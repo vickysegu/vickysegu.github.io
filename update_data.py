@@ -18,15 +18,15 @@ hasil = {
     "pendidikan": [],
     "mengajar": [],
     "pengabdian": [],
-    "publikasi": [],
-    "debug_keys": [] # Untuk melacak jika API mengganti nama kolom lagi
+    "publikasi": []
 }
 
-def cari_nilai_fleksibel(kamus_data, daftar_kata_kunci):
-    """Mencari data dengan mencocokkan kata kunci secara parsial pada nama kolom API"""
+def cari_nilai_fleksibel(kamus_data, daftar_kata_kunci, kecualikan=None):
+    """Mencari data secara pintar dengan mengecualikan kolom 'kode' atau 'id'"""
+    if kecualikan is None: kecualikan = []
     if not isinstance(kamus_data, dict): return 'N/A'
     
-    # 1. Coba kecocokan persis
+    # 1. Coba kecocokan persis (Exact match) terlebih dahulu
     for k in daftar_kata_kunci:
         if k in kamus_data and kamus_data[k]: 
             return str(kamus_data[k]).strip()
@@ -34,6 +34,12 @@ def cari_nilai_fleksibel(kamus_data, daftar_kata_kunci):
     # 2. Coba kecocokan parsial (Fuzzy Search)
     for key, val in kamus_data.items():
         key_lower = key.lower()
+        
+        # Abaikan jika nama kolom mengandung kata terlarang (seperti 'kode' atau 'id')
+        is_excluded = any(exc in key_lower for exc in kecualikan)
+        if is_excluded:
+            continue
+            
         for k in daftar_kata_kunci:
             if k in key_lower and val:
                 return str(val).strip()
@@ -110,14 +116,14 @@ try:
                 if pendidikan_raw:
                     pend_list = pendidikan_raw.get('data', []) if isinstance(pendidikan_raw, dict) else pendidikan_raw
                     for p in pend_list:
-                        jenjang = cari_nilai_fleksibel(p, ['gelar', 'jenjang', 'sp_satdik'])
-                        kampus = cari_nilai_fleksibel(p, ['pt', 'perguruan_tinggi']).upper()
-                        tahun_lulus = cari_nilai_fleksibel(p, ['tahun_lulus', 'thn_lulus', 'tahun'])
+                        jenjang = cari_nilai_fleksibel(p, ['gelar', 'jenjang', 'sp_satdik'], ['id', 'kode'])
+                        kampus = cari_nilai_fleksibel(p, ['pt', 'perguruan_tinggi'], ['id', 'kode', 'singkat']).upper()
+                        tahun_lulus = cari_nilai_fleksibel(p, ['tahun_lulus', 'thn_lulus', 'tahun'], ['id'])
                         hasil["pendidikan"].append({"jenjang": jenjang, "pt": kampus, "tahun": tahun_lulus})
             except Exception as e:
                 print(f"Peringatan riwayat pendidikan: {str(e)}")
 
-            # 2. RIWAYAT MENGAJAR (EKSTRAKSI CERDAS & GROUPING SEMESTER)
+            # 2. RIWAYAT MENGAJAR (Dengan Pengecualian Kata 'kode' dan 'id')
             try:
                 mengajar_raw = client.get_dosen_teaching_history(dosen_id)
                 if mengajar_raw:
@@ -125,15 +131,12 @@ try:
                     matkul_dict = {}
                     
                     for m in mengajar_list:
-                        # Log keys untuk debugging jika masih gagal
-                        if isinstance(m, dict) and len(hasil["debug_keys"]) == 0:
-                            hasil["debug_keys"] = list(m.keys())
-
-                        nama_matkul = cari_nilai_fleksibel(m, ['mata_kuliah', 'matkul', 'mk']).title()
-                        nama_kampus = cari_nilai_fleksibel(m, ['pt', 'perguruan_tinggi', 'kampus']).upper()
-                        semester = cari_nilai_fleksibel(m, ['semester', 'smt'])
+                        # Kunci Solusi: Mengecualikan kolom bernama "kode_mk" atau "id_mk"
+                        nama_matkul = cari_nilai_fleksibel(m, ['nama_mata_kuliah', 'nm_mk', 'mata_kuliah', 'matkul'], kecualikan=['kode', 'id', 'sks']).title()
+                        nama_kampus = cari_nilai_fleksibel(m, ['pt', 'perguruan_tinggi', 'kampus'], kecualikan=['kode', 'id', 'singkat']).upper()
+                        semester = cari_nilai_fleksibel(m, ['nama_semester', 'semester', 'smt'], kecualikan=['id', 'kode'])
                         
-                        if nama_matkul != 'N/A' and nama_matkul != 'None':
+                        if nama_matkul != 'N/a' and nama_matkul != 'None':
                             kunci = f"{nama_matkul} | {nama_kampus}"
                             if kunci not in matkul_dict:
                                 matkul_dict[kunci] = {"matkul": nama_matkul, "kampus": nama_kampus, "semester": set()}
@@ -157,8 +160,8 @@ try:
                 if pengabdian:
                     pengabdian_list = pengabdian.get('data', []) if isinstance(pengabdian, dict) else pengabdian
                     for p in pengabdian_list:
-                        judul = cari_nilai_fleksibel(p, ['judul'])
-                        tahun = cari_nilai_fleksibel(p, ['tahun'])
+                        judul = cari_nilai_fleksibel(p, ['judul'], ['id'])
+                        tahun = cari_nilai_fleksibel(p, ['tahun'], ['id'])
                         hasil["pengabdian"].append({"judul": judul, "tahun": tahun, "kategori": "Pengabdian"})
             except Exception as e:
                 print(f"Peringatan riwayat pengabdian: {str(e)}")
@@ -171,11 +174,11 @@ try:
                 if karya_pddikti:
                     karya_list = karya_pddikti.get('data', []) if isinstance(karya_pddikti, dict) else karya_pddikti
                     for p in karya_list:
-                        jenis = cari_nilai_fleksibel(p, ['jenis'])
+                        jenis = cari_nilai_fleksibel(p, ['jenis'], ['id', 'kode'])
                         if jenis == "Hasil penelitian/pemikiran yang tidak dipublikasikan":
                             hasil["pengabdian"].append({
-                                "judul": cari_nilai_fleksibel(p, ['judul']),
-                                "tahun": cari_nilai_fleksibel(p, ['tahun']),
+                                "judul": cari_nilai_fleksibel(p, ['judul'], ['id']),
+                                "tahun": cari_nilai_fleksibel(p, ['tahun'], ['id']),
                                 "kategori": "Penelitian Internal"
                             })
             else:
@@ -183,9 +186,9 @@ try:
                 if publikasi:
                     publikasi_list = publikasi.get('data', []) if isinstance(publikasi, dict) else publikasi
                     for p in publikasi_list:
-                        judul_keg = cari_nilai_fleksibel(p, ['judul'])
-                        jenis_keg = cari_nilai_fleksibel(p, ['jenis'])
-                        tahun_keg = cari_nilai_fleksibel(p, ['tahun'])
+                        judul_keg = cari_nilai_fleksibel(p, ['judul'], ['id'])
+                        jenis_keg = cari_nilai_fleksibel(p, ['jenis'], ['id', 'kode'])
+                        tahun_keg = cari_nilai_fleksibel(p, ['tahun'], ['id'])
                         
                         if jenis_keg == "Hasil penelitian/pemikiran yang tidak dipublikasikan":
                             hasil["pengabdian"].append({"judul": judul_keg, "tahun": tahun_keg, "kategori": "Penelitian Internal"})
