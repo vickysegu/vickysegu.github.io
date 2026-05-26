@@ -11,6 +11,19 @@ nama_pt = "UNIVERSITAS PERINTIS INDONESIA"
 prodi = "BISNIS DIGITAL"
 scholar_id = "zxh3WngAAAAJ"
 
+# --- FALLBACK LINK JURNAL (Mencegah Google Scholar memblokir GitHub Actions) ---
+MANUAL_LINKS = {
+    "Beyond experience: how customer engagement transforms AI interactions into Generation Z loyalty": "https://scholar.google.com/citations?view_op=view_citation&hl=id&user=zxh3WngAAAAJ&citation_for_view=zxh3WngAAAAJ:d1gIgvwA3N8C",
+    "Easily Determining Post-Study System Usability for Anime Community E-Commerce Analysis": "https://scholar.google.com/citations?view_op=view_citation&hl=id&user=zxh3WngAAAAJ&citation_for_view=zxh3WngAAAAJ:9yKSN-GCB0IC",
+    "Implementasi Sistem Informasi Administrasi Pembayaran SPP Pada SDIT Darul Hikmah Metode Rapid Application Development (RAD)": "https://scholar.google.com/citations?view_op=view_citation&hl=id&user=zxh3WngAAAAJ&citation_for_view=zxh3WngAAAAJ:qjMakFHDy7sC",
+    "Metode Waterfall Untuk Meningkatkan Kualitas Layanan Nikah dan Rujuk Pada Kantor Urusan Agama (KUA) Kec. Lubuk Batu Jaya": "https://scholar.google.com/citations?view_op=view_citation&hl=id&user=zxh3WngAAAAJ&citation_for_view=zxh3WngAAAAJ:2osOgNQ5qMEC",
+    "Penerapan Metode Topsis Dalam Menentukan Kualitas Gambir": "https://scholar.google.com/citations?view_op=view_citation&hl=id&user=zxh3WngAAAAJ&citation_for_view=zxh3WngAAAAJ:UeHWp8X0CEIC",
+    "Sistem Penunjang Keputusan dalam Optimalisasi Pemberian Insentif terhadap Pemasok Menggunakan Metode TOPSIS": "https://scholar.google.com/citations?view_op=view_citation&hl=id&user=zxh3WngAAAAJ&citation_for_view=zxh3WngAAAAJ:u5y6OjeaXhIC",
+    "Implementasi Metode Prototype dalam Pengembangan Sistem Informasi Inventaris Obat di Apotek Syira Farma": "https://scholar.google.com/citations?view_op=view_citation&hl=id&user=zxh3WngAAAAJ&citation_for_view=zxh3WngAAAAJ:Tyk-4Ss8FVUC",
+    "RANCANG BANGUN ARSITEKTUR SISTEM INFORMASI MARKETPLACE JASA FOTOGRAFI BERBASIS WEB": "https://scholar.google.com/citations?view_op=view_citation&hl=id&user=zxh3WngAAAAJ&citation_for_view=zxh3WngAAAAJ:Y0pCki6q_DkC",
+    "INTERNET OF THINGS: Konsep, Implementasi dan Arah Masa Depan": "https://scholar.google.com/citations?view_op=view_citation&hl=id&user=zxh3WngAAAAJ&citation_for_view=zxh3WngAAAAJ:W7OEmFMy1HYC"
+}
+
 hasil = {
     "status": "error",
     "pesan": "",
@@ -24,40 +37,29 @@ hasil = {
 def cari_nilai_fleksibel(kamus_data, daftar_kata_kunci, kecualikan=None):
     if kecualikan is None: kecualikan = []
     if not isinstance(kamus_data, dict): return 'N/A'
-    
     for k in daftar_kata_kunci:
-        if k in kamus_data and kamus_data[k]: 
-            return str(kamus_data[k]).strip()
-            
+        if k in kamus_data and kamus_data[k]: return str(kamus_data[k]).strip()
     for key, val in kamus_data.items():
         key_lower = key.lower()
-        is_excluded = any(exc in key_lower for exc in kecualikan)
-        if is_excluded: continue
-            
+        if any(exc in key_lower for exc in kecualikan): continue
         for k in daftar_kata_kunci:
-            if k in key_lower and val:
-                return str(val).strip()
+            if k in key_lower and val: return str(val).strip()
     return 'N/A'
 
 def parse_semester(sem_str):
-    """Memecah string PDDIKTI menjadi Tahun Ajaran dan Tipe Semester (Ganjil/Genap)"""
     sem_str = str(sem_str).strip()
-    thn_ajaran = "Tahun Tidak Diketahui"
-    tipe = "Lainnya"
-    
-    # Deteksi pola 5 digit PDDIKTI (ex: 20231 -> 2023/2024 Ganjil)
+    thn_ajaran = ""
+    tipe = ""
     match_angka = re.match(r'^(\d{4})([123])$', sem_str)
     if match_angka:
         thn = int(match_angka.group(1))
         thn_ajaran = f"{thn}/{thn+1}"
         tipe_map = {'1': 'Ganjil', '2': 'Genap', '3': 'Pendek'}
-        tipe = tipe_map.get(match_angka.group(2), "Lainnya")
-        return thn_ajaran, tipe
+        tipe = tipe_map.get(match_angka.group(2), "")
+        return f"{tipe} {thn_ajaran}".strip()
     
-    # Deteksi pola teks manual (ex: 2023/2024 Ganjil)
     match_thn = re.search(r'(\d{4})[/-](\d{4})', sem_str)
-    if match_thn:
-        thn_ajaran = f"{match_thn.group(1)}/{match_thn.group(2)}"
+    if match_thn: thn_ajaran = f"{match_thn.group(1)}/{match_thn.group(2)}"
     else:
         match_thn_single = re.search(r'(\d{4})', sem_str)
         if match_thn_single:
@@ -68,16 +70,14 @@ def parse_semester(sem_str):
     if 'ganjil' in sem_lower or 'gasal' in sem_lower or 'odd' in sem_lower: tipe = "Ganjil"
     elif 'genap' in sem_lower or 'even' in sem_lower: tipe = "Genap"
     elif 'pendek' in sem_lower or 'antara' in sem_lower: tipe = "Pendek"
-        
-    if thn_ajaran == "Tahun Tidak Diketahui" and tipe == "Lainnya": return "Periode", sem_str
-    return thn_ajaran, tipe
+    
+    return f"{tipe} {thn_ajaran}".strip() if thn_ajaran else sem_str
 
 def cari_akreditasi_sinta_via_garuda(judul_artikel):
     judul_clean = " ".join(judul_artikel.strip().rstrip('.').split())
     if not judul_clean: return ""
     judul_encoded = urllib.parse.quote(judul_clean)
     url = f"https://garuda.kemdiktisaintek.go.id/documents?select=title&q={judul_encoded}"
-    
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
     try:
         response = requests.get(url, headers=headers, timeout=10)
@@ -117,26 +117,22 @@ def ambil_data_scholar(scholar_id):
         pass
     return publikasi_scholar
 
-print("Memulai sinkronisasi terintegrasi (PDDIKTI + Scholar)...")
+print("Memulai sinkronisasi terintegrasi...")
 
 try:
     with api() as client:
         results = client.search_dosen(keyword=nama_dosen)
         dosen_id = None
-        
         if results:
             for dosen in results:
-                if (nama_pt.lower() in dosen.get('nama_pt', '').lower() and 
-                    prodi.lower() in dosen.get('nama_prodi', '').lower()):
+                if nama_pt.lower() in dosen.get('nama_pt', '').lower():
                     hasil["profil"] = dosen
                     dosen_id = dosen.get('id')
                     hasil["status"] = "success"
                     break
         
-        if not dosen_id:
-            hasil["pesan"] = "Profil Dosen tidak ditemukan pada basis data PDDIKTI."
-        else:
-            # 1. RIWAYAT PENDIDIKAN
+        if dosen_id:
+            # 1. PENDIDIKAN
             try:
                 pendidikan_raw = client.get_dosen_study_history(dosen_id)
                 if pendidikan_raw:
@@ -146,47 +142,35 @@ try:
                         kampus = cari_nilai_fleksibel(p, ['pt', 'perguruan_tinggi'], ['id', 'kode', 'singkat']).upper()
                         tahun_lulus = cari_nilai_fleksibel(p, ['tahun_lulus', 'thn_lulus', 'tahun'], ['id'])
                         hasil["pendidikan"].append({"jenjang": jenjang, "pt": kampus, "tahun": tahun_lulus})
-            except Exception as e:
-                print(f"Peringatan riwayat pendidikan: {str(e)}")
+            except: pass
 
-            # 2. RIWAYAT MENGAJAR (HIERARKI PARENT-CHILD)
+            # 2. MENGAJAR (HIERARKI BARU: KAMPUS -> MATKUL -> LIST SEMESTER)
             try:
                 mengajar_raw = client.get_dosen_teaching_history(dosen_id)
                 if mengajar_raw:
                     mengajar_list = mengajar_raw.get('data', []) if isinstance(mengajar_raw, dict) else mengajar_raw
-                    tree_mengajar = {}
+                    matkul_tree = {}
                     
-                    # Bangun Pohon: Kampus -> Tahun Ajaran -> Semester -> Set(Matkul)
                     for m in mengajar_list:
-                        nama_matkul = cari_nilai_fleksibel(m, ['nama_mata_kuliah', 'nm_mk', 'mata_kuliah', 'matkul'], kecualikan=['kode', 'id', 'sks']).title()
-                        nama_kampus = cari_nilai_fleksibel(m, ['pt', 'perguruan_tinggi', 'kampus'], kecualikan=['kode', 'id', 'singkat']).upper()
-                        semester_raw = cari_nilai_fleksibel(m, ['nama_semester', 'semester', 'smt', 'id_smt'], kecualikan=['id_mk', 'kode'])
+                        nama_matkul = cari_nilai_fleksibel(m, ['nama_mata_kuliah', 'nm_mk', 'mata_kuliah', 'matkul'], ['kode', 'id', 'sks']).title()
+                        nama_kampus = cari_nilai_fleksibel(m, ['pt', 'perguruan_tinggi', 'kampus'], ['kode', 'id', 'singkat']).upper()
+                        semester_raw = cari_nilai_fleksibel(m, ['nama_semester', 'semester', 'smt', 'id_smt'], ['id_mk', 'kode'])
                         
                         if nama_matkul != 'N/A' and nama_matkul != 'None':
-                            thn_ajaran, tipe_sem = parse_semester(semester_raw)
-                            
-                            if nama_kampus not in tree_mengajar: tree_mengajar[nama_kampus] = {}
-                            if thn_ajaran not in tree_mengajar[nama_kampus]: tree_mengajar[nama_kampus][thn_ajaran] = {}
-                            if tipe_sem not in tree_mengajar[nama_kampus][thn_ajaran]: tree_mengajar[nama_kampus][thn_ajaran][tipe_sem] = set()
-                            
-                            tree_mengajar[nama_kampus][thn_ajaran][tipe_sem].add(nama_matkul)
+                            if nama_kampus not in matkul_tree: matkul_tree[nama_kampus] = {}
+                            if nama_matkul not in matkul_tree[nama_kampus]: matkul_tree[nama_kampus][nama_matkul] = set()
+                            if semester_raw != 'N/A' and semester_raw != 'None':
+                                matkul_tree[nama_kampus][nama_matkul].add(parse_semester(semester_raw))
                     
-                    # Konversi Pohon ke List of Dictionaries untuk JSON
-                    for kampus in sorted(tree_mengajar.keys()):
-                        data_kampus = {"nama_kampus": kampus, "tahun_ajaran": []}
-                        for thn in sorted(tree_mengajar[kampus].keys(), reverse=True): # Urut Tahun Terbaru
-                            data_thn = {"tahun": thn, "semester": []}
-                            for sem in sorted(tree_mengajar[kampus][thn].keys(), reverse=True): # Genap (2) sebelum Ganjil (1)
-                                data_thn["semester"].append({
-                                    "tipe": sem,
-                                    "matkul": sorted(list(tree_mengajar[kampus][thn][sem]))
-                                })
-                            data_kampus["tahun_ajaran"].append(data_thn)
+                    for kampus in sorted(matkul_tree.keys()):
+                        data_kampus = {"nama_kampus": kampus, "mata_kuliah": []}
+                        for mk in sorted(matkul_tree[kampus].keys()):
+                            sems = sorted(list(matkul_tree[kampus][mk]), reverse=True)
+                            data_kampus["mata_kuliah"].append({"nama": mk, "semester": ", ".join(sems) if sems else "N/A"})
                         hasil["mengajar"].append(data_kampus)
-            except Exception as e:
-                print(f"Peringatan riwayat mengajar: {str(e)}")
+            except: pass
 
-            # 3. RIWAYAT PENGABDIAN
+            # 3. PENGABDIAN
             try:
                 pengabdian = client.get_dosen_pengabdian(dosen_id)
                 if pengabdian:
@@ -195,10 +179,9 @@ try:
                         judul = cari_nilai_fleksibel(p, ['judul'], ['id'])
                         tahun = cari_nilai_fleksibel(p, ['tahun'], ['id'])
                         hasil["pengabdian"].append({"judul": judul, "tahun": tahun, "kategori": "Pengabdian"})
-            except Exception as e:
-                pass
+            except: pass
 
-            # 4. RIWAYAT PUBLIKASI
+            # 4. PUBLIKASI DENGAN LINK FALLBACK
             data_scholar = ambil_data_scholar(scholar_id)
             if data_scholar:
                 hasil["publikasi"] = data_scholar
@@ -208,11 +191,7 @@ try:
                     for p in karya_list:
                         jenis = cari_nilai_fleksibel(p, ['jenis'], ['id', 'kode'])
                         if jenis == "Hasil penelitian/pemikiran yang tidak dipublikasikan":
-                            hasil["pengabdian"].append({
-                                "judul": cari_nilai_fleksibel(p, ['judul'], ['id']),
-                                "tahun": cari_nilai_fleksibel(p, ['tahun'], ['id']),
-                                "kategori": "Penelitian Internal"
-                            })
+                            hasil["pengabdian"].append({"judul": cari_nilai_fleksibel(p, ['judul'], ['id']), "tahun": cari_nilai_fleksibel(p, ['tahun'], ['id']), "kategori": "Penelitian Internal"})
             else:
                 publikasi = client.get_dosen_karya(dosen_id)
                 if publikasi:
@@ -226,7 +205,21 @@ try:
                             hasil["pengabdian"].append({"judul": judul_keg, "tahun": tahun_keg, "kategori": "Penelitian Internal"})
                         else:
                             tingkat = cari_akreditasi_sinta_via_garuda(judul_keg)
-                            hasil["publikasi"].append({"judul": judul_keg, "jenis": tingkat if tingkat else jenis_keg, "tahun": tahun_keg})
+                            
+                            # INJEKSI LINK MANUAL JIKA SCHOLAR DIBLOKIR
+                            link_terselamatkan = ""
+                            judul_lookup = judul_keg.lower().rstrip('.')
+                            for dict_judul, dict_link in MANUAL_LINKS.items():
+                                if dict_judul.lower().rstrip('.') in judul_lookup or judul_lookup in dict_judul.lower():
+                                    link_terselamatkan = dict_link
+                                    break
+                                    
+                            hasil["publikasi"].append({
+                                "judul": judul_keg, 
+                                "jenis": tingkat if tingkat else jenis_keg, 
+                                "tahun": tahun_keg, 
+                                "link": link_terselamatkan
+                            })
 
 except Exception as e:
     hasil["status"] = "error"
@@ -235,4 +228,4 @@ except Exception as e:
 with open("data.json", "w", encoding="utf-8") as f:
     json.dump(hasil, f, indent=4, ensure_ascii=False)
 
-print("File data.json hierarkis sukses diperbarui!")
+print("File data.json sukses diperbarui dengan proteksi tautan!")
