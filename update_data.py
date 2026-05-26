@@ -22,28 +22,55 @@ hasil = {
 }
 
 def cari_nilai_fleksibel(kamus_data, daftar_kata_kunci, kecualikan=None):
-    """Mencari data secara pintar dengan mengecualikan kolom 'kode' atau 'id'"""
     if kecualikan is None: kecualikan = []
     if not isinstance(kamus_data, dict): return 'N/A'
     
-    # 1. Coba kecocokan persis (Exact match) terlebih dahulu
     for k in daftar_kata_kunci:
         if k in kamus_data and kamus_data[k]: 
             return str(kamus_data[k]).strip()
             
-    # 2. Coba kecocokan parsial (Fuzzy Search)
     for key, val in kamus_data.items():
         key_lower = key.lower()
-        
-        # Abaikan jika nama kolom mengandung kata terlarang (seperti 'kode' atau 'id')
         is_excluded = any(exc in key_lower for exc in kecualikan)
-        if is_excluded:
-            continue
+        if is_excluded: continue
             
         for k in daftar_kata_kunci:
             if k in key_lower and val:
                 return str(val).strip()
     return 'N/A'
+
+def parse_semester(sem_str):
+    """Memecah string PDDIKTI menjadi Tahun Ajaran dan Tipe Semester (Ganjil/Genap)"""
+    sem_str = str(sem_str).strip()
+    thn_ajaran = "Tahun Tidak Diketahui"
+    tipe = "Lainnya"
+    
+    # Deteksi pola 5 digit PDDIKTI (ex: 20231 -> 2023/2024 Ganjil)
+    match_angka = re.match(r'^(\d{4})([123])$', sem_str)
+    if match_angka:
+        thn = int(match_angka.group(1))
+        thn_ajaran = f"{thn}/{thn+1}"
+        tipe_map = {'1': 'Ganjil', '2': 'Genap', '3': 'Pendek'}
+        tipe = tipe_map.get(match_angka.group(2), "Lainnya")
+        return thn_ajaran, tipe
+    
+    # Deteksi pola teks manual (ex: 2023/2024 Ganjil)
+    match_thn = re.search(r'(\d{4})[/-](\d{4})', sem_str)
+    if match_thn:
+        thn_ajaran = f"{match_thn.group(1)}/{match_thn.group(2)}"
+    else:
+        match_thn_single = re.search(r'(\d{4})', sem_str)
+        if match_thn_single:
+            thn = int(match_thn_single.group(1))
+            thn_ajaran = f"{thn}/{thn+1}"
+            
+    sem_lower = sem_str.lower()
+    if 'ganjil' in sem_lower or 'gasal' in sem_lower or 'odd' in sem_lower: tipe = "Ganjil"
+    elif 'genap' in sem_lower or 'even' in sem_lower: tipe = "Genap"
+    elif 'pendek' in sem_lower or 'antara' in sem_lower: tipe = "Pendek"
+        
+    if thn_ajaran == "Tahun Tidak Diketahui" and tipe == "Lainnya": return "Periode", sem_str
+    return thn_ajaran, tipe
 
 def cari_akreditasi_sinta_via_garuda(judul_artikel):
     judul_clean = " ".join(judul_artikel.strip().rstrip('.').split())
@@ -60,8 +87,7 @@ def cari_akreditasi_sinta_via_garuda(judul_artikel):
                 if "/journal/view/" in link["href"]:
                     teks_badge = link.get_text().lower().strip()
                     match = re.search(r's(?:inta)?\s*([1-6])', teks_badge)
-                    if match:
-                        return f"SINTA {match.group(1)}"
+                    if match: return f"SINTA {match.group(1)}"
         return ""
     except:
         return ""
@@ -123,34 +149,40 @@ try:
             except Exception as e:
                 print(f"Peringatan riwayat pendidikan: {str(e)}")
 
-            # 2. RIWAYAT MENGAJAR (Dengan Pengecualian Kata 'kode' dan 'id')
+            # 2. RIWAYAT MENGAJAR (HIERARKI PARENT-CHILD)
             try:
                 mengajar_raw = client.get_dosen_teaching_history(dosen_id)
                 if mengajar_raw:
                     mengajar_list = mengajar_raw.get('data', []) if isinstance(mengajar_raw, dict) else mengajar_raw
-                    matkul_dict = {}
+                    tree_mengajar = {}
                     
+                    # Bangun Pohon: Kampus -> Tahun Ajaran -> Semester -> Set(Matkul)
                     for m in mengajar_list:
-                        # Kunci Solusi: Mengecualikan kolom bernama "kode_mk" atau "id_mk"
                         nama_matkul = cari_nilai_fleksibel(m, ['nama_mata_kuliah', 'nm_mk', 'mata_kuliah', 'matkul'], kecualikan=['kode', 'id', 'sks']).title()
                         nama_kampus = cari_nilai_fleksibel(m, ['pt', 'perguruan_tinggi', 'kampus'], kecualikan=['kode', 'id', 'singkat']).upper()
-                        semester = cari_nilai_fleksibel(m, ['nama_semester', 'semester', 'smt'], kecualikan=['id', 'kode'])
+                        semester_raw = cari_nilai_fleksibel(m, ['nama_semester', 'semester', 'smt', 'id_smt'], kecualikan=['id_mk', 'kode'])
                         
-                        if nama_matkul != 'N/a' and nama_matkul != 'None':
-                            kunci = f"{nama_matkul} | {nama_kampus}"
-                            if kunci not in matkul_dict:
-                                matkul_dict[kunci] = {"matkul": nama_matkul, "kampus": nama_kampus, "semester": set()}
+                        if nama_matkul != 'N/A' and nama_matkul != 'None':
+                            thn_ajaran, tipe_sem = parse_semester(semester_raw)
                             
-                            if semester != 'N/A' and semester != 'None':
-                                matkul_dict[kunci]["semester"].add(semester)
+                            if nama_kampus not in tree_mengajar: tree_mengajar[nama_kampus] = {}
+                            if thn_ajaran not in tree_mengajar[nama_kampus]: tree_mengajar[nama_kampus][thn_ajaran] = {}
+                            if tipe_sem not in tree_mengajar[nama_kampus][thn_ajaran]: tree_mengajar[nama_kampus][thn_ajaran][tipe_sem] = set()
+                            
+                            tree_mengajar[nama_kampus][thn_ajaran][tipe_sem].add(nama_matkul)
                     
-                    for kunci, data_mk in matkul_dict.items():
-                        sorted_sems = sorted(list(data_mk["semester"]), reverse=True)
-                        hasil["mengajar"].append({
-                            "matkul": data_mk["matkul"],
-                            "kampus": data_mk["kampus"],
-                            "semester": ", ".join(sorted_sems) if sorted_sems else "N/A"
-                        })
+                    # Konversi Pohon ke List of Dictionaries untuk JSON
+                    for kampus in sorted(tree_mengajar.keys()):
+                        data_kampus = {"nama_kampus": kampus, "tahun_ajaran": []}
+                        for thn in sorted(tree_mengajar[kampus].keys(), reverse=True): # Urut Tahun Terbaru
+                            data_thn = {"tahun": thn, "semester": []}
+                            for sem in sorted(tree_mengajar[kampus][thn].keys(), reverse=True): # Genap (2) sebelum Ganjil (1)
+                                data_thn["semester"].append({
+                                    "tipe": sem,
+                                    "matkul": sorted(list(tree_mengajar[kampus][thn][sem]))
+                                })
+                            data_kampus["tahun_ajaran"].append(data_thn)
+                        hasil["mengajar"].append(data_kampus)
             except Exception as e:
                 print(f"Peringatan riwayat mengajar: {str(e)}")
 
@@ -164,7 +196,7 @@ try:
                         tahun = cari_nilai_fleksibel(p, ['tahun'], ['id'])
                         hasil["pengabdian"].append({"judul": judul, "tahun": tahun, "kategori": "Pengabdian"})
             except Exception as e:
-                print(f"Peringatan riwayat pengabdian: {str(e)}")
+                pass
 
             # 4. RIWAYAT PUBLIKASI
             data_scholar = ambil_data_scholar(scholar_id)
@@ -195,8 +227,6 @@ try:
                         else:
                             tingkat = cari_akreditasi_sinta_via_garuda(judul_keg)
                             hasil["publikasi"].append({"judul": judul_keg, "jenis": tingkat if tingkat else jenis_keg, "tahun": tahun_keg})
-            
-            print("Ekstraksi data selesai.")
 
 except Exception as e:
     hasil["status"] = "error"
@@ -205,4 +235,4 @@ except Exception as e:
 with open("data.json", "w", encoding="utf-8") as f:
     json.dump(hasil, f, indent=4, ensure_ascii=False)
 
-print("File data.json sukses diperbarui!")
+print("File data.json hierarkis sukses diperbarui!")
