@@ -1,4 +1,6 @@
 import json
+import re
+import urllib.parse
 import requests
 from bs4 import BeautifulSoup
 from pddiktipy import api
@@ -7,85 +9,76 @@ from pddiktipy import api
 nama_dosen = "VICKY SETIA GUNAWAN"
 nama_pt = "UNIVERSITAS PERINTIS INDONESIA"
 prodi = "BISNIS DIGITAL"
-scholar_id = "zxh3WngAAAAJ"  # ID Google Scholar Anda
-
-# --- KAMUS PEMETAAN SINTA MANUAL ---
-PETA_SINTA_MANUAL = {
-    "Penerapan Metode Topsis Dalam Menentukan Kualitas Gambir": "SINTA 3",
-    "Sistem Penunjang Keputusan dalam Optimalisasi Pemberian Insentif terhadap Pemasok Menggunakan Metode TOPSIS": "SINTA 4",
-    "Easily Determining Post-Study System Usability for Anime Community E-Commerce Analysis": "SINTA 3",
-    "Implementasi Sistem Informasi Administrasi Pembayaran SPP Pada SDIT Darul Hikmah Metode Rapid Application Development (RAD)": "SINTA 4",
-    "Beyond experience: how customer engagement transforms AI interactions into Generation Z loyalty": "SINTA 2",
-    "Implementasi Metode Prototype dalam Pengembangan Sistem Informasi Inventaris Obat di Apotek Syira Farma.": "SINTA 4",
-    "Metode Waterfall Untuk Meningkatkan Kualitas Layanan Nikah dan Rujuk Pada Kantor Urusan Agama (KUA) Kec. Lubuk Batu Jaya": "SINTA 5",
-    "Perancangan Aplikasi Jual Beli Tandan Buah Sawit (Tbs) Pada Pengepul H. Muslimin Berbasis Web": "SINTA 5",
-    "RANCANG BANGUN ARSITEKTUR SISTEM INFORMASI MARKETPLACE JASA FOTOGRAFI BERBASIS WEB": "SINTA 4",
-    "PENERAPAN WEB TRANSAKSI TANDAN BUAH SAWIT (TBS) PADA PENGEPUL H. MUSLIMIN": "Lain-lain",
-    "INTERNET OF THINGS: Konsep, Implementasi dan Arah Masa Depan": "Buku Referensi"
-}
+scholar_id = "zxh3WngAAAAJ"
 
 hasil = {
     "status": "error",
     "pesan": "",
     "profil": {},
+    "mengajar": [],
     "pengabdian": [],
     "publikasi": []
 }
 
+def cari_akreditasi_sinta_via_garuda(judul_artikel):
+    """Mencari peringkat akreditasi SINTA via situs Garuda secara dinamis"""
+    judul_clean = " ".join(judul_artikel.strip().rstrip('.').split())
+    if not judul_clean: return ""
+    judul_encoded = urllib.parse.quote(judul_clean)
+    url = f"https://garuda.kemdiktisaintek.go.id/documents?select=title&q={judul_encoded}"
+    
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+    try:
+        response = requests.get(url, headers=headers, timeout=10)
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.text, "html.parser")
+            for link in soup.find_all("a", href=True):
+                if "/journal/view/" in link["href"]:
+                    teks_badge = link.get_text().lower().strip()
+                    match = re.search(r's(?:inta)?\s*([1-6])', teks_badge)
+                    if match:
+                        return f"SINTA {match.group(1)}"
+        return ""
+    except:
+        return ""
+
 def ambil_data_scholar(scholar_id):
-    """Mencoba mengambil data publikasi, link, dan sitasi dari Google Scholar"""
+    """Mengambil publikasi secara dinamis dari Google Scholar"""
     publikasi_scholar = []
     url = f"https://scholar.google.com/citations?user={scholar_id}&hl=id&pagesize=100"
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-    }
-    
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
     try:
-        req = requests.get(url, headers=headers, timeout=15)
+        req = requests.get(url, headers=headers, timeout=12)
         if req.status_code == 200:
             soup = BeautifulSoup(req.text, 'html.parser')
-            rows = soup.find_all("tr", class_="gsc_a_tr")
-            
-            for row in rows:
+            for row in soup.find_all("tr", class_="gsc_a_tr"):
                 title_elem = row.find("a", class_="gsc_a_at")
                 if not title_elem: continue
                 
                 judul = title_elem.text.strip()
                 link = "https://scholar.google.com" + title_elem['href']
                 
-                # Mengambil Sitasi
                 cites_elem = row.find("a", class_="gsc_a_ac")
                 sitasi = cites_elem.text.strip() if cites_elem and cites_elem.text.strip() else "0"
                 
-                # Mengambil Tahun
                 year_elem = row.find("span", class_="gsc_a_h")
                 tahun = year_elem.text.strip() if year_elem and year_elem.text.strip() else "N/A"
                 
-                # Mencocokkan dengan Kamus SINTA
-                jenis_keg = "Jurnal Ilmiah"
-                judul_lookup = judul.rstrip('.')
-                for key_judul, label_sinta in PETA_SINTA_MANUAL.items():
-                    if key_judul.lower().rstrip('.') == judul_lookup.lower():
-                        jenis_keg = label_sinta
-                        break
+                # Deteksi otomatis tingkat SINTA tanpa hardcoded map
+                tingkat = cari_akreditasi_sinta_via_garuda(judul)
+                jenis_keg = tingkat if tingkat else "Jurnal Ilmiah"
                 
                 publikasi_scholar.append({
-                    "judul": judul,
-                    "jenis": jenis_keg,
-                    "tahun": tahun,
-                    "sitasi": sitasi,
-                    "link": link
+                    "judul": judul, "jenis": jenis_keg, "tahun": tahun, "sitasi": sitasi, "link": link
                 })
-    except Exception as e:
-        print(f"Google Scholar Error/Diblokir: {e}")
-        
+    except:
+        pass
     return publikasi_scholar
 
-print("Memulai sinkronisasi hibrida (Google Scholar + PDDIKTI)...")
+print("Memulai sinkronisasi terintegrasi dari PDDIKTI dan Scholar...")
 
 try:
     with api() as client:
-        # 1. TARIK PROFIL PDDIKTI
         results = client.search_dosen(keyword=nama_dosen)
         dosen_id = None
         
@@ -99,71 +92,73 @@ try:
                     break
         
         if not dosen_id:
-            hasil["pesan"] = f"Dosen '{nama_dosen}' tidak ditemukan di PDDIKTI."
+            hasil["pesan"] = "Profil Dosen tidak ditemukan pada basis data PDDIKTI."
         else:
-            # 2. TARIK PENGABDIAN (Dari PDDIKTI)
+            # 1. AMBIL DATA RIWAYAT MENGAJAR (Dinamis dari PDDIKTI)
+            try:
+                mengajar_raw = client.get_dosen_mengajar(dosen_id)
+                if mengajar_raw:
+                    matkul_tercatat = set()
+                    for m in mengajar_raw:
+                        nama_matkul = m.get('nama_mata_kuliah', 'N/A').strip().title()
+                        semester = m.get('nama_semester') or m.get('id_semester') or 'N/A'
+                        # Eliminasi duplikasi kelas paralel agar ringkas
+                        if nama_matkul not in matkul_tercatat:
+                            matkul_tercatat.add(nama_matkul)
+                            hasil["mengajar"].append({
+                                "matkul": nama_matkul,
+                                "semester": semester
+                            })
+            except Exception as e:
+                print(f"Gagal memuat riwayat mengajar: {str(e)}")
+
+            # 2. AMBIL DATA RIWAYAT PENGABDIAN
             pengabdian = client.get_dosen_pengabdian(dosen_id)
             if pengabdian:
                 for p in pengabdian:
-                    thn = p.get('tahun_kegiatan') or p.get('tahun_pelaksanaan') or p.get('tahun') or 'N/A'
+                    tahun = p.get('tahun_kegiatan') or p.get('tahun') or 'N/A'
                     hasil["pengabdian"].append({
-                        "judul": p.get('judul_kegiatan', 'N/A'),
-                        "tahun": thn,
-                        "kategori": "Pengabdian"
+                        "judul": p.get('judul_kegiatan', 'N/A'), "tahun": tahun, "kategori": "Pengabdian"
                     })
 
-            # 3. TARIK PUBLIKASI (Prioritas 1: Google Scholar)
-            print("Mencoba menarik data jurnal dan sitasi dari Google Scholar...")
+            # 3. AMBIL DATA RIWAYAT PUBLIKASI (Hibrida Otomatis)
             data_scholar = ambil_data_scholar(scholar_id)
-            
-            if len(data_scholar) > 0:
-                print(f"Sukses! Mendapatkan {len(data_scholar)} publikasi dari Scholar.")
+            if data_scholar:
                 hasil["publikasi"] = data_scholar
-                
-                # Tambahkan pemikiran tidak dipublikasikan ke pengabdian dari PDDIKTI (sebagai pelengkap)
                 karya_pddikti = client.get_dosen_karya(dosen_id)
                 if karya_pddikti:
                     for p in karya_pddikti:
                         if p.get('jenis_kegiatan') == "Hasil penelitian/pemikiran yang tidak dipublikasikan":
-                            thn_int = p.get('tahun_kegiatan') or p.get('tahun_pelaksanaan') or p.get('tahun') or 'N/A'
+                            tahun_int = p.get('tahun_kegiatan') or p.get('tahun') or 'N/A'
                             hasil["pengabdian"].append({
-                                "judul": p.get('judul_kegiatan', ''),
-                                "tahun": thn_int,
-                                "kategori": "Penelitian Internal"
+                                "judul": p.get('judul_kegiatan', ''), "tahun": tahun_int, "kategori": "Penelitian Internal"
                             })
             else:
-                # FALLBACK (Prioritas 2: PDDIKTI jika Scholar diblokir)
-                print("Scholar diblokir/gagal. Menggunakan jalur cadangan (PDDIKTI)...")
+                # Jalur cadangan murni PDDIKTI jika Scholar membatasi akses
                 publikasi = client.get_dosen_karya(dosen_id)
                 if publikasi:
                     for p in publikasi:
                         judul_keg = p.get('judul_kegiatan', '').strip()
                         jenis_keg = p.get('jenis_kegiatan', 'N/A')
-                        tahun_keg = p.get('tahun_kegiatan') or p.get('tahun_pelaksanaan') or p.get('tahun') or 'N/A'
+                        tahun_keg = p.get('tahun_kegiatan') or p.get('tahun') or 'N/A'
                         
                         if jenis_keg == "Hasil penelitian/pemikiran yang tidak dipublikasikan":
                             hasil["pengabdian"].append({
                                 "judul": judul_keg, "tahun": tahun_keg, "kategori": "Penelitian Internal"
                             })
                         else:
-                            judul_lookup = judul_keg.rstrip('.')
-                            for key_judul, label_sinta in PETA_SINTA_MANUAL.items():
-                                if key_judul.lower().rstrip('.') == judul_lookup.lower():
-                                    jenis_keg = label_sinta
-                                    break
-                            
+                            tingkat = cari_akreditasi_sinta_via_garuda(judul_keg)
                             hasil["publikasi"].append({
-                                "judul": judul_keg, "jenis": jenis_keg, "tahun": tahun_keg
+                                "judul": judul_keg, "jenis": tingkat if tingkat else jenis_keg, "tahun": tahun_keg
                             })
             
-            print("Proses sinkronisasi dan klasifikasi data selesai.")
+            print("Seluruh ekstraksi data berhasil diproses.")
 
 except Exception as e:
     hasil["status"] = "error"
-    hasil["pesan"] = f"Terjadi kesalahan: {str(e)}"
+    hasil["pesan"] = str(e)
 
-# Simpan hasil akhir
 with open("data.json", "w", encoding="utf-8") as f:
     json.dump(hasil, f, indent=4, ensure_ascii=False)
 
-print("File data.json berhasil diperbarui!")
+print("File data.json diperbarui secara dinamis murni!")
