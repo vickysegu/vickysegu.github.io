@@ -193,67 +193,84 @@
         document.getElementById('data-container').style.display = 'none';
         
         try {
-            // Membaca dari data.json (ditambahkan cache-buster waktu)
             const response = await fetch('./data.json?t=' + new Date().getTime()); 
             const data = await response.json();
             
             if (data.status === 'success') {
-                // Isi Elemen Profil
                 document.getElementById('nama').innerText = data.profil.nama || '-';
                 document.getElementById('pt').innerText = data.profil.nama_pt || '-';
                 document.getElementById('prodi').innerText = data.profil.nama_prodi || '-';
                 document.getElementById('nidn').innerText = data.profil.nidn || '-';
                 
-                // Isi Hitungan Summary Statistik
                 const totalPengabdian = data.pengabdian ? data.pengabdian.length : 0;
                 const totalPublikasi = data.publikasi ? data.publikasi.length : 0;
                 
                 document.getElementById('count-pengabdian').innerText = totalPengabdian;
                 document.getElementById('count-publikasi').innerText = totalPublikasi;
+
+                // --- INJEKSI UI SINTA SCORE ---
+                // Mengecek apakah data Sinta berhasil ditarik dari backend
+                if (data.sinta_score && Object.keys(data.sinta_score).length > 0) {
+                    const profileCard = document.querySelector('.card-profile .d-flex.flex-wrap.gap-2');
+                    
+                    // Membuat HTML untuk Skor Sinta
+                    const overallScore = data.sinta_score.overall_v2 || data.sinta_score.overall || 0;
+                    const yearsScore = data.sinta_score['3_years_v2'] || data.sinta_score['3_years'] || 0;
+                    
+                    let sintaHtml = `
+                        <div class="w-100 mt-2 mb-1 border-top pt-3 d-flex flex-wrap gap-2 align-items-center">
+                            <span class="badge bg-warning text-dark border px-2 py-1.5 rounded-pill"><i class="bi bi-star-fill text-danger me-1"></i> SINTA Score: ${overallScore}</span>
+                            <span class="badge bg-light text-dark border px-2 py-1.5 rounded-pill">3 Yrs Score: ${yearsScore}</span>
+                            <div class="ms-auto d-flex gap-1">
+                    `;
+
+                    // Membuat Badge untuk Akreditasi S1 - S6 (Hanya tampilkan jika jumlah > 0)
+                    const k = data.sinta_kategori;
+                    if(k) {
+                        if(k.S1 > 0) sintaHtml += `<span class="badge bg-danger">S1: ${k.S1}</span>`;
+                        if(k.S2 > 0) sintaHtml += `<span class="badge bg-warning text-dark">S2: ${k.S2}</span>`;
+                        if(k.S3 > 0) sintaHtml += `<span class="badge bg-success">S3: ${k.S3}</span>`;
+                        if(k.S4 > 0) sintaHtml += `<span class="badge bg-info text-dark">S4: ${k.S4}</span>`;
+                        if(k.S5 > 0) sintaHtml += `<span class="badge bg-secondary">S5: ${k.S5}</span>`;
+                        if(k.S6 > 0) sintaHtml += `<span class="badge bg-secondary">S6: ${k.S6}</span>`;
+                    }
+                    
+                    sintaHtml += `</div></div>`;
+                    
+                    // Cek agar tidak duplikat saat reload
+                    if(!document.getElementById('sinta-badges-container')) {
+                        const sintaContainer = document.createElement('div');
+                        sintaContainer.id = 'sinta-badges-container';
+                        sintaContainer.className = 'w-100';
+                        sintaContainer.innerHTML = sintaHtml;
+                        profileCard.parentNode.appendChild(sintaContainer);
+                    }
+                }
                 
-                // Fungsi Generator Baris Data Modern
                 const renderContainer = (elementId, arrayData, keyText, keySub, textBadgeClass) => {
                     const container = document.getElementById(elementId);
                     container.innerHTML = '';
                     
                     if (!arrayData || arrayData.length === 0) {
-                        container.innerHTML = `
-                            <div class="text-center text-muted py-5">
-                                <i class="bi bi-folder-x fs-2 d-block mb-2 opacity-50"></i>
-                                <span class="small fw-medium">Belum ada data riwayat terdaftar.</span>
-                            </div>`;
+                        container.innerHTML = `<div class="text-center text-muted py-5"><i class="bi bi-folder-x fs-2 d-block mb-2 opacity-50"></i><span class="small fw-medium">Belum ada data riwayat.</span></div>`;
                         return;
                     }
                     
                     arrayData.forEach(item => {
-                        container.innerHTML += `
-                            <div class="data-item d-flex justify-content-between align-items-start gap-3">
-                                <div class="flex-grow-1">
-                                    <div class="fw-semibold text-dark small mb-1">${item[keyText]}</div>
-                                </div>
-                                <span class="badge ${textBadgeClass} rounded px-2 py-1 small align-self-start text-uppercase" style="font-size:0.65rem; font-weight:700;">
-                                    ${item[keySub]}
-                                </span>
-                            </div>`;
+                        container.innerHTML += `<div class="data-item d-flex justify-content-between align-items-start gap-3"><div class="flex-grow-1"><div class="fw-semibold text-dark small mb-1">${item[keyText]}</div></div><span class="badge ${textBadgeClass} rounded px-2 py-1 small align-self-start text-uppercase" style="font-size:0.65rem; font-weight:700;">${item[keySub]}</span></div>`;
                     });
                 };
 
-                // Render ke masing-masing kolom
                 renderContainer('list-pengabdian', data.pengabdian, 'judul', 'tahun', 'bg-success text-white');
                 renderContainer('list-publikasi', data.publikasi, 'judul', 'jenis', 'bg-primary text-white');
                 
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('data-container').style.display = 'block';
             } else {
-                alert(data.pesan || "Struktur data tidak sesuai.");
-                document.getElementById('loading').style.display = 'none';
+                alert(data.pesan);
             }
         } catch (error) {
-            document.getElementById('loading').innerHTML = `
-                <div class="text-center p-4 card border-danger border-opacity-20 bg-danger bg-opacity-10 rounded-3" style="max-width:500px;">
-                    <i class="bi bi-exclamation-triangle-fill text-danger fs-3 mb-2"></i>
-                    <p class="text-danger fw-semibold mb-0 small">Arsip data.json belum siap atau sedang di-generate oleh GitHub Actions. Sila tunggu beberapa menit.</p>
-                </div>`;
+            console.error(error);
         }
     }
     window.onload = fetchData;
