@@ -64,7 +64,6 @@ def ambil_data_scholar(scholar_id):
                 year_elem = row.find("span", class_="gsc_a_h")
                 tahun = year_elem.text.strip() if year_elem and year_elem.text.strip() else "N/A"
                 
-                # Deteksi otomatis tingkat SINTA tanpa hardcoded map
                 tingkat = cari_akreditasi_sinta_via_garuda(judul)
                 jenis_keg = tingkat if tingkat else "Jurnal Ilmiah"
                 
@@ -94,28 +93,33 @@ try:
         if not dosen_id:
             hasil["pesan"] = "Profil Dosen tidak ditemukan pada basis data PDDIKTI."
         else:
-            # 1. AMBIL DATA RIWAYAT MENGAJAR (Dinamis dari PDDIKTI)
+            # 1. AMBIL DATA RIWAYAT MENGAJAR (Perbaikan Metode Asli)
             try:
-                mengajar_raw = client.get_dosen_mengajar(dosen_id)
+                mengajar_raw = client.get_dosen_teaching_history(dosen_id)
                 if mengajar_raw:
+                    # Mengakomodasi bila API merespon dengan tipe dict atau list
+                    mengajar_list = mengajar_raw.get('data', []) if isinstance(mengajar_raw, dict) else mengajar_raw
+                    
                     matkul_tercatat = set()
-                    for m in mengajar_raw:
-                        nama_matkul = m.get('nama_mata_kuliah', 'N/A').strip().title()
-                        semester = m.get('nama_semester') or m.get('id_semester') or 'N/A'
-                        # Eliminasi duplikasi kelas paralel agar ringkas
-                        if nama_matkul not in matkul_tercatat:
+                    for m in mengajar_list:
+                        nama_matkul = str(m.get('nama_mata_kuliah') or m.get('mata_kuliah') or m.get('mk') or 'N/A').strip().title()
+                        semester = str(m.get('nama_semester') or m.get('id_semester') or m.get('semester') or 'N/A')
+                        
+                        # Eliminasi kelas paralel (menghindari duplikasi baris di CV)
+                        if nama_matkul != 'N/A' and nama_matkul not in matkul_tercatat:
                             matkul_tercatat.add(nama_matkul)
                             hasil["mengajar"].append({
                                 "matkul": nama_matkul,
                                 "semester": semester
                             })
             except Exception as e:
-                print(f"Gagal memuat riwayat mengajar: {str(e)}")
+                print(f"Peringatan modul mengajar: {str(e)}")
 
             # 2. AMBIL DATA RIWAYAT PENGABDIAN
             pengabdian = client.get_dosen_pengabdian(dosen_id)
             if pengabdian:
-                for p in pengabdian:
+                pengabdian_list = pengabdian.get('data', []) if isinstance(pengabdian, dict) else pengabdian
+                for p in pengabdian_list:
                     tahun = p.get('tahun_kegiatan') or p.get('tahun') or 'N/A'
                     hasil["pengabdian"].append({
                         "judul": p.get('judul_kegiatan', 'N/A'), "tahun": tahun, "kategori": "Pengabdian"
@@ -127,17 +131,18 @@ try:
                 hasil["publikasi"] = data_scholar
                 karya_pddikti = client.get_dosen_karya(dosen_id)
                 if karya_pddikti:
-                    for p in karya_pddikti:
+                    karya_list = karya_pddikti.get('data', []) if isinstance(karya_pddikti, dict) else karya_pddikti
+                    for p in karya_list:
                         if p.get('jenis_kegiatan') == "Hasil penelitian/pemikiran yang tidak dipublikasikan":
                             tahun_int = p.get('tahun_kegiatan') or p.get('tahun') or 'N/A'
                             hasil["pengabdian"].append({
                                 "judul": p.get('judul_kegiatan', ''), "tahun": tahun_int, "kategori": "Penelitian Internal"
                             })
             else:
-                # Jalur cadangan murni PDDIKTI jika Scholar membatasi akses
                 publikasi = client.get_dosen_karya(dosen_id)
                 if publikasi:
-                    for p in publikasi:
+                    publikasi_list = publikasi.get('data', []) if isinstance(publikasi, dict) else publikasi
+                    for p in publikasi_list:
                         judul_keg = p.get('judul_kegiatan', '').strip()
                         jenis_keg = p.get('jenis_kegiatan', 'N/A')
                         tahun_keg = p.get('tahun_kegiatan') or p.get('tahun') or 'N/A'
