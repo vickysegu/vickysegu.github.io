@@ -272,12 +272,57 @@
       font-size: 0.88rem; font-weight: 700; line-height: 1.35;
       color: var(--text-primary); margin-bottom: 8px;
     }
+    .edu-prodi {
+      font-size: 0.80rem; font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+      line-height: 1.3;
+    }
     .edu-year {
       font-size: 0.78rem; font-weight: 600;
       color: var(--text-muted);
       display: flex; align-items: center; gap: 5px;
     }
     .edu-year i { font-size: 0.7rem; }
+
+    /* ─── STATS BAR ──────────────────────────────────────────────────── */
+    .stats-bar {
+      display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;
+    }
+    .stat-pill {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 8px 16px;
+      background: rgba(255,255,255,0.28);
+      border: 1px solid rgba(255,255,255,0.42);
+      border-radius: var(--radius-pill);
+      backdrop-filter: blur(12px);
+      font-size: 0.80rem; font-weight: 700;
+      color: var(--text-secondary);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .stat-pill:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(100,120,200,0.12);
+    }
+    .stat-pill .stat-num {
+      font-size: 1.02rem; font-weight: 800;
+      background: linear-gradient(90deg, var(--blue-accent), var(--indigo-accent));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .stat-pill i { color: var(--blue-accent); font-size: 0.78rem; }
+
+    /* ─── CITATION BADGE ─────────────────────────────────────────────── */
+    .cite-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px;
+      border-radius: var(--radius-pill);
+      background: rgba(255,179,0,0.12);
+      border: 1px solid rgba(255,179,0,0.28);
+      font-size: 0.72rem; font-weight: 800;
+      color: #a06800;
+    }
+    .cite-badge i { font-size: 0.65rem; color: #d48a00; }
 
     /* ─── TABS ───────────────────────────────────────────────────────── */
     .tab-bar {
@@ -485,6 +530,9 @@
 
   <!-- ── TABS: Teaching / Research / Service ── -->
   <div class="glass" style="padding: 30px 36px;">
+    <!-- Stats Bar -->
+    <div class="stats-bar" id="stats-bar"></div>
+
     <div class="tab-bar">
       <button class="tab-btn active" onclick="switchTab('teaching', this)">
         <i class="fa-solid fa-chalkboard-user"></i>
@@ -562,12 +610,18 @@ async function loadData() {
 
     /* Education */
     const sorted = [...(data.pendidikan || [])].sort((a, b) => +b.tahun - +a.tahun);
-    $('edu-grid').innerHTML = sorted.map(e => `
+    $('edu-grid').innerHTML = sorted.map(e => {
+      const prodiLine = (e.prodi && e.prodi !== 'N/A')
+        ? `<div class="edu-prodi"><i class="fa-solid fa-layer-group" style="font-size:.65rem;color:var(--blue-accent);margin-right:4px;"></i>${e.prodi}</div>`
+        : '';
+      return `
       <div class="edu-card">
         <div class="edu-degree">${e.jenjang}</div>
         <div class="edu-uni">${e.pt}</div>
+        ${prodiLine}
         <div class="edu-year"><i class="fa-regular fa-calendar"></i> Lulus ${e.tahun}</div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
 
     /* Teaching */
     const tc = $('teaching-content');
@@ -588,16 +642,42 @@ async function loadData() {
       }).join('');
     }
 
-    /* Publications */
+    /* Publications + Stats Bar */
     const rc = $('research-content');
     if (!data.publikasi || !data.publikasi.length) {
       rc.innerHTML = '<p style="color:var(--text-muted);font-size:.85rem;">Tidak ada data.</p>';
     } else {
+      // hitung total sitasi
+      const totalSitasi = data.publikasi.reduce((acc, pub) => {
+        const n = parseInt(pub.sitasi || '0', 10);
+        return acc + (isNaN(n) ? 0 : n);
+      }, 0);
+      const totalPub    = data.publikasi.length;
+      const totalMengajar = (data.mengajar || []).reduce((a, k) => a + (k.mata_kuliah || []).length, 0);
+      const totalPengabdian = (data.pengabdian || []).length;
+
+      // render stats bar
+      $('stats-bar').innerHTML = [
+        { icon: 'fa-book-open',        num: totalPub,        label: 'Publikasi' },
+        { icon: 'fa-star',             num: totalSitasi,     label: 'Total Sitasi' },
+        { icon: 'fa-chalkboard-user',  num: totalMengajar,   label: 'Mata Kuliah' },
+        { icon: 'fa-handshake-angle',  num: totalPengabdian, label: 'Pengabdian' },
+      ].map(s => `
+        <div class="stat-pill">
+          <i class="fa-solid ${s.icon}"></i>
+          <span class="stat-num">${s.num}</span>
+          <span>${s.label}</span>
+        </div>`).join('');
+
       rc.innerHTML = data.publikasi.map(pub => {
         const titleInner = pub.link
           ? `<a href="${pub.link}" target="_blank">${pub.judul} <i class="fa-solid fa-arrow-up-right-from-square"></i></a>`
           : pub.judul;
         const tc = tagClass(pub.jenis);
+        const sitasiNum = parseInt(pub.sitasi || '0', 10);
+        const citeBadge = sitasiNum > 0
+          ? `<span class="cite-badge"><i class="fa-solid fa-star"></i>${sitasiNum} Sitasi</span>`
+          : '';
         return `
           <div class="pub-item">
             <div class="pub-year-badge">${pub.tahun}</div>
@@ -605,6 +685,7 @@ async function loadData() {
               <div class="pub-title">${titleInner}</div>
               <div class="pub-meta">
                 <span class="tag ${tc}">${pub.jenis}</span>
+                ${citeBadge}
               </div>
             </div>
           </div>`;
