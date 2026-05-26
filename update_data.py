@@ -1,40 +1,47 @@
 import json
+import urllib.parse
+import requests
+from bs4 import BeautifulSoup
 from pddiktipy import api
-import sinta # <--- INI BAGIAN YANG DIPERBARUI
 
-# Parameter PDDIKTI
+# --- PARAMETER PENCARIAN DOSEN ---
 nama_dosen = "VICKY SETIA GUNAWAN"
 nama_pt = "UNIVERSITAS PERINTIS INDONESIA"
 prodi = "BISNIS DIGITAL"
 
-# Parameter SINTA
-sinta_id = "6902246"  # <--- PASTIKAN SUDAH DIGANTI DENGAN ID SINTA ANDA 
-
+# --- STRUKTUR DATA AWAL ---
 hasil = {
     "status": "error",
     "pesan": "",
     "profil": {},
-    "penelitian": [],
     "pengabdian": [],
-    "publikasi": [],
-    "sinta_score": {},
-    "sinta_kategori": {}
+    "publikasi": []
 }
 
-print("Memulai sinkronisasi data dengan PDDIKTI dan SINTA...")
+def cari_akreditasi_sinta_via_garuda(judul_artikel):
+    """Mencari peringkat akreditasi SINTA via situs Garuda (Domain Baru)"""
+    judul_encoded = urllib.parse.quote(judul_artikel)
+    url = f"https://garuda.kemdiktisaintek.go.id/documents?select=title&q={judul_encoded}"
+    
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+    }
+    
+    try:
+        response = requests.get(url, headers=headers, timeout=10)
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.text, "html.parser")
+            for link in soup.find_all("a", href=True):
+                if "/journal/view/" in link["href"]:
+                    teks_badge = link.get_text().strip()
+                    if teks_badge.startswith("S") and teks_badge[1:].isdigit():
+                        return teks_badge
+        return ""
+    except:
+        return ""
 
-# 1. AMBIL DATA DARI SINTA
-try:
-    print(f"Menarik data SINTA untuk ID: {sinta_id}...")
-    data_sinta = sinta.author(sinta_id)
-    if data_sinta:
-        hasil["sinta_score"] = data_sinta.get("score", {})
-        hasil["sinta_kategori"] = data_sinta.get("sinta", {})
-        print("Data SINTA berhasil ditarik.")
-except Exception as e:
-    print(f"Peringatan: Gagal menarik data SINTA: {str(e)}")
+print("Memulai sinkronisasi data dari PDDIKTI...")
 
-# 2. AMBIL DATA DARI PDDIKTI
 try:
     with api() as client:
         results = client.search_dosen(keyword=nama_dosen)
@@ -52,25 +59,55 @@ try:
         if not dosen_id:
             hasil["pesan"] = f"Dosen '{nama_dosen}' tidak ditemukan di PDDIKTI."
         else:
-            penelitian = client.get_dosen_penelitian(dosen_id)
-            if penelitian:
-                hasil["penelitian"] = [{"judul": p.get('judul_kegiatan', 'N/A'), "tahun": p.get('tahun_kegiatan', 'N/A')} for p in penelitian]
-
+            # 1. Ambil Riwayat Pengabdian Masyarakat Asli
             pengabdian = client.get_dosen_pengabdian(dosen_id)
             if pengabdian:
-                hasil["pengabdian"] = [{"judul": p.get('judul_kegiatan', 'N/A'), "tahun": p.get('tahun_kegiatan', 'N/A')} for p in pengabdian]
+                for p in pengabdian:
+                    tahun = p.get('tahun_kegiatan') or p.get('tahun_pelaksanaan') or p.get('tahun') or 'N/A'
+                    hasil["pengabdian"].append({
+                        "judul": p.get('judul_kegiatan', 'N/A'),
+                        "tahun": tahun,
+                        "kategori": "Pengabdian"
+                    })
 
+            # 2. Ambil Karya Ilmiah / Publikasi & Filter Pemindahan Kategori
             publikasi = client.get_dosen_karya(dosen_id)
             if publikasi:
-                hasil["publikasi"] = [{"judul": p.get('judul_kegiatan', 'N/A'), "jenis": p.get('jenis_kegiatan', 'N/A')} for p in publikasi]
+                print(f"Ditemukan {len(publikasi)} karya ilmiah. Memulai proses filter dan cek Garuda...")
+                for p in publikasi:
+                    judul_keg = p.get('judul_kegiatan', 'N/A')
+                    jenis_keg = p.get('jenis_kegiatan', 'N/A')
+                    tahun_keg = p.get('tahun_kegiatan') or p.get('tahun_pelaksanaan') or p.get('tahun') or 'N/A'
+                    
+                    # LOGIKA PEMINDAHAN: Jika tidak dipublikasikan, pindahkan ke Pengabdian/Internal
+                    if jenis_keg == "Hasil penelitian/pemikiran yang tidak dipublikasikan":
+                        hasil["pengabdian"].append({
+                            "judul": judul_keg,
+                            "tahun": tahun_keg,
+                            "kategori": "Penelitian Internal"
+                        })
+                    else:
+                        # Jika dipublikasikan, cek tingkat SINTA via Garuda
+                        print(f"Mengecek di Garuda: {judul_keg[:40]}...")
+                        tingkat = cari_akreditasi_sinta_via_garuda(judul_keg)
+                        
+                        if tingkat:
+                            jenis_keg = f"SINTA {tingkat[1:]}"
+                        
+                        hasil["publikasi"].append({
+                            "judul": judul_keg,
+                            "jenis": jenis_keg,
+                            "tahun": tahun_keg
+                        })
             
-            print("Data PDDIKTI berhasil ditarik.")
+            print("Proses sinkronisasi dan klasifikasi data selesai.")
 
 except Exception as e:
-    hasil["pesan"] = f"Terjadi kesalahan PDDIKTI: {str(e)}"
+    hasil["status"] = "error"
+    hasil["pesan"] = f"Terjadi kesalahan: {str(e)}"
 
-# Simpan ke file
+# Simpan hasil akhir ke data.json
 with open("data.json", "w", encoding="utf-8") as f:
     json.dump(hasil, f, indent=4, ensure_ascii=False)
 
-print("File data.json berhasil diperbarui!")
+print("File data.json berhasil diperbarui secara hibrida!")
