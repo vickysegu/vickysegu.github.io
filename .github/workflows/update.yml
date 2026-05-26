@@ -1,0 +1,37 @@
+name: Update PDDIKTI Data Automatically
+
+on:
+  schedule:
+    - cron: '0 17 * * *' # Berjalan otomatis setiap hari pukul 17:00 UTC (atau 00:00 WIB)
+  workflow_dispatch: # Tombol rahasia agar Anda bisa menjalankan script ini secara manual kapan saja
+
+permissions:
+  contents: write # Wajib diaktifkan agar bot bisa menyimpan file data.json ke repo
+
+jobs:
+  build-and-update:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pddiktipy
+
+    - name: Run Update Script
+      run: python update_data.py
+
+    - name: Commit and Push Changes
+      run: |
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        git add data.json
+        # Hanya commit jika ada perubahan data asli dari PDDIKTI
+        git diff --quiet && git diff --staged --quiet || (git commit -m "Umat otomatis: Perbarui data.json" && git push)
