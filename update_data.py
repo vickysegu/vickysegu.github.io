@@ -86,21 +86,23 @@ try:
         if not dosen_id:
             hasil["pesan"] = "Profil Dosen tidak ditemukan pada basis data PDDIKTI."
         else:
-            # 1. RIWAYAT PENDIDIKAN
+            # 1. RIWAYAT PENDIDIKAN (Dengan proteksi key singkatan PDDIKTI)
             try:
                 pendidikan_raw = client.get_dosen_study_history(dosen_id)
                 if pendidikan_raw:
                     pend_list = pendidikan_raw.get('data', []) if isinstance(pendidikan_raw, dict) else pendidikan_raw
                     for p in pend_list:
+                        jenjang = str(p.get('nm_sp_satdik') or p.get('gelar_akademik') or p.get('jenjang_pendidikan') or p.get('singkatan_gelar') or 'N/A')
+                        kampus = str(p.get('nm_pt') or p.get('nama_perguruan_tinggi') or 'N/A').upper()
+                        tahun_lulus = str(p.get('thn_lulus') or p.get('tahun_lulus') or p.get('tahun') or 'N/A')
+                        
                         hasil["pendidikan"].append({
-                            "jenjang": p.get('gelar_akademik') or p.get('jenjang_pendidikan') or 'N/A',
-                            "pt": p.get('nama_perguruan_tinggi') or 'N/A',
-                            "tahun": p.get('tahun_lulus') or 'N/A'
+                            "jenjang": jenjang, "pt": kampus, "tahun": tahun_lulus
                         })
             except Exception as e:
                 print(f"Peringatan riwayat pendidikan: {str(e)}")
 
-            # 2. RIWAYAT MENGAJAR (Dengan Grouping Semester Terpadat)
+            # 2. RIWAYAT MENGAJAR (Dilengkapi Nama Kampus)
             try:
                 mengajar_raw = client.get_dosen_teaching_history(dosen_id)
                 if mengajar_raw:
@@ -108,20 +110,25 @@ try:
                     matkul_dict = {}
                     
                     for m in mengajar_list:
-                        nama_matkul = str(m.get('nama_mata_kuliah') or 'N/A').strip().title()
-                        semester = str(m.get('nama_semester') or 'N/A')
+                        # Menangkap singkatan: nm_mk, nm_pt, id_smt
+                        nama_matkul = str(m.get('nm_mk') or m.get('nama_mata_kuliah') or m.get('mata_kuliah') or 'N/A').strip().title()
+                        nama_kampus = str(m.get('nm_pt') or m.get('nama_pt') or m.get('perguruan_tinggi') or 'N/A').strip().upper()
+                        semester = str(m.get('id_smt') or m.get('id_semester') or m.get('nama_semester') or 'N/A')
                         
                         if nama_matkul != 'N/A' and nama_matkul != 'None':
-                            if nama_matkul not in matkul_dict:
-                                matkul_dict[nama_matkul] = set()
+                            # Jadikan matkul & kampus sebagai 1 ID grup agar rapi
+                            kunci = f"{nama_matkul} | {nama_kampus}"
+                            if kunci not in matkul_dict:
+                                matkul_dict[kunci] = {"matkul": nama_matkul, "kampus": nama_kampus, "semester": set()}
+                            
                             if semester != 'N/A' and semester != 'None':
-                                matkul_dict[nama_matkul].add(semester)
+                                matkul_dict[kunci]["semester"].add(semester)
                     
-                    for matkul, sem_set in matkul_dict.items():
-                        # Urutkan semester dari yang terbaru
-                        sorted_sems = sorted(list(sem_set), reverse=True)
+                    for kunci, data_mk in matkul_dict.items():
+                        sorted_sems = sorted(list(data_mk["semester"]), reverse=True)
                         hasil["mengajar"].append({
-                            "matkul": matkul,
+                            "matkul": data_mk["matkul"],
+                            "kampus": data_mk["kampus"],
                             "semester": ", ".join(sorted_sems) if sorted_sems else "N/A"
                         })
             except Exception as e:
