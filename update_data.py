@@ -8,7 +8,7 @@ nama_pt = "UNIVERSITAS PERINTIS INDONESIA"
 prodi = "BISNIS DIGITAL"
 
 # Parameter SINTA
-sinta_id = 1234567  # <--- GANTI DENGAN ID SINTA ANDA 
+sinta_id = 6902246  # <--- GANTI DENGAN ID SINTA ANDA 
 
 hasil = {
     "status": "error",
