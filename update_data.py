@@ -112,7 +112,14 @@ def ambil_data_scholar(scholar_id):
                 
                 tingkat = cari_akreditasi_sinta_via_garuda(judul)
                 jenis_keg = tingkat if tingkat else "Jurnal Ilmiah"
-                publikasi_scholar.append({"judul": judul, "jenis": jenis_keg, "tahun": tahun, "sitasi": sitasi, "link": link})
+                # ── sitasi selalu diisi (int-safe) ──
+                publikasi_scholar.append({
+                    "judul": judul,
+                    "jenis": jenis_keg,
+                    "tahun": tahun,
+                    "sitasi": sitasi,   # <── field sitasi
+                    "link": link
+                })
     except:
         pass
     return publikasi_scholar
@@ -132,19 +139,31 @@ try:
                     break
         
         if dosen_id:
-            # 1. PENDIDIKAN
+            # ── 1. PENDIDIKAN (+ prodi / bidang studi) ──────────────────────
             try:
                 pendidikan_raw = client.get_dosen_study_history(dosen_id)
                 if pendidikan_raw:
                     pend_list = pendidikan_raw.get('data', []) if isinstance(pendidikan_raw, dict) else pendidikan_raw
                     for p in pend_list:
-                        jenjang = cari_nilai_fleksibel(p, ['gelar', 'jenjang', 'sp_satdik'], ['id', 'kode'])
-                        kampus = cari_nilai_fleksibel(p, ['pt', 'perguruan_tinggi'], ['id', 'kode', 'singkat']).upper()
+                        jenjang    = cari_nilai_fleksibel(p, ['gelar', 'jenjang', 'sp_satdik'], ['id', 'kode'])
+                        kampus     = cari_nilai_fleksibel(p, ['pt', 'perguruan_tinggi'], ['id', 'kode', 'singkat']).upper()
                         tahun_lulus = cari_nilai_fleksibel(p, ['tahun_lulus', 'thn_lulus', 'tahun'], ['id'])
-                        hasil["pendidikan"].append({"jenjang": jenjang, "pt": kampus, "tahun": tahun_lulus})
+                        # ── BARU: ambil program studi / bidang studi ──
+                        nama_prodi = cari_nilai_fleksibel(
+                            p,
+                            ['prodi', 'nama_prodi', 'program_studi', 'bidang_studi',
+                             'sp_jenjang', 'nama_bidang', 'nm_prodi', 'bidang'],
+                            ['id', 'kode']
+                        )
+                        hasil["pendidikan"].append({
+                            "jenjang":    jenjang,
+                            "pt":         kampus,
+                            "tahun":      tahun_lulus,
+                            "prodi":      nama_prodi   # <── field baru
+                        })
             except: pass
 
-            # 2. MENGAJAR (HIERARKI BARU: KAMPUS -> MATKUL -> LIST SEMESTER)
+            # ── 2. MENGAJAR (hierarki kampus → matkul → semester) ───────────
             try:
                 mengajar_raw = client.get_dosen_teaching_history(dosen_id)
                 if mengajar_raw:
@@ -170,7 +189,7 @@ try:
                         hasil["mengajar"].append(data_kampus)
             except: pass
 
-            # 3. PENGABDIAN
+            # ── 3. PENGABDIAN ────────────────────────────────────────────────
             try:
                 pengabdian = client.get_dosen_pengabdian(dosen_id)
                 if pengabdian:
@@ -181,7 +200,7 @@ try:
                         hasil["pengabdian"].append({"judul": judul, "tahun": tahun, "kategori": "Pengabdian"})
             except: pass
 
-            # 4. PUBLIKASI DENGAN LINK FALLBACK
+            # ── 4. PUBLIKASI (Scholar utama, pddikti fallback) ───────────────
             data_scholar = ambil_data_scholar(scholar_id)
             if data_scholar:
                 hasil["publikasi"] = data_scholar
@@ -191,8 +210,13 @@ try:
                     for p in karya_list:
                         jenis = cari_nilai_fleksibel(p, ['jenis'], ['id', 'kode'])
                         if jenis == "Hasil penelitian/pemikiran yang tidak dipublikasikan":
-                            hasil["pengabdian"].append({"judul": cari_nilai_fleksibel(p, ['judul'], ['id']), "tahun": cari_nilai_fleksibel(p, ['tahun'], ['id']), "kategori": "Penelitian Internal"})
+                            hasil["pengabdian"].append({
+                                "judul": cari_nilai_fleksibel(p, ['judul'], ['id']),
+                                "tahun": cari_nilai_fleksibel(p, ['tahun'], ['id']),
+                                "kategori": "Penelitian Internal"
+                            })
             else:
+                # Fallback: gunakan pddikti karya + MANUAL_LINKS
                 publikasi = client.get_dosen_karya(dosen_id)
                 if publikasi:
                     publikasi_list = publikasi.get('data', []) if isinstance(publikasi, dict) else publikasi
@@ -206,19 +230,19 @@ try:
                         else:
                             tingkat = cari_akreditasi_sinta_via_garuda(judul_keg)
                             
-                            # INJEKSI LINK MANUAL JIKA SCHOLAR DIBLOKIR
                             link_terselamatkan = ""
                             judul_lookup = judul_keg.lower().rstrip('.')
                             for dict_judul, dict_link in MANUAL_LINKS.items():
                                 if dict_judul.lower().rstrip('.') in judul_lookup or judul_lookup in dict_judul.lower():
                                     link_terselamatkan = dict_link
                                     break
-                                    
+                            
                             hasil["publikasi"].append({
-                                "judul": judul_keg, 
-                                "jenis": tingkat if tingkat else jenis_keg, 
-                                "tahun": tahun_keg, 
-                                "link": link_terselamatkan
+                                "judul":  judul_keg,
+                                "jenis":  tingkat if tingkat else jenis_keg,
+                                "tahun":  tahun_keg,
+                                "sitasi": "0",   # <── fallback sitasi = 0 jika Scholar diblokir
+                                "link":   link_terselamatkan
                             })
 
 except Exception as e:
