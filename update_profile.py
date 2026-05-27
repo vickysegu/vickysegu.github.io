@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 """
-Profil Dosen Integrator untuk GitHub Actions.
-Menggabungkan data dari PDDIKTI, SINTA/Garuda, Semantic Scholar, dan link manual.
-Tidak melakukan scraping Google Scholar (terlalu sering diblokir di CI/CD).
+Profil Dosen Integrator untuk GitHub Actions (OpenAlex Edition).
+Sumber:
+- PDDIKTI (daftar karya, mengajar, pendidikan, pengabdian)
+- OpenAlex API (sitasi) – gratis, tanpa key, limit 100k/hari
+- Semantic Scholar (fallback sitasi)
+- Portal Garuda (akreditasi SINTA)
+- Daftar link manual
 """
 
 import json
@@ -22,7 +26,7 @@ from pddiktipy import api
 NAMA_DOSEN = os.getenv("NAMA_DOSEN", "VICKY SETIA GUNAWAN")
 NAMA_PT    = os.getenv("NAMA_PT",    "UNIVERSITAS PERINTIS INDONESIA")
 PRODI      = os.getenv("PRODI",      "BISNIS DIGITAL")
-SCHOLAR_ID = os.getenv("SCHOLAR_ID", "zxh3WngAAAAJ")
+SCHOLAR_ID = os.getenv("SCHOLAR_ID", "zxh3WngAAAAJ")  # tidak dipakai untuk scraping, hanya info
 
 # ─── LOGGING ─────────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -32,7 +36,7 @@ logging.basicConfig(
 )
 log = logging.getLogger(__name__)
 
-# ─── LINK MANUAL JURNAL (jika tidak terdeteksi otomatis) ─────────────────
+# ─── LINK MANUAL ─────────────────────────────────────────────────────────
 MANUAL_LINKS = {
     "Beyond experience: how customer engagement transforms AI interactions into Generation Z loyalty":
         "https://scholar.google.com/citations?view_op=view_citation&hl=id&user=zxh3WngAAAAJ&citation_for_view=zxh3WngAAAAJ:d1gIgvwA3N8C",
@@ -68,7 +72,6 @@ hasil = {
 # ─── HELPERS ─────────────────────────────────────────────────────────────
 
 def cari_nilai_fleksibel(kamus_data: dict, daftar_kata_kunci: list, kecualikan: Optional[list] = None) -> str:
-    """Ambil nilai dari dict berdasarkan beberapa kunci, dengan toleransi."""
     if kecualikan is None:
         kecualikan = []
     if not isinstance(kamus_data, dict):
@@ -86,7 +89,6 @@ def cari_nilai_fleksibel(kamus_data: dict, daftar_kata_kunci: list, kecualikan: 
     return "N/A"
 
 def parse_semester(sem_str: str) -> str:
-    """Ubah string semester menjadi format 'Ganjil 2024/2025'."""
     sem_str = str(sem_str).strip()
     thn_ajaran, tipe = "", ""
     match_angka = re.match(r"^(\d{4})([123])$", sem_str)
@@ -112,11 +114,10 @@ def parse_semester(sem_str: str) -> str:
     return f"{tipe} {thn_ajaran}".strip() if thn_ajaran else sem_str
 
 def request_with_retry(url: str, headers: dict = None, params: dict = None, max_retries: int = 3) -> Optional[requests.Response]:
-    """Kirim GET request dengan mekanisme retry sederhana."""
     for attempt in range(max_retries):
         try:
             resp = requests.get(url, headers=headers, params=params, timeout=20)
-            if resp.status_code == 429:  # Too Many Requests
+            if resp.status_code == 429:
                 wait = 10 * (attempt + 1)
                 log.warning(f"Rate limited. Menunggu {wait} detik...")
                 time.sleep(wait)
@@ -127,53 +128,72 @@ def request_with_retry(url: str, headers: dict = None, params: dict = None, max_
             time.sleep(5)
     return None
 
-# ─── SITASI DARI SEMANTIC SCHOLAR ────────────────────────────────────────
+# ─── SITASI: OPENALEX (UTAMA) + SEMANTIC SCHOLAR (FALLBACK) ─────────────
 
-def cari_sitasi_semantic_scholar(judul: str) -> str:
-    """Cari jumlah sitasi di Semantic Scholar. Return '0' jika tidak ditemukan."""
+def cari_sitasi_openalex(judul: str) -> str:
+    """Cari jumlah sitasi di OpenAlex berdasarkan judul."""
     judul_clean = " ".join(judul.strip().rstrip('."').split())
     if not judul_clean:
         return "0"
-
-    params = {
-        "query": judul_clean,
-        "fields": "title,year,citationCount",
-        "limit": 5,
-    }
-    headers = {"User-Agent": "GitHubActions-AcademicUpdater/1.0"}
-    resp = request_with_retry("https://api.semanticscholar.org/graph/v1/paper/search", headers=headers, params=params)
-
+    params = {"search": judul_clean, "per_page": 3}
+    headers = {"User-Agent": "GitHubActions-ProfileUpdater/1.0"}
+    resp = request_with_retry("https://api.openalex.org/works", headers=headers, params=params)
     if resp and resp.status_code == 200:
         data = resp.json()
-        papers = data.get("data", [])
-        judul_lower = judul_clean.lower()
-        for paper in papers:
-            result_title = (paper.get("title") or "").lower()
-            # Pencocokan berbasis kata (toleransi minimal 60% kata cocok)
-            common = sum(1 for w in judul_lower.split() if w in result_title)
-            total = len(judul_lower.split())
-            if total > 0 and common / total >= 0.6:
-                count = paper.get("citationCount", 0)
+        for work in data.get("results", []):
+            title_api = work.get("title") or ""
+            # Pencocokan fuzzy sederhana
+            judul_lower = judul_clean.lower()
+            title_lower = title_api.lower()
+            if judul_lower in title_lower or title_lower in judul_lower:
+                count = work.get("cited_by_count", 0)
                 return str(count) if count else "0"
     return "0"
 
+def cari_sitasi_semantic_scholar(judul: str) -> str:
+    """Fallback: Semantic Scholar API."""
+    judul_clean = " ".join(judul.strip().rstrip('."').split())
+    if not judul_clean:
+        return "0"
+    params = {"query": judul_clean, "fields": "title,citationCount", "limit": 5}
+    headers = {"User-Agent": "GitHubActions-ProfileUpdater/1.0"}
+    resp = request_with_retry("https://api.semanticscholar.org/graph/v1/paper/search", headers=headers, params=params)
+    if resp and resp.status_code == 200:
+        papers = resp.json().get("data", [])
+        judul_lower = judul_clean.lower()
+        for paper in papers:
+            result_title = (paper.get("title") or "").lower()
+            common = sum(1 for w in judul_lower.split() if w in result_title)
+            total = len(judul_lower.split())
+            if total > 0 and common / total >= 0.6:
+                return str(paper.get("citationCount", 0))
+    return "0"
+
 def enrichment_sitasi_batch(daftar_publikasi: list) -> list:
-    """Perbarui 'sitasi' untuk semua publikasi, dengan rate limit 1 req/detik."""
     log.info(f"Memperkaya sitasi untuk {len(daftar_publikasi)} publikasi...")
     for i, pub in enumerate(daftar_publikasi):
         if pub.get("sitasi", "0") not in ("0", "", None):
-            log.debug(f"[{i+1}] Sudah ada sitasi ({pub['sitasi']}): {pub['judul'][:50]}...")
+            log.debug(f"[{i+1}] Sudah ada sitasi ({pub['sitasi']})")
             continue
+
+        # Coba OpenAlex dulu
+        sitasi = cari_sitasi_openalex(pub["judul"])
+        if sitasi != "0":
+            log.info(f"[{i+1}] OpenAlex: {sitasi} - {pub['judul'][:50]}...")
+            pub["sitasi"] = sitasi
+            time.sleep(0.2)  # OpenAlex lebih longgar, kita bisa lebih cepat
+            continue
+
+        # Fallback ke Semantic Scholar
         sitasi = cari_sitasi_semantic_scholar(pub["judul"])
+        log.info(f"[{i+1}] SemanticScholar: {sitasi} - {pub['judul'][:50]}...")
         pub["sitasi"] = sitasi
-        log.info(f"[{i+1}] {sitasi} sitasi: {pub['judul'][:60]}...")
-        time.sleep(1.2)  # aman: 100 request/5 menit
+        time.sleep(1.1)  # rate limit Semantic Scholar
     return daftar_publikasi
 
-# ─── AKREDITASI SINTA VIA GARUDA ─────────────────────────────────────────
+# ─── SINTA VIA GARUDA ────────────────────────────────────────────────────
 
 def cari_akreditasi_sinta_via_garuda(judul_artikel: str) -> str:
-    """Ambil akreditasi SINTA dari portal Garuda."""
     judul_clean = " ".join(judul_artikel.strip().rstrip('.').split())
     if not judul_clean:
         return ""
@@ -194,10 +214,8 @@ def cari_akreditasi_sinta_via_garuda(judul_artikel: str) -> str:
         pass
     return ""
 
-# ─── CARI LINK MANUAL ────────────────────────────────────────────────────
-
 def cari_link_manual(judul: str) -> str:
-    """Cocokkan judul dengan daftar link manual."""
+    """Cocokkan dengan MANUAL_LINKS."""
     judul_bersih = re.sub(r'[^\w\s]', '', judul).lower().strip()
     for simpan_judul, link in MANUAL_LINKS.items():
         simpan_bersih = re.sub(r'[^\w\s]', '', simpan_judul).lower().strip()
@@ -208,10 +226,9 @@ def cari_link_manual(judul: str) -> str:
 # ─── MAIN ────────────────────────────────────────────────────────────────
 
 def main():
-    log.info("Memulai sinkronisasi data dosen...")
+    log.info("Memulai sinkronisasi data dosen (OpenAlex edition)...")
     try:
         with api() as client:
-            # Cari dosen
             results = client.search_dosen(keyword=NAMA_DOSEN)
             dosen_id = None
             if results:
@@ -221,7 +238,6 @@ def main():
                         dosen_id = dosen.get("id")
                         hasil["status"] = "success"
                         break
-
             if not dosen_id:
                 hasil["pesan"] = f"Dosen '{NAMA_DOSEN}' di PT '{NAMA_PT}' tidak ditemukan."
                 log.error(hasil["pesan"])
@@ -241,7 +257,7 @@ def main():
                             "tahun": cari_nilai_fleksibel(p, ["tahun_lulus", "thn_lulus", "tahun"], ["id"]),
                             "prodi": cari_nilai_fleksibel(p, ["prodi", "nama_prodi", "program_studi", "bidang_studi"], ["id", "kode"]),
                         })
-                    log.info(f"Pendidikan: {len(hasil['pendidikan'])} entri.")
+                    log.info(f"Pendidikan: {len(hasil['pendidikan'])} entri")
             except Exception as e:
                 log.error(f"Gagal mengambil pendidikan: {e}")
 
@@ -265,11 +281,11 @@ def main():
                             sems = sorted(matkul_tree[kampus][mk], reverse=True)
                             mk_list.append({"nama": mk, "semester": ", ".join(sems) or "N/A"})
                         hasil["mengajar"].append({"nama_kampus": kampus, "mata_kuliah": mk_list})
-                    log.info(f"Mengajar: {len(hasil['mengajar'])} kampus.")
+                    log.info(f"Mengajar: {len(hasil['mengajar'])} kampus")
             except Exception as e:
                 log.error(f"Gagal mengambil mengajar: {e}")
 
-            # 3. Pengabdian & publikasi (dari PDDIKTI)
+            # 3. Pengabdian & Publikasi
             try:
                 # Pengabdian resmi
                 pengabdian_raw = client.get_dosen_pengabdian(dosen_id)
@@ -281,7 +297,7 @@ def main():
                             "kategori": "Pengabdian",
                         })
 
-                # Karya (publikasi & penelitian internal)
+                # Karya ilmiah
                 karya_pddikti = client.get_dosen_karya(dosen_id)
                 if karya_pddikti:
                     for p in (karya_pddikti.get("data", []) if isinstance(karya_pddikti, dict) else karya_pddikti):
@@ -302,10 +318,10 @@ def main():
                                 "judul": judul_keg,
                                 "jenis": tingkat if tingkat else jenis_keg,
                                 "tahun": tahun_keg,
-                                "sitasi": "0",  # akan diperbarui
+                                "sitasi": "0",
                                 "link": link,
                             })
-                log.info(f"Publikasi awal: {len(hasil['publikasi'])} | Pengabdian: {len(hasil['pengabdian'])}")
+                log.info(f"Publikasi: {len(hasil['publikasi'])}, Pengabdian: {len(hasil['pengabdian'])}")
             except Exception as e:
                 log.error(f"Gagal mengambil publikasi/pengabdian: {e}")
 
@@ -318,12 +334,10 @@ def main():
         hasil["pesan"] = str(e)
         log.exception("Error utama:")
 
-    # Tulis output
     with open("data.json", "w", encoding="utf-8") as f:
         json.dump(hasil, f, indent=4, ensure_ascii=False)
 
     log.info("✔ data.json berhasil dibuat.")
-    # Jika dalam GitHub Actions, cetak ringkasan
     if os.getenv("GITHUB_ACTIONS"):
         print(f"::notice title=Profil Dosen::Status: {hasil['status']}, Publikasi: {len(hasil['publikasi'])}")
 
