@@ -62,7 +62,6 @@
       background: #0f172a url('https://images.unsplash.com/photo-1723621901726-eacc52c8fc4d?q=80&w=2070&auto=format') center/cover no-repeat fixed;
       color: var(--text-primary); -webkit-font-smoothing: antialiased;
       display: flex; align-items: center; justify-content: center;
-      /* DITAMBAHKAN calc(+ 30px) AGAR TIDAK SESAK DI ATAS HP */
       padding: calc(var(--safe-top) + 30px) 20px var(--safe-bottom) 20px; 
     }
 
@@ -77,7 +76,7 @@
 
     @media (min-width: 768px) {
       .app-container { flex-direction: row; height: 85vh; }
-      body { padding: var(--safe-top) 20px var(--safe-bottom) 20px; } /* Reset padding di Desktop */
+      body { padding: var(--safe-top) 20px var(--safe-bottom) 20px; }
     }
 
     /* ══════════════════════════════════════════════
@@ -107,7 +106,7 @@
 
     .profile-info { flex: 1; }
     .profile-name { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 2px; text-shadow: 0 2px 8px rgba(0,0,0,0.3); }
-    .profile-role { font-size: 13px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .profile-role { font-size: 13px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
     .profile-bio { display: none; }
     
     .social-links { display: flex; gap: 8px; margin-top: 12px; }
@@ -201,7 +200,8 @@
         border-radius: 28px; padding: 8px; justify-content: space-between; gap: 4px;
       }
       
-      .window-body { padding-bottom: 110px; }
+      /* PERBAIKAN: Ruang bawah yang luas agar konten tidak tertutup Navbar */
+      .window-body { padding-bottom: 140px; }
       
       .nav-tab { flex-direction: column; padding: 10px 4px; gap: 6px; flex: 1; border-radius: 20px; }
       .nav-tab i { font-size: 18px; margin-bottom: 2px; }
@@ -310,11 +310,18 @@
       $('scroll-area').scrollTop = 0;
     }
 
-    // Fungsi bantu untuk mengekstrak angka tahun tertinggi dari teks (contoh: "Ganjil 2025/2026" -> 2026)
+    // Fungsi bantu untuk mengekstrak angka tahun tertinggi dari teks semester
     function getLatestYear(str) {
       if (!str) return 0;
       const years = [...str.matchAll(/\d{4}/g)].map(m => parseInt(m[0]));
       return years.length ? Math.max(...years) : 0;
+    }
+
+    // Fungsi bantu untuk mendapatkan tahun terbaru dari satu kampus penuh
+    function getCampusLatestYear(kampus) {
+      if (!kampus.mata_kuliah || kampus.mata_kuliah.length === 0) return 0;
+      const years = kampus.mata_kuliah.map(mk => getLatestYear(mk.semester));
+      return Math.max(...years);
     }
 
     async function loadData() {
@@ -342,15 +349,19 @@
           </div>
         `).join('');
 
-        // 3. Setup Mengajar (DENGAN SORTING TAHUN TERKINI)
+        // 3. Setup Mengajar (DENGAN SORTING KAMPUS & MATKUL TERKINI)
         const tc = $('teach-content');
         if (!data.mengajar || !data.mengajar.length) {
           tc.innerHTML = '<p style="color:var(--text-tertiary); font-size:14px;">Tidak ada data.</p>';
         } else {
           let tCount = 0;
-          tc.innerHTML = data.mengajar.map(kampus => {
+
+          // Urutkan Kampus dari yang paling baru ke lama
+          const sortedKampus = [...data.mengajar].sort((a, b) => getCampusLatestYear(b) - getCampusLatestYear(a));
+
+          tc.innerHTML = sortedKampus.map(kampus => {
             
-            // Urutkan Mata Kuliah dari yang paling baru ke lama
+            // Urutkan Mata Kuliah di dalam kampus dari yang paling baru ke lama
             const sortedMatkul = (kampus.mata_kuliah || []).sort((a, b) => getLatestYear(b.semester) - getLatestYear(a.semester));
 
             const courses = sortedMatkul.map(mk => {
