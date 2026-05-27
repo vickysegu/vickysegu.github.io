@@ -62,7 +62,8 @@
       background: #0f172a url('https://images.unsplash.com/photo-1723621901726-eacc52c8fc4d?q=80&w=2070&auto=format') center/cover no-repeat fixed;
       color: var(--text-primary); -webkit-font-smoothing: antialiased;
       display: flex; align-items: center; justify-content: center;
-      padding: var(--safe-top) 20px var(--safe-bottom) 20px;
+      /* DITAMBAHKAN calc(+ 30px) AGAR TIDAK SESAK DI ATAS HP */
+      padding: calc(var(--safe-top) + 30px) 20px var(--safe-bottom) 20px; 
     }
 
     /* ══════════════════════════════════════════════
@@ -76,6 +77,7 @@
 
     @media (min-width: 768px) {
       .app-container { flex-direction: row; height: 85vh; }
+      body { padding: var(--safe-top) 20px var(--safe-bottom) 20px; } /* Reset padding di Desktop */
     }
 
     /* ══════════════════════════════════════════════
@@ -130,7 +132,6 @@
     ══════════════════════════════════════════════ */
     .main-window { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
 
-    /* Navigasi Default (Desktop) */
     .window-header {
       padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.15);
       display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none;
@@ -193,51 +194,20 @@
     ══════════════════════════════════════════════ */
     @media (max-width: 767px) {
       .window-header {
-        position: fixed;
-        bottom: 24px;
-        left: 20px;
-        right: 20px;
-        z-index: 1000;
-        
-        /* Floating Liquid Glass Effect */
-        background: rgba(15, 23, 42, 0.65); 
-        backdrop-filter: blur(24px) saturate(200%);
-        -webkit-backdrop-filter: blur(24px) saturate(200%);
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        border-top: 1px solid rgba(255, 255, 255, 0.3);
+        position: fixed; bottom: 24px; left: 20px; right: 20px; z-index: 1000;
+        background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(24px) saturate(200%); -webkit-backdrop-filter: blur(24px) saturate(200%);
+        border: 1px solid rgba(255, 255, 255, 0.15); border-top: 1px solid rgba(255, 255, 255, 0.3);
         box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.1);
-        border-radius: 28px;
-        
-        padding: 8px;
-        justify-content: space-between;
-        gap: 4px;
+        border-radius: 28px; padding: 8px; justify-content: space-between; gap: 4px;
       }
       
-      /* Ruang kosong di bawah agar konten tidak tertutup Navbar */
-      .window-body {
-        padding-bottom: 110px; 
-      }
+      .window-body { padding-bottom: 110px; }
       
-      .nav-tab {
-        flex-direction: column;
-        padding: 10px 4px;
-        gap: 6px;
-        flex: 1; /* Distribusi rata 4 tab */
-        border-radius: 20px;
-      }
-      
+      .nav-tab { flex-direction: column; padding: 10px 4px; gap: 6px; flex: 1; border-radius: 20px; }
       .nav-tab i { font-size: 18px; margin-bottom: 2px; }
       .nav-tab .tab-text { font-size: 10px; font-weight: 700; letter-spacing: 0.2px; }
       
-      /* Posisi Badge Merah di Mobile */
-      .badge-count {
-        position: absolute;
-        top: 2px;
-        right: calc(50% - 24px); /* Menempel di kanan atas ikon */
-        padding: 2px 5px;
-        font-size: 9px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-      }
+      .badge-count { position: absolute; top: 2px; right: calc(50% - 24px); padding: 2px 5px; font-size: 9px; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
     }
 
     /* LOADER */
@@ -328,7 +298,6 @@
   <script>
     const $ = id => document.getElementById(id);
     
-    // Fungsi Pindah Tab
     function openTab(tabId, btn) {
       if (navigator.vibrate) navigator.vibrate(10);
       
@@ -339,6 +308,13 @@
       btn.classList.add('active');
 
       $('scroll-area').scrollTop = 0;
+    }
+
+    // Fungsi bantu untuk mengekstrak angka tahun tertinggi dari teks (contoh: "Ganjil 2025/2026" -> 2026)
+    function getLatestYear(str) {
+      if (!str) return 0;
+      const years = [...str.matchAll(/\d{4}/g)].map(m => parseInt(m[0]));
+      return years.length ? Math.max(...years) : 0;
     }
 
     async function loadData() {
@@ -366,14 +342,18 @@
           </div>
         `).join('');
 
-        // 3. Setup Mengajar
+        // 3. Setup Mengajar (DENGAN SORTING TAHUN TERKINI)
         const tc = $('teach-content');
         if (!data.mengajar || !data.mengajar.length) {
           tc.innerHTML = '<p style="color:var(--text-tertiary); font-size:14px;">Tidak ada data.</p>';
         } else {
           let tCount = 0;
           tc.innerHTML = data.mengajar.map(kampus => {
-           const courses = (kampus.mata_kuliah||[]).map(mk => {
+            
+            // Urutkan Mata Kuliah dari yang paling baru ke lama
+            const sortedMatkul = (kampus.mata_kuliah || []).sort((a, b) => getLatestYear(b.semester) - getLatestYear(a.semester));
+
+            const courses = sortedMatkul.map(mk => {
               tCount++;
               const semesterList = (mk.semester || '').split(',').map(s => s.trim());
               const chipsHtml = semesterList.map(s => `<span class="chip">${s}</span>`).join('');
@@ -386,6 +366,7 @@
                   </div>
                 </div>`;
             }).join('');
+            
             return `<div style="margin-bottom: 24px;">
                       <h3 style="font-size:15px; color:var(--text-secondary); margin-bottom:12px;">
                         <i class="fa-solid fa-building-columns" style="margin-right:6px;"></i>${kampus.nama_camp_||kampus.nama_kampus}
@@ -462,7 +443,6 @@
 
     window.addEventListener('DOMContentLoaded', loadData);
 
-    // Fungsi Copy Email
     function copyEmail() {
       const email = "vicky.setia@upertis.ac.id"; // Sesuaikan dengan email asli
       navigator.clipboard.writeText(email).then(() => {
