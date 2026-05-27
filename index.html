@@ -12,19 +12,18 @@
 
   <style>
     /* ══════════════════════════════════════════════
-       ROOT — THEME & VARIABLES
+       ROOT & THEME VARIABLES
     ══════════════════════════════════════════════ */
     :root {
       --font-system: 'Plus Jakarta Sans', sans-serif;
       --text-primary:     #ffffff; 
       --text-secondary:   rgba(255, 255, 255, 0.85); 
-      --text-tertiary:    rgba(255, 255, 255, 0.6); 
-      
+      --text-tertiary:    rgba(255, 255, 255, 0.5); 
       --accent:           #60a5fa; 
       --accent-muted:     rgba(96, 165, 250, 0.2);
       
       --radius-pill:      9999px;
-      --radius-xl:        28px;
+      --radius-xl:        32px;
       --radius-lg:        20px;
       --radius-md:        16px;
       
@@ -33,182 +32,232 @@
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+    
+    /* MENGUNCI LAYAR AGAR TIDAK BISA DI-SCROLL FULL PAGE */
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden; /* Mengunci scroll utama */
+    }
 
     body {
       font-family: var(--font-system);
       background: #0f172a url('https://images.unsplash.com/photo-1723621901726-eacc52c8fc4d?q=80&w=880&auto=format&fit=crop') center/cover no-repeat fixed;
       color: var(--text-primary);
       -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      min-height: 100vh;
-      overflow-x: hidden;
-      padding-bottom: calc(120px + var(--safe-bottom));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--safe-top) 20px var(--safe-bottom) 20px;
     }
 
     /* ══════════════════════════════════════════════
-       LIQUID GLASS ENGINE 
+       ONE-PAGE APP LAYOUT
+    ══════════════════════════════════════════════ */
+    .app-container {
+      width: 100%;
+      max-width: 1100px;
+      height: 100%;
+      max-height: 850px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      opacity: 0; /* Untuk animasi loader */
+      transition: opacity 0.6s ease;
+    }
+
+    /* Desktop Layout: Menyamping (Sidebar & Main Panel) */
+    @media (min-width: 768px) {
+      .app-container {
+        flex-direction: row;
+        height: 85vh; /* Menyesuaikan layar desktop */
+      }
+    }
+
+    /* ══════════════════════════════════════════════
+       VANILLA LIQUID GLASS ENGINE
     ══════════════════════════════════════════════ */
     .glass-panel {
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.01) 100%);
-      backdrop-filter: blur(20px) saturate(160%);
-      -webkit-backdrop-filter: blur(20px) saturate(160%);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.02) 100%);
+      backdrop-filter: blur(25px) saturate(180%);
+      -webkit-backdrop-filter: blur(25px) saturate(180%);
       border: 1px solid rgba(255, 255, 255, 0.2);
       border-top: 1px solid rgba(255, 255, 255, 0.5);
       border-left: 1px solid rgba(255, 255, 255, 0.4);
-      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.4), 0 16px 40px rgba(0, 0, 0, 0.3);
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3), 0 16px 40px rgba(0, 0, 0, 0.3);
       border-radius: var(--radius-xl);
+    }
+
+    /* ══════════════════════════════════════════════
+       1. SIDEBAR (PROFIL)
+    ══════════════════════════════════════════════ */
+    .sidebar {
+      flex: 0 0 auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 20px;
       overflow: hidden;
-      transition: all 0.4s ease;
     }
 
-    .glass-panel:hover {
-      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.6), 0 20px 50px rgba(0, 0, 0, 0.4);
+    .avatar-wrapper {
+      width: 80px; height: 80px; flex-shrink: 0;
+      border-radius: var(--radius-pill); padding: 3px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.4), rgba(255,255,255,0.05));
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    }
+    .avatar-inner {
+      width: 100%; height: 100%; border-radius: inherit; background: rgba(0,0,0,0.5);
+      display: flex; align-items: center; justify-content: center; overflow: hidden;
     }
 
-    .glass-card, .stat-box {
-      background: rgba(0, 0, 0, 0.25);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: var(--radius-lg);
-      padding: 20px;
-      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1), 0 4px 16px rgba(0, 0, 0, 0.2);
-      transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), background 0.3s ease;
-      height: 100%;
+    .profile-info { flex: 1; }
+    .profile-name { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 2px; text-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+    .profile-role { font-size: 13px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .profile-bio { display: none; } /* Disembunyikan di mobile agar hemat tempat */
+    
+    .social-links { display: flex; gap: 8px; margin-top: 12px; }
+    .social-btn {
+      width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+      border-radius: var(--radius-pill); background: rgba(255,255,255,0.1);
+      color: var(--text-primary); border: 1px solid rgba(255,255,255,0.15);
+      text-decoration: none; transition: 0.3s ease;
     }
-    .glass-card:active { transform: scale(0.98); background: rgba(255, 255, 255, 0.05); }
+    .social-btn:hover { background: var(--accent-muted); color: var(--accent); border-color: rgba(96, 165, 250, 0.4); }
 
-    /* ══════════════════════════════════════════════
-       LAYOUT & RESPONSIVE DESKTOP SUPPORT
-    ══════════════════════════════════════════════ */
-    .container {
-      width: 100%; max-width: 1000px; margin: 0 auto; 
-      padding: calc(40px + var(--safe-top)) 20px 20px;
-      display: flex; flex-direction: column; gap: 32px;
-    }
-
-    .animate-up { animation: floatUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) both; }
-    .delay-1 { animation-delay: 0.1s; }
-    .delay-2 { animation-delay: 0.2s; }
-    @keyframes floatUp { 
-      from { opacity: 0; transform: translateY(24px) scale(0.98); } 
-      to { opacity: 1; transform: translateY(0) scale(1); } 
-    }
-
-    /* ══════════════════════════════════════════════
-       KARTU PROFIL 
-    ══════════════════════════════════════════════ */
-    .profile-widget { padding: 36px 24px; display: flex; flex-direction: column; align-items: center; text-align: center; }
-    .avatar-wrapper { width: 130px; height: 130px; border-radius: var(--radius-pill); padding: 4px; background: linear-gradient(135deg, rgba(255,255,255,0.4), rgba(255,255,255,0.05)); box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3); margin-bottom: 24px; }
-    .avatar-inner { width: 100%; height: 100%; border-radius: inherit; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; overflow: hidden; }
-    .profile-name { font-size: 28px; font-weight: 800; letter-spacing: -0.6px; margin-bottom: 4px; text-shadow: 0 4px 12px rgba(0,0,0,0.4); }
-    .profile-role { font-size: 14px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 20px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
-    .profile-tags { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 20px; }
-    .tag-pill { background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.3); padding: 8px 16px; border-radius: var(--radius-pill); font-size: 13px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 6px; box-shadow: inset 0 1px 2px rgba(255,255,255,0.2); }
-    .tag-pill i { color: var(--accent); }
-    .profile-bio { font-size: 16px; line-height: 1.6; color: var(--text-secondary); font-weight: 500; text-shadow: 0 2px 8px rgba(0,0,0,0.3); }
-
+    /* Mode Desktop untuk Sidebar */
     @media (min-width: 768px) {
-      .profile-widget { flex-direction: row; text-align: left; gap: 40px; padding: 48px; }
-      .avatar-wrapper { width: 170px; height: 170px; margin-bottom: 0; flex-shrink: 0; }
-      .profile-info { flex: 1; }
-      .profile-tags { justify-content: flex-start; }
-      .edu-list, .list-group { grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); }
-      .stats-container { gap: 24px; }
+      .sidebar {
+        flex: 0 0 320px;
+        flex-direction: column;
+        text-align: center;
+        padding: 48px 32px;
+        justify-content: center;
+      }
+      .avatar-wrapper { width: 150px; height: 150px; margin-bottom: 16px; }
+      .profile-name { font-size: 28px; margin-bottom: 4px; }
+      .profile-bio { display: block; font-size: 14.5px; line-height: 1.6; color: var(--text-secondary); margin-top: 20px; text-shadow: 0 1px 4px rgba(0,0,0,0.2); }
+      .social-links { justify-content: center; margin-top: 24px; }
     }
 
     /* ══════════════════════════════════════════════
-       SECTION COMPONENTS & GRIDS
+       2. AREA KONTEN UTAMA (APP WINDOW)
     ══════════════════════════════════════════════ */
-    /* Tambahan scroll-margin-top agar saat fitur auto-scroll bekerja, tampilannya tidak terlalu menempel ke atas layar */
-    #tab-section { scroll-margin-top: 20px; }
-    
-    .section-header { font-size: 20px; font-weight: 800; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; color: var(--text-primary); text-shadow: 0 2px 8px rgba(0,0,0,0.3); }
-    .section-header i { color: var(--accent); }
-    .edu-list, .list-group { display: grid; grid-template-columns: 1fr; gap: 16px; }
-    .edu-degree { font-size: 12px; font-weight: 800; color: var(--accent); text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.5px; }
-    .edu-uni { font-size: 17px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
-    .edu-prodi { font-size: 15px; font-weight: 500; color: var(--text-secondary); margin-bottom: 8px; }
-    .edu-year { font-size: 13px; font-weight: 600; color: var(--text-tertiary); display: flex; align-items: center; gap: 6px; }
-    .stats-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 32px; }
-    .stat-box { display: flex; flex-direction: column; align-items: flex-start; }
-    .stat-box i { color: var(--accent); font-size: 18px; margin-bottom: 8px; }
-    .stat-num { font-size: 28px; font-weight: 800; color: var(--text-primary); line-height: 1.2; text-shadow: 0 2px 8px rgba(0,0,0,0.3); }
-    .stat-label { font-size: 13px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;}
-
-    .campus-group { margin-bottom: 32px; }
-    .campus-title { font-size: 16px; font-weight: 700; color: var(--text-secondary); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-    .item-row { display: flex; align-items: flex-start; gap: 16px; }
-    .item-icon-box { width: 48px; height: 48px; flex-shrink: 0; border-radius: var(--radius-md); background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); display: flex; align-items: center; justify-content: center; color: var(--text-primary); font-size: 14px; font-weight: 800; box-shadow: inset 0 1px 2px rgba(255,255,255,0.1); }
-    .item-content { flex: 1; }
-    .item-title { font-size: 16px; font-weight: 700; color: var(--text-primary); line-height: 1.4; margin-bottom: 8px; text-shadow: 0 1px 4px rgba(0,0,0,0.3); }
-    .item-title a { color: inherit; text-decoration: none; }
-    .item-meta { display: flex; flex-wrap: wrap; gap: 8px; }
-    .badge { background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 6px; padding: 4px 8px; font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; }
-    .badge.highlight { background: var(--accent-muted); color: var(--accent); border-color: rgba(96, 165, 250, 0.3); }
-
-    /* ══════════════════════════════════════════════
-       FLOATING TAB BAR & BADGES
-    ══════════════════════════════════════════════ */
-    .floating-tab-bar {
-      position: fixed; bottom: calc(24px + var(--safe-bottom)); left: 0; right: 0; margin: 0 auto;
-      width: calc(100% - 40px); max-width: 500px;
-      background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(25px) saturate(180%); -webkit-backdrop-filter: blur(25px) saturate(180%);
-      border: 1px solid rgba(255, 255, 255, 0.15); border-top: 1px solid rgba(255, 255, 255, 0.3);
-      border-radius: var(--radius-pill); padding: 6px; display: flex; z-index: 100;
-      box-shadow: inset 0 1px 1px rgba(255,255,255,0.2), 0 16px 32px rgba(0,0,0,0.4);
-    }
-    
-    .tab-btn {
-      flex: 1; padding: 12px 0; border: none; background: transparent;
-      border-radius: var(--radius-pill); color: var(--text-tertiary);
-      font-family: inherit; font-size: 13px; font-weight: 700;
-      display: flex; flex-direction: column; align-items: center; gap: 4px;
-      cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-      position: relative; /* Diperlukan untuk meletakkan badge notifikasi */
-    }
-    .tab-btn i { font-size: 18px; }
-    
-    .tab-btn.active { 
-      background: rgba(255, 255, 255, 0.15); color: #ffffff; 
-      box-shadow: inset 0 1px 1px rgba(255,255,255,0.2), 0 4px 12px rgba(0, 0, 0, 0.2); 
-      border: 1px solid rgba(255, 255, 255, 0.2);
+    .main-window {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden; /* Mencegah tumpah dari panel kaca */
     }
 
-    /* BADGE NOTIFIKASI PADA TAB */
-    .tab-badge {
-      position: absolute;
-      top: 6px;
-      right: calc(50% - 22px);
-      background: var(--accent);
-      color: #0f172a;
-      font-size: 10px;
-      font-weight: 800;
-      padding: 2px 5px;
-      min-width: 18px;
-      text-align: center;
+    /* Tab Navigasi di dalam Window */
+    .window-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.15);
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      scrollbar-width: none; /* Firefox */
+    }
+    .window-header::-webkit-scrollbar { display: none; }
+
+    .nav-tab {
+      padding: 10px 20px;
       border-radius: var(--radius-pill);
-      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-      display: none; /* Sembunyikan default, muncul setelah data di-load */
-      transition: all 0.3s ease;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-tertiary);
+      font-family: inherit; font-size: 14px; font-weight: 700;
+      cursor: pointer; transition: all 0.3s ease;
+      display: flex; align-items: center; gap: 8px;
+      white-space: nowrap;
     }
-    .tab-btn.active .tab-badge {
-      background: #ffffff;
-      color: #0f172a;
+    .nav-tab i { font-size: 16px; }
+    
+    .nav-tab:hover { color: var(--text-secondary); background: rgba(255,255,255,0.05); }
+    
+    .nav-tab.active {
+      background: rgba(255, 255, 255, 0.15);
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.25);
+      box-shadow: inset 0 1px 1px rgba(255,255,255,0.2), 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .badge-count {
+      background: var(--accent); color: #0f172a;
+      padding: 2px 6px; border-radius: 10px; font-size: 11px; font-weight: 800;
+    }
+    .nav-tab.active .badge-count { background: #fff; }
+
+    /* Area Scroll Internal */
+    .window-body {
+      flex: 1;
+      overflow-y: auto; /* Scroll bar HANYA ada di sini */
+      padding: 24px;
+      scroll-behavior: smooth;
     }
 
-    .tab-content { display: none; }
-    .tab-content.active { display: block; animation: floatUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; }
+    /* Custom Glass Scrollbar */
+    .window-body::-webkit-scrollbar { width: 6px; }
+    .window-body::-webkit-scrollbar-track { background: transparent; }
+    .window-body::-webkit-scrollbar-thumb { 
+      background: rgba(255, 255, 255, 0.3); 
+      border-radius: 10px; 
+    }
+    .window-body::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.5); }
+
+    /* Animasi Konten */
+    .content-section { display: none; animation: fadeIn 0.4s ease forwards; }
+    .content-section.active { display: block; }
+    @keyframes fadeIn { 
+      from { opacity: 0; transform: translateY(10px); } 
+      to { opacity: 1; transform: translateY(0); } 
+    }
+
+    /* ══════════════════════════════════════════════
+       ELEMEN DI DALAM KONTEN
+    ══════════════════════════════════════════════ */
+    .section-title { font-size: 18px; font-weight: 800; margin-bottom: 20px; color: var(--text-primary); display: flex; align-items: center; gap: 10px; }
+    .section-title i { color: var(--accent); }
+
+    .grid-list { display: grid; grid-template-columns: 1fr; gap: 16px; }
+    @media (min-width: 1024px) { .grid-list { grid-template-columns: 1fr 1fr; } } /* 2 Kolom untuk area lebar */
+
+    .glass-card {
+      background: rgba(0, 0, 0, 0.2); backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1); border-radius: var(--radius-lg);
+      padding: 16px; box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+      display: flex; gap: 16px;
+    }
+    
+    .card-icon {
+      width: 44px; height: 44px; flex-shrink: 0;
+      border-radius: var(--radius-md); background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-secondary); font-size: 14px; font-weight: 800;
+    }
+    
+    .card-info { flex: 1; }
+    .item-title { font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; line-height: 1.4; }
+    .item-title a { color: inherit; text-decoration: none; }
+    .item-desc { font-size: 13px; color: var(--text-tertiary); font-weight: 500; margin-bottom: 8px;}
+    .item-meta { display: flex; flex-wrap: wrap; gap: 6px; }
+    
+    .badge {
+      background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 6px; padding: 4px 8px; font-size: 10px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;
+    }
+    .badge.highlight { background: var(--accent-muted); color: var(--accent); border-color: rgba(96, 165, 250, 0.3); }
 
     /* ══════════════════════════════════════════════
        LOADER 
     ══════════════════════════════════════════════ */
     #page-loader { position: fixed; inset: 0; z-index: 999; background: #0f172a; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; transition: opacity 0.5s ease; }
-    .spinner { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--accent); border-radius: 50%; animation: iosSpin 1s cubic-bezier(0.5, 0, 0.5, 1) infinite; }
-    .loader-text { font-size: 14px; font-weight: 700; color: var(--text-secondary); letter-spacing: 0.5px; }
+    .spinner { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s cubic-bezier(0.5, 0, 0.5, 1) infinite; }
     #page-loader.hidden { opacity: 0; pointer-events: none; }
-    @keyframes iosSpin { to { transform: rotate(360deg); } }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
   </style>
 </head>
@@ -216,226 +265,211 @@
 
   <div id="page-loader">
     <div class="spinner"></div>
-    <div class="loader-text">Memuat Data Profil...</div>
+    <div style="font-weight: 700; color: #cbd5e1; font-size: 14px;">Memuat Aplikasi...</div>
   </div>
 
-  <div class="container" id="main-content" style="opacity:0;">
+  <div class="app-container" id="app-container">
 
-    <div class="glass-panel profile-widget animate-up">
+    <aside class="glass-panel sidebar">
       <div class="avatar-wrapper">
         <div class="avatar-inner">
-          <img id="cv-photo" src="profile.png" alt="Foto Profil" onerror="this.style.display='none'; document.getElementById('cv-avatar-fallback').style.display='block';" style="width: 100%; height: 100%; object-fit: cover;">
-          <i id="cv-avatar-fallback" class="fa-solid fa-user" style="display: none; font-size: 50px; color: #94a3b8;"></i>
+          <img id="cv-photo" src="profile.png" alt="Foto" onerror="this.style.display='none'; document.getElementById('cv-avatar-fallback').style.display='block';" style="width: 100%; height: 100%; object-fit: cover;">
+          <i id="cv-avatar-fallback" class="fa-solid fa-user" style="display: none; font-size: 40px; color: #94a3b8;"></i>
         </div>
       </div>
       <div class="profile-info">
         <h1 class="profile-name" id="prof-name">—</h1>
         <div class="profile-role" id="prof-role">—</div>
-        
-        <div class="profile-tags" id="prof-chips"></div>
+        <div class="profile-role" id="prof-nidn" style="color:var(--text-tertiary); font-size: 12px; margin-top:-6px;">—</div>
         
         <p class="profile-bio">
-          Dosen aktif di bidang Bisnis Digital dengan keahlian dalam pengembangan sistem informasi, kecerdasan buatan, dan pemrograman web. Berpengalaman mengajar di dua perguruan tinggi dan aktif berkontribusi melalui penelitian, pengabdian, serta publikasi ilmiah.
+          Dosen aktif di bidang Bisnis Digital dengan keahlian dalam pengembangan sistem informasi, kecerdasan buatan, dan pemrograman web. Aktif berkontribusi melalui penelitian dan publikasi ilmiah.
         </p>
+
+        <div class="social-links">
+          <a href="#" class="social-btn"><i class="fa-solid fa-envelope"></i></a>
+          <a href="#" class="social-btn"><i class="fa-brands fa-linkedin-in"></i></a>
+          <a href="#" class="social-btn"><i class="fa-solid fa-graduation-cap"></i></a>
+        </div>
       </div>
-    </div>
+    </aside>
 
-    <div class="glass-panel animate-up delay-1" style="padding: 32px;">
-      <h2 class="section-header"><i class="fa-solid fa-graduation-cap"></i> Pendidikan</h2>
-      <div class="edu-list" id="edu-grid"></div>
-    </div>
-
-    <div class="glass-panel animate-up delay-2" id="tab-section" style="padding: 32px; margin-bottom: 40px;">
-      <div class="stats-container" id="stats-bar"></div>
+    <main class="glass-panel main-window">
       
-      <div class="tab-content active" id="tab-teaching">
-        <h2 class="section-header"><i class="fa-solid fa-chalkboard-user"></i> Riwayat Mengajar</h2>
-        <div id="teaching-content"></div>
-      </div>
-      
-      <div class="tab-content" id="tab-research">
-        <h2 class="section-header"><i class="fa-solid fa-book-open"></i> Publikasi Ilmiah</h2>
-        <div class="list-group" id="research-content"></div>
-      </div>
-      
-      <div class="tab-content" id="tab-service">
-        <h2 class="section-header"><i class="fa-solid fa-handshake-angle"></i> Pengabdian</h2>
-        <div class="list-group" id="service-content"></div>
-      </div>
-    </div>
+      <header class="window-header">
+        <button class="nav-tab active" onclick="openTab('edu', this)">
+          <i class="fa-solid fa-graduation-cap"></i> Profil & Edukasi
+        </button>
+        <button class="nav-tab" onclick="openTab('teach', this)">
+          <i class="fa-solid fa-chalkboard-user"></i> Mengajar <span class="badge-count" id="count-teach" style="display:none;">0</span>
+        </button>
+        <button class="nav-tab" onclick="openTab('pub', this)">
+          <i class="fa-solid fa-book-open"></i> Publikasi <span class="badge-count" id="count-pub" style="display:none;">0</span>
+        </button>
+        <button class="nav-tab" onclick="openTab('srv', this)">
+          <i class="fa-solid fa-handshake-angle"></i> Pengabdian <span class="badge-count" id="count-srv" style="display:none;">0</span>
+        </button>
+      </header>
 
-  </div>
+      <div class="window-body" id="scroll-area">
+        
+        <div class="content-section active" id="tab-edu">
+          <h2 class="section-title"><i class="fa-solid fa-clock-rotate-left"></i> Riwayat Pendidikan</h2>
+          <div class="grid-list" id="edu-grid"></div>
+        </div>
 
-  <div class="floating-tab-bar animate-up delay-2">
-    <button class="tab-btn active" onclick="switchTab('teaching', this)">
-      <i class="fa-solid fa-chalkboard-user"></i>
-      <span class="tab-badge" id="badge-teaching">0</span>
-      <span>Mengajar</span>
-    </button>
-    <button class="tab-btn" onclick="switchTab('research', this)">
-      <i class="fa-solid fa-book-open"></i>
-      <span class="tab-badge" id="badge-research">0</span>
-      <span>Publikasi</span>
-    </button>
-    <button class="tab-btn" onclick="switchTab('service', this)">
-      <i class="fa-solid fa-handshake-angle"></i>
-      <span class="tab-badge" id="badge-service">0</span>
-      <span>Pengabdian</span>
-    </button>
+        <div class="content-section" id="tab-teach">
+          <h2 class="section-title"><i class="fa-solid fa-landmark"></i> Riwayat Mengajar</h2>
+          <div id="teach-content"></div>
+        </div>
+
+        <div class="content-section" id="tab-pub">
+          <h2 class="section-title"><i class="fa-solid fa-newspaper"></i> Karya Ilmiah & Jurnal</h2>
+          <div class="grid-list" id="pub-content"></div>
+        </div>
+
+        <div class="content-section" id="tab-srv">
+          <h2 class="section-title"><i class="fa-solid fa-users"></i> Pengabdian Masyarakat</h2>
+          <div class="grid-list" id="srv-content"></div>
+        </div>
+
+      </div>
+
+    </main>
   </div>
 
   <script>
     const $ = id => document.getElementById(id);
     
-    // Fitur 1: Interaktif Switch & Auto-Scroll
-    function switchTab(name, btn) {
-      // Haptic Feedback
-      if (navigator.vibrate) navigator.vibrate(10); 
+    // Fungsi Pindah Tab (Tanpa Scroll Layar Utama)
+    function openTab(tabId, btn) {
+      if (navigator.vibrate) navigator.vibrate(10);
       
-      // Hapus status aktif dari semua
-      document.querySelectorAll('.tab-content').forEach(p => p.classList.remove('active'));
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      // Hapus status aktif
+      document.querySelectorAll('.content-section').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
       
-      // Tambahkan status aktif ke tab yang dipilih
-      $('tab-' + name).classList.add('active');
+      // Tambah status aktif ke target
+      $('tab-' + tabId).classList.add('active');
       btn.classList.add('active');
 
-      // Auto-Scroll Mulur ke Tab Section
-      const section = $('tab-section');
-      // Menghitung posisi Y dikurangi sedikit ruang (offset) agar tidak terlalu menempel ke atas
-      const y = section.getBoundingClientRect().top + window.scrollY - 20;
-      window.scrollTo({ top: y, behavior: 'smooth' });
+      // Scroll otomatis KEMBALI KE ATAS khusus di dalam panel window-body saja (bukan layar utama)
+      $('scroll-area').scrollTop = 0;
     }
 
     async function loadData() {
       try {
         const res = await fetch('./data.json?t=' + Date.now());
         const data = await res.json();
-        if (data.status !== 'success') throw new Error('Bad status');
+        if (data.status !== 'success') throw new Error('Data Error');
         
-        // 1. Profil
+        // 1. Setup Profil
         const p = data.profil;
         $('prof-name').textContent = p.nama || '—';
-        $('prof-role').textContent = `Dosen – ${p.nama_prodi || ''}`;
-        $('prof-chips').innerHTML = [
-          { icon:'fa-university', text: p.nama_pt || '' },
-          { icon:'fa-id-badge',   text: 'NIDN ' + (p.nidn || '') },
-          { icon:'fa-briefcase',  text: p.nama_prodi || '' },
-        ].map(c => `<div class="tag-pill"><i class="fa-solid ${c.icon}"></i>${c.text}</div>`).join('');
+        $('prof-role').textContent = `Dosen ${p.nama_prodi || ''}`;
+        $('prof-nidn').textContent = `NIDN. ${p.nidn || '—'} • ${p.nama_pt || ''}`;
 
-        // 2. Pendidikan
-        const sorted = [...(data.pendidikan||[])].sort((a,b) => +b.tahun - +a.tahun);
-        $('edu-grid').innerHTML = sorted.map(e => {
-          const prodi = (e.prodi && e.prodi !== 'N/A') ? `<div class="edu-prodi">${e.prodi}</div>` : '';
-          return `
+        // 2. Setup Pendidikan
+        const eduSorted = [...(data.pendidikan||[])].sort((a,b) => +b.tahun - +a.tahun);
+        $('edu-grid').innerHTML = eduSorted.map(e => `
           <div class="glass-card">
-            <div class="edu-degree">${e.jenjang}</div>
-            <div class="edu-uni">${e.pt}</div>
-            ${prodi}
-            <div class="edu-year"><i class="fa-regular fa-calendar"></i> Lulus ${e.tahun}</div>
-          </div>`;
-        }).join('');
+            <div class="card-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+            <div class="card-info">
+              <div class="item-title">${e.pt}</div>
+              <div class="item-desc">${e.jenjang} • ${e.prodi !== 'N/A' ? e.prodi : '-'}</div>
+              <div class="item-meta"><span class="badge highlight">Lulus ${e.tahun}</span></div>
+            </div>
+          </div>
+        `).join('');
 
-        // 3. Mengajar
-        const tc = $('teaching-content');
+        // 3. Setup Mengajar
+        const tc = $('teach-content');
         if (!data.mengajar || !data.mengajar.length) {
-          tc.innerHTML = '<p style="color: var(--text-tertiary); font-size: 15px;">Tidak ada data.</p>';
+          tc.innerHTML = '<p style="color:var(--text-tertiary); font-size:14px;">Tidak ada data.</p>';
         } else {
-          // Menghitung total MK untuk badge
-          let totalMK = 0;
+          let tCount = 0;
           tc.innerHTML = data.mengajar.map(kampus => {
             const courses = (kampus.mata_kuliah||[]).map(mk => {
-              totalMK++;
+              tCount++;
               return `
-              <div class="glass-card">
-                <div class="item-title">${mk.nama}</div>
-                <div class="edu-year"><i class="fa-regular fa-calendar-check"></i> Semester: ${mk.semester}</div>
-              </div>`;
+                <div class="glass-card" style="margin-bottom:12px;">
+                  <div class="card-icon"><i class="fa-solid fa-chalkboard"></i></div>
+                  <div class="card-info">
+                    <div class="item-title">${mk.nama}</div>
+                    <div class="item-meta"><span class="badge">Semester: ${mk.semester}</span></div>
+                  </div>
+                </div>`;
             }).join('');
-            return `<div class="campus-group"><div class="campus-title"><i class="fa-solid fa-landmark"></i>${kampus.nama_camp_||kampus.nama_kampus}</div><div class="list-group">${courses}</div></div>`;
+            return `<div style="margin-bottom: 24px;">
+                      <h3 style="font-size:15px; color:var(--text-secondary); margin-bottom:12px;">
+                        <i class="fa-solid fa-building-columns" style="margin-right:6px;"></i>${kampus.nama_camp_||kampus.nama_kampus}
+                      </h3>
+                      <div class="grid-list">${courses}</div>
+                    </div>`;
           }).join('');
           
-          // Tampilkan badge Mengajar
-          if(totalMK > 0) {
-            $('badge-teaching').textContent = totalMK;
-            $('badge-teaching').style.display = 'block';
+          if(tCount > 0) {
+            $('count-teach').textContent = tCount;
+            $('count-teach').style.display = 'inline-block';
           }
         }
 
-        // 4. Publikasi
-        const rc = $('research-content');
+        // 4. Setup Publikasi
+        const pc = $('pub-content');
         if (!data.publikasi || !data.publikasi.length) {
-          rc.innerHTML = '<p style="color: var(--text-tertiary); font-size: 15px;">Tidak ada data.</p>';
+          pc.innerHTML = '<p style="color:var(--text-tertiary); font-size:14px;">Tidak ada data.</p>';
         } else {
-          // Tampilkan badge Publikasi
-          $('badge-research').textContent = data.publikasi.length;
-          $('badge-research').style.display = 'block';
+          $('count-pub').textContent = data.publikasi.length;
+          $('count-pub').style.display = 'inline-block';
 
-          const totalSitasi = data.publikasi.reduce((a, pub) => {
-            const n = parseInt(pub.sitasi || '0', 10);
-            return a + (isNaN(n) ? 0 : n);
-          }, 0);
-          
-          $('stats-bar').innerHTML = [
-            { icon:'fa-book-journal-whills', num: data.publikasi.length, label:'Karya Ilmiah' },
-            { icon:'fa-star', num: totalSitasi, label:'Total Sitasi' }
-          ].map(s => `
-            <div class="stat-box">
-              <i class="fa-solid ${s.icon}"></i>
-              <span class="stat-num">${s.num}</span>
-              <span class="stat-label">${s.label}</span>
-            </div>`).join('');
-
-          rc.innerHTML = data.publikasi.map(pub => {
-            const titleInner = pub.link ? `<a href="${pub.link}" target="_blank">${pub.judul} <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:12px; opacity:0.6; margin-left:4px;"></i></a>` : pub.judul;
-            const sitasiNum = parseInt(pub.sitasi || '0', 10);
-            const citeBadge = sitasiNum > 0 ? `<span class="badge highlight"><i class="fa-solid fa-star" style="margin-right:4px;"></i>${sitasiNum} Sitasi</span>` : '';
+          pc.innerHTML = data.publikasi.map(pub => {
+            const t = pub.link ? `<a href="${pub.link}" target="_blank">${pub.judul} <i class="fa-solid fa-up-right-from-square" style="font-size:10px;"></i></a>` : pub.judul;
+            const sit = parseInt(pub.sitasi||'0', 10);
+            const sitBadge = sit > 0 ? `<span class="badge highlight"><i class="fa-solid fa-star"></i> ${sit} Sitasi</span>` : '';
             return `
-            <div class="glass-card item-row">
-              <div class="item-icon-box">${pub.tahun}</div>
-              <div class="item-content">
-                <div class="item-title">${titleInner}</div>
-                <div class="item-meta">
-                  <span class="badge">${pub.jenis}</span>
-                  ${citeBadge}
+              <div class="glass-card">
+                <div class="card-icon">${pub.tahun}</div>
+                <div class="card-info">
+                  <div class="item-title">${t}</div>
+                  <div class="item-meta">
+                    <span class="badge">${pub.jenis}</span> ${sitBadge}
+                  </div>
                 </div>
-              </div>
-            </div>`;
+              </div>`;
           }).join('');
         }
 
-        // 5. Pengabdian
-        const sc = $('service-content');
+        // 5. Setup Pengabdian
+        const sc = $('srv-content');
         if (!data.pengabdian || !data.pengabdian.length) {
-          sc.innerHTML = '<p style="color: var(--text-tertiary); font-size: 15px;">Tidak ada data.</p>';
+          sc.innerHTML = '<p style="color:var(--text-tertiary); font-size:14px;">Tidak ada data.</p>';
         } else {
-          // Tampilkan badge Pengabdian
-          $('badge-service').textContent = data.pengabdian.length;
-          $('badge-service').style.display = 'block';
+          $('count-srv').textContent = data.pengabdian.length;
+          $('count-srv').style.display = 'inline-block';
 
           sc.innerHTML = data.pengabdian.map(item => `
-            <div class="glass-card item-row">
-              <div class="item-icon-box">${item.tahun}</div>
-              <div class="item-content">
+            <div class="glass-card">
+              <div class="card-icon">${item.tahun}</div>
+              <div class="card-info">
                 <div class="item-title">${item.judul}</div>
-                <div class="item-meta">
-                  <span class="badge highlight">${item.kategori}</span>
-                </div>
+                <div class="item-meta"><span class="badge highlight">${item.kategori}</span></div>
               </div>
             </div>`).join('');
         }
 
+        // Animasi Tampil
         $('page-loader').classList.add('hidden');
-        setTimeout(() => $('page-loader').remove(), 500);
-        $('main-content').style.transition = 'opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1)';
-        $('main-content').style.opacity = '1';
+        setTimeout(() => {
+          $('page-loader').remove();
+          $('app-container').style.opacity = '1';
+        }, 500);
 
       } catch (err) {
         console.error(err);
         $('page-loader').innerHTML = `
-          <div style="text-align:center; padding: 20px;">
-            <i class="fa-solid fa-triangle-exclamation" style="font-size:36px; color:#FF3B30; margin-bottom:16px;"></i>
-            <p style="color:#FF3B30; font-weight:600; font-size:16px;">Gagal memuat data JSON.</p>
+          <div style="text-align:center;">
+            <i class="fa-solid fa-triangle-exclamation" style="font-size:32px; color:#ef4444; margin-bottom:12px;"></i>
+            <p style="color:#ef4444; font-weight:700;">Gagal memuat JSON</p>
           </div>`;
       }
     }
