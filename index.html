@@ -12,7 +12,7 @@
 
   <style>
     /* ═══════════════════════════════════════════════════════════════
-       NOTIFIKASI DENGAN ANIMASI CHECKLIST (MENGGANTIKAN CHIP NOTIF)
+       NOTIFIKASI CHIP (GLASS) DENGAN ANIMASI CHECKLIST SVG
     ═══════════════════════════════════════════════════════════════ */
     .semester-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
     .chip {
@@ -22,65 +22,77 @@
         backdrop-filter: blur(4px);
     }
 
-    /* ANIMASI CHECKLIST - VERSI FLOATING UNTUK NOTIFIKASI COPY EMAIL */
-    .checklist-notif {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%) scale(0.8);
-        z-index: 10000;
-        opacity: 0;
-        transition: opacity 0.2s ease, transform 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
-        pointer-events: none;
+    /* CHIP NOTIFIKASI (TETAP SEPERTI SEMULA) */
+    #chip-notif {
+        position: fixed; top: 0; left: 50%; transform: translate(-50%, -30px);
+        z-index: 9999; opacity: 0; transition: opacity 0.3s ease, transform 0.3s ease;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        color: white;
+        padding: 8px 20px;
+        border-radius: 40px;
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        white-space: nowrap;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        display: flex;
+        align-items: center;
+        gap: 10px;
     }
-    .checklist-notif.show {
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(1);
+    @media (max-width: 640px) {
+        #chip-notif { font-size: 12px; padding: 6px 16px; }
     }
-    /* Animasi tambahan untuk efek lingkaran luar */
-    .checkbox-wrapper-31 {
-        position: relative;
+
+    /* ANIMASI CHECKLIST SVG (versi mini) */
+    .checklist-svg {
         display: inline-block;
-        width: 70px;
-        height: 70px;
-        filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));
+        width: 22px;
+        height: 22px;
+        position: relative;
     }
-    .checkbox-wrapper-31 .background {
+    .checklist-svg svg {
+        width: 100%;
+        height: 100%;
+    }
+    .checklist-svg .background {
         fill: rgba(255,255,255,0.2);
-        transition: ease all 0.6s;
+        transition: fill 0.3s ease;
     }
-    .checkbox-wrapper-31 .stroke {
+    .checklist-svg .stroke {
         fill: none;
         stroke: var(--accent, #22c55e);
         stroke-miterlimit: 10;
-        stroke-width: 2.5px;
+        stroke-width: 2px;
         stroke-dashoffset: 100;
         stroke-dasharray: 100;
-        transition: ease all 0.6s;
+        transition: stroke-dashoffset 0.5s ease;
     }
-    .checkbox-wrapper-31 .check {
+    .checklist-svg .check {
         fill: none;
         stroke: var(--accent, #22c55e);
         stroke-linecap: round;
         stroke-linejoin: round;
-        stroke-width: 2.5px;
+        stroke-width: 2px;
         stroke-dashoffset: 22;
         stroke-dasharray: 22;
-        transition: ease all 0.6s;
+        transition: stroke-dashoffset 0.5s ease;
     }
-    /* Saat active (tanpa checkbox input, kita trigger via JS) */
-    .checkbox-wrapper-31.animate .background {
+    /* Saat animasi dijalankan */
+    .checklist-svg.animate .stroke {
+        stroke-dashoffset: 0;
+    }
+    .checklist-svg.animate .check {
+        stroke-dashoffset: 0;
+    }
+    .checklist-svg.animate .background {
         fill: var(--accent, #22c55e);
-    }
-    .checkbox-wrapper-31.animate .stroke {
-        stroke-dashoffset: 0;
-    }
-    .checkbox-wrapper-31.animate .check {
-        stroke-dashoffset: 0;
     }
 
     /* ═══════════════════════════════════════════════════════════════
-       ROOT & THEME VARIABLES (sama seperti sebelumnya)
+       ROOT & THEME VARIABLES (tidak berubah)
     ═══════════════════════════════════════════════════════════════ */
     :root {
       --font-system: 'Plus Jakarta Sans', sans-serif;
@@ -111,9 +123,6 @@
       align-items: center;
       justify-content: center;
       padding: calc(var(--safe-top) + 30px) 20px var(--safe-bottom) 20px;
-    }
-    @media (max-width: 768px) {
-      body { background-image: linear-gradient(145deg, #0a1a2f, #0f172a); }
     }
     body::before {
       content: '';
@@ -358,15 +367,16 @@
   <div style="font-weight:600;">Memuat Portofolio...</div>
 </div>
 
-<!-- NOTIFIKASI DENGAN ANIMASI CHECKLIST -->
-<div id="checklist-notif" class="checklist-notif">
-  <div class="checkbox-wrapper-31" id="checklist-anim">
+<!-- NOTIFIKASI CHIP DENGAN ANIMASI CHECKLIST SVG -->
+<div id="chip-notif" style="display:none;">
+  <div class="checklist-svg" id="checklist-svg">
     <svg viewBox="0 0 35.6 35.6">
       <circle class="background" cx="17.8" cy="17.8" r="17.8"></circle>
       <circle class="stroke" cx="17.8" cy="17.8" r="14.37"></circle>
       <polyline class="check" points="11.78 18.12 15.55 22.23 25.17 12.87"></polyline>
     </svg>
   </div>
+  <span>Email berhasil disalin</span>
 </div>
 
 <div class="app-container" id="app-container">
@@ -581,28 +591,36 @@
   window.addEventListener('DOMContentLoaded', loadData);
 
   // ═══════════════════════════════════════════════════════════════════
-  // 3. COPY EMAIL DENGAN ANIMASI CHECKLIST (MENGGANTIKAN NOTIFIKASI SEBELUMNYA)
+  // 3. COPY EMAIL DENGAN NOTIFIKASI CHIP + ANIMASI CHECKLIST SVG
   // ═══════════════════════════════════════════════════════════════════
   function copyEmail() {
     const email = "vicky.setia@upertis.ac.id";
     navigator.clipboard.writeText(email).then(() => {
-      const notif = document.getElementById('checklist-notif');
-      const animBox = document.getElementById('checklist-anim');
+      const chip = document.getElementById("chip-notif");
+      const checkSvg = document.getElementById("checklist-svg");
       
-      // Reset animasi dengan menghapus class lalu memicu reflow
-      animBox.classList.remove('animate');
-      void animBox.offsetWidth; // force reflow
-      animBox.classList.add('animate');
+      // Reset animasi
+      checkSvg.classList.remove('animate');
+      void checkSvg.offsetWidth; // force reflow
+      checkSvg.classList.add('animate');
       
-      // Tampilkan notifikasi
-      notif.classList.add('show');
+      // Tampilkan chip
+      chip.style.display = "flex";
+      requestAnimationFrame(() => {
+        chip.style.opacity = "1";
+        chip.style.transform = "translate(-50%, 20px)";
+      });
       
-      // Sembunyikan setelah 1.5 detik
+      // Sembunyikan setelah 2 detik
       setTimeout(() => {
-        notif.classList.remove('show');
-        // Hapus class animate agar bisa dijalankan lagi nanti
-        setTimeout(() => animBox.classList.remove('animate'), 300);
-      }, 1500);
+        chip.style.opacity = "0";
+        chip.style.transform = "translate(-50%, -30px)";
+        setTimeout(() => {
+          chip.style.display = "none";
+          // Hapus class animate setelah chip hilang
+          checkSvg.classList.remove('animate');
+        }, 300);
+      }, 2000);
     });
   }
 
@@ -650,13 +668,13 @@
         document.documentElement.style.setProperty('--accent-muted', accentMuted);
         const profileRoles = document.querySelectorAll('.profile-role');
         profileRoles.forEach(el => { if (el.id !== 'prof-nidn') el.style.color = accentColor; });
-        // Juga update warna stroke & check pada animasi checklist agar sesuai aksen
+        // Update warna stroke SVG checklist
         const style = document.createElement('style');
         style.textContent = `
-          .checkbox-wrapper-31 .stroke, .checkbox-wrapper-31 .check {
+          .checklist-svg .stroke, .checklist-svg .check {
             stroke: ${accentColor} !important;
           }
-          .checkbox-wrapper-31.animate .background {
+          .checklist-svg.animate .background {
             fill: ${accentColor} !important;
           }
         `;
