@@ -12,7 +12,7 @@
 
   <style>
     /* ═══════════════════════════════════════════════════════════════
-       NOTIFIKASI TRANSPARAN (GLASS) & CHIPS
+       NOTIFIKASI DENGAN ANIMASI CHECKLIST (MENGGANTIKAN CHIP NOTIF)
     ═══════════════════════════════════════════════════════════════ */
     .semester-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
     .chip {
@@ -21,30 +21,66 @@
         font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;
         backdrop-filter: blur(4px);
     }
-    #chip-notif {
-        position: fixed; top: 0; left: 50%; transform: translate(-50%, -30px);
-        z-index: 9999; opacity: 0; transition: opacity 0.3s ease, transform 0.3s ease;
-        background: rgba(255, 255, 255, 0.15);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.25);
-        color: white;
-        padding: 12px 24px;
-        border-radius: 40px;
-        font-size: 14px;
-        font-weight: 600;
-        letter-spacing: 0.3px;
-        white-space: nowrap;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+
+    /* ANIMASI CHECKLIST - VERSI FLOATING UNTUK NOTIFIKASI COPY EMAIL */
+    .checklist-notif {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0.8);
+        z-index: 10000;
+        opacity: 0;
+        transition: opacity 0.2s ease, transform 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
+        pointer-events: none;
     }
-    @media (max-width: 640px) {
-        #chip-notif { font-size: 12px; padding: 10px 20px; white-space: nowrap; }
+    .checklist-notif.show {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
     }
-    .checkmark { margin-right: 8px; font-size: 16px; color: #22c55e; display: inline-block; transition: transform 0.2s cubic-bezier(0.34, 1.2, 0.64, 1); }
-    .checkmark.animate { transform: scale(1.3); }
+    /* Animasi tambahan untuk efek lingkaran luar */
+    .checkbox-wrapper-31 {
+        position: relative;
+        display: inline-block;
+        width: 70px;
+        height: 70px;
+        filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));
+    }
+    .checkbox-wrapper-31 .background {
+        fill: rgba(255,255,255,0.2);
+        transition: ease all 0.6s;
+    }
+    .checkbox-wrapper-31 .stroke {
+        fill: none;
+        stroke: var(--accent, #22c55e);
+        stroke-miterlimit: 10;
+        stroke-width: 2.5px;
+        stroke-dashoffset: 100;
+        stroke-dasharray: 100;
+        transition: ease all 0.6s;
+    }
+    .checkbox-wrapper-31 .check {
+        fill: none;
+        stroke: var(--accent, #22c55e);
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 2.5px;
+        stroke-dashoffset: 22;
+        stroke-dasharray: 22;
+        transition: ease all 0.6s;
+    }
+    /* Saat active (tanpa checkbox input, kita trigger via JS) */
+    .checkbox-wrapper-31.animate .background {
+        fill: var(--accent, #22c55e);
+    }
+    .checkbox-wrapper-31.animate .stroke {
+        stroke-dashoffset: 0;
+    }
+    .checkbox-wrapper-31.animate .check {
+        stroke-dashoffset: 0;
+    }
 
     /* ═══════════════════════════════════════════════════════════════
-       ROOT & THEME VARIABLES
+       ROOT & THEME VARIABLES (sama seperti sebelumnya)
     ═══════════════════════════════════════════════════════════════ */
     :root {
       --font-system: 'Plus Jakarta Sans', sans-serif;
@@ -65,7 +101,7 @@
     html, body { width: 100%; height: 100%; overflow: hidden; }
 
     /* ═══════════════════════════════════════════════════════════════
-       BACKGROUND GAMBAR (STABIL + FALLBACK)
+       BACKGROUND GAMBAR 
     ═══════════════════════════════════════════════════════════════ */
     body {
       font-family: var(--font-system);
@@ -76,7 +112,6 @@
       justify-content: center;
       padding: calc(var(--safe-top) + 30px) 20px var(--safe-bottom) 20px;
     }
-    /* Fallback gradien jika gambar gagal */
     @media (max-width: 768px) {
       body { background-image: linear-gradient(145deg, #0a1a2f, #0f172a); }
     }
@@ -89,9 +124,7 @@
       z-index: -1;
     }
 
-    /* ═══════════════════════════════════════════════════════════════
-       LAYOUT UTAMA
-    ═══════════════════════════════════════════════════════════════ */
+    /* LAYOUT & GLASS (sama seperti sebelumnya) */
     .app-container {
       width: 100%; max-width: 1100px; height: 100%; max-height: 850px;
       display: flex; flex-direction: column; gap: 20px;
@@ -101,12 +134,9 @@
       .app-container { flex-direction: row; height: 85vh; }
       body { padding: var(--safe-top) 20px var(--safe-bottom) 20px; }
     }
-
-    /* GLASS PANEL */
     .glass-panel {
       background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.02) 100%);
       backdrop-filter: blur(15px) saturate(180%);
-      -webkit-backdrop-filter: blur(15px) saturate(180%);
       border: 1px solid rgba(255, 255, 255, 0.2);
       border-top: 1px solid rgba(255, 255, 255, 0.5);
       border-left: 1px solid rgba(255, 255, 255, 0.4);
@@ -114,9 +144,7 @@
       border-radius: var(--radius-xl);
     }
 
-    /* ═══════════════════════════════════════════════════════════════
-       SIDEBAR (PROFIL) - FOTO TIDAK ZOOM + ANIMASI GLOW SOSMED
-    ═══════════════════════════════════════════════════════════════ */
+    /* SIDEBAR & FOTO (tidak berubah) */
     .sidebar {
       flex: 0 0 auto; padding: 24px; display: flex; flex-direction: row;
       align-items: center; gap: 20px; overflow: hidden;
@@ -133,7 +161,6 @@
       display: flex; align-items: center; justify-content: center;
       overflow: hidden;
     }
-    /* Foto tidak nge-zoom */
     .avatar-inner img {
       max-width: 100%;
       max-height: 100%;
@@ -163,7 +190,6 @@
       position: relative;
       overflow: hidden;
     }
-    /* Efek glow pada sosial media */
     .social-btn::before {
       content: '';
       position: absolute;
@@ -173,33 +199,27 @@
       opacity: 0;
       transition: opacity 0.4s;
     }
-    .social-btn:hover::before {
-      opacity: 0.3;
-    }
+    .social-btn:hover::before { opacity: 0.3; }
     .social-btn:hover {
       transform: scale(1.08);
       border-color: var(--accent);
       box-shadow: 0 0 12px rgba(34,197,94,0.4);
     }
-
     @media (min-width: 768px) {
       .sidebar { flex: 0 0 320px; flex-direction: column; text-align: center; padding: 48px 32px; justify-content: center; }
       .avatar-wrapper { width: 150px; height: 150px; margin-bottom: 16px; }
-      .profile-name { font-size: 28px; margin-bottom: 4px; }
+      .profile-name { font-size: 28px; }
       .profile-bio { display: block; font-size: 14.5px; line-height: 1.5; color: var(--text-secondary); margin-top: 20px; text-shadow: 0 1px 3px rgba(0,0,0,0.3); }
       .social-links { justify-content: center; margin-top: 24px; }
     }
 
-    /* ═══════════════════════════════════════════════════════════════
-       MAIN WINDOW & TABS
-    ═══════════════════════════════════════════════════════════════ */
-    .main-window { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+    /* MAIN WINDOW & TABS (sama) */
+    .main-window { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
     .window-header {
       padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.15);
       display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none;
     }
     .window-header::-webkit-scrollbar { display: none; }
-
     .nav-tab {
       padding: 10px 20px; border-radius: var(--radius-pill); border: 1px solid transparent;
       background: transparent; color: var(--text-tertiary); font-family: inherit;
@@ -232,15 +252,12 @@
     .content-section.active { display: block; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* ELEMEN KONTEN */
     .section-title { font-size: 18px; font-weight: 800; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
     .section-title i { color: var(--accent); }
     .grid-list { display: grid; grid-template-columns: 1fr; gap: 16px; }
     @media (min-width: 1024px) { .grid-list { grid-template-columns: 1fr 1fr; } }
 
-    /* ═══════════════════════════════════════════════════════════════
-       ANIMASI MICRO-INTERACTION: SHIMMER BORDER PADA KARTU
-    ═══════════════════════════════════════════════════════════════ */
+    /* glass-card dengan animasi shimmer */
     .glass-card {
       background: rgba(0, 0, 0, 0.25); backdrop-filter: blur(8px);
       border: 1px solid rgba(255, 255, 255, 0.12);
@@ -253,7 +270,6 @@
       position: relative;
       overflow: hidden;
     }
-    /* Efek border gradien bergerak saat hover */
     .glass-card::before {
       content: '';
       position: absolute;
@@ -284,7 +300,6 @@
       border-color: rgba(255, 255, 255, 0.3);
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
     }
-
     .card-icon {
       width: 44px; height: 44px; flex-shrink: 0; border-radius: var(--radius-md);
       background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
@@ -292,9 +307,7 @@
       font-size: 14px; font-weight: 800;
       transition: transform 0.2s;
     }
-    .glass-card:hover .card-icon {
-      transform: scale(1.05);
-    }
+    .glass-card:hover .card-icon { transform: scale(1.05); }
     .item-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; line-height: 1.4; }
     .item-title a { color: inherit; text-decoration: none; }
     .item-desc { font-size: 13px; color: var(--text-tertiary); margin-bottom: 8px; }
@@ -304,7 +317,6 @@
       border-radius: 6px; padding: 4px 8px; font-size: 10px; font-weight: 700; text-transform: uppercase;
     }
     .badge.highlight { background: var(--accent-muted); color: var(--accent); border-color: rgba(96,165,250,0.4); }
-
     .campus-group { margin-bottom: 28px; }
     .campus-title {
       font-size: 16px; font-weight: 700; color: var(--text-secondary); margin-bottom: 14px;
@@ -312,7 +324,6 @@
     }
     .campus-title i { margin-right: 8px; color: var(--accent); }
 
-    /* MOBILE NAVBAR (FLOATING) */
     @media (max-width: 767px) {
       .window-header {
         position: fixed; bottom: 20px; left: 16px; right: 16px; z-index: 1000;
@@ -330,7 +341,6 @@
       .badge-count { position: absolute; top: 6px; right: 8px; margin-left: 0; }
     }
 
-    /* LOADER */
     #page-loader {
       position: fixed; inset: 0; z-index: 999; background: #0f172a;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -348,12 +358,18 @@
   <div style="font-weight:600;">Memuat Portofolio...</div>
 </div>
 
-<div id="chip-notif" style="display:none;">
-  <span class="checkmark">✓</span> Email berhasil disalin
+<!-- NOTIFIKASI DENGAN ANIMASI CHECKLIST -->
+<div id="checklist-notif" class="checklist-notif">
+  <div class="checkbox-wrapper-31" id="checklist-anim">
+    <svg viewBox="0 0 35.6 35.6">
+      <circle class="background" cx="17.8" cy="17.8" r="17.8"></circle>
+      <circle class="stroke" cx="17.8" cy="17.8" r="14.37"></circle>
+      <polyline class="check" points="11.78 18.12 15.55 22.23 25.17 12.87"></polyline>
+    </svg>
+  </div>
 </div>
 
 <div class="app-container" id="app-container">
-
   <aside class="glass-panel sidebar">
     <div class="avatar-wrapper">
       <div class="avatar-inner">
@@ -460,7 +476,6 @@
       document.getElementById('prof-role').textContent = `Dosen ${p.nama_prodi || ''}`;
       document.getElementById('prof-nidn').textContent = `NIDN. ${p.nidn || '—'} • ${p.nama_pt || ''}`;
 
-      // Pendidikan
       const eduSorted = [...(data.pendidikan || [])].sort((a,b) => +b.tahun - +a.tahun);
       document.getElementById('edu-grid').innerHTML = eduSorted.map(e => `
         <div class="glass-card">
@@ -473,7 +488,6 @@
         </div>
       `).join('');
 
-      // Mengajar
       const tc = document.getElementById('teach-content');
       if (!data.mengajar || !data.mengajar.length) {
         tc.innerHTML = '<p style="color:var(--text-tertiary);">Tidak ada data mengajar.</p>';
@@ -507,7 +521,6 @@
         document.getElementById('count-teach').textContent = totalCourses;
       }
 
-      // Publikasi
       const pubDiv = document.getElementById('pub-content');
       if (!data.publikasi || !data.publikasi.length) {
         pubDiv.innerHTML = '<p style="color:var(--text-tertiary);">Tidak ada publikasi.</p>';
@@ -532,7 +545,6 @@
         }).join('');
       }
 
-      // Pengabdian
       const srvDiv = document.getElementById('srv-content');
       if (!data.pengabdian || !data.pengabdian.length) {
         srvDiv.innerHTML = '<p style="color:var(--text-tertiary);">Tidak ada data pengabdian.</p>';
@@ -551,14 +563,12 @@
         `).join('');
       }
 
-      // Hilangkan loader
       const loader = document.getElementById('page-loader');
       loader.classList.add('hidden');
       setTimeout(() => {
         if (loader.parentNode) loader.remove();
         document.getElementById('app-container').style.opacity = '1';
       }, 450);
-
     } catch (err) {
       console.error(err);
       document.getElementById('page-loader').innerHTML = `
@@ -568,31 +578,31 @@
         </div>`;
     }
   }
-
   window.addEventListener('DOMContentLoaded', loadData);
 
   // ═══════════════════════════════════════════════════════════════════
-  // 3. COPY EMAIL DENGAN NOTIF TRANSPARAN
+  // 3. COPY EMAIL DENGAN ANIMASI CHECKLIST (MENGGANTIKAN NOTIFIKASI SEBELUMNYA)
   // ═══════════════════════════════════════════════════════════════════
   function copyEmail() {
     const email = "vicky.setia@upertis.ac.id";
     navigator.clipboard.writeText(email).then(() => {
-      const chip = document.getElementById("chip-notif");
-      chip.style.display = "flex";
-      chip.style.alignItems = "center";
-      chip.style.justifyContent = "center";
-      requestAnimationFrame(() => {
-        chip.style.opacity = "1";
-        chip.style.transform = "translate(-50%, 20px)";
-      });
-      const check = chip.querySelector(".checkmark");
-      check.classList.add("animate");
-      setTimeout(() => check.classList.remove("animate"), 300);
+      const notif = document.getElementById('checklist-notif');
+      const animBox = document.getElementById('checklist-anim');
+      
+      // Reset animasi dengan menghapus class lalu memicu reflow
+      animBox.classList.remove('animate');
+      void animBox.offsetWidth; // force reflow
+      animBox.classList.add('animate');
+      
+      // Tampilkan notifikasi
+      notif.classList.add('show');
+      
+      // Sembunyikan setelah 1.5 detik
       setTimeout(() => {
-        chip.style.opacity = "0";
-        chip.style.transform = "translate(-50%, -30px)";
-        setTimeout(() => { chip.style.display = "none"; }, 300);
-      }, 2000);
+        notif.classList.remove('show');
+        // Hapus class animate agar bisa dijalankan lagi nanti
+        setTimeout(() => animBox.classList.remove('animate'), 300);
+      }, 1500);
     });
   }
 
@@ -640,6 +650,17 @@
         document.documentElement.style.setProperty('--accent-muted', accentMuted);
         const profileRoles = document.querySelectorAll('.profile-role');
         profileRoles.forEach(el => { if (el.id !== 'prof-nidn') el.style.color = accentColor; });
+        // Juga update warna stroke & check pada animasi checklist agar sesuai aksen
+        const style = document.createElement('style');
+        style.textContent = `
+          .checkbox-wrapper-31 .stroke, .checkbox-wrapper-31 .check {
+            stroke: ${accentColor} !important;
+          }
+          .checkbox-wrapper-31.animate .background {
+            fill: ${accentColor} !important;
+          }
+        `;
+        document.head.appendChild(style);
       };
       img.onerror = () => console.warn("Gagal ekstraksi warna dari background");
     }
