@@ -51,7 +51,7 @@
         #chip-notif { font-size: 12px; padding: 6px 16px; }
     }
 
-    /* ANIMASI CHECKLIST - PUTIH TRANSPARAN, TIDAK BERUBAH WARNA */
+    /* ANIMASI CHECKLIST - PUTIH TRANSPARAN */
     .checklist-svg {
         display: inline-block;
         width: 22px;
@@ -66,32 +66,22 @@
         fill: rgba(255, 255, 255, 0.2);
         transition: fill 0.3s ease;
     }
-    .checklist-svg .stroke {
-        fill: none;
-        stroke: rgba(255, 255, 255, 0.8);
-        stroke-miterlimit: 10;
-        stroke-width: 2px;
-        stroke-dashoffset: 100;
-        stroke-dasharray: 100;
-        transition: stroke-dashoffset 0.5s ease;
-    }
+    .checklist-svg .stroke,
     .checklist-svg .check {
         fill: none;
         stroke: rgba(255, 255, 255, 0.8);
         stroke-linecap: round;
         stroke-linejoin: round;
-        stroke-width: 2px;
-        stroke-dashoffset: 22;
-        stroke-dasharray: 22;
-        transition: stroke-dashoffset 0.5s ease;
+        stroke-width: 2;
+        transition: stroke-dashoffset 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    /* Saat animasi, stroke terisi penuh, background tetap putih transparan */
+    /* Saat animasi dijalankan, class .animate akan mengubah stroke-dashoffset ke 0 */
     .checklist-svg.animate .stroke,
     .checklist-svg.animate .check {
         stroke-dashoffset: 0;
     }
     .checklist-svg.animate .background {
-        fill: rgba(255, 255, 255, 0.3); /* sedikit lebih terang tapi tetap transparan */
+        fill: rgba(255, 255, 255, 0.35);
     }
 
     /* SCROLL TO TOP BUTTON */
@@ -196,7 +186,7 @@
       border-radius: var(--radius-xl);
     }
 
-    /* SIDEBAR & FOTO (tidak berubah) */
+    /* SIDEBAR & FOTO */
     .sidebar {
       flex: 0 0 auto; padding: 24px; display: flex; flex-direction: row;
       align-items: center; gap: 20px; overflow: hidden;
@@ -313,7 +303,6 @@
     .grid-list { display: grid; grid-template-columns: 1fr; gap: 16px; }
     @media (min-width: 1024px) { .grid-list { grid-template-columns: 1fr 1fr; } }
 
-    /* glass-card dengan shimmer */
     .glass-card {
       background: rgba(0, 0, 0, 0.25); backdrop-filter: blur(8px);
       border: 1px solid rgba(255, 255, 255, 0.12);
@@ -474,6 +463,26 @@
 </div>
 
 <script>
+  // ═══════════════════════════════════════════════════════════════════
+  // 0. SETUP PANJANG STROKE UNTUK ANIMASI CHECKLIST (PASTIKAN BERGERAK)
+  // ═══════════════════════════════════════════════════════════════════
+  function setupChecklistAnimation() {
+    const strokeCircle = document.querySelector('.checklist-svg .stroke');
+    const checkPoly = document.querySelector('.checklist-svg .check');
+    if (strokeCircle) {
+      const length = strokeCircle.getTotalLength();
+      strokeCircle.style.strokeDasharray = length;
+      strokeCircle.style.strokeDashoffset = length;
+    }
+    if (checkPoly) {
+      const length = checkPoly.getTotalLength();
+      checkPoly.style.strokeDasharray = length;
+      checkPoly.style.strokeDashoffset = length;
+    }
+  }
+  // Panggil setelah DOM siap
+  document.addEventListener('DOMContentLoaded', setupChecklistAnimation);
+
   // ═══════════════════════════════════════════════════════════════════
   // 1. TAB NAVIGATION + SCROLL PERSIST + LOCALSTORAGE PREFERENCE
   // ═══════════════════════════════════════════════════════════════════
@@ -650,7 +659,7 @@
   window.addEventListener('DOMContentLoaded', loadData);
 
   // ═══════════════════════════════════════════════════════════════════
-  // 3. COPY EMAIL DENGAN NOTIFIKASI CHIP + ANIMASI CHECKLIST (PUTIH)
+  // 3. COPY EMAIL DENGAN NOTIFIKASI CHIP + ANIMASI CHECKLIST (PASTIKAN BERGERAK)
   // ═══════════════════════════════════════════════════════════════════
   function copyEmail() {
     const email = "vicky.setia@upertis.ac.id";
@@ -658,22 +667,38 @@
       const chip = document.getElementById("chip-notif");
       const checkSvg = document.getElementById("checklist-svg");
       
+      // Reset animasi: hapus class, lalu paksa reflow, lalu tambah class
       checkSvg.classList.remove('animate');
-      void checkSvg.offsetWidth;
+      void checkSvg.offsetWidth; // force reflow
       checkSvg.classList.add('animate');
       
+      // Tampilkan chip
       chip.style.display = "flex";
       requestAnimationFrame(() => {
         chip.style.opacity = "1";
         chip.style.transform = "translate(-50%, 20px)";
       });
       
+      // Sembunyikan setelah 2 detik
       setTimeout(() => {
         chip.style.opacity = "0";
         chip.style.transform = "translate(-50%, -30px)";
         setTimeout(() => {
           chip.style.display = "none";
+          // Jangan hapus class animate terlalu cepat, biarkan selesai
+          // Tapi kita hapus setelah chip hilang agar next time bisa reset
           checkSvg.classList.remove('animate');
+          // Reset stroke-dashoffset ke nilai semula (untuk animasi ulang nanti)
+          const strokeCircle = checkSvg.querySelector('.stroke');
+          const checkPoly = checkSvg.querySelector('.check');
+          if (strokeCircle) {
+            const len = strokeCircle.getTotalLength();
+            strokeCircle.style.strokeDashoffset = len;
+          }
+          if (checkPoly) {
+            const len = checkPoly.getTotalLength();
+            checkPoly.style.strokeDashoffset = len;
+          }
         }, 300);
       }, 2000);
     }).catch(() => {
@@ -744,7 +769,7 @@
         document.documentElement.style.setProperty('--accent-muted', accentMuted);
         const profileRoles = document.querySelectorAll('.profile-role');
         profileRoles.forEach(el => { if (el.id !== 'prof-nidn') el.style.color = accentColor; });
-        // Checklist TIDAK diubah, tetap putih transparan
+        // Checklist tidak diubah, tetap putih transparan
       };
       img.onerror = () => console.warn("Gagal ekstraksi warna");
     }
