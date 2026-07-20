@@ -678,50 +678,46 @@ async function loadGitHubFiles() {
   const owner = 'vickysegu'; 
   const repo = 'vickysegu.github.io';       
   const path = 'Materi'; // Kosongkan ('') jika ingin folder root (utama)
-
-  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
   const githubContainer = document.getElementById('github-content');
 
   try {
-    const response = await fetch(url);
+    const response = await fetch(apiUrl);
     
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     const files = await response.json();
 
-    // Pastikan data yang dikembalikan adalah array (folder)
     if (Array.isArray(files)) {
       githubContainer.innerHTML = files.map(file => {
-        // Tentukan icon berdasarkan tipe (file atau folder)
         const icon = file.type === 'dir' ? 'fa-folder-open' : 'fa-file-code';
-        const typeBadge = file.type === 'dir' ? 'Folder' : 'File';
-        const fileSize = file.size > 0 ? `<span class="badge">${(file.size / 1024).toFixed(1)} KB</span>` : '';
+        const typeBadge = file.type === 'dir' ? 'Folder Materi' : 'File';
+        
+        // 2. KUNCI PERUBAHANNYA ADA DI SINI
+        // Kita merakit URL GitHub Pages, bukan URL repository source code
+        // file.path akan otomatis mengambil nama folder/file matkul tersebut
+        const webUrl = `https://${owner}.github.io/${repo}/${file.path}`;
 
-        // Menggunakan desain glass-card bawaan website kamu
         return `
           <div class="glass-card">
             <div class="card-icon"><i class="fa-solid ${icon}"></i></div>
             <div class="card-info">
               <div class="item-title">
-                <a href="${file.html_url}" target="_blank" style="text-decoration:none;">
+                <!-- href diubah menggunakan webUrl -->
+                <a href="${webUrl}" target="_blank" style="text-decoration:none;">
                   ${file.name} <i class="fa-solid fa-up-right-from-square" style="font-size:10px;"></i>
                 </a>
               </div>
               <div class="item-meta">
                 <span class="badge highlight">${typeBadge}</span>
-                ${fileSize}
               </div>
             </div>
           </div>
         `;
       }).join('');
       
-      // Re-initiate efek glow kursor untuk card yang baru dirender
       initCursorGlow();
     } else {
-      githubContainer.innerHTML = '<p style="color:var(--text-tertiary);">Path ini bukan folder atau kosong.</p>';
+      githubContainer.innerHTML = '<p style="color:var(--text-tertiary);">Path ini kosong.</p>';
     }
 
   } catch (error) {
@@ -729,7 +725,7 @@ async function loadGitHubFiles() {
     githubContainer.innerHTML = `
       <div style="text-align:center; padding:20px; width: 100%;">
         <i class="fa-brands fa-github" style="font-size:40px; color:#ef4444;"></i>
-        <p style="color:#ef4444; margin-top:12px;">Gagal memuat repository. Pastikan repo bersifat publik.</p>
+        <p style="color:#ef4444; margin-top:12px;">Gagal memuat daftar materi.</p>
       </div>`;
   }
 }
