@@ -663,6 +663,82 @@
       });
     });
   }
+
+  // ═══════════════════════════════════════════════════════════════════
+// 6. FETCH DATA FOLDER GITHUB
+// ═══════════════════════════════════════════════════════════════════
+async function loadGitHubFiles() {
+  // Ganti dengan data repositori kamu
+  const owner = 'vickysegu'; 
+  const repo = 'vickysegu.github.io';       
+  const path = 'Materi'; // Kosongkan ('') jika ingin folder root (utama)
+
+  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+  const githubContainer = document.getElementById('github-content');
+
+  try {
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const files = await response.json();
+
+    // Pastikan data yang dikembalikan adalah array (folder)
+    if (Array.isArray(files)) {
+      githubContainer.innerHTML = files.map(file => {
+        // Tentukan icon berdasarkan tipe (file atau folder)
+        const icon = file.type === 'dir' ? 'fa-folder-open' : 'fa-file-code';
+        const typeBadge = file.type === 'dir' ? 'Folder' : 'File';
+        const fileSize = file.size > 0 ? `<span class="badge">${(file.size / 1024).toFixed(1)} KB</span>` : '';
+
+        // Menggunakan desain glass-card bawaan website kamu
+        return `
+          <div class="glass-card">
+            <div class="card-icon"><i class="fa-solid ${icon}"></i></div>
+            <div class="card-info">
+              <div class="item-title">
+                <a href="${file.html_url}" target="_blank" style="text-decoration:none;">
+                  ${file.name} <i class="fa-solid fa-up-right-from-square" style="font-size:10px;"></i>
+                </a>
+              </div>
+              <div class="item-meta">
+                <span class="badge highlight">${typeBadge}</span>
+                ${fileSize}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      // Re-initiate efek glow kursor untuk card yang baru dirender
+      initCursorGlow();
+    } else {
+      githubContainer.innerHTML = '<p style="color:var(--text-tertiary);">Path ini bukan folder atau kosong.</p>';
+    }
+
+  } catch (error) {
+    console.error("Gagal mengambil data GitHub:", error);
+    githubContainer.innerHTML = `
+      <div style="text-align:center; padding:20px; width: 100%;">
+        <i class="fa-brands fa-github" style="font-size:40px; color:#ef4444;"></i>
+        <p style="color:#ef4444; margin-top:12px;">Gagal memuat repository. Pastikan repo bersifat publik.</p>
+      </div>`;
+  }
+}
+
+// Panggil fungsi ini saat halaman dimuat
+window.addEventListener('DOMContentLoaded', () => {
+  loadGitHubFiles();
+});
 </script>
+  <!-- Tambahkan di dalam <div class="window-body" id="scroll-area"> -->
+<div class="content-section" id="tab-github">
+  <h2 class="section-title"><i class="fa-brands fa-github"></i> File Repository</h2>
+  <div class="grid-list" id="github-content">
+    <p style="color:var(--text-tertiary);">Memuat data dari GitHub...</p>
+  </div>
+</div>
 </body>
 </html>
