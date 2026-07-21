@@ -673,13 +673,21 @@
   // ═══════════════════════════════════════════════════════════════════
 // 6. FETCH DATA FOLDER GITHUB
 // ═══════════════════════════════════════════════════════════════════
-async function loadGitHubFiles() {
-  // Ganti dengan data repositori kamu
-  const owner = 'vickysegu'; 
-  const repo = 'vickysegu.github.io';       
-  const path = 'Materi'; // Kosongkan ('') jika ingin folder root (utama)
-const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+
+  const gOwner = 'vickysegu'; 
+  const ghRepo = 'vickysegu.github.io';       
+  const ghBasePath = 'Materi'; // Kosongkan ('') jika ingin folder root (utama)
+// Fungsi ini sekarang menerima parameter "currentPath"
+async function loadGitHubFiles(currentPath = ghBasePath) {
+  const apiUrl = `https://api.github.com/repos/${ghOwner}/${ghRepo}/contents/${currentPath}`;
   const githubContainer = document.getElementById('github-content');
+
+  // Tampilkan efek loading saat berpindah folder
+  githubContainer.innerHTML = `
+    <div style="grid-column: 1 / -1; display:flex; gap:10px; align-items:center; color:var(--text-tertiary);">
+      <div class="spinner" style="width:20px; height:20px; border-width:2px;"></div>
+      Memuat isi folder...
+    </div>`;
 
   try {
     const response = await fetch(apiUrl);
@@ -687,52 +695,89 @@ const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     const files = await response.json();
 
-    if (Array.isArray(files)) {
-      githubContainer.innerHTML = files.map(file => {
-        const icon = file.type === 'dir' ? 'fa-folder-open' : 'fa-file-code';
-        const typeBadge = file.type === 'dir' ? 'Folder Materi' : 'File';
-        
-        // 2. KUNCI PERUBAHANNYA ADA DI SINI
-        // Kita merakit URL GitHub Pages, bukan URL repository source code
-        // file.path akan otomatis mengambil nama folder/file matkul tersebut
-        const webUrl = `https://${owner}.github.io/${repo}/${file.path}`;
+    let htmlContent = '';
 
-        return `
-          <div class="glass-card">
-            <div class="card-icon"><i class="fa-solid ${icon}"></i></div>
-            <div class="card-info">
-              <div class="item-title">
-                <!-- href diubah menggunakan webUrl -->
-                <a href="${webUrl}" target="_blank" style="text-decoration:none;">
-                  ${file.name} <i class="fa-solid fa-up-right-from-square" style="font-size:10px;"></i>
-                </a>
-              </div>
-              <div class="item-meta">
-                <span class="badge highlight">${typeBadge}</span>
+    // 2. TOMBOL KEMBALI (Jika posisi saat ini bukan di folder utama/root)
+    if (currentPath !== ghBasePath) {
+      // Mencari path folder induknya
+      const pathParts = currentPath.split('/');
+      pathParts.pop(); // Hapus folder saat ini
+      const parentPath = pathParts.join('/') || ghBasePath;
+
+      htmlContent += `
+        <div class="glass-card" style="cursor:pointer; border-color:var(--accent); background:rgba(34, 197, 94, 0.1);" onclick="loadGitHubFiles('${parentPath}')">
+          <div class="card-icon" style="color:var(--accent);"><i class="fa-solid fa-arrow-left"></i></div>
+          <div class="card-info">
+            <div class="item-title">Kembali</div>
+            <div class="item-desc">Ke folder sebelumnya</div>
+          </div>
+        </div>
+      `;
+    }
+
+    // 3. RENDER ISI FOLDER / FILE
+    if (Array.isArray(files)) {
+      htmlContent += files.map(file => {
+        
+        if (file.type === 'dir') {
+          // JIKA BERUPA FOLDER: Buat card yang bisa diklik untuk masuk ke folder
+          return `
+            <div class="glass-card" style="cursor:pointer;" onclick="loadGitHubFiles('${file.path}')">
+              <div class="card-icon"><i class="fa-solid fa-folder" style="color: #facc15;"></i></div>
+              <div class="card-info">
+                <div class="item-title">${file.name}</div>
+                <div class="item-meta"><span class="badge">Folder Materi</span></div>
               </div>
             </div>
-          </div>
-        `;
+          `;
+        } else {
+          // JIKA BERUPA FILE: Buat link ke GitHub Pages (halaman web yang dirender)
+          const webUrl = `https://${ghOwner}.github.io/${ghRepo}/${file.path}`;
+          // Menyesuaikan ikon: jika html pakai ikon globe, selain itu ikon file biasa
+          const isHtml = file.name.endsWith('.html');
+          const iconFile = isHtml ? 'fa-brands fa-html5' : 'fa-solid fa-file-code';
+          const colorFile = isHtml ? 'color: #e34f26;' : '';
+
+          return `
+            <div class="glass-card">
+              <div class="card-icon"><i class="${iconFile}" style="${colorFile}"></i></div>
+              <div class="card-info">
+                <div class="item-title">
+                  <a href="${webUrl}" target="_blank" style="text-decoration:none;">
+                    ${file.name} <i class="fa-solid fa-up-right-from-square" style="font-size:10px;"></i>
+                  </a>
+                </div>
+                <div class="item-meta">
+                  <span class="badge highlight">${isHtml ? 'Web Page' : 'File'}</span>
+                </div>
+              </div>
+            </div>
+          `;
+        }
       }).join('');
       
+      githubContainer.innerHTML = htmlContent;
+      
+      // Jalankan ulang efek glow kursor untuk card yang baru dibuat
       initCursorGlow();
     } else {
-      githubContainer.innerHTML = '<p style="color:var(--text-tertiary);">Path ini kosong.</p>';
+      githubContainer.innerHTML = '<p style="color:var(--text-tertiary);">Folder ini kosong.</p>';
     }
 
   } catch (error) {
     console.error("Gagal mengambil data GitHub:", error);
     githubContainer.innerHTML = `
-      <div style="text-align:center; padding:20px; width: 100%;">
-        <i class="fa-brands fa-github" style="font-size:40px; color:#ef4444;"></i>
-        <p style="color:#ef4444; margin-top:12px;">Gagal memuat daftar materi.</p>
+      <div style="grid-column: 1 / -1; text-align:center; padding:20px;">
+        <i class="fa-solid fa-triangle-exclamation" style="font-size:30px; color:#ef4444;"></i>
+        <p style="color:#ef4444; margin-top:8px;">Gagal memuat isi folder.</p>
+        <button onclick="loadGitHubFiles('${currentPath}')" style="margin-top:10px; padding:6px 12px; border-radius:8px; background:var(--accent); color:#000; border:none; cursor:pointer; font-weight:bold;">Coba Lagi</button>
       </div>`;
   }
 }
 
-// Panggil fungsi ini saat halaman dimuat
+// Panggil fungsi pertama kali saat halaman web dimuat
 window.addEventListener('DOMContentLoaded', () => {
-  loadGitHubFiles();
+  loadGitHubFiles(ghBasePath);
 });
 </script>
  
