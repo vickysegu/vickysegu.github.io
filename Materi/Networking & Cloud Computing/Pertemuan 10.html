@@ -1,0 +1,3594 @@
+<!DOCTYPE html>
+
+<html lang="id">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Pertemuan 10 — Setup Environment Aplikasi Web Dasar</title>
+<meta content="Salindia interaktif Pertemuan 10: Dari VPS kosong menjadi website yang bisa diakses publik dengan Web Server dan PHP Runtime." name="description"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<style>
+    :root {
+      --bg: #FFFFFF;
+      --bg-alt: #F6F8FC;
+      --bg-warm: #FAFBFF;
+      --panel: #FFFFFF;
+      --panel-tinted: #F0F2FF;
+      --border: #E0E4EE;
+      --border-soft: #ECEEF7;
+
+      --text: #111827;
+      --text-sub: #374151;
+      --text-muted: #6B7280;
+      --text-dim: #9CA3AF;
+
+      --indigo: #4F46E5;
+      --indigo-hover: #4338CA;
+      --indigo-soft: rgba(79, 70, 229, .07);
+      --indigo-glow: rgba(79, 70, 229, .18);
+      --indigo-strong: rgba(79, 70, 229, .12);
+
+      --teal: #0D9488;
+      --teal-soft: rgba(13, 148, 136, .08);
+      --green: #059669;
+      --green-soft: rgba(5, 150, 105, .08);
+      --green-strong: rgba(5, 150, 105, .14);
+      --red: #DC2626;
+      --red-soft: rgba(220, 38, 38, .07);
+      --amber: #B45309;
+      --amber-soft: rgba(180, 83, 9, .07);
+
+      --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+      --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, .06);
+      --shadow-md: 0 4px 20px rgba(0, 0, 0, .08);
+      --shadow-lg: 0 12px 48px rgba(0, 0, 0, .10);
+      --shadow-glow: 0 0 0 3px var(--indigo-glow);
+      --shadow-card: 0 1px 4px rgba(0, 0, 0, .04), 0 4px 16px rgba(0, 0, 0, .04);
+      --shadow-card-hover: 0 8px 30px rgba(0, 0, 0, .10);
+
+      --radius: 16px;
+      --radius-md: 12px;
+      --radius-sm: 8px;
+      --transition: .22s cubic-bezier(.4, 0, .2, 1);
+      --spring: .4s cubic-bezier(.16, 1, .3, 1);
+    }
+
+    [data-theme="dark"] {
+      --bg: #0F172A;
+      --bg-alt: #1E293B;
+      --bg-warm: #0B0F19;
+      --panel: #1E293B;
+      --panel-tinted: #1E1B4B;
+      --border: #334155;
+      --border-soft: #1E293B;
+
+      --text: #F8FAFC;
+      --text-sub: #CBD5E1;
+      --text-muted: #94A3B8;
+      --text-dim: #64748B;
+
+      --indigo: #6366F1;
+      --indigo-hover: #4F46E5;
+      --indigo-soft: rgba(99, 102, 241, .18);
+      --indigo-glow: rgba(99, 102, 241, .35);
+      --indigo-strong: rgba(99, 102, 241, .25);
+
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, .4);
+      --shadow-md: 0 4px 20px rgba(0, 0, 0, .5);
+      --shadow-lg: 0 12px 48px rgba(0, 0, 0, .6);
+      --shadow-card: 0 1px 4px rgba(0, 0, 0, .3), 0 4px 16px rgba(0, 0, 0, .3);
+      --shadow-card-hover: 0 8px 30px rgba(0, 0, 0, .5);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a {
+      color: var(--indigo);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    code,
+    .mono {
+      font-family: var(--mono);
+    }
+
+    button {
+      font-family: var(--sans);
+      cursor: pointer;
+      border: none;
+      background: none;
+    }
+
+    button:focus-visible {
+      outline: none;
+      box-shadow: var(--shadow-glow);
+    }
+
+    /* ─── Full-width layout ─── */
+    .app {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      height: 100dvh;
+      width: 100%;
+    }
+
+    /* ─── Top Bar ─── */
+    .topbar {
+      flex: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      height: 56px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      z-index: 20;
+      position: relative;
+    }
+
+    .topbar-brand {
+      font-family: var(--mono);
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: none;
+    }
+
+    .topbar-brand .pulse {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 8px rgba(5, 150, 105, .45);
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      50% {
+        opacity: .4;
+        transform: scale(.7);
+      }
+    }
+
+    .mobile-topbar-title,
+    .mobile-bottom-nav {
+      display: none !important;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .ctrl-btn-mini {
+      background: var(--panel);
+      border: 1.5px solid var(--border);
+      color: var(--text-sub);
+      font-weight: 700;
+      font-size: 16px;
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .ctrl-btn-mini:hover:not(:disabled) {
+      border-color: var(--indigo);
+      color: var(--indigo);
+      transform: translateY(-1px);
+    }
+
+    .ctrl-btn-mini:disabled {
+      opacity: .3;
+      cursor: not-allowed;
+    }
+
+    .slide-counter {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin-right: 6px;
+    }
+
+    /* Status indicator in topbar */
+    .topbar-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: none;
+      padding: 5px 12px;
+      border-radius: 20px;
+      background: var(--bg-alt);
+      border: 1px solid var(--border);
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      cursor: pointer;
+      position: relative;
+      transition: all var(--transition);
+    }
+
+    .topbar-status:hover {
+      border-color: var(--indigo);
+      color: var(--indigo);
+    }
+
+    .status-dots {
+      display: flex;
+      gap: 3px;
+    }
+
+    .status-mini-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--border);
+      transition: all .4s ease;
+    }
+
+    .status-mini-dot.on {
+      background: var(--green);
+      box-shadow: 0 0 6px rgba(5, 150, 105, .4);
+    }
+
+    /* Status dropdown */
+    .status-dropdown {
+      display: none;
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      width: 280px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
+      padding: 16px;
+      z-index: 50;
+    }
+
+    .status-dropdown.open {
+      display: block;
+      animation: dropIn .25s var(--spring);
+    }
+
+    @keyframes dropIn {
+      from {
+        opacity: 0;
+        transform: translateY(-8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    .status-dropdown-title {
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .status-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 6px;
+      font-size: 12.5px;
+      border-bottom: 1px solid var(--border-soft);
+      transition: background var(--transition);
+    }
+
+    .status-row:last-child {
+      border-bottom: none;
+    }
+
+    .status-name {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-sub);
+      font-weight: 500;
+    }
+
+    .svc-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex: none;
+      background: var(--border);
+      transition: all .4s ease;
+    }
+
+    .svc-dot.on {
+      background: var(--green);
+      box-shadow: 0 0 8px rgba(5, 150, 105, .35);
+    }
+
+    .state-label {
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-dim);
+      padding: 2px 8px;
+      border-radius: 20px;
+      background: var(--bg-alt);
+      transition: all var(--transition);
+    }
+
+    .state-label.on {
+      color: var(--green);
+      background: var(--green-soft);
+    }
+
+    /* ─── Slide progress ─── */
+    .slide-progress {
+      height: 3px;
+      background: var(--bg-alt);
+      flex: none;
+    }
+
+    .slide-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--indigo), #818CF8, var(--teal));
+      transition: width .5s var(--spring);
+      border-radius: 0 4px 4px 0;
+    }
+
+    /* ─── Main stage ─── */
+    .stage {
+      flex: 1;
+      min-height: 0;
+      position: relative;
+      overflow-y: auto;
+      overflow-x: hidden;
+      background: var(--bg-warm);
+      scroll-behavior: smooth;
+    }
+
+    .slide-stage {
+      width: 100%;
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .slide {
+      display: none;
+      min-height: 100%;
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 36px 48px;
+      animation: slidein .35s var(--spring);
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: stretch;
+      box-sizing: border-box;
+    }
+
+    .slide.active {
+      display: flex;
+    }
+
+    .slide.center-slide {
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    .slide-inner {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ─── 2-Column Layout Helpers ─── */
+    .two-col-layout {
+      display: flex;
+      gap: 24px;
+      width: 100%;
+      align-items: stretch;
+      margin-top: 14px;
+    }
+
+    .col-main, .col-half {
+      flex: 1;
+      min-width: 0;
+      width: 100%;
+    }
+
+    .col-side {
+      width: 420px;
+      max-width: 100%;
+      flex: none;
+    }
+
+    .col-side-quiz {
+      width: 380px;
+      max-width: 100%;
+      flex: none;
+    }
+
+    @keyframes slidein {
+      from {
+        opacity: 0;
+        transform: translateY(16px);
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    /* ─── Typography ─── */
+    .eyebrow {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: .06em;
+      color: var(--indigo);
+      text-transform: uppercase;
+      font-weight: 700;
+      margin: 0 0 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 14px;
+      background: var(--indigo-soft);
+      border-radius: 20px;
+    }
+
+    h1,
+    h2,
+    h3 {
+      font-weight: 800;
+      letter-spacing: -.03em;
+      line-height: 1.12;
+      color: var(--text);
+    }
+
+    h1 {
+      font-size: clamp(30px, 4vw, 44px);
+      margin: 0 0 16px;
+    }
+
+    h2 {
+      font-size: clamp(24px, 3vw, 34px);
+      margin: 0 0 14px;
+    }
+
+    h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin: 0 0 6px;
+    }
+
+    p {
+      font-size: 15.5px;
+      color: var(--text-sub);
+      margin: 0 0 16px;
+      line-height: 1.7;
+    }
+
+    p.lead {
+      font-size: 16.5px;
+      color: var(--text);
+      font-weight: 400;
+    }
+
+    .small {
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    /* ─── Hero ─── */
+    .hero-term {
+      margin-top: 6px !important;
+      margin-bottom: 6px !important;
+      max-width: 550px !important;
+      /* snugger width */
+      width: 100%;
+    }
+
+    .hero-term .term-bar {
+      padding: 4px 12px !important;
+      /* super tight bar */
+    }
+
+    .hero-term .term-body {
+      padding: 6px 12px !important;
+      /* tight vertical padding */
+      line-height: 1.35 !important;
+      /* compact line height */
+      font-size: 14.5px !important;
+      /* nice, large, readable font size */
+    }
+
+    .btn-primary {
+      background: var(--indigo);
+      color: #fff;
+      border: none;
+      font-weight: 700;
+      font-size: 15px;
+      padding: 10px 24px !important;
+      /* snugger button padding */
+      border-radius: var(--radius-sm);
+      margin-top: 8px !important;
+      /* brought even closer */
+      transition: all var(--transition);
+      box-shadow: 0 4px 14px rgba(79, 70, 229, .3);
+      letter-spacing: -.01em;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(79, 70, 229, .35);
+      background: var(--indigo-hover);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    /* ─── Terminal ─── */
+    .term-window {
+      text-align: left !important;
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+      background: #1E1E2E;
+      border: 1px solid #2A2A3C;
+    }
+
+    .term-bar {
+      display: flex;
+      gap: 8px;
+      padding: 12px 16px;
+      background: #181825;
+      align-items: center;
+      text-align: left !important;
+    }
+
+    .term-bar .tdot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+    }
+
+    .term-bar .t1 {
+      background: #F38BA8;
+    }
+
+    .term-bar .t2 {
+      background: #F9E2AF;
+    }
+
+    .term-bar .t3 {
+      background: #A6E3A1;
+    }
+
+    .term-bar .title {
+      margin-left: 10px;
+      font-family: var(--mono);
+      font-size: 11.5px;
+      color: rgba(205, 214, 244, .4);
+      font-weight: 500;
+    }
+
+    .term-body {
+      text-align: left !important;
+      padding: 12px 14px;
+      font-family: var(--mono);
+      font-size: 14px;
+      /* enlarged */
+      line-height: 1.45;
+      /* compact */
+      color: #CDD6F4;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .term-line {
+      margin-bottom: 2px !important;
+      line-height: 1.3 !important;
+    }
+    .term-line.term-prompt {
+      color: #A6E3A1;
+    }
+
+    .term-line.term-out {
+      color: #BAC2DE;
+    }
+
+    #term-body {
+      height: 170px;
+      overflow-y: auto;
+    }
+
+    /* ─── Cards: Compare ─── */
+    .compare-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-top: 14px;
+    }
+
+    .compare-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      background: var(--panel);
+      transition: all var(--spring);
+      box-shadow: var(--shadow-card);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .compare-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--border);
+      transition: background var(--transition);
+    }
+
+    .compare-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-card-hover);
+    }
+
+    .compare-card .tag {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 12px;
+      font-weight: 700;
+    }
+
+    .compare-card.after {
+      border-color: rgba(79, 70, 229, .25);
+    }
+
+    .compare-card.after::before {
+      background: var(--indigo);
+    }
+
+    .icon-wrap {
+      width: 40px;
+      height: 40px;
+      margin-bottom: 14px;
+      color: var(--text-dim);
+    }
+
+    .compare-card.after .icon-wrap {
+      color: var(--indigo);
+    }
+
+    .compare-card p {
+      font-size: 13.5px;
+      margin: 0;
+      line-height: 1.6;
+    }
+
+    /* ─── Diagram ─── */
+    .diagram {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--panel);
+      padding: 24px 28px;
+      margin: 14px 0;
+      box-shadow: var(--shadow-card);
+    }
+
+    .diagram-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .diagram-node {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      width: 130px;
+      flex: none;
+      padding: 12px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: #ffffff;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.4s ease;
+    }
+
+    .diagram-node.active {
+      border-color: var(--indigo);
+      background: var(--indigo-soft);
+      box-shadow: 0 0 14px rgba(79, 70, 229, 0.25);
+      transform: translateY(-2px);
+    }
+
+    .diagram-node.active .icon-wrap {
+      color: var(--indigo) !important;
+      filter: drop-shadow(0 0 4px var(--indigo));
+    }
+
+    .diagram-node.success {
+      border-color: var(--green);
+      background: var(--green-soft);
+      box-shadow: 0 0 14px rgba(5, 150, 105, 0.25);
+      transform: translateY(-2px);
+    }
+
+    .diagram-node.success .icon-wrap {
+      color: var(--green) !important;
+      filter: drop-shadow(0 0 4px var(--green));
+    }
+
+    .diagram-node .icon-wrap {
+      width: 36px;
+      height: 36px;
+      margin: 0;
+      color: var(--teal);
+    }
+
+    .diagram-node span {
+      font-family: var(--mono);
+      font-size: 11.5px;
+      color: var(--text-sub);
+      font-weight: 600;
+    }
+
+    .diagram-wire {
+      position: relative;
+      height: 3px;
+      background: var(--border);
+      flex: 1;
+      margin: 0 18px;
+      border-radius: 3px;
+    }
+
+    .diagram-wire .port-label {
+      position: absolute;
+      top: -24px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--indigo);
+      background: var(--indigo-soft);
+      padding: 2px 10px;
+      border-radius: 10px;
+    }
+
+    .packet {
+      position: absolute;
+      top: -5px;
+      left: 4%;
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: var(--indigo);
+      box-shadow: 0 0 16px rgba(79, 70, 229, .55);
+      transition: left .9s ease-in-out, background .3s;
+    }
+
+    .packet.at-server {
+      left: 93%;
+    }
+
+    .packet.returning {
+      background: var(--green);
+      box-shadow: 0 0 16px rgba(5, 150, 105, .55);
+    }
+
+    .diagram-log {
+      margin-top: 8px;
+      border-top: 1px dashed var(--border);
+      padding-top: 12px;
+      min-height: 52px;
+    }
+
+    .log-line {
+      font-family: var(--mono);
+      font-size: 12px;
+      padding: 3px 0;
+      opacity: 0;
+      animation: fadein .3s forwards;
+    }
+
+    @keyframes fadein {
+      to {
+        opacity: 1;
+      }
+    }
+
+    .log-teal {
+      color: var(--teal);
+    }
+
+    .log-green {
+      color: var(--green);
+    }
+
+    .log-muted {
+      color: var(--text-dim);
+    }
+
+    /* ─── Handshake ─── */
+    .hs-step {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 12px 16px;
+      margin-bottom: 8px;
+      background: var(--bg-alt);
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius-sm);
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.5s var(--spring);
+    }
+
+    .hs-step.show {
+      opacity: 1;
+      transform: none;
+    }
+
+    .hs-step .who {
+      font-family: var(--sans);
+      font-size: 11px;
+      color: #ffffff;
+      width: 80px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      text-align: center;
+    }
+
+    /* Color Klien and Server differently */
+    .hs-step .who:first-of-type {
+      background: var(--indigo);
+    }
+
+    .hs-step .who:last-of-type {
+      background: var(--teal);
+    }
+
+    /* If Server is the sender (step 2) */
+    #hs2 .who:first-of-type {
+      background: var(--teal);
+    }
+
+    #hs2 .who:last-of-type {
+      background: var(--indigo);
+    }
+
+    .hs-step .arrow {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text-sub);
+      flex: 1;
+      text-align: center;
+      border-bottom: 2px dashed var(--border);
+      padding-bottom: 6px;
+      font-weight: 600;
+    }
+
+    /* ─── Buttons ─── */
+    .btn-sim {
+      background: var(--panel);
+      color: var(--text);
+      border: 1.5px solid var(--border);
+      font-family: var(--mono);
+      font-size: 12.5px;
+      font-weight: 600;
+      padding: 11px 22px;
+      border-radius: var(--radius-sm);
+      transition: all var(--transition);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn-sim:hover:not(:disabled) {
+      border-color: var(--indigo);
+      color: var(--indigo);
+      box-shadow: var(--shadow-glow);
+      transform: translateY(-2px);
+    }
+
+    .btn-sim:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .btn-sim:disabled {
+      opacity: .4;
+      cursor: not-allowed;
+    }
+
+    .center-btn {
+      text-align: center;
+      margin: 12px 0 8px;
+    }
+
+    /* ─── Fact Grid ─── */
+    .fact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .fact-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 22px;
+      background: var(--panel);
+      box-shadow: var(--shadow-card);
+      transition: all var(--spring);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .fact-card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--indigo);
+      opacity: 0;
+      transition: opacity var(--transition);
+    }
+
+    .fact-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-card-hover);
+    }
+
+    .fact-card:hover::after {
+      opacity: 1;
+    }
+
+    .fact-card h3 {
+      font-size: 13.5px;
+      color: var(--indigo);
+      margin-bottom: 8px;
+      font-weight: 800;
+    }
+
+    .fact-card p {
+      font-size: 13px;
+      margin: 0;
+      line-height: 1.6;
+    }
+
+    /* ─── Stack Toggle ─── */
+    .stack-toggle {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 14px 0;
+    }
+
+    .stack-card {
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 22px;
+      background: var(--panel);
+      text-align: left;
+      transition: all var(--spring);
+      box-shadow: var(--shadow-card);
+      cursor: pointer;
+    }
+
+    .stack-card:hover {
+      box-shadow: var(--shadow-card-hover);
+      transform: translateY(-2px);
+    }
+
+    .stack-card .stack-name {
+      display: block;
+      font-weight: 800;
+      font-size: 15px;
+      color: var(--text);
+    }
+
+    .stack-card .stack-desc {
+      display: block;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 6px;
+      line-height: 1.55;
+    }
+
+    .stack-card[data-stack="lamp"].active {
+      border-color: #4F46E5;
+      background: linear-gradient(180deg, rgba(79, 70, 229, 0.14), var(--panel) 50%);
+      box-shadow: 0 0 16px rgba(79, 70, 229, 0.2), var(--shadow-card);
+    }
+
+    .stack-card[data-stack="xampp"].active {
+      border-color: #F97316;
+      background: linear-gradient(180deg, rgba(249, 115, 22, 0.14), var(--panel) 50%);
+      box-shadow: 0 0 16px rgba(249, 115, 22, 0.2), var(--shadow-card);
+    }
+
+    /* ─── Meters ─── */
+    .meters-group {
+      margin: 8px 0;
+    }
+
+    .meter {
+      margin-bottom: 12px;
+    }
+
+    .meter-head {
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--mono);
+      font-size: 11.5px;
+      color: var(--text-sub);
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    .meter-track {
+      height: 8px;
+      border-radius: 10px;
+      background: var(--bg-alt);
+      overflow: hidden;
+      margin-bottom: 5px;
+    }
+
+    .meter-fill {
+      height: 100%;
+      width: 0;
+      border-radius: 10px;
+      transition: width 1.2s var(--spring);
+    }
+
+    .meter-fill.lamp {
+      background: linear-gradient(90deg, #4F46E5, #38BDF8);
+    }
+
+    .meter-fill.xampp {
+      background: linear-gradient(90deg, #F97316, #FBBF24);
+    }
+
+    .meter-fill.dim {
+      opacity: 0.3;
+      filter: grayscale(60%);
+    }
+
+    .meter-fill.lamp.active-focus {
+      opacity: 1;
+      box-shadow: 0 0 12px rgba(79, 70, 229, 0.45);
+    }
+
+    .meter-fill.xampp.active-focus {
+      opacity: 1;
+      box-shadow: 0 0 12px rgba(249, 115, 22, 0.45);
+    }
+
+    /* ─── Stack Verdict Banner ─── */
+    .stack-verdict {
+      margin: 14px 0;
+      padding: 14px 18px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      background: var(--panel);
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      box-shadow: var(--shadow-sm);
+      transition: all var(--spring);
+    }
+
+    .stack-verdict.lamp {
+      border-color: rgba(79, 70, 229, .4);
+      background: rgba(79, 70, 229, 0.08);
+    }
+
+    .stack-verdict.lamp .verdict-icon {
+      color: #4F46E5;
+    }
+
+    .stack-verdict.lamp #verdict-title {
+      color: #4F46E5;
+    }
+
+    .stack-verdict.xampp {
+      border-color: rgba(249, 115, 22, .4);
+      background: rgba(249, 115, 22, 0.08);
+    }
+
+    .stack-verdict.xampp .verdict-icon {
+      color: #EA580C;
+    }
+
+    .stack-verdict.xampp #verdict-title {
+      color: #EA580C;
+    }
+
+    .verdict-icon {
+      font-size: 22px;
+      flex: none;
+      line-height: 1;
+    }
+
+    .verdict-text strong {
+      display: block;
+      font-size: 13.5px;
+      margin-bottom: 3px;
+      font-family: var(--sans);
+    }
+
+    .verdict-text p {
+      font-size: 12.5px;
+      color: var(--text-sub);
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    /* ─── Table & Mobile Cards ─── */
+    table.cmp {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      margin-top: 14px;
+      font-size: 13px;
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+    }
+
+    table.cmp th,
+    table.cmp td {
+      padding: 12px 16px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    table.cmp th {
+      font-family: var(--mono);
+      font-size: 10.5px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--text-muted);
+      background: var(--bg-alt);
+      font-weight: 700;
+      border-bottom: 2px solid var(--border);
+    }
+
+    table.cmp td {
+      color: var(--text-sub);
+      background: var(--panel);
+      border-bottom: 1px solid var(--border-soft);
+    }
+
+    table.cmp tr:last-child td {
+      border-bottom: none;
+    }
+
+    table.cmp td[data-col="lamp"].col-highlight {
+      background: rgba(79, 70, 229, 0.12);
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    table.cmp td[data-col="xampp"].col-highlight {
+      background: rgba(249, 115, 22, 0.12);
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    table.cmp td:first-child {
+      color: var(--text);
+      font-weight: 700;
+      background: var(--bg-alt);
+    }
+
+    /* ─── Mobile Comparison Cards ─── */
+    .cmp-mobile-cards {
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 14px;
+      width: 100%;
+    }
+
+    .cmp-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      box-shadow: var(--shadow-card);
+      transition: all var(--transition);
+    }
+
+    .cmp-card:hover {
+      border-color: var(--indigo);
+      transform: translateY(-1px);
+    }
+
+    .cmp-card-head {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--text);
+      padding-bottom: 8px;
+      border-bottom: 1px dashed var(--border-soft);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .cmp-card-row {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      margin-bottom: 8px;
+      transition: all var(--spring);
+    }
+
+    .cmp-card-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .cmp-card-row.lamp {
+      background: rgba(79, 70, 229, 0.09);
+      border-left: 3.5px solid #4F46E5;
+    }
+
+    .cmp-card-row.xampp {
+      background: rgba(249, 115, 22, 0.09);
+      border-left: 3.5px solid #F97316;
+    }
+
+    .cmp-card-row.dim {
+      opacity: 0.35;
+      filter: grayscale(60%);
+    }
+
+    .cmp-card-row.lamp.active-focus {
+      opacity: 1;
+      transform: translateX(3px);
+      box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);
+    }
+
+    .cmp-card-row.xampp.active-focus {
+      opacity: 1;
+      transform: translateX(3px);
+      box-shadow: 0 2px 8px rgba(249, 115, 22, 0.25);
+    }
+
+    .cmp-tag {
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .cmp-tag.lamp {
+      color: #4F46E5;
+    }
+
+    .cmp-tag.xampp {
+      color: #EA580C;
+    }
+
+    .cmp-val {
+      font-size: 12.5px;
+      color: var(--text-sub);
+      line-height: 1.45;
+    }
+
+    /* ─── Progress ─── */
+    .progress-wrap {
+      margin: 12px 0 16px;
+    }
+
+    .progress-track {
+      height: 8px;
+      border-radius: 10px;
+      background: var(--bg-alt);
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, var(--indigo), var(--teal));
+      transition: width .6s ease;
+      border-radius: 10px;
+    }
+
+    .progress-label {
+      font-family: var(--mono);
+      font-size: 11.5px;
+      color: var(--text-muted);
+      margin-top: 6px;
+      font-weight: 600;
+    }
+
+    /* ─── Step Wizard ─── */
+    .step-wizard {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px 26px;
+      background: var(--panel);
+      margin-top: 14px;
+      box-shadow: var(--shadow-card);
+      transition: all var(--transition);
+    }
+
+    .step-head {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 10px;
+    }
+
+    .step-badge {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--bg-alt);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--text-muted);
+      flex: none;
+      transition: all var(--transition);
+    }
+
+    .step-wizard.done .step-badge {
+      background: var(--green-strong);
+      color: var(--green);
+    }
+
+    .step-title {
+      font-size: 16px;
+      font-weight: 800;
+      flex: 1;
+      letter-spacing: -.02em;
+    }
+
+    .step-status {
+      font-family: var(--mono);
+      font-size: 16px;
+      color: var(--text-dim);
+      width: 20px;
+      text-align: center;
+    }
+
+    .step-desc {
+      font-size: 13.5px;
+      color: var(--text-sub);
+      margin: 0 0 14px;
+      line-height: 1.65;
+    }
+
+    .cmd-block {
+      background: #1E1E2E;
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      font-family: var(--mono);
+      font-size: 12.5px;
+      color: #A6E3A1;
+      overflow-x: auto;
+      margin-bottom: 14px;
+    }
+
+    .step-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .wiz-dots {
+      display: flex;
+      gap: 7px;
+    }
+
+    .wiz-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--bg-alt);
+      border: 2px solid var(--border);
+      transition: all var(--transition);
+    }
+
+    .wiz-dot.done {
+      background: var(--green);
+      border-color: var(--green);
+    }
+
+    .wiz-dot.current {
+      border-color: var(--indigo);
+      background: var(--indigo-soft);
+    }
+
+    /* ─── Browser Mock ─── */
+    .browser-mock {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow-md);
+    }
+
+    .browser-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      background: var(--bg-alt);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .browser-bar .bdot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--border);
+    }
+
+    .browser-addr {
+      flex: 1;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 14px;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text-dim);
+      margin-left: 6px;
+    }
+
+    .browser-content {
+      padding: 24px;
+      min-height: 90px;
+      background: var(--panel);
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    .state-error {
+      color: var(--red);
+      font-weight: 700;
+    }
+
+    .state-pending {
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    .state-fixed {
+      color: var(--green);
+      font-weight: 700;
+    }
+
+    .state-fixed .dim {
+      display: block;
+      color: var(--text-sub);
+      font-weight: 400;
+      font-size: 12.5px;
+      margin-top: 4px;
+    }
+
+    .state-code {
+      font-family: var(--mono);
+      color: var(--text-sub);
+    }
+
+    /* ─── PHP Info Mock ─── */
+    .php-mock {
+      background: #fff;
+      color: #222;
+      font-family: sans-serif;
+      font-size: 11.5px;
+      border: 1px solid #ccc;
+      text-align: center;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .php-mock-head {
+      background: #5B6B9B;
+      color: #fff;
+      padding: 6px;
+      font-weight: bold;
+      font-size: 14.5px;
+    }
+
+    .php-mock table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .php-mock td {
+      padding: 4px 6px;
+      border: 1px solid #ccc;
+      text-align: left;
+    }
+
+    .php-mock td:first-child {
+      background: #e9e9e9;
+      font-weight: bold;
+      width: 35%;
+      color: #333;
+    }
+
+    /* ─── Diagnostics ─── */
+    .diag-list {
+      list-style: none;
+      margin: 0 0 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .diag-list li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13.5px;
+      color: var(--text-sub);
+      padding: 10px 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--panel);
+      font-weight: 500;
+      transition: all var(--transition);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .diag-list li:hover {
+      background: var(--bg-alt);
+      transform: translateX(4px);
+    }
+
+    .diag-list li .mark {
+      font-family: var(--mono);
+      width: 18px;
+      text-align: center;
+      flex: none;
+      font-weight: 800;
+      font-size: 14px;
+    }
+
+    .diag-list li .mark.ok {
+      color: var(--green);
+    }
+
+    .diag-list li .mark.bad {
+      color: var(--red);
+    }
+
+    .diag-cause {
+      font-size: 13.5px;
+      color: var(--text-sub);
+      background: var(--red-soft);
+      border-left: 4px solid var(--red);
+      padding: 16px 20px;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      margin-bottom: 14px;
+      line-height: 1.65;
+    }
+
+    /* ─── Verify Chips ─── */
+    .verify-status {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .verify-chip {
+      font-family: var(--mono);
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1.5px solid var(--border);
+      color: var(--text-dim);
+      background: var(--panel);
+      transition: all var(--transition);
+    }
+
+    .verify-chip.on {
+      border-color: var(--green);
+      color: var(--green);
+      background: var(--green-soft);
+    }
+
+    /* ─── References ─── */
+    ol.ref-list {
+      margin: 12px 0;
+      list-style: none;
+      counter-reset: ref;
+    }
+
+    ol.ref-list li {
+      counter-increment: ref;
+      padding: 12px 0 12px 42px;
+      position: relative;
+      font-size: 13px;
+      color: var(--text-sub);
+      border-top: 1px solid var(--border-soft);
+      line-height: 1.65;
+    }
+
+    ol.ref-list li::before {
+      content: counter(ref);
+      position: absolute;
+      left: 0;
+      top: 12px;
+      font-family: var(--mono);
+      color: var(--indigo);
+      font-size: 11px;
+      font-weight: 800;
+      background: var(--indigo-soft);
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+    }
+
+    .refs-more {
+      display: none;
+      margin-top: 10px;
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 10px 16px;
+      background: var(--panel);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .refs-more.show {
+      display: block;
+      animation: fadein .3s ease;
+    }
+
+    .refs-more a {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: block;
+      padding: 7px 0;
+      border-top: 1px solid var(--border-soft);
+      transition: color var(--transition);
+    }
+
+    .refs-more a:first-child {
+      border-top: none;
+    }
+
+    .refs-more a:hover {
+      color: var(--indigo);
+      text-decoration: none;
+    }
+
+    .btn-link {
+      background: var(--panel);
+      border: 1.5px solid var(--border);
+      color: var(--text-sub);
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 10px 20px;
+      border-radius: var(--radius-sm);
+      transition: all var(--transition);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn-link:hover {
+      border-color: var(--indigo);
+      color: var(--indigo);
+      transform: translateY(-1px);
+    }
+
+    /* ─── Term Hint ─── */
+    .term-hint {
+      border-bottom: 2px dashed var(--indigo);
+      cursor: help;
+      color: var(--indigo);
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 4px;
+      background: var(--indigo-soft);
+      transition: all var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .term-hint::after {
+      content: 'ℹ';
+      font-size: 10px;
+      opacity: 0.7;
+      font-family: var(--mono);
+    }
+
+    .term-hint:hover {
+      background: var(--indigo);
+      color: #ffffff !important;
+      border-bottom-color: transparent;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px var(--indigo-glow);
+    }
+
+    /* ─── Why Box (Inline Accordion) ─── */
+    .why-box {
+      margin-top: 10px !important;
+      width: 100%;
+      display: block;
+    }
+
+    .why-toggle {
+      background: var(--indigo-soft);
+      border: 1px solid var(--indigo-glow);
+      color: var(--indigo);
+      font-size: 13px !important;
+      font-weight: 700;
+      padding: 8px 16px !important;
+      border-radius: var(--radius-sm);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all var(--transition);
+      cursor: pointer;
+    }
+
+    .why-toggle:hover {
+      background: var(--indigo-strong);
+      transform: translateY(-1px);
+    }
+
+    .why-content {
+      display: none;
+      margin-top: 8px;
+      padding: 14px 18px;
+      background: var(--panel-tinted);
+      border-left: 4px solid var(--indigo);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      font-size: 13.5px;
+      color: var(--text-sub);
+      line-height: 1.65;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .why-content.show {
+      display: block !important;
+      animation: slideDown .3s var(--spring);
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ─── TOC Drawer & Theme Button ─── */
+    .toc-btn {
+      background: var(--panel);
+      border: 1.5px solid var(--border);
+      color: var(--text-sub);
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all var(--transition);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .toc-btn:hover {
+      border-color: var(--indigo);
+      color: var(--indigo);
+      background: var(--indigo-soft);
+    }
+
+    .toc-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.4);
+      backdrop-filter: blur(3px);
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .3s ease;
+    }
+
+    .toc-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .toc-drawer {
+      position: fixed;
+      top: 0; left: 0; width: 320px; max-width: 85vw; height: 100vh;
+      background: var(--panel);
+      border-right: 1px solid var(--border);
+      box-shadow: var(--shadow-lg);
+      z-index: 101;
+      transform: translateX(-100%);
+      transition: transform .35s var(--spring);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .toc-drawer.open {
+      transform: translateX(0);
+    }
+
+    .toc-header {
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .toc-title {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--indigo);
+    }
+
+    .toc-close-btn {
+      font-size: 18px;
+      color: var(--text-dim);
+      padding: 4px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all .2s;
+    }
+
+    .toc-close-btn:hover {
+      background: var(--bg-alt);
+      color: var(--red);
+    }
+
+    .toc-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .toc-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid transparent;
+      background: var(--bg-alt);
+      color: var(--text-sub);
+      font-size: 12.5px;
+      text-align: left;
+      transition: all var(--transition);
+      cursor: pointer;
+      font-family: var(--sans);
+    }
+
+    .toc-item:hover {
+      border-color: var(--indigo);
+      color: var(--indigo);
+      background: var(--indigo-soft);
+    }
+
+    .toc-item.active {
+      background: var(--indigo-soft);
+      border-color: var(--indigo);
+      color: var(--indigo);
+      font-weight: 700;
+    }
+
+    .toc-item-num {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: var(--panel);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      flex: none;
+    }
+
+    .toc-item.active .toc-item-num {
+      background: var(--indigo);
+      color: #ffffff;
+      border-color: var(--indigo);
+    }
+
+    .why-modal-bg {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(4px);
+      z-index: 999;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .why-modal-bg.show {
+      display: flex;
+      animation: fadein .2s ease;
+    }
+
+    .why-modal-card {
+      background: var(--panel);
+      width: 100%;
+      max-width: 520px;
+      padding: 26px 30px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-lg);
+      border-top: 4px solid var(--indigo);
+      position: relative;
+      animation: dropIn .35s var(--spring);
+    }
+
+    .why-modal-close {
+      position: absolute;
+      top: 14px;
+      right: 16px;
+      background: none;
+      border: none;
+      font-size: 24px;
+      color: var(--text-dim);
+      cursor: pointer;
+      transition: color .2s;
+    }
+
+    .why-modal-close:hover {
+      color: var(--red);
+    }
+
+    .why-modal-body {
+      font-size: 14px;
+      color: var(--text-sub);
+      line-height: 1.65;
+    }
+
+    .why-modal-body b {
+      color: var(--text);
+    }
+
+    @keyframes dropIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    /* ─── Quiz ─── */
+    .quiz-card {
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px 28px;
+      background: var(--panel);
+      margin-top: 16px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .quiz-q {
+      font-size: 15.5px;
+      color: var(--text);
+      margin: 0 0 16px;
+      font-weight: 800;
+      line-height: 1.4;
+    }
+
+    .quiz-opts {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .quiz-opt {
+      text-align: left;
+      background: var(--bg-alt);
+      border: 1.5px solid var(--border);
+      color: var(--text-sub);
+      font-size: 14px;
+      font-weight: 500;
+      padding: 14px 18px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all var(--transition);
+    }
+
+    .quiz-opt:hover:not(:disabled) {
+      border-color: var(--indigo);
+      background: var(--indigo-soft);
+      color: var(--text);
+      transform: translateX(4px);
+    }
+
+    .quiz-opt .qmark {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--text-dim);
+      flex: none;
+      background: var(--panel);
+      padding: 3px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+
+    .quiz-opt.correct {
+      border-color: var(--green);
+      background: var(--green-soft);
+      color: var(--text);
+    }
+
+    .quiz-opt.correct .qmark {
+      background: var(--green-soft);
+      color: var(--green);
+      border-color: var(--green);
+    }
+
+    .quiz-opt.wrong {
+      border-color: var(--red);
+      background: var(--red-soft);
+      color: var(--text);
+    }
+
+    .quiz-opt.wrong .qmark {
+      background: var(--red-soft);
+      color: var(--red);
+      border-color: var(--red);
+    }
+
+    .quiz-opt:disabled {
+      cursor: default;
+    }
+
+    .quiz-feedback {
+      margin-top: 14px;
+      padding: 14px 18px;
+      border-radius: var(--radius-md);
+      font-size: 13.5px;
+      display: none;
+      line-height: 1.65;
+      font-weight: 600;
+    }
+
+    .quiz-feedback.show {
+      display: block;
+      animation: fadein .3s ease;
+    }
+
+    .quiz-feedback.ok {
+      background: var(--green-soft);
+      color: var(--green);
+      border: 1.5px solid rgba(5, 150, 105, .25);
+    }
+
+    .quiz-feedback.no {
+      background: var(--red-soft);
+      color: var(--red);
+      border: 1.5px solid rgba(220, 38, 38, .2);
+    }
+
+
+
+    /* ─── Keyboard hint ─── */
+    .key-hint {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-dim);
+      margin-left: 10px;
+    }
+
+    .key-hint kbd {
+      background: var(--bg-alt);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-size: 10px;
+      box-shadow: 0 1px 0 var(--border);
+    }
+
+    /* ─── Responsive & Mobile Enhancements ─── */
+    @media(max-width: 850px) {
+      html, body {
+        overflow-y: auto !important;
+        height: auto !important;
+      }
+
+      .app {
+        height: auto !important;
+        min-height: 100vh !important;
+        overflow: visible !important;
+      }
+
+      .topbar {
+        padding: 0 14px;
+        height: 52px;
+        position: sticky;
+        top: 0;
+        z-index: 50;
+      }
+
+      .topbar-brand {
+        display: none;
+      }
+
+      .stage {
+        overflow-y: visible !important;
+        height: auto !important;
+      }
+
+      .slide {
+        padding: 20px 16px 40px !important;
+        min-height: auto !important;
+        height: auto !important;
+      }
+
+      .two-col-layout {
+        flex-direction: column !important;
+        gap: 16px !important;
+      }
+
+      .col-main, .col-half, .col-side, .col-side-quiz {
+        width: 100% !important;
+        flex: 1 1 100% !important;
+      }
+
+      .compare-grid,
+      .fact-grid {
+        grid-template-columns: 1fr !important;
+        gap: 14px !important;
+      }
+
+      table.cmp {
+        display: none !important;
+      }
+
+      .cmp-mobile-cards {
+        display: flex !important;
+      }
+
+      .stack-toggle {
+        flex-direction: column !important;
+        gap: 12px !important;
+      }
+
+      .diagram {
+        padding: 16px 12px !important;
+      }
+
+      .diagram-row {
+        flex-direction: row !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        gap: 8px !important;
+      }
+
+      .diagram-node {
+        width: auto !important;
+        flex: 1 1 0 !important;
+        min-width: 0 !important;
+        padding: 10px 6px !important;
+        gap: 6px !important;
+      }
+
+      .diagram-node .icon-wrap {
+        width: 28px !important;
+        height: 28px !important;
+      }
+
+      .diagram-node span {
+        font-size: 11px !important;
+        text-align: center;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        width: 100%;
+      }
+
+      .diagram-wire {
+        margin: 0 4px !important;
+        height: 3px !important;
+        width: auto !important;
+        flex: 1 !important;
+      }
+
+      .diagram-wire .port-label {
+        font-size: 9.5px !important;
+        padding: 1px 6px !important;
+        top: -20px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+      }
+
+      .packet {
+        display: block !important;
+        width: 10px !important;
+        height: 10px !important;
+        top: -4px !important;
+      }
+
+      .hs-step {
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 6px !important;
+        padding: 10px 10px !important;
+      }
+
+      .hs-step .who {
+        width: 60px !important;
+        font-size: 9.5px !important;
+        padding: 4px 2px !important;
+        flex: none !important;
+        border-radius: 8px !important;
+      }
+
+      .hs-step .arrow {
+        font-size: 10.5px !important;
+        line-height: 1.3 !important;
+        padding-bottom: 4px !important;
+        border-bottom: 1.5px dashed var(--border) !important;
+        border-left: none !important;
+        text-align: center !important;
+        flex: 1 !important;
+        padding-left: 0 !important;
+      }
+
+      h1 {
+        font-size: clamp(22px, 6vw, 28px) !important;
+      }
+
+      h2 {
+        font-size: clamp(18px, 5vw, 22px) !important;
+      }
+
+      .hero-term {
+        max-width: 100% !important;
+      }
+
+      /* ─── Browser Mockup Mobile Fixes ─── */
+      .browser-mock {
+        margin-bottom: 12px !important;
+        border-radius: var(--radius-md) !important;
+        overflow: hidden !important;
+        box-shadow: var(--shadow-sm) !important;
+      }
+
+      .browser-bar {
+        padding: 8px 10px !important;
+        gap: 6px !important;
+      }
+
+      .browser-bar .bdot {
+        width: 7px !important;
+        height: 7px !important;
+      }
+
+      .browser-addr {
+        padding: 4px 10px !important;
+        font-size: 11px !important;
+        margin-left: 4px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        max-width: calc(100% - 35px) !important;
+      }
+
+      .browser-content {
+        padding: 12px 14px !important;
+        min-height: auto !important;
+        font-size: 12px !important;
+        line-height: 1.5 !important;
+        word-break: break-word !important;
+        overflow-x: auto !important;
+      }
+
+      .php-mock {
+        font-size: 10.5px !important;
+        overflow-x: auto !important;
+        display: block !important;
+        width: 100% !important;
+      }
+
+      .php-mock-head {
+        font-size: 12.5px !important;
+        padding: 6px 8px !important;
+      }
+
+      .php-mock table {
+        width: 100% !important;
+        min-width: 240px !important;
+      }
+
+      .php-mock td {
+        padding: 5px 6px !important;
+        font-size: 10.5px !important;
+      }
+
+      .php-mock td:first-child {
+        width: 40% !important;
+      }
+
+      .key-hint {
+        display: none;
+      }
+
+      /* ─── Floating Mobile Navigation Dock ─── */
+      .mobile-bottom-nav {
+        display: flex !important;
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        height: 60px !important;
+        background: var(--bg) !important;
+        border-top: 1px solid var(--border) !important;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.25) !important;
+        z-index: 99 !important;
+        padding: 0 14px !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 8px !important;
+        backdrop-filter: blur(12px) !important;
+      }
+
+      .m-nav-btn {
+        height: 42px !important;
+        min-width: 42px !important;
+        padding: 0 10px !important;
+        border-radius: var(--radius-md) !important;
+        background: var(--panel) !important;
+        border: 1.5px solid var(--border) !important;
+        color: var(--text) !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-weight: 700 !important;
+        font-size: 14px !important;
+        transition: all var(--transition) !important;
+        box-shadow: var(--shadow-sm) !important;
+      }
+
+      .m-nav-btn:active:not(:disabled) {
+        transform: scale(0.94) !important;
+        border-color: var(--indigo) !important;
+      }
+
+      .m-nav-btn:disabled {
+        opacity: 0.35 !important;
+        cursor: not-allowed !important;
+      }
+
+      .m-btn-next {
+        background: var(--indigo) !important;
+        color: #ffffff !important;
+        border-color: var(--indigo) !important;
+        padding: 0 14px !important;
+      }
+
+      .m-toc-btn {
+        gap: 6px !important;
+        font-size: 12.5px !important;
+        color: var(--text-sub) !important;
+        padding: 0 12px !important;
+      }
+
+      .m-slide-counter {
+        font-family: var(--mono) !important;
+        font-size: 13px !important;
+        font-weight: 800 !important;
+        color: var(--indigo) !important;
+        background: var(--bg-alt) !important;
+        padding: 5px 12px !important;
+        border-radius: 20px !important;
+        border: 1px solid var(--border) !important;
+        white-space: nowrap !important;
+      }
+
+      .mobile-topbar-title {
+        display: block !important;
+        font-family: var(--sans);
+        font-size: 11.5px !important;
+        font-weight: 800 !important;
+        color: var(--indigo) !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        max-width: 175px !important;
+        flex: 1 !important;
+        text-align: center !important;
+        padding: 0 4px !important;
+      }
+
+      .topbar {
+        height: 50px !important;
+        padding: 0 12px !important;
+      }
+
+      .topbar .slide-counter,
+      .topbar #btn-prev,
+      .topbar #btn-next,
+      .topbar #theme-btn,
+      .topbar .toc-btn {
+        display: none !important;
+      }
+
+      .toc-drawer {
+        width: 85% !important;
+        max-width: 320px !important;
+      }
+
+      .stage {
+        padding-bottom: 74px !important;
+      }
+    }
+
+    @media(prefers-reduced-motion:reduce) {
+      * {
+        animation-duration: .001s !important;
+        transition-duration: .001s !important;
+      }
+    }
+
+    /* ─── Scrollbar ─── */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 6px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--indigo);
+    }
+
+  </style>
+</head>
+<body>
+<!-- ─── TOC Slide Drawer ─── -->
+<div class="toc-overlay" id="toc-overlay" onclick="toggleToc(false)"></div>
+<aside class="toc-drawer" id="toc-drawer">
+  <div class="toc-header">
+    <div class="toc-title">📍 Daftar Slide Pertemuan 10</div>
+    <button class="toc-close-btn" onclick="toggleToc(false)">✕</button>
+  </div>
+  <div class="toc-body" id="toc-list">
+    <!-- Populated by JS -->
+  </div>
+</aside>
+
+<div class="app">
+<!-- ─── Top Navigation Bar ─── -->
+<nav class="topbar">
+<div class="topbar-left" style="display:flex;align-items:center;gap:12px;">
+  <button class="toc-btn" onclick="toggleToc(true)" title="Buka Daftar Isi Slide">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+    <span>Slides</span>
+  </button>
+  <div class="topbar-brand"><span class="pulse"></span>pertemuan_10</div>
+</div>
+<div class="mobile-topbar-title" id="mobile-topbar-title">1. Pengantar: Environment Server Web</div>
+<div class="topbar-right">
+<div class="slide-counter" id="slide-counter">1 / 9</div>
+<button class="ctrl-btn-mini" id="btn-prev" onclick="goPrev()" title="Slide Sebelumnya (←)">←</button>
+<button class="ctrl-btn-mini" id="btn-next" onclick="goNext()" title="Slide Selanjutnya (→)">→</button>
+<button class="ctrl-btn-mini" id="theme-btn" onclick="toggleTheme()" title="Ubah Tema (Terang/Gelap)">🌙</button>
+<div class="topbar-status" onclick="this.querySelector('.status-dropdown').classList.toggle('open')">
+<div class="status-dots">
+<span class="status-mini-dot on" data-svc="ssh"></span>
+<span class="status-mini-dot" data-svc="apache"></span>
+<span class="status-mini-dot" data-svc="php"></span>
+<span class="status-mini-dot" data-svc="ufw"></span>
+<span class="status-mini-dot" data-svc="verify"></span>
+</div>
+<span id="status-count">1/5</span>
+<div class="status-dropdown" id="status-dropdown" onclick="event.stopPropagation()">
+<p class="status-dropdown-title">Status Layanan VPS</p>
+<div class="status-row" data-service="ssh">
+<span class="status-name"><span class="svc-dot on"></span>SSH (Pert. 9)</span>
+<span class="state-label on">aktif</span>
+</div>
+<div class="status-row" data-service="apache">
+<span class="status-name"><span class="svc-dot"></span>Apache2</span>
+<span class="state-label">nonaktif</span>
+</div>
+<div class="status-row" data-service="php">
+<span class="status-name"><span class="svc-dot"></span>PHP Runtime</span>
+<span class="state-label">nonaktif</span>
+</div>
+<div class="status-row" data-service="ufw">
+<span class="status-name"><span class="svc-dot"></span>UFW <span class="term-hint" onclick="explainTerm('port')">Port 80</span></span>
+<span class="state-label">nonaktif</span>
+</div>
+<div class="status-row" data-service="verify">
+<span class="status-name"><span class="svc-dot"></span>info.php</span>
+<span class="state-label">nonaktif</span>
+</div>
+</div>
+</div>
+</div></nav>
+<div class="slide-progress">
+<div class="slide-progress-fill" id="slide-progress-fill" style="width:8.33%"></div>
+</div>
+<!-- ─── Slide Stage ─── -->
+<div class="stage">
+<div class="slide-stage" id="slide-stage">
+<!-- HERO -->
+<section class="slide active center-slide" data-group="hero" id="hero">
+<p class="eyebrow">Pertemuan 10 · Praktikum Infrastruktur Web</p>
+<h1>1. Pengantar: Inisialisasi Environment Server Web</h1>
+<p class="lead">Pertemuan 10 berfokus pada penyediaan (<span class="term-hint" onclick="explainTerm('native')">provisioning</span>) environment server web dari kondisi kosong (<span class="term-hint" onclick="explainTerm('vps')">bare-metal virtual machine</span>) hingga siap menyajikan aplikasi web dinamis. Kita akan memasang komponen **HTTP Daemon** (Apache/<span class="term-hint" onclick="explainTerm('lemp')">NGINX</span>) dan <span class="term-hint" onclick="explainTerm('php runtime')">PHP Runtime Engine</span> untuk mengubah Virtual Private Server (<span class="term-hint" onclick="explainTerm('vps')">VPS</span>) menjadi infrastruktur publik yang dapat merespons permintaan klien secara global.</p>
+<div class="hero-term term-window">
+<div class="term-bar"><span class="tdot t1"></span><span class="tdot t2"></span><span class="tdot t3"></span><span class="title">root@vps:~ — cek status singkat</span></div>
+<div class="term-body" style="height:auto;">
+<div class="term-line term-prompt">$ status --pertemuan 9</div>
+<div class="term-line term-out">✓ VPS aktif · ✓ <span class="term-hint" onclick="explainTerm('ssh')">SSH</span> terpasang · ✓ Firewall dasar</div>
+<div class="term-line term-prompt">$ status --pertemuan 10</div>
+<div class="term-line term-out" style="color:#D97706">… belum ada Web Server, belum bisa diakses lewat browser</div>
+</div>
+</div>
+<button class="btn-primary" onclick="goNext()">Mulai Belajar →</button>
+</section>
+<!-- BLOK 01 -->
+<section class="slide" data-group="s01" id="s01">
+<p class="eyebrow">Blok 01 · Jembatan Teori</p>
+<h2>2. Jembatan Teori: Peran Web Server &amp; Runtime</h2>
+<p class="lead">Memahami pemisahan tanggung jawab antara mesin virtual (hardware terabstraksi) dengan perangkat lunak server web (software pengelola request). Meskipun VPS aman dan dapat diakses secara administratif melalui SSH, server tersebut tetap pasif dan tidak dapat diakses publik sebelum dipasang HTTP daemon untuk mendengarkan port jaringan eksternal.</p>
+<div class="compare-grid">
+<div class="compare-card">
+<div class="tag">Sebelum — Pertemuan 9</div>
+<div class="icon-wrap">
+<svg fill="none" stroke="currentColor" stroke-width="1.4" viewbox="0 0 24 24">
+<rect height="18" rx="2" stroke-dasharray="3 3" width="18" x="3" y="3"></rect>
+<circle cx="12" cy="12" r="3.2"></circle>
+<rect height="3" rx=".5" width="2.8" x="10.6" y="10.6"></rect>
+<path d="M10.6 10.6v-1.4a1.4 1.4 0 0 1 2.8 0v1.4"></path>
+</svg>
+</div>
+<h3>VPS Teramankan (Pertemuan 9)</h3>
+<p><b>Status:</b> Sistem terproteksi. Hanya dapat diakses administrator secara remote via port <span class="term-hint" onclick="explainTerm('ssh')">SSH</span> (22). Layanan sistem berkas masih statis dan tertutup dari akses HTTP.</p>
+</div>
+<div class="compare-card after">
+<div class="tag">Sesudah — Pertemuan 10</div>
+<div class="icon-wrap">
+<svg fill="none" stroke="currentColor" stroke-width="1.4" viewbox="0 0 24 24">
+<path d="M4 21V9l8-5 8 5v12"></path>
+<rect height="7" width="6" x="9" y="14"></rect>
+<line x1="3" x2="21" y1="21" y2="21"></line>
+<line x1="7" x2="17" y1="9" y2="9"></line>
+</svg>
+</div>
+<h3>Server Web Aktif (Pertemuan 10)</h3>
+<p><b>Status:</b> Server web siap publik. Layanan latar belakang HTTP Daemon (<span class="term-hint" onclick="explainTerm('apache')">Apache</span>) berjalan secara persisten, mendengarkan Port 80, dan siap mengeksekusi script PHP via interpreter.</p>
+</div>
+</div>
+<div class="why-box">
+<button class="why-toggle" onclick="toggleWhy(this)">💡 Kenapa ini penting?</button>
+<div class="why-content">Tanpa Web Server, VPS secanggih apa pun tetap tidak bisa dijadikan website — sama
+              seperti punya rumah bagus tapi tidak ada pintu dan bel. Web Server-lah yang "mendengarkan" di pintu
+              jaringan (port) dan menjawab setiap kunjungan browser. Ini adalah fondasi wajib sebelum kita bicara soal
+              aplikasi web apa pun, baik itu toko online, blog, maupun sistem akademik.</div>
+</div>
+<p class="slide-bridge">Setelah memahami peran penting web server dan runtime sebagai pondasi operasional VPS,
+            bagaimana cara browser di komputer kita berinteraksi secara teknis dengan server tersebut? Mari kita bedah
+            alur komunikasinya.</p>
+</section>
+<!-- BLOK 02a -->
+<section class="slide" data-group="s02" id="s02">
+<p class="eyebrow">Blok 02 · Protokol Transmisi</p>
+<h2>3. Protokol Transmisi: Arsitektur Request-Response HTTP</h2>
+<p class="lead">HTTP bekerja di atas model transaksi request-response. <span class="term-hint" onclick="explainTerm('klien')">Browser</span> bertindak sebagai klien yang menginisiasi koneksi TCP ke port web server, mengirimkan berkas permintaan teks (GET/POST), lalu menunggu server memproses dan mengembalikan respons teks terstruktur.</p>
+<div class="diagram">
+<div class="diagram-row">
+<div class="diagram-node">
+<div class="icon-wrap"><svg fill="none" stroke="currentColor" stroke-width="1.4" viewbox="0 0 24 24">
+<rect height="15" rx="2" width="20" x="2" y="4"></rect>
+<line x1="2" x2="22" y1="8" y2="8"></line>
+<circle cx="5" cy="6" fill="currentColor" r=".6" stroke="none"></circle>
+<circle cx="7.5" cy="6" fill="currentColor" r=".6" stroke="none"></circle>
+</svg></div>
+<span>Klien (Browser)</span>
+</div>
+<div class="diagram-wire">
+<span class="port-label"><span class="term-hint" onclick="explainTerm('port')">Port 80</span></span>
+<div class="packet" id="packet-a"></div>
+</div>
+<div class="diagram-node">
+<div class="icon-wrap"><svg fill="none" stroke="currentColor" stroke-width="1.4" viewbox="0 0 24 24">
+<rect height="7" rx="1.2" width="16" x="4" y="2"></rect>
+<rect height="7" rx="1.2" width="16" x="4" y="15"></rect>
+<circle cx="7" cy="5.5" fill="currentColor" r=".6" stroke="none"></circle>
+<circle cx="7" cy="18.5" fill="currentColor" r=".6" stroke="none"></circle>
+</svg></div>
+<span>Server (Apache)</span>
+</div>
+</div>
+<div class="center-btn"><button class="btn-sim" id="btn-req" onclick="sendRequest()">Kirim Permintaan (GET
+                Request) →</button></div>
+<div class="diagram-log" id="log-a"></div>
+</div>
+<div class="why-box">
+<button class="why-toggle" onclick="toggleWhy(this)">💡 Kenapa ini penting?</button>
+<div class="why-content">Memahami alur ini membantu kita saat troubleshooting nanti. Kalau website "tidak
+              bisa dibuka", masalahnya bisa ada di sisi klien (browser), di jalur jaringan (port tertutup), atau di sisi
+              server (servernya mati/belum terpasang). Tanpa paham alurnya, kita akan menebak-nebak dan sulit mencari
+              akar masalahnya.</div>
+</div>
+<p class="slide-bridge">Komunikasi HTTP yang dinamis di atas hanya dapat terjadi jika browser dan server telah
+            tersambung secara fisik dan logis. Bagaimana protokol TCP menjamin sambungan ini terbentuk dengan aman
+            sebelum pertukaran data dimulai? Mari pelajari proses jabat tangan tiga langkah.</p>
+</section>
+<!-- BLOK 02b -->
+<section class="slide" data-group="s02" id="s02b">
+<p class="eyebrow">Blok 02 · Lapisan Transportasi</p>
+<h2>4. Lapisan Transportasi: Protokol TCP Three-Way Handshake</h2>
+<p class="lead">Sebelum data HTTP ditransmisikan, protokol <span class="term-hint" onclick="explainTerm('tcp')">TCP</span> menjamin keandalan sambungan fisik dan logis antara klien dan server melalui mekanisme jabat tangan tiga langkah. Proses ini memvalidasi sinkronisasi nomor urut paket guna mencegah hilangnya data di jaringan.</p>
+<div class="diagram">
+<div class="hs-step" id="hs1"><span class="who" onclick="explainTerm('klien')">Klien</span><span class="arrow"><span class="term-hint" onclick="explainTerm('syn')">SYN</span> — "Halo, saya mau connect
+                ke <span class="term-hint" onclick="explainTerm('port')">Port 80</span>" →</span><span class="who" onclick="explainTerm('server')">Server</span></div>
+<div class="hs-step" id="hs2"><span class="who" onclick="explainTerm('server')">Server</span><span class="arrow">← <span class="term-hint" onclick="explainTerm('syn-ack')">SYN-ACK</span> — "Halo, saya
+                dengar, siap kok"</span><span class="who" onclick="explainTerm('klien')">Klien</span></div>
+<div class="hs-step" id="hs3"><span class="who" onclick="explainTerm('klien')">Klien</span><span class="arrow"><span class="term-hint" onclick="explainTerm('ack')">ACK</span> — "Oke, ayo mulai" —
+                koneksi terbentuk →</span><span class="who" onclick="explainTerm('server')">Server</span></div>
+<div class="center-btn"><button class="btn-sim" onclick="runHandshake(this)">Mulai Simulasi
+                Handshake</button></div>
+<div class="diagram-log" id="log-b"></div>
+</div>
+<div class="why-box">
+<button class="why-toggle" onclick="toggleWhy(this)">💡 Kenapa ini penting?</button>
+<div class="why-content">Handshake memastikan kedua belah pihak benar-benar siap sebelum data penting
+              dikirim, sehingga data tidak hilang atau rusak di tengah jalan. Ini juga alasan kenapa membuka website
+              terasa ada jeda sepersekian detik sebelum halaman muncul — di balik layar, ada "sapaan" tiga langkah ini
+              yang terjadi lebih dulu.</div>
+</div>
+<p class="slide-bridge">Setelah memahami pembentukan koneksi dasar TCP, aturan komunikasi tingkat tinggi
+            (HTTP) memiliki beberapa karakteristik khas yang membuatnya sangat andal di internet. Mari telusuri empat
+            sifat penting protokol HTTP.</p>
+</section>
+<!-- BLOK 02c -->
+<section class="slide" data-group="s02" id="s02c">
+<p class="eyebrow">Blok 02 · Karakteristik HTTP</p>
+<h2>5. Karakteristik HTTP: Stateless, Connectionless &amp; Media Independent</h2>
+<p class="lead">Memahami tiga sifat utama protokol <span class="term-hint" onclick="explainTerm('http')">HTTP</span> yang mendasari cara kerja aplikasi web modern di internet. Karakteristik ini dirancang untuk menjaga efisiensi penggunaan memori server ketika melayani ribuan kunjungan sekaligus.</p>
+<div class="two-col-layout">
+<div class="fact-grid col-main" style="margin-top:0;">
+<div class="fact-card">
+<h3>📭 Stateless</h3>
+<p>Server tidak menyimpan status atau riwayat sesi request sebelumnya dari klien yang sama. Setiap transaksi dianggap unik dan berdiri sendiri.</p>
+</div>
+<div class="fact-card">
+<h3>⚡ Connectionless</h3>
+<p>Koneksi diputus seketika setelah respons dikirimkan. Browser harus menginisiasi jabat tangan TCP baru untuk request berikutnya.</p>
+</div>
+<div class="fact-card">
+<h3>📦 Media Independent</h3>
+<p>HTTP dapat mengirimkan format data apa pun selama tipe MIME disepakati bersama oleh klien dan server.</p>
+</div>
+<div class="fact-card">
+<h3>✍️ Text Oriented</h3>
+<p>Seluruh struktur request dan response dikirim dalam format teks murni sehingga mudah dibaca dan didiagnosis.</p>
+</div>
+</div>
+<div class="quiz-card col-side-quiz" style="margin-top:0;">
+<p class="quiz-q" style="font-size:14.5px;">🧠 Cek Pemahaman: Kenapa website butuh fitur "login tetap
+                tersimpan" padahal HTTP itu stateless?</p>
+<div class="quiz-opts">
+<button class="quiz-opt" onclick="answerQuiz(this.closest('.quiz-card'),this,false,'HTTP memang selalu mengirim ulang file — itu bukan alasan utamanya. Jawaban yang tepat berkaitan dengan sifat stateless.')"><span class="qmark">A</span>Karena HTTP selalu mengirim ulang seluruh file website</button>
+<button class="quiz-opt" data-correct="true" onclick="answerQuiz(this.closest('.quiz-card'),this,true,'Karena server tidak mengingat kita, aplikasi web perlu menyimpan status login sendiri (lewat cookie/session) di setiap permintaan baru.')"><span class="qmark">B</span>Karena server tidak mengingat siapa kita di permintaan berikutnya</button>
+<button class="quiz-opt" onclick="answerQuiz(this.closest('.quiz-card'),this,false,'Bukan itu penyebabnya — port 80 hanya alamat pintu masuk, tidak berkaitan dengan status login.')"><span class="qmark">C</span>Karena Port 80 hanya bisa dipakai satu kali</button>
+</div>
+<div class="quiz-feedback"></div>
+</div>
+</div>
+<p class="slide-bridge">Dengan pemahaman utuh tentang protokol HTTP, langkah berikutnya adalah memilih dan
+            memasang paket perangkat lunak (web stack) yang sesuai pada server virtual kita. Mari kita bandingkan dua
+            metode instalasi terpopuler.</p>
+</section>
+
+<!-- BLOK 03 Combined -->
+<section class="slide" data-group="s03" id="s03">
+<p class="eyebrow">Blok 03 · Memilih Alat yang Tepat</p>
+<h2>6. LAMP vs XAMPP — Dua Cara Menyalakan Web Stack</h2>
+<p class="lead">Menganalisis perbedaan arsitektur penyebaran web stack antara metode pemasangan komponen
+            terpisah secara native (<span class="term-hint" onclick="explainTerm('lamp')">LAMP</span>/<span class="term-hint" onclick="explainTerm('lemp')">LEMP</span>) untuk lingkungan produksi yang terisolasi
+            dengan instalasi paket XAMPP praktis untuk mempercepat simulasi dan pengembangan lokal.</p>
+<div class="stack-toggle">
+<button class="stack-card active" data-stack="lamp" onclick="selectStack('lamp')">
+<span class="stack-name">LAMP / LEMP — Untuk Server Produksi</span>
+<span class="stack-desc">Tiap komponen dipasang &amp; dikelola terpisah lewat <span class="term-hint" onclick="explainTerm('systemd')">systemd</span>. Cocok untuk website yang sudah online.</span>
+</button>
+<button class="stack-card" data-stack="xampp" onclick="selectStack('xampp')">
+<span class="stack-name">XAMPP — Untuk Belajar di Laptop Sendiri</span>
+<span class="stack-desc">Semua komponen dibundel jadi satu folder, praktis diinstal tapi keamanannya dibebaskan.</span>
+</button>
+</div>
+<div class="meters-group">
+<div class="meter">
+<div class="meter-head"><span>Keamanan Bawaan</span><span>LAMP 90% · XAMPP 25%</span></div>
+<div class="meter-track">
+<div class="meter-fill lamp" data-value="90"></div>
+</div>
+<div class="meter-track">
+<div class="meter-fill xampp" data-value="25"></div>
+</div>
+</div>
+<div class="meter">
+<div class="meter-head"><span>Efisiensi Penggunaan RAM</span><span>LAMP 85% · XAMPP 40%</span></div>
+<div class="meter-track">
+<div class="meter-fill lamp" data-value="85"></div>
+</div>
+<div class="meter-track">
+<div class="meter-fill xampp" data-value="40"></div>
+</div>
+</div>
+<div class="meter">
+<div class="meter-head"><span>Kemudahan Update Keamanan</span><span>LAMP 95% · XAMPP 20%</span></div>
+<div class="meter-track">
+<div class="meter-fill lamp" data-value="95"></div>
+</div>
+</div>
+</div>
+
+<!-- Dynamic Verdict Banner -->
+<div class="stack-verdict lamp" id="stack-verdict">
+  <div class="verdict-icon" id="verdict-icon">✨</div>
+  <div class="verdict-text">
+    <strong id="verdict-title">Rekomendasi Produksi: LAMP / LEMP Native Stack</strong>
+    <p id="verdict-desc">Komponen terpasang terpisah &amp; menyatu dengan OS Linux. Keamanan bawaan tinggi (90%), efisiensi RAM maksimal (85%), serta update keamanan otomatis via <code>apt</code>. Standar utama untuk VPS publik.</p>
+  </div>
+</div>
+
+<table class="cmp">
+<thead>
+<tr>
+<th>Aspek</th>
+<th>LAMP / LEMP (Native)</th>
+<th>XAMPP (Bundel)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Tujuan Dibuat Untuk</td>
+<td data-col="lamp">Server produksi yang stabil &amp; cepat</td>
+<td data-col="xampp">Belajar dan uji coba di komputer sendiri</td>
+</tr>
+<tr>
+<td>Cara Memasangnya</td>
+<td data-col="lamp">Tiap komponen dipasang terpisah, menyatu dengan sistem Linux</td>
+<td data-col="xampp">Satu folder instalasi (mis. /opt/lampp), tinggal jalankan</td>
+</tr>
+<tr>
+<td>Pengaturan Keamanan</td>
+<td data-col="lamp">Ketat sejak awal — database hanya bisa diakses dari server itu sendiri</td>
+<td data-col="xampp">Longgar — akun <span class="term-hint" onclick="explainTerm('database')">database</span> "root" tanpa password</td>
+</tr>
+<tr>
+<td>Cara Update Keamanan</td>
+<td data-col="lamp">Otomatis lewat perintah <code><span class="term-hint" onclick="explainTerm('apt')">apt</span> upgrade</code></td>
+<td data-col="xampp">Manual, harus unduh &amp; timpa ulang seluruh folder</td>
+</tr>
+<tr>
+<td>Pemakaian RAM &amp; CPU</td>
+<td data-col="lamp">Ringan — hanya modul yang dibutuhkan yang dijalankan</td>
+<td data-col="xampp">Lebih berat — banyak modul tambahan ikut aktif</td>
+</tr>
+<tr>
+<td>Cara Menyalakan/Mematikan</td>
+<td data-col="lamp">Perintah resmi Linux (systemd), otomatis nyala saat server reboot</td>
+<td data-col="xampp">Lewat panel kontrol XAMPP sendiri</td>
+</tr>
+</tbody>
+</table>
+<!-- Mobile Comparison Cards (Shown on mobile screens < 850px) -->
+<div class="cmp-mobile-cards">
+  <div class="cmp-card">
+    <div class="cmp-card-head">📌 Tujuan Dibuat Untuk</div>
+    <div class="cmp-card-row lamp">
+      <span class="cmp-tag lamp">LAMP / LEMP (Native)</span>
+      <span class="cmp-val">Server produksi yang stabil &amp; cepat</span>
+    </div>
+    <div class="cmp-card-row xampp">
+      <span class="cmp-tag xampp">XAMPP (Bundel)</span>
+      <span class="cmp-val">Belajar dan uji coba di komputer sendiri</span>
+    </div>
+  </div>
+
+  <div class="cmp-card">
+    <div class="cmp-card-head">🛠️ Cara Memasangnya</div>
+    <div class="cmp-card-row lamp">
+      <span class="cmp-tag lamp">LAMP / LEMP (Native)</span>
+      <span class="cmp-val">Tiap komponen dipasang terpisah, menyatu dengan sistem Linux</span>
+    </div>
+    <div class="cmp-card-row xampp">
+      <span class="cmp-tag xampp">XAMPP (Bundel)</span>
+      <span class="cmp-val">Satu folder instalasi (mis. /opt/lampp), tinggal jalankan</span>
+    </div>
+  </div>
+
+  <div class="cmp-card">
+    <div class="cmp-card-head">🔒 Pengaturan Keamanan</div>
+    <div class="cmp-card-row lamp">
+      <span class="cmp-tag lamp">LAMP / LEMP (Native)</span>
+      <span class="cmp-val">Ketat sejak awal — database hanya bisa diakses dari server itu sendiri</span>
+    </div>
+    <div class="cmp-card-row xampp">
+      <span class="cmp-tag xampp">XAMPP (Bundel)</span>
+      <span class="cmp-val">Longgar — akun <span class="term-hint" onclick="explainTerm('database')">database</span> "root" tanpa password</span>
+    </div>
+  </div>
+
+  <div class="cmp-card">
+    <div class="cmp-card-head">🔄 Cara Update Keamanan</div>
+    <div class="cmp-card-row lamp">
+      <span class="cmp-tag lamp">LAMP / LEMP (Native)</span>
+      <span class="cmp-val">Otomatis lewat perintah <code><span class="term-hint" onclick="explainTerm('apt')">apt</span> upgrade</code></span>
+    </div>
+    <div class="cmp-card-row xampp">
+      <span class="cmp-tag xampp">XAMPP (Bundel)</span>
+      <span class="cmp-val">Manual, harus unduh &amp; timpa ulang seluruh folder</span>
+    </div>
+  </div>
+
+  <div class="cmp-card">
+    <div class="cmp-card-head">⚡ Pemakaian RAM &amp; CPU</div>
+    <div class="cmp-card-row lamp">
+      <span class="cmp-tag lamp">LAMP / LEMP (Native)</span>
+      <span class="cmp-val">Ringan — hanya modul yang dibutuhkan yang dijalankan</span>
+    </div>
+    <div class="cmp-card-row xampp">
+      <span class="cmp-tag xampp">XAMPP (Bundel)</span>
+      <span class="cmp-val">Lebih berat — banyak modul tambahan ikut aktif</span>
+    </div>
+  </div>
+
+  <div class="cmp-card">
+    <div class="cmp-card-head">⚙️ Cara Menyalakan/Mematikan</div>
+    <div class="cmp-card-row lamp">
+      <span class="cmp-tag lamp">LAMP / LEMP (Native)</span>
+      <span class="cmp-val">Perintah resmi Linux (systemd), otomatis nyala saat server reboot</span>
+    </div>
+    <div class="cmp-card-row xampp">
+      <span class="cmp-tag xampp">XAMPP (Bundel)</span>
+      <span class="cmp-val">Lewat panel kontrol XAMPP sendiri</span>
+    </div>
+  </div>
+</div>
+<div class="why-box">
+<button class="why-toggle" onclick="toggleWhy(this)">💡 Kenapa kita pilih LAMP native untuk praktikum ini?</button>
+<div class="why-content">Karena VPS kita akan diakses lewat internet oleh siapa saja, keamanan jadi
+              prioritas. XAMPP dirancang untuk dipakai di laptop sendiri yang tidak terhubung ke publik — kalau dipasang
+              di server produksi, celah keamanannya (misalnya password kosong di database) bisa dieksploitasi orang
+              lain. LAMP native memang butuh beberapa langkah instalasi tambahan, tapi lebih aman dan lebih hemat sumber
+              daya untuk jangka panjang.</div>
+</div>
+<p class="slide-bridge">Setelah menimbang kelebihan masing-masing metode instalasi, mari kita praktikkan
+            langsung langkah-langkah instalasi native LAMP stack di terminal VPS kita hingga berhasil ditayangkan.</p>
+</section>
+<!-- BLOK 04 Combined -->
+<section class="slide" data-group="s04" id="s04">
+<p class="eyebrow">Blok 03 · Web Stack</p>
+<h2>6. Analisis Web Stack: Pilihan Paket Perangkat Lunak</h2>
+<p class="lead">Untuk menjalankan aplikasi web dinamis, server memerlukan kombinasi terintegrasi dari Sistem Operasi, Web Server, Database, dan Runtime Engine. Kombinasi ini disebut sebagai <span class="term-hint" onclick="explainTerm('web stack')">Web Stack</span>, dengan dua opsi arsitektur terpopuler di lingkungan Linux produksi.</p>
+<div class="two-col-layout">
+<!-- Kiri: Terminal & Wizard -->
+<div class="col-main">
+<div class="progress-wrap" style="margin-top:0;">
+<div class="progress-track">
+<div class="progress-fill" id="progress-fill"></div>
+</div>
+<div class="progress-label" id="progress-label">0 / 5 tahap selesai</div>
+</div>
+<div class="term-window" style="margin-bottom:14px;">
+<div class="term-bar"><span class="tdot t1"></span><span class="tdot t2"></span><span class="tdot t3"></span><span class="title">root@vps:~ — simulasi terminal</span></div>
+<div class="term-body" id="term-body" style="height:150px;">
+<div class="term-line term-out">Sesi SSH belum dimulai. Jalankan tahap pertama.</div>
+</div>
+</div>
+<div class="step-wizard" id="step-wizard" style="margin-top:0;padding:16px 20px;">
+<div class="step-head">
+<span class="step-badge" id="wiz-badge">1</span>
+<span class="step-title" id="wiz-title" style="font-size:14.5px;">Masuk ke VPS Lewat SSH</span>
+<span class="step-status" id="wiz-status">○</span>
+</div>
+<p class="step-desc" id="wiz-desc" style="font-size:12.5px;margin-bottom:10px;">Kita pakai akses <span class="term-hint" onclick="explainTerm('ssh')">SSH</span>
+                  yang sudah disiapkan di Pertemuan 9...</p>
+<div class="cmd-block" id="wiz-cmd" style="padding:10px 14px;margin-bottom:10px;">ssh
+                  root@vps_ip_address</div>
+<div class="step-foot">
+<button class="btn-sim" id="wiz-run" onclick="runCurrentStep()" style="padding:8px 16px;">Jalankan
+                    ▶</button>
+<div class="wiz-dots" id="wiz-dots"></div>
+</div>
+</div>
+</div>
+<!-- Kanan: Browser Verify -->
+<div class="col-side">
+<div class="verify-status" id="verify-status" style="margin-bottom:10px;"></div>
+<div class="browser-mock" style="margin-bottom:0;">
+<div class="browser-bar"><span class="bdot"></span><span class="bdot"></span><span class="bdot"></span><span class="browser-addr">http://vps_ip_address/info.php</span></div>
+<div class="browser-content" id="verify-content" style="min-height:180px;"></div>
+</div>
+</div>
+</div>
+<p class="slide-bridge">Pengoperasian server di lapangan tidak selalu berjalan mulus dan sering kali menemui
+            kendala akses. Bagaimana cara administrator mendiagnosis dan memecahkan kendala jaringan tersebut? Mari kita
+            pelajari skenario pemecahan masalah (<span class="term-hint" onclick="explainTerm('troubleshooting')">troubleshooting</span>) berikut.</p>
+</section>
+<!-- BLOK 05 Combined -->
+<section class="slide" data-group="s05" id="s05">
+<p class="eyebrow">Blok 03 · Studi Perbandingan</p>
+<h2>7. Studi Perbandingan: Apache vs Nginx HTTP Daemon</h2>
+<p class="lead">Memilih web server yang tepat memerlukan analisis beban kerja server. Apache menggunakan arsitektur berbasis proses/thread (blocking), sedangkan NGINX menggunakan loop event non-blocking (asynchronous) yang sangat efisien untuk menangani koneksi konkuren dalam jumlah besar.</p>
+<div class="two-col-layout">
+<!-- Kiri: Skenario 1 -->
+<div class="col-half">
+<div style="background:var(--panel-tinted);padding:16px 20px;border-radius:var(--radius-md);border:1px solid var(--border);">
+<h3 style="font-size:14.5px;color:var(--text);margin-bottom:8px;">1. "Situs Tidak Bisa Dijangkau"</h3>
+<p style="font-size:12.5px;color:var(--text-sub);margin-bottom:12px;">Apache &amp; UFW aktif, tapi dari
+                  browser gagal terhubung.</p>
+<div class="browser-mock" style="margin-bottom:12px;">
+<div class="browser-bar"><span class="bdot"></span><span class="bdot"></span><span class="bdot"></span><span class="browser-addr">http://vps_ip_address</span></div>
+<div class="browser-content" id="browser1-content" style="min-height:70px;display:flex;align-items:center;"><span class="state-error" style="font-size:13px;">✗ Situs tidak dapat dijangkau — koneksi <span class="term-hint" onclick="explainTerm('timeout')">timeout</span>.</span></div>
+</div>
+<ul class="diag-list" style="margin-bottom:12px;">
+<li><span class="mark ok">✓</span>Apache berjalan &amp; UFW mengizinkan <span class="term-hint" onclick="explainTerm('port')">Port 80</span></li>
+<li><span class="mark bad" id="check1-3">✗</span><span class="term-hint" onclick="explainTerm('inbound rule')">Inbound Rule</span> (Firewall Cloud) belum dibuka</li>
+</ul>
+<div class="diag-cause" style="padding:10px;font-size:12px;margin-bottom:12px;">Dua lapis firewall harus
+                  sinkron: UFW (dalam VPS) dan <span class="term-hint" onclick="explainTerm('firewall')">firewall</span>
+                  provider cloud (luar VPS).</div>
+<button class="btn-sim" id="fix1-btn" onclick="fixScenario1()" style="width:100%;">Terapkan Perbaikan
+                  (Buka Inbound Rule 80)</button>
+</div>
+</div>
+<!-- Kanan: Skenario 2 -->
+<div class="col-half">
+<div style="background:var(--panel-tinted);padding:16px 20px;border-radius:var(--radius-md);border:1px solid var(--border);">
+<h3 style="font-size:14.5px;color:var(--text);margin-bottom:8px;">2. Kode PHP Muncul Teks Mentah</h3>
+<p style="font-size:12.5px;color:var(--text-sub);margin-bottom:12px;">File info.php terbuka, tapi
+                  kodenya tidak tereksekusi.</p>
+<div class="browser-mock" style="margin-bottom:12px;">
+<div class="browser-bar"><span class="bdot"></span><span class="bdot"></span><span class="bdot"></span><span class="browser-addr">http://vps_ip_address/info.php</span></div>
+<div class="browser-content" id="browser2-content" style="min-height:70px;display:flex;align-items:center;padding:12px;"><span class="state-code" style="font-size:13px;">&lt;?php phpinfo();?&gt;</span></div>
+</div>
+<ul class="diag-list" style="margin-bottom:12px;">
+<li><span class="mark ok">✓</span>Apache berjalan &amp; file info.php ditemukan</li>
+<li><span class="mark bad" id="check2-3">✗</span>Modul PHP belum aktif di konfigurasi Apache</li>
+</ul>
+<div class="diag-cause" style="padding:10px;font-size:12px;margin-bottom:12px;">Apache memperlakukan
+                  .php sebagai file teks karena konfigurasi modul PHP-nya belum dimuat ulang.</div>
+<button class="btn-sim" id="fix2-btn" onclick="fixScenario2()" style="width:100%;">Aktifkan Modul &amp;
+                  Restart Apache</button>
+</div>
+</div>
+</div>
+</section>
+</div>
+</div>
+<div class="why-modal-bg" id="why-modal" onclick="if(event.target===this) this.classList.remove('show')">
+<div class="why-modal-card">
+<button class="why-modal-close" onclick="document.getElementById('why-modal').classList.remove('show')">×</button>
+<div class="why-modal-body" id="why-modal-body"></div>
+</div>
+</div>
+
+<!-- Mobile Bottom Navigation Dock (Visible only on mobile screens < 850px) -->
+<div class="mobile-bottom-nav">
+  <button class="m-nav-btn" id="m-btn-prev" onclick="goPrev()" title="Slide Sebelumnya">
+    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"></path></svg>
+  </button>
+  <button class="m-nav-btn m-toc-btn" onclick="toggleToc(true)" title="Daftar Isi Slide">
+    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+    <span>Slides</span>
+  </button>
+  <div class="m-slide-counter" id="m-slide-counter">1 / 8</div>
+  <button class="m-nav-btn" id="m-theme-btn" onclick="toggleTheme()" title="Ubah Tema">🌙</button>
+  <button class="m-nav-btn m-btn-next" id="m-btn-next" onclick="goNext()" title="Slide Selanjutnya">
+    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"></path></svg>
+  </button>
+</div>
+</div>
+<script>
+    // ---------- theme engine ----------
+    function initTheme() {
+      var savedTheme = localStorage.getItem('app-theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      updateThemeIcon(savedTheme);
+    }
+    function toggleTheme() {
+      var current = document.documentElement.getAttribute('data-theme') || 'light';
+      var next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('app-theme', next);
+      updateThemeIcon(next);
+    }
+    function updateThemeIcon(theme) {
+      ['theme-btn', 'm-theme-btn'].forEach(function (id) {
+        var btn = document.getElementById(id);
+        if (btn) {
+          btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+          btn.title = theme === 'dark' ? 'Ganti ke Tema Terang' : 'Ganti ke Tema Gelap';
+        }
+      });
+    }
+    initTheme();
+
+    // ---------- slide engine & TOC ----------
+    var slideIds = ['hero', 's01', 's02', 's02b', 's02c', 's03', 's04', 's05'];
+    var groupLabels = { hero: 'Mulai', s01: 'Kenapa Perlu Ini', s02: 'Cara Kerjanya', s03: 'Pilih Alatnya', s04: 'Praktik Langsung', s05: 'Troubleshooting' };
+    var slideTitles = [
+      '1. Pengantar: Environment Server Web',
+      '2. Jembatan Teori: Peran Web Server',
+      '3. Protokol Transmisi: Request-Response',
+      '4. Lapisan Transportasi: TCP Handshake',
+      '5. Karakteristik HTTP: Stateless & Media',
+      '6. LAMP vs XAMPP: Perbandingan Stack',
+      '7. Praktikum: Pemasangan Web Stack',
+      '8. Troubleshooting Skenario Utama'
+    ];
+    var current = 0;
+
+    function toggleToc(show) {
+      var drawer = document.getElementById('toc-drawer');
+      var overlay = document.getElementById('toc-overlay');
+      if (!drawer || !overlay) return;
+      var open = typeof show === 'boolean' ? show : !drawer.classList.contains('open');
+      drawer.classList.toggle('open', open);
+      overlay.classList.toggle('open', open);
+    }
+
+    function renderToc() {
+      var container = document.getElementById('toc-list');
+      if (!container) return;
+      container.innerHTML = '';
+      slideIds.forEach(function (id, idx) {
+        var item = document.createElement('button');
+        item.className = 'toc-item' + (idx === current ? ' active' : '');
+        item.onclick = function () {
+          current = idx;
+          renderSlide();
+          toggleToc(false);
+        };
+        var num = document.createElement('span');
+        num.className = 'toc-item-num';
+        num.textContent = (idx + 1);
+        var txt = document.createElement('span');
+        txt.textContent = slideTitles[idx] || ('Slide ' + (idx + 1));
+        item.appendChild(num);
+        item.appendChild(txt);
+        container.appendChild(item);
+      });
+    }
+
+    // clean slide wrapper
+    document.querySelectorAll('.slide').forEach(function (s) {
+      if (!s.querySelector('.slide-inner')) {
+        var inner = document.createElement('div'); inner.className = 'slide-inner';
+        while (s.firstChild) { inner.appendChild(s.firstChild); } s.appendChild(inner);
+      }
+    });
+
+    function renderSlide() {
+      slideIds.forEach(function (id, i) { document.getElementById(id).classList.toggle('active', i === current); });
+      var group = document.getElementById(slideIds[current]).dataset.group;
+      var counterStr = (current + 1) + ' / ' + slideIds.length;
+      
+      var topCounter = document.getElementById('slide-counter');
+      if (topCounter) topCounter.textContent = counterStr + '  ·  ' + groupLabels[group];
+
+      var mCounter = document.getElementById('m-slide-counter');
+      if (mCounter) mCounter.textContent = counterStr;
+
+      var mTitle = document.getElementById('mobile-topbar-title');
+      if (mTitle) mTitle.textContent = slideTitles[current] || ('Slide ' + (current + 1));
+
+      var isPrevDis = current === 0;
+      var isNextDis = current === slideIds.length - 1;
+
+      ['btn-prev', 'm-btn-prev'].forEach(function(id) {
+        var b = document.getElementById(id); if (b) b.disabled = isPrevDis;
+      });
+      ['btn-next', 'm-btn-next'].forEach(function(id) {
+        var b = document.getElementById(id); if (b) b.disabled = isNextDis;
+      });
+
+      document.getElementById('slide-progress-fill').style.width = ((current + 1) / slideIds.length * 100) + '%';
+      if (slideIds[current] === 's04') { renderVerifySlide(); }
+      renderToc();
+      var stage = document.querySelector('.stage');
+      if (stage) stage.scrollTop = 0;
+    }
+    function goNext() { if (slideIds.length - 1 > current) { current++; renderSlide(); } }
+    function goPrev() { if (current > 0) { current--; renderSlide(); } }
+    window.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') { goNext(); }
+      else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { goPrev(); }
+    });
+    renderSlide();
+
+    // ---------- status panel ----------
+    var state = { services: { ssh: 'active', apache: 'inactive', php: 'inactive', ufw: 'inactive', verify: 'inactive' }, stepsDone: 0 };
+    function renderStatus() {
+      document.querySelectorAll('[data-service]').forEach(function (el) {
+        var key = el.dataset.service; var st = state.services[key];
+        var dot = el.querySelector('.svc-dot'); var label = el.querySelector('.state-label');
+        if (dot) { dot.classList.toggle('on', st === 'active'); }
+        if (label) { label.textContent = st === 'active' ? 'aktif' : 'nonaktif'; label.classList.toggle('on', st === 'active'); }
+      });
+      // Update mini dots in topbar
+      document.querySelectorAll('.status-mini-dot').forEach(function (d) {
+        var svc = d.dataset.svc; if (svc) { d.classList.toggle('on', state.services[svc] === 'active'); }
+      });
+      var count = Object.values(state.services).filter(function (v) { return v === 'active'; }).length;
+      document.getElementById('status-count').textContent = count + '/5';
+    }
+    renderStatus();
+
+    // close dropdown on outside click
+    document.addEventListener('click', function (e) {
+      var dd = document.getElementById('status-dropdown');
+      if (dd && dd.classList.contains('open') && !e.target.closest('.topbar-status')) { dd.classList.remove('open'); }
+    });
+
+    // ---------- Blok 2a: request/response ----------
+    function appendLog(container, text, color) {
+      var line = document.createElement('div'); line.className = 'log-line log-' + (color || 'muted');
+      line.textContent = text; container.appendChild(line); container.scrollTop = container.scrollHeight;
+    }
+    function sendRequest() {
+      var packet = document.getElementById('packet-a'), log = document.getElementById('log-a'), btn = document.getElementById('btn-req');
+      var clientNode = document.querySelectorAll('#s02 .diagram-node')[0];
+      var serverNode = document.querySelectorAll('#s02 .diagram-node')[1];
+
+      btn.disabled = true; log.innerHTML = '';
+      clientNode.className = 'diagram-node active';
+      serverNode.className = 'diagram-node';
+      packet.classList.remove('returning'); packet.classList.add('at-server');
+
+      appendLog(log, '→ GET /index.html HTTP/1.1', 'teal');
+
+      setTimeout(function () {
+        appendLog(log, '  server mencari objek yang diminta…', 'muted');
+      }, 550);
+
+      setTimeout(function () {
+        clientNode.className = 'diagram-node';
+        serverNode.className = 'diagram-node active';
+        packet.classList.add('returning');
+        packet.classList.remove('at-server');
+        appendLog(log, '← HTTP/1.1 200 OK (text/html)', 'green');
+      }, 1450);
+
+      setTimeout(function () {
+        clientNode.className = 'diagram-node success';
+        serverNode.className = 'diagram-node';
+        btn.disabled = false;
+      }, 2450);
+    }
+
+    // ---------- Blok 2b: handshake ----------
+    function runHandshake(btn) {
+      btn.disabled = true; var log = document.getElementById('log-b'); log.innerHTML = '';
+      ['hs1', 'hs2', 'hs3'].forEach(function (id) { document.getElementById(id).classList.remove('show'); });
+      var seq = [
+        { delay: 150, id: 'hs1', text: 'Klien → Server : SYN (permintaan koneksi ke Port 80)', color: 'teal' },
+        { delay: 1150, id: 'hs2', text: 'Server → Klien : SYN-ACK (server menerima & membalas)', color: 'teal' },
+        { delay: 2150, id: 'hs3', text: 'Klien → Server : ACK (koneksi TCP terbentuk)', color: 'teal' },
+        { delay: 3050, id: null, text: '✓ Soket baru dibuat — siap bertukar pesan HTTP', color: 'green' }
+      ];
+      seq.forEach(function (step) {
+        setTimeout(function () {
+          if (step.id) document.getElementById(step.id).classList.add('show');
+          appendLog(log, step.text, step.color);
+        }, step.delay);
+      });
+      setTimeout(function () { btn.disabled = false; }, 3400);
+    }
+
+    // ---------- Blok 3: stack toggle + meters + verdict ----------
+    var verdictData = {
+      lamp: {
+        icon: '✨',
+        title: 'Rekomendasi Produksi: LAMP / LEMP Native Stack',
+        desc: 'Komponen terpasang terpisah &amp; menyatu dengan OS Linux. Keamanan bawaan tinggi (90%), efisiensi RAM maksimal (85%), serta update keamanan otomatis via systemd &amp; apt. Standar utama untuk VPS publik.'
+      },
+      xampp: {
+        icon: '⚠️',
+        title: 'Peringatan Lingkungan: XAMPP Local Development Stack',
+        desc: 'Sangat praktis untuk belajar offline di laptop pribadi, namun memiliki celah keamanan bawaan (database root tanpa password). Sangat tidak disarankan dipasang pada VPS produksi publik.'
+      }
+    };
+
+    function selectStack(which) {
+      // 1. Toggle Stack Buttons
+      document.querySelectorAll('.stack-card').forEach(function (c) {
+        c.classList.toggle('active', c.dataset.stack === which);
+      });
+
+      // 2. Highlight Table Columns on Desktop
+      document.querySelectorAll('td[data-col]').forEach(function (td) {
+        td.classList.toggle('col-highlight', td.dataset.col === which);
+      });
+
+      // 3. Focus Highlight & Dim on Meters
+      document.querySelectorAll('.meter-fill').forEach(function (el) {
+        var isSelected = el.classList.contains(which);
+        el.classList.toggle('active-focus', isSelected);
+        el.classList.toggle('dim', !isSelected);
+      });
+
+      // 4. Focus Highlight & Dim on Mobile Cards
+      document.querySelectorAll('.cmp-card-row').forEach(function (row) {
+        var isSelected = row.classList.contains(which);
+        row.classList.toggle('active-focus', isSelected);
+        row.classList.toggle('dim', !isSelected);
+      });
+
+      // 5. Update Dynamic Verdict Banner
+      var verdict = document.getElementById('stack-verdict');
+      var icon = document.getElementById('verdict-icon');
+      var title = document.getElementById('verdict-title');
+      var desc = document.getElementById('verdict-desc');
+      var data = verdictData[which];
+
+      if (verdict && data) {
+        verdict.className = 'stack-verdict ' + which;
+        if (icon) icon.textContent = data.icon;
+        if (title) title.textContent = data.title;
+        if (desc) desc.innerHTML = data.desc;
+      }
+    }
+
+    window.addEventListener('load', function () {
+      document.querySelectorAll('.meter-fill').forEach(function (el) {
+        setTimeout(function () { el.style.width = el.dataset.value + '%'; }, 300);
+      });
+      selectStack('lamp');
+    });
+
+    // ---------- Blok 4: terminal + step wizard ----------
+    var termBody = document.getElementById('term-body');
+    var stepData = [
+      {
+        title: 'Masuk ke VPS Lewat SSH', desc: 'Apa: membuka sesi terminal jarak jauh ke VPS. Bagaimana: kita pakai akun & akses yang sudah disiapkan di Pertemuan 9. Kenapa: semua perintah instalasi berikutnya harus dijalankan langsung di dalam VPS, bukan dari laptop kita.', cmdDisplay: 'ssh root@vps_ip_address', cmd: 'ssh root@vps_ip_address',
+        lines: ["The authenticity of host 'vps_ip_address (203.0.113.10)' can't be established.", "Are you sure you want to continue connecting (yes/no)? yes", "Welcome to Ubuntu 24.04.2 LTS (GNU/Linux 6.8.0-generic x86_64)", "root@vps:~#"], service: null
+      },
+      {
+        title: 'Perbarui Daftar Paket & Pasang Apache', desc: 'Apa: memasang Apache, program Web Server yang akan menerima kunjungan browser. Bagaimana: pertama update daftar paket agar versi yang dipasang terbaru, baru instal apache2. Kenapa: tanpa Web Server, VPS tidak tahu cara merespons permintaan HTTP sama sekali.', cmdDisplay: 'sudo apt update && sudo apt install apache2 -y', cmd: 'sudo apt update && sudo apt install apache2 -y',
+        lines: ["Reading package lists... Done", "Building dependency tree... Done", "Setting up apache2 (2.4.58-1ubuntu8) ...", "Synchronizing state of apache2.service...", "apache2.service: active (running)"], service: 'apache'
+      },
+      {
+        title: 'Pasang PHP Runtime', desc: 'Apa: memasang interpreter PHP beserta modul penghubungnya ke Apache. Bagaimana: satu perintah instal untuk keduanya sekaligus. Kenapa: Apache sendiri cuma bisa mengirim file statis (HTML/gambar) — supaya bisa menjalankan kode PHP yang dinamis, ia butuh "penerjemah" bernama PHP Runtime ini.', cmdDisplay: 'sudo apt install php libapache2-mod-php -y', cmd: 'sudo apt install php libapache2-mod-php -y',
+        lines: ["Reading package lists... Done", "Setting up libapache2-mod-php8.3 ...", "Enabling module php8.3.", "Restarting web server apache2 ... done."], service: 'php'
+      },
+      {
+        title: 'Buka Port 80 di Firewall (UFW)', desc: 'Apa: mengizinkan lalu lintas HTTP masuk lewat firewall lokal VPS. Bagaimana: satu perintah UFW yang mengizinkan profil Apache. Kenapa: meski Apache sudah menyala, firewall akan tetap memblokir semua permintaan dari luar kalau pintunya (port 80) belum dibukakan secara eksplisit.', cmdDisplay: "sudo ufw allow 'Apache'", cmd: "sudo ufw allow 'Apache'",
+        lines: ["Rule added", "Rule added (v6)"], service: 'ufw'
+      },
+      {
+        title: 'Buat File Uji Coba info.php', desc: 'Apa: membuat satu file PHP sederhana sebagai alat tes. Bagaimana: menuliskan kode singkat phpinfo() ke folder utama Apache (document root). Kenapa: ini cara paling cepat dan meyakinkan untuk membuktikan bahwa Apache dan PHP benar-benar sudah terhubung dan bekerja sama.', cmdDisplay: 'echo "&lt;?php phpinfo();?&gt;" | sudo tee /var/www/html/info.php', cmd: 'echo "<?php phpinfo();?>" | sudo tee /var/www/html/info.php',
+        lines: ["<?php phpinfo();?>", "→ file info.php berhasil dibuat di /var/www/html/"], service: 'verify'
+      }
+    ];
+    var wizIndex = 0;
+
+    function renderWizard() {
+      var d = stepData[wizIndex];
+      document.getElementById('wiz-badge').textContent = wizIndex + 1;
+      document.getElementById('wiz-title').textContent = d.title;
+      document.getElementById('wiz-desc').textContent = d.desc;
+      document.getElementById('wiz-cmd').innerHTML = d.cmdDisplay;
+      document.getElementById('wiz-status').textContent = '○';
+      document.getElementById('step-wizard').classList.remove('done');
+      var run = document.getElementById('wiz-run'); run.disabled = false; run.textContent = 'Jalankan Perintah ▶';
+      var dots = document.getElementById('wiz-dots'); dots.innerHTML = '';
+      stepData.forEach(function (_, i) {
+        var dot = document.createElement('span');
+        dot.className = 'wiz-dot' + (state.stepsDone > i ? ' done' : '') + (i === wizIndex ? ' current' : '');
+        dots.appendChild(dot);
+      });
+    }
+    renderWizard();
+
+    function typeLine(container, text, cls, cb) {
+      var line = document.createElement('div'); line.className = 'term-line term-' + cls;
+      container.appendChild(line); var i = 0;
+      (function tick() { if (text.length >= i) { line.textContent = text.slice(0, i); i++; container.scrollTop = container.scrollHeight; setTimeout(tick, 14); } else if (cb) { cb(); } })();
+    }
+    function appendTermLine(text, cls) {
+      var line = document.createElement('div'); line.className = 'term-line term-' + cls;
+      line.textContent = text; termBody.appendChild(line); termBody.scrollTop = termBody.scrollHeight;
+    }
+    function runCurrentStep() {
+      var run = document.getElementById('wiz-run'); run.disabled = true; run.textContent = 'Menjalankan…';
+      var d = stepData[wizIndex];
+      typeLine(termBody, '$ ' + d.cmd, 'prompt', function () {
+        var i = 0; (function nextLine() {
+          if (d.lines.length > i) { appendTermLine(d.lines[i], 'out'); i++; setTimeout(nextLine, 220); }
+          else { finishCurrentStep(d.service); }
+        })();
+      });
+    }
+    function triggerConfetti() {
+      var canvas = document.createElement('canvas');
+      canvas.style.position = 'fixed';
+      canvas.style.top = '0';
+      canvas.style.left = '0';
+      canvas.style.width = '100vw';
+      canvas.style.height = '100vh';
+      canvas.style.pointerEvents = 'none';
+      canvas.style.zIndex = '9999';
+      document.body.appendChild(canvas);
+      var ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      var particles = [];
+      var colors = ['#4F46E5', '#0D9488', '#059669', '#F59E0B', '#EC4899', '#8B5CF6'];
+      for (var i = 0; i < 75; i++) {
+        particles.push({
+          x: canvas.width / 2,
+          y: canvas.height / 2,
+          vx: (Math.random() - 0.5) * 16,
+          vy: (Math.random() - 0.7) * 16,
+          size: Math.random() * 8 + 4,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          rotation: Math.random() * 360,
+          rSpeed: (Math.random() - 0.5) * 10,
+          opacity: 1
+        });
+      }
+      var start = Date.now();
+      (function render() {
+        var elapsed = Date.now() - start;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(function (p) {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += 0.35;
+          p.rotation += p.rSpeed;
+          p.opacity = Math.max(0, 1 - elapsed / 2500);
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate((p.rotation * Math.PI) / 180);
+          ctx.globalAlpha = p.opacity;
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+          ctx.restore();
+        });
+        if (elapsed < 2500) {
+          requestAnimationFrame(render);
+        } else {
+          canvas.remove();
+        }
+      })();
+    }
+
+    function finishCurrentStep(service) {
+      document.getElementById('wiz-status').textContent = '✓';
+      document.getElementById('step-wizard').classList.add('done');
+      if (service) { state.services[service] = 'active'; renderStatus(); }
+      state.stepsDone++; updateProgress(); renderVerifySlide();
+      if (stepData.length - 1 > wizIndex) { setTimeout(function () { wizIndex++; renderWizard(); }, 500); }
+      else {
+        var run = document.getElementById('wiz-run'); run.textContent = 'Semua tahap selesai ✓';
+        triggerConfetti();
+        var dots = document.getElementById('wiz-dots'); dots.innerHTML = '';
+        stepData.forEach(function () { var dot = document.createElement('span'); dot.className = 'wiz-dot done'; dots.appendChild(dot); });
+      }
+    }
+    function updateProgress() {
+      var pct = (state.stepsDone / stepData.length) * 100;
+      document.getElementById('progress-fill').style.width = pct + '%';
+      document.getElementById('progress-label').textContent = state.stepsDone + ' / ' + stepData.length + ' tahap selesai';
+    }
+
+    // ---------- Blok 4b: verifikasi ----------
+    function renderVerifySlide() {
+      var box = document.getElementById('verify-status'), content = document.getElementById('verify-content');
+      var names = { apache: 'Apache2', php: 'PHP Runtime', ufw: 'UFW Port 80', verify: 'info.php' };
+      box.innerHTML = '';
+      Object.keys(names).forEach(function (key) {
+        var chip = document.createElement('span'); var on = state.services[key] === 'active';
+        chip.className = 'verify-chip' + (on ? ' on' : ''); chip.textContent = (on ? '✓ ' : '○ ') + names[key];
+        box.appendChild(chip);
+      });
+      if (state.services.verify === 'active') {
+        content.innerHTML = '<div class="php-mock"><div class="php-mock-head">PHP Version 8.3.x</div><table><tr><td>System</td><td>Linux vps 6.8.0-generic x86_64</td></tr><tr><td>Server API</td><td>Apache 2.0 Handler</td></tr><tr><td>Loaded Modules</td><td>core, mod_php, mod_rewrite</td></tr></table></div>';
+      } else {
+        content.innerHTML = '<span class="state-pending">… menunggu tahap praktikum diselesaikan.</span>';
+      }
+    }
+
+    // ---------- Blok 5: troubleshooting ----------
+    function fixScenario1() {
+      document.getElementById('browser1-content').innerHTML = '<span class="state-fixed">✓ Apache2 Ubuntu Default Page<span class="dim">It works! Server web berhasil dijangkau dari jaringan publik.</span></span>';
+      var chk = document.getElementById('check1-3'); chk.textContent = '✓'; chk.classList.remove('bad'); chk.classList.add('ok');
+      var btn = document.getElementById('fix1-btn'); btn.disabled = true; btn.textContent = 'Perbaikan diterapkan ✓';
+    }
+    function fixScenario2() {
+      document.getElementById('browser2-content').innerHTML = '<div class="php-mock" style="width:100%"><div class="php-mock-head">PHP Version 8.3.x</div><table><tr><td>System</td><td>Linux vps 6.8.0-generic x86_64</td></tr><tr><td>Server API</td><td>Apache 2.0 Handler</td></tr><tr><td>Loaded Modules</td><td>core, mod_php, mod_rewrite</td></tr></table></div>';
+      var chk = document.getElementById('check2-3'); chk.textContent = '✓'; chk.classList.remove('bad'); chk.classList.add('ok');
+      var btn = document.getElementById('fix2-btn'); btn.disabled = true; btn.textContent = 'Perbaikan diterapkan ✓';
+    }
+
+    // ---------- toggles ----------
+    var glossary = {
+      'vps': '<b>VPS (Virtual Private Server)</b>: Komputer virtual sewaan di internet yang berjalan 24 jam di data center. Anda memiliki akses penuh (root) untuk mengelola OS dan perangkat lunak di dalamnya.',
+      'web server': '<b>Web Server</b>: Layanan latar belakang yang menerima permintaan halaman dari peramban web (browser) lewat protokol HTTP/HTTPS dan mengirimkan file web yang diminta.',
+      'php runtime': '<b>PHP Runtime</b>: Interpreter/penerjemah yang mengeksekusi kode script PHP di sisi server untuk menghasilkan halaman HTML dinamis secara langsung sebelum dikirim ke klien.',
+      'http': '<b>HTTP (HyperText Transfer Protocol)</b>: Aturan baku yang mengatur format komunikasi permintaan (request) dan balasan (response) antara peramban web (klien) dan web server.',
+      'klien': '<b>Klien</b>: Perangkat atau aplikasi (seperti Google Chrome atau Firefox) yang memulai koneksi dan meminta layanan atau data ke server.',
+      'server': '<b>Server</b>: Sistem komputer penyedia layanan (seperti Apache) yang memproses permintaan dari klien dan mengembalikan respons data.',
+      'http status': '<b>Kode Status HTTP</b>:<br>• <b>200 OK</b>: Permintaan sukses. Server berhasil menemukan halaman yang diminta.<br>• <b>404 Not Found</b>: Berkas tidak ditemukan di direktori server.<br>• <b>403 Forbidden</b>: Akses ditolak karena masalah hak izin berkas.<br>• <b>500 Internal Error</b>: Kesalahan fatal pemrosesan kode server.',
+      'tcp': '<b>TCP (Transmission Control Protocol)</b>: Protokol transportasi data yang memastikan koneksi terbentuk secara andal, paket data terkirim berurutan, dan tidak ada data yang hilang.',
+      'three-way handshake': '<b>Three-Way Handshake</b>: Proses "salaman" tiga langkah (SYN → SYN-ACK → ACK) untuk memvalidasi kesiapan browser dan server sebelum transfer data HTTP dimulai.',
+      'syn': '<b>SYN (Synchronize)</b>: Paket inisiasi jabat tangan pertama dari klien untuk menyelaraskan nomor urut paket data (sequence number) yang akan ditransmisikan.',
+      'ack': '<b>ACK (Acknowledge)</b>: Sinyal konfirmasi tanda terima yang memvalidasi bahwa paket data sebelumnya telah sampai dengan selamat dan utuh.',
+      'syn-ack': '<b>SYN-ACK</b>: Respons gabungan server untuk mengonfirmasi penerimaan sinyal klien (ACK) sekaligus mengirim permintaan penyelarasan balik (SYN).',
+      'stateless': '<b>Stateless</b>: Sifat protokol di mana server tidak mengingat riwayat request klien sebelumnya. Setiap request diperlakukan sebagai transaksi baru yang mandiri.',
+      'connectionless': '<b>Connectionless</b>: Server memutus koneksi segera setelah respons HTTP dikirim ke peramban. Browser harus membuat koneksi baru untuk request berikutnya.',
+      'media independent': '<b>Media Independent</b>: HTTP dapat mengirim tipe data apa saja (teks, gambar, audio, video) asalkan klien dan server sepakat pada tipe MIME formatnya.',
+      'text oriented': '<b>Text Oriented</b>: Seluruh format perintah HTTP ditulis dalam teks murni sehingga mudah dibaca manusia dan didiagnosis oleh administrator jaringan.',
+      'web stack': '<b>Web Stack</b>: Bundel perangkat lunak (OS, Web Server, Database, Bahasa Pemrogram) yang bekerja sama untuk menyajikan aplikasi web dinamis (misal: Linux, Apache, MySQL, PHP).',
+      'native': '<b>Native</b>: Pemasangan komponen secara terpisah dan terintegrasi langsung dengan sistem operasi Linux. Standar terbaik untuk lingkungan produksi server nyata.',
+      'xampp': '<b>XAMPP (X-platform, Apache, MariaDB, PHP, Perl)</b>: Paket perangkat lunak lintas platform terintegrasi yang berisi server Apache, database MariaDB, serta interpreter PHP dan Perl untuk simulasi lokal.',
+      'apache': '<b>Apache</b>: Salah satu perangkat lunak Web Server open source terpopuler yang handal dan modular untuk menyajikan halaman situs web.',
+      'php': '<b>PHP (Hypertext Preprocessor)</b>: Bahasa pemrograman server-side dinamis yang digunakan untuk membuat aplikasi web interaktif seperti sistem kasir dan situs e-commerce.',
+      'ufw': '<b>UFW (Uncomplicated Firewall)</b>: Program firewall bawaan Ubuntu yang berfungsi memblokir atau mengizinkan port tertentu (seperti Port 80 untuk HTTP) demi keamanan server.',
+      'troubleshooting': '<b>Troubleshooting</b>: Proses sistematis untuk mencari, menganalisis, dan memperbaiki sumber masalah (kegagalan/bug) pada sistem perangkat keras atau perangkat lunak.',
+      'lamp': '<b>LAMP Stack (Linux, Apache, MySQL/MariaDB, PHP)</b>: Kombinasi empat perangkat lunak open source untuk menjalankan server aplikasi web berbasis Linux.',
+      'lemp': '<b>LEMP Stack (Linux, Nginx [Engine-X], MySQL/MariaDB, PHP)</b>: Variasi web stack yang menggunakan Nginx sebagai pengganti Apache demi performa asinkron yang lebih ringan.',
+      'systemd': '<b>Systemd</b>: Sistem manajemen init dan layanan latar belakang (service/daemon) standar pada sistem operasi distribusi Linux modern.',
+      'reboot': '<b>Reboot</b>: Proses memulai ulang sistem operasi komputer untuk menyegarkan memori atau menerapkan pembaruan konfigurasi baru.',
+      'database': '<b>Database</b>: Sistem penyimpanan data relasional atau terstruktur yang efisien untuk memudahkan penambahan, pembacaan, dan manipulasi data.',
+      'ssh': '<b>SSH (Secure Shell)</b>: Protokol komunikasi terenkripsi yang memungkinkan pengguna melakukan koneksi aman untuk mengendalikan server Linux jarak jauh.',
+      'apt': '<b>APT (Advanced Package Tool)</b>: Manajer paket bawaan Debian/Ubuntu untuk mencari, memasang, memperbarui, dan menghapus perangkat lunak lewat repositori resmi.',
+      'sudo': '<b>Sudo (Superuser Do)</b>: Perintah Linux untuk mengeksekusi program dengan wewenang administratif tertinggi (root/administrator).',
+      'tee': '<b>Tee</b>: Perintah baris utilitas Linux untuk membaca dari input standar (stdin) lalu menulis hasilnya ke output standar (stdout) sekaligus menyimpannya ke file berkas.',
+      'document root': '<b>Document Root</b>: Direktori utama pada sistem berkas server (misal: /var/www/html) tempat server web mencari dan menyajikan file berkas situs web.',
+      'localhost': '<b>Localhost</b>: Alamat referensi loopback virtual (IP 127.0.0.1) yang merujuk pada komputer/mesin yang sedang digunakan saat itu juga.',
+      'timeout': '<b>Timeout</b>: Batas durasi waktu tunggu maksimal koneksi terlampaui karena tidak adanya respons atau sinyal dari sisi server tujuan.',
+      'inbound rule': '<b>Inbound Rule</b>: Aturan konfigurasi lalu lintas masuk pada dinding pengaman (firewall) yang menentukan IP atau Port mana saja yang diizinkan mengakses server.',
+      'port': '<b>Port</b>: Angka identifikasi virtual (saluran komunikasi) di dalam sistem komputer untuk memilah lalu lintas data dari berbagai jenis layanan (misal: Port 80 untuk HTTP).',
+      'host': '<b>Host</b>: Perangkat fisik atau server virtual yang terhubung ke jaringan internet/lokal dan memiliki alamat IP unik.',
+      'firewall': '<b>Firewall</b>: Dinding pelindung jaringan komputer yang menyaring dan mengontrol lalu lintas data masuk serta keluar berdasarkan aturan keamanan tertentu.'
+    };
+
+    function explainTerm(key) {
+      var modal = document.getElementById('why-modal');
+      var body = document.getElementById('why-modal-body');
+      var termInfo = glossary[key.toLowerCase()];
+      if (termInfo) {
+        body.innerHTML = '<b style="color:var(--indigo);font-size:15.5px;display:block;margin-bottom:10px;"><i class="fa-solid fa-circle-info"></i> Kamus Istilah Cloud</b>' + termInfo;
+        modal.classList.add('show');
+      }
+    }
+
+    function toggleWhy(btn) {
+      var content = btn.nextElementSibling;
+      if (!content) return;
+      var isShowing = content.classList.contains('show');
+      document.querySelectorAll('.why-content').forEach(function (c) { c.classList.remove('show'); });
+      if (!isShowing) {
+        content.classList.add('show');
+      }
+    }
+
+    function answerQuiz(card, btn, isCorrect, explanation) {
+      var opts = card.querySelectorAll('.quiz-opt'); opts.forEach(function (o) { o.disabled = true; });
+      btn.classList.add(isCorrect ? 'correct' : 'wrong');
+      if (!isCorrect) { var c = card.querySelector('.quiz-opt[data-correct="true"]'); if (c) c.classList.add('correct'); }
+      var fb = card.querySelector('.quiz-feedback');
+      fb.textContent = (isCorrect ? '✓ Benar! ' : '✗ Belum tepat. ') + explanation;
+      fb.className = 'quiz-feedback show ' + (isCorrect ? 'ok' : 'no');
+    }
+  </script>
+</body>
+</html>
