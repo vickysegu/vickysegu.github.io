@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Editor data.json — Vicky Setia Gunawan</title>
+<style>
+:root{
+  --bg1:#0a1a2f; --bg2:#0f172a; --panel:rgba(255,255,255,.06);
+  --panel2:rgba(0,0,0,.25); --border:rgba(255,255,255,.15);
+  --accent:#22c55e; --accent2:#60a5fa; --text:#e5e7eb; --muted:#94a3b8;
+  --danger:#ef4444; --radius:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+  background:linear-gradient(145deg,var(--bg1),var(--bg2));
+  color:var(--text);min-height:100vh;padding:16px;
+}
+.topbar{
+  position:sticky;top:0;z-index:50;
+  background:rgba(15,23,42,.85);backdrop-filter:blur(12px);
+  border:1px solid var(--border);border-radius:var(--radius);
+  padding:12px 16px;margin-bottom:16px;
+  display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;
+}
+.topbar h1{font-size:15px;font-weight:700;letter-spacing:.3px}
+.topbar h1 span{color:var(--accent)}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+button{
+  font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;
+  padding:8px 14px;border-radius:999px;border:1px solid var(--border);
+  background:var(--panel);color:var(--text);transition:.15s;
+}
+button:hover{background:rgba(255,255,255,.12)}
+button.primary{background:var(--accent);color:#0a1a2f;border-color:transparent}
+button.primary:hover{filter:brightness(1.1)}
+button.danger{color:var(--danger);border-color:rgba(239,68,68,.4)}
+button.ghost{background:transparent}
+button.sm{padding:5px 10px;font-size:12px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.tab{
+  padding:8px 14px;border-radius:999px;font-size:13px;font-weight:600;
+  background:var(--panel);border:1px solid var(--border);cursor:pointer;color:var(--muted);
+}
+.tab.active{background:var(--accent);color:#0a1a2f;border-color:transparent}
+.section{display:none}
+.section.active{display:block}
+.card{
+  background:var(--panel2);border:1px solid var(--border);
+  border-radius:var(--radius);padding:16px;margin-bottom:12px;
+}
+.card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px}
+.card-head h3{font-size:13px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:.5px}
+label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.4px;
+  color:var(--muted);margin:8px 0 4px;font-weight:600}
+input[type=text],input[type=number],textarea,select{
+  width:100%;padding:9px 11px;border-radius:8px;
+  background:rgba(0,0,0,.35);border:1px solid var(--border);color:var(--text);
+  font-family:inherit;font-size:13px;
+}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent2)}
+textarea{resize:vertical;min-height:60px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+@media(max-width:640px){.row,.row3{grid-template-columns:1fr}}
+.subcard{
+  background:rgba(255,255,255,.03);border:1px dashed var(--border);
+  border-radius:10px;padding:12px;margin-bottom:8px;
+}
+.chip-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.raw{
+  width:100%;min-height:60vh;font-family:ui-monospace,Consolas,monospace;
+  font-size:12px;line-height:1.5;
+}
+.modal-bg{
+  position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);
+  z-index:100;display:none;align-items:center;justify-content:center;padding:20px;
+}
+.modal-bg.open{display:flex}
+.modal{
+  background:#0f172a;border:1px solid var(--border);border-radius:16px;
+  padding:20px;max-width:520px;width:100%;max-height:90vh;overflow:auto;
+}
+.modal h2{font-size:16px;margin-bottom:12px}
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translate(-50%,60px);
+  background:var(--accent);color:#0a1a2f;padding:10px 20px;border-radius:999px;
+  font-size:13px;font-weight:700;z-index:200;opacity:0;transition:.3s;
+}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.toast.err{background:var(--danger);color:#fff}
+.empty{color:var(--muted);text-align:center;padding:20px;font-size:13px;font-style:italic}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>✎ Editor <span>data.json</span> — Vicky Setia Gunawan</h1>
+  <div class="actions">
+    <label style="margin:0;cursor:pointer;">
+      <input type="file" id="fileInput" accept=".json" style="display:none">
+      <button class="ghost" onclick="document.getElementById('fileInput').click()">📂 Muat File</button>
+    </label>
+    <button class="ghost" onclick="reloadFromServer()">↻ Reload dari Server</button>
+    <button class="primary" onclick="openSaveModal()">💾 Simpan</button>
+  </div>
+</div>
+
+<div class="tabs" id="tabs"></div>
+
+<div class="section active" data-sec="profil">
+  <div class="card">
+    <div class="card-head"><h3>Profil Utama</h3></div>
+    <label>Nama Lengkap</label><input type="text" data-f="nama">
+    <label>NIDN</label><input type="text" data-f="nidn">
+    <label>NUPTK</label><input type="text" data-f="nuptk">
+    <label>Nama Perguruan Tinggi</label><input type="text" data-f="nama_pt">
+    <label>Singkatan PT</label><input type="text" data-f="sinkatan_pt">
+    <label>Program Studi</label><input type="text" data-f="nama_prodi">
+    <label>ID (opsional)</label><input type="text" data-f="id">
+  </div>
+</div>
+
+<div class="section" data-sec="pendidikan">
+  <div class="card">
+    <div class="card-head">
+      <h3>Riwayat Pendidikan</h3>
+      <button class="primary sm" onclick="addItem('pendidikan')">+ Tambah</button>
+    </div>
+    <div id="list-pendidikan"></div>
+  </div>
+</div>
+
+<div class="section" data-sec="mengajar">
+  <div class="card">
+    <div class="card-head">
+      <h3>Riwayat Mengajar (per Kampus)</h3>
+      <button class="primary sm" onclick="addCampus()">+ Tambah Kampus</button>
+    </div>
+    <div id="list-mengajar"></div>
+  </div>
+</div>
+
+<div class="section" data-sec="pengabdian">
+  <div class="card">
+    <div class="card-head">
+      <h3>Pengabdian & Penelitian</h3>
+      <button class="primary sm" onclick="addItem('pengabdian')">+ Tambah</button>
+    </div>
+    <div id="list-pengabdian"></div>
+  </div>
+</div>
+
+<div class="section" data-sec="publikasi">
+  <div class="card">
+    <div class="card-head">
+      <h3>Publikasi</h3>
+      <button class="primary sm" onclick="addItem('publikasi')">+ Tambah</button>
+    </div>
+    <div id="list-publikasi"></div>
+  </div>
+</div>
+
+<div class="section" data-sec="raw">
+  <div class="card">
+    <div class="card-head"><h3>JSON Mentah (read-only)</h3></div>
+    <textarea class="raw" id="rawJson" readonly></textarea>
+  </div>
+</div>
+
+<div class="modal-bg" id="saveModal">
+  <div class="modal">
+    <h2>Simpan data.json</h2>
+    <p style="color:var(--muted);font-size:12px;margin-bottom:14px;">
+      Pilih salah satu metode. Untuk push ke GitHub, butuh Personal Access Token (scope: <code>repo</code>).
+      Token disimpan di localStorage browser ini saja.
+    </p>
+
+    <div class="card" style="background:rgba(0,0,0,.3);">
+      <h3 style="font-size:12px;color:var(--accent2);margin-bottom:8px;">METODE 1 — DOWNLOAD</h3>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">
+        Unduh file, lalu commit manual ke repo. Paling aman, tanpa token.
+      </p>
+      <button class="primary" onclick="saveDownload()">⬇ Download data.json</button>
+    </div>
+
+    <div class="card" style="background:rgba(0,0,0,.3);margin-top:12px;">
+      <h3 style="font-size:12px;color:var(--accent2);margin-bottom:8px;">METODE 2 — PUSH KE GITHUB</h3>
+      <label>Personal Access Token</label>
+      <input type="text" id="ghToken" placeholder="ghp_...">
+      <div class="row">
+        <div><label>Owner</label><input type="text" id="ghOwner" value="vickysegu"></div>
+        <div><label>Repo</label><input type="text" id="ghRepo" value="vickysegu.github.io"></div>
+      </div>
+      <div class="row">
+        <div><label>Path</label><input type="text" id="ghPath" value="data.json"></div>
+        <div><label>Branch</label><input type="text" id="ghBranch" value="main"></div>
+      </div>
+      <label>Commit Message</label>
+      <input type="text" id="ghMsg" value="Update data.json via editor">
+      <div style="margin-top:12px;display:flex;gap:8px;">
+        <button class="primary" onclick="saveGitHub()">🚀 Push ke GitHub</button>
+        <button class="ghost" onclick="closeSaveModal()">Batal</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ────────────────────────────────────────────────
+   STATE + LOAD
+──────────────────────────────────────────────── */
+let S = {
+  status: "success", pesan: "",
+  profil: {}, pendidikan: [], mengajar: [], pengabdian: [], publikasi: []
+};
+
+const TABS = [
+  ["profil","👤 Profil"],["pendidikan","🎓 Pendidikan"],
+  ["mengajar","📚 Mengajar"],["pengabdian","🤝 Pengabdian"],
+  ["publikasi","📖 Publikasi"],["raw","{ } JSON Mentah"]
+];
+
+function buildTabs(){
+  document.getElementById('tabs').innerHTML = TABS.map(([id,label],i)=>
+    `<div class="tab ${i===0?'active':''}" data-tab="${id}">${label}</div>`
+  ).join('');
+  document.querySelectorAll('.tab').forEach(t=>{
+    t.onclick = ()=>{
+      document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+      document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));
+      t.classList.add('active');
+      document.querySelector(`.section[data-sec="${t.dataset.tab}"]`).classList.add('active');
+    };
+  });
+}
+
+async function loadFromServer(){
+  try{
+    const r = await fetch('./data.json?t='+Date.now());
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    S = await r.json();
+    renderAll(); toast('data.json dimuat dari server');
+  }catch(e){
+    toast('Gagal memuat data.json: '+e.message, true);
+    renderAll();
+  }
+}
+function reloadFromServer(){ if(confirm('Muat ulang dari server? Perubahan belum disimpan akan hilang.')) loadFromServer(); }
+
+/* ────────────────────────────────────────────────
+   RENDER
+──────────────────────────────────────────────── */
+function renderAll(){
+  renderProfil();
+  renderPendidikan();
+  renderMengajar();
+  renderPengabdian();
+  renderPublikasi();
+  renderRaw();
+}
+
+function renderProfil(){
+  const p = S.profil || {};
+  document.querySelectorAll('.section[data-sec="profil"] [data-f]').forEach(inp=>{
+    inp.value = p[inp.dataset.f] ?? '';
+  });
+}
+
+function renderPendidikan(){
+  const arr = S.pendidikan || [];
+  const el = document.getElementById('list-pendidikan');
+  if(!arr.length){ el.innerHTML = '<div class="empty">Belum ada data pendidikan.</div>'; return; }
+  el.innerHTML = arr.map((it,i)=>`
+    <div class="card" data-idx="${i}">
+      <div class="card-head">
+        <h3>#${i+1}</h3>
+        <button class="danger sm" onclick="removeItem('pendidikan',${i})">Hapus</button>
+      </div>
+      <div class="row">
+        <div><label>Jenjang</label><input type="text" data-k="jenjang" value="${esc(it.jenjang)}" placeholder="S1/S2/S3"></div>
+        <div><label>Tahun Lulus</label><input type="text" data-k="tahun" value="${esc(it.tahun)}"></div>
+      </div>
+      <label>Perguruan Tinggi</label>
+      <input type="text" data-k="pt" value="${esc(it.pt)}">
+      <label>Program Studi</label>
+      <input type="text" data-k="prodi" value="${esc(it.prodi)}">
+    </div>
+  `).join('');
+}
+
+function renderMengajar(){
+  const arr = S.mengajar || [];
+  const el = document.getElementById('list-mengajar');
+  if(!arr.length){ el.innerHTML = '<div class="empty">Belum ada data mengajar.</div>'; return; }
+  el.innerHTML = arr.map((k,ki)=>`
+    <div class="card" data-kidx="${ki}">
+      <div class="card-head">
+        <h3>🏛 Kampus #${ki+1}</h3>
+        <div style="display:flex;gap:6px;">
+          <button class="primary sm" onclick="addMatkul(${ki})">+ Matkul</button>
+          <button class="danger sm" onclick="removeCampus(${ki})">Hapus Kampus</button>
+        </div>
+      </div>
+      <label>Nama Kampus</label>
+      <input type="text" data-k="nama_kampus" value="${esc(k.nama_kampus)}">
+      <label style="margin-top:12px;">Mata Kuliah</label>
+      ${(k.mata_kuliah||[]).map((m,mi)=>`
+        <div class="subcard" data-midx="${mi}">
+          <div class="card-head" style="margin-bottom:6px;">
+            <h3 style="color:var(--muted);font-size:11px;">Matkul #${mi+1}</h3>
+            <button class="danger sm" onclick="removeMatkul(${ki},${mi})">×</button>
+          </div>
+          <input type="text" data-mk="nama" value="${esc(m.nama)}" placeholder="Nama Mata Kuliah">
+          <label style="margin-top:6px;">Semester (pisahkan dengan koma)</label>
+          <textarea data-mk="semester" placeholder="Ganjil 2024/2025, Genap 2024/2025">${esc(m.semester)}</textarea>
+        </div>
+      `).join('') || '<div class="empty" style="padding:8px;">Belum ada matkul.</div>'}
+    </div>
+  `).join('');
+}
+
+function renderPengabdian(){
+  const arr = S.pengabdian || [];
+  const el = document.getElementById('list-pengabdian');
+  if(!arr.length){ el.innerHTML = '<div class="empty">Belum ada data.</div>'; return; }
+  el.innerHTML = arr.map((it,i)=>`
+    <div class="card" data-idx="${i}">
+      <div class="card-head">
+        <h3>#${i+1}</h3>
+        <button class="danger sm" onclick="removeItem('pengabdian',${i})">Hapus</button>
+      </div>
+      <label>Judul</label>
+      <textarea data-k="judul">${esc(it.judul)}</textarea>
+      <div class="row">
+        <div><label>Tahun</label><input type="text" data-k="tahun" value="${esc(it.tahun)}"></div>
+        <div><label>Kategori</label><input type="text" data-k="kategori" value="${esc(it.kategori)}" placeholder="Pengabdian / Penelitian Internal"></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderPublikasi(){
+  const arr = S.publikasi || [];
+  const el = document.getElementById('list-publikasi');
+  if(!arr.length){ el.innerHTML = '<div class="empty">Belum ada publikasi.</div>'; return; }
+  el.innerHTML = arr.map((it,i)=>`
+    <div class="card" data-idx="${i}">
+      <div class="card-head">
+        <h3>#${i+1}</h3>
+        <button class="danger sm" onclick="removeItem('publikasi',${i})">Hapus</button>
+      </div>
+      <label>Judul</label>
+      <textarea data-k="judul">${esc(it.judul)}</textarea>
+      <div class="row">
+        <div><label>Jenis</label><input type="text" data-k="jenis" value="${esc(it.jenis)}"></div>
+        <div><label>Tahun</label><input type="text" data-k="tahun" value="${esc(it.tahun)}"></div>
+      </div>
+      <div class="row">
+        <div><label>Sitasi</label><input type="text" data-k="sitasi" value="${esc(it.sitasi ?? '0')}"></div>
+        <div><label>Link (URL/DOI)</label><input type="text" data-k="link" value="${esc(it.link)}"></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderRaw(){
+  document.getElementById('rawJson').value = JSON.stringify(collect(), null, 4);
+}
+
+/* ────────────────────────────────────────────────
+   COLLECT (DOM → STATE)
+──────────────────────────────────────────────── */
+function esc(v){ if(v==null) return ''; return String(v).replace(/"/g,'&quot;'); }
+
+function collect(){
+  // Profil
+  const profil = {};
+  document.querySelectorAll('.section[data-sec="profil"] [data-f]').forEach(inp=>{
+    if(inp.value.trim()) profil[inp.dataset.f] = inp.value.trim();
+  });
+  if(!profil.status) profil.status = S.profil?.status || "success";
+
+  // Pendidikan
+  const pendidikan = [];
+  document.querySelectorAll('#list-pendidikan .card[data-idx]').forEach(c=>{
+    const o = {};
+    c.querySelectorAll('[data-k]').forEach(i=> o[i.dataset.k] = i.value.trim());
+    if(Object.values(o).some(v=>v)) pendidikan.push(o);
+  });
+
+  // Mengajar
+  const mengajar = [];
+  document.querySelectorAll('#list-mengajar .card[data-kidx]').forEach(c=>{
+    const kampus = c.querySelector('[data-k="nama_kampus"]')?.value.trim() || '';
+    const mks = [];
+    c.querySelectorAll('.subcard').forEach(sc=>{
+      const mk = {};
+      sc.querySelectorAll('[data-mk]').forEach(i=> mk[i.dataset.mk] = i.value.trim());
+      if(mk.nama) mks.push(mk);
+    });
+    if(kampus || mks.length) mengajar.push({ nama_kampus: kampus, mata_kuliah: mks });
+  });
+
+  // Pengabdian
+  const pengabdian = [];
+  document.querySelectorAll('#list-pengabdian .card[data-idx]').forEach(c=>{
+    const o = {};
+    c.querySelectorAll('[data-k]').forEach(i=> o[i.dataset.k] = i.value.trim());
+    if(o.judul) pengabdian.push(o);
+  });
+
+  // Publikasi
+  const publikasi = [];
+  document.querySelectorAll('#list-publikasi .card[data-idx]').forEach(c=>{
+    const o = {};
+    c.querySelectorAll('[data-k]').forEach(i=> o[i.dataset.k] = i.value.trim());
+    if(o.judul) publikasi.push(o);
+  });
+
+  return {
+    status: S.status || "success",
+    pesan: S.pesan || "",
+    profil, pendidikan, mengajar, pengabdian, publikasi
+  };
+}
+
+/* ────────────────────────────────────────────────
+   ACTIONS
+──────────────────────────────────────────────── */
+function syncBeforeMutate(){
+  const fresh = collect();
+  S = { ...S, ...fresh };
+}
+
+function addItem(section){
+  syncBeforeMutate();
+  const tpl = {
+    pendidikan: { jenjang:"S1", pt:"", tahun:"", prodi:"" },
+    pengabdian: { judul:"", tahun:new Date().getFullYear().toString(), kategori:"Pengabdian" },
+    publikasi:  { judul:"", jenis:"Jurnal nasional", tahun:new Date().getFullYear().toString(), sitasi:"0", link:"" }
+  }[section];
+  S[section] = S[section] || [];
+  S[section].push({...tpl});
+  renderAll();
+}
+function removeItem(section, idx){
+  syncBeforeMutate();
+  S[section].splice(idx,1);
+  renderAll();
+}
+function addCampus(){
+  syncBeforeMutate();
+  S.mengajar = S.mengajar || [];
+  S.mengajar.push({ nama_kampus:"", mata_kuliah:[] });
+  renderAll();
+}
+function removeCampus(ki){
+  syncBeforeMutate();
+  S.mengajar.splice(ki,1);
+  renderAll();
+}
+function addMatkul(ki){
+  syncBeforeMutate();
+  S.mengajar[ki].mata_kuliah = S.mengajar[ki].mata_kuliah || [];
+  S.mengajar[ki].mata_kuliah.push({ nama:"", semester:"" });
+  renderAll();
+}
+function removeMatkul(ki, mi){
+  syncBeforeMutate();
+  S.mengajar[ki].mata_kuliah.splice(mi,1);
+  renderAll();
+}
+
+/* ────────────────────────────────────────────────
+   SAVE — DOWNLOAD
+──────────────────────────────────────────────── */
+function saveDownload(){
+  const json = JSON.stringify(collect(), null, 4);
+  const blob = new Blob([json], { type:"application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'data.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('data.json diunduh');
+}
+
+/* ────────────────────────────────────────────────
+   SAVE — GITHUB
+──────────────────────────────────────────────── */
+async function saveGitHub(){
+  const token  = document.getElementById('ghToken').value.trim();
+  const owner  = document.getElementById('ghOwner').value.trim();
+  const repo   = document.getElementById('ghRepo').value.trim();
+  const path   = document.getElementById('ghPath').value.trim();
+  const branch = document.getElementById('ghBranch').value.trim() || 'main';
+  const msg    = document.getElementById('ghMsg').value.trim() || 'Update data.json';
+
+  if(!token){ toast('Token kosong', true); return; }
+  localStorage.setItem('gh_token', token);
+  localStorage.setItem('gh_owner', owner);
+  localStorage.setItem('gh_repo', repo);
+
+  const api = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+  const headers = {
+    'Authorization': 'Bearer ' + token,
+    'Accept': 'application/vnd.github+json',
+    'X-GitHub-Api-Version': '2022-11-28'
+  };
+
+  try{
+    // Get current SHA
+    let sha = null;
+    const gr = await fetch(`${api}?ref=${branch}`, { headers });
+    if(gr.ok){ sha = (await gr.json()).sha; }
+    else if(gr.status !== 404){
+      throw new Error('Gagal cek file: ' + gr.status);
+    }
+
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(collect(), null, 4))));
+    const body = { message: msg, content, branch };
+    if(sha) body.sha = sha;
+
+    const pr = await fetch(api, { method:'PUT', headers, body: JSON.stringify(body) });
+    if(!pr.ok){
+      const err = await pr.json().catch(()=>({}));
+      throw new Error(err.message || ('HTTP ' + pr.status));
+    }
+    toast('✓ Berhasil push ke GitHub! Tunggu 30-60s agar Pages update.');
+    closeSaveModal();
+  }catch(e){
+    toast('Gagal: ' + e.message, true);
+  }
+}
+
+/* ────────────────────────────────────────────────
+   MODAL + TOAST + FILE
+──────────────────────────────────────────────── */
+function openSaveModal(){
+  document.getElementById('ghToken').value  = localStorage.getItem('gh_token') || '';
+  document.getElementById('ghOwner').value  = localStorage.getItem('gh_owner') || 'vickysegu';
+  document.getElementById('ghRepo').value   = localStorage.getItem('gh_repo')  || 'vickysegu.github.io';
+  document.getElementById('saveModal').classList.add('open');
+}
+function closeSaveModal(){ document.getElementById('saveModal').classList.remove('open'); }
+
+let toastT;
+function toast(msg, err){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (err ? ' err' : '');
+  clearTimeout(toastT);
+  toastT = setTimeout(()=>{ el.className = 'toast'; }, 3500);
+}
+
+document.getElementById('fileInput').onchange = async e=>{
+  const f = e.target.files[0]; if(!f) return;
+  try{
+    S = JSON.parse(await f.text());
+    renderAll(); toast('File dimuat: ' + f.name);
+  }catch(err){ toast('File JSON tidak valid', true); }
+};
+
+/* ────────────────────────────────────────────────
+   INIT
+──────────────────────────────────────────────── */
+buildTabs();
+loadFromServer();
+</script>
+</body>
+</html>
