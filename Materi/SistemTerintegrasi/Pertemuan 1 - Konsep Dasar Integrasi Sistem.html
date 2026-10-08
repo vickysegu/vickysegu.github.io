@@ -1,0 +1,2008 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Minggu 1 — Konsep Dasar Integrasi Sistem</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #FAF7F2; --surface: #FFFFFF; --surface-2: #F4F1EB;
+    --ink: #0F0F0F; --ink-2: #262626; --body: #404040; --muted: #737373;
+    --line: #E7E2D9; --line-2: #D9D2C4;
+    --primary: #6D28D9; --primary-2: #7C3AED; --primary-soft: #F3EEFF;
+    --accent: #FF4D00; --accent-soft: #FFEDE4;
+    --success: #059669; --success-soft: #ECFDF5;
+    --danger: #DC2626; --danger-soft: #FEF2F2;
+    --warning: #D97706; --warning-soft: #FFFBEB;
+    --r-2xl: 28px; --r-xl: 22px; --r-lg: 16px; --r-md: 12px; --r-sm: 8px;
+    --sh-xs: 0 1px 2px rgba(15,15,15,0.04);
+    --sh-sm: 0 2px 6px rgba(15,15,15,0.05), 0 1px 2px rgba(15,15,15,0.03);
+    --sh-md: 0 6px 18px -4px rgba(15,15,15,0.08), 0 2px 6px -2px rgba(15,15,15,0.04);
+    --sh-lg: 0 20px 40px -12px rgba(15,15,15,0.14), 0 8px 16px -8px rgba(15,15,15,0.06);
+    --sh-xl: 0 32px 64px -16px rgba(15,15,15,0.2);
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --ease-smooth: cubic-bezier(0.65, 0, 0.35, 1);
+    --ff-display: "Plus Jakarta Sans", system-ui, sans-serif;
+    --ff-body: "Inter", system-ui, sans-serif;
+    --ff-mono: "JetBrains Mono", monospace;
+    --fs-hero: clamp(2.8rem, 5.6vw, 5.4rem);
+    --fs-h2: clamp(2rem, 3.4vw, 3.2rem);
+    --fs-h3: clamp(1.2rem, 1.5vw, 1.55rem);
+    --fs-lead: clamp(1.05rem, 1.35vw, 1.35rem);
+    --fs-body: clamp(15.5px, 1.05vw, 18px);
+    --fs-sm: clamp(0.92rem, 0.98vw, 1.05rem);
+    --fs-xs: clamp(0.8rem, 0.85vw, 0.92rem);
+  }
+  html, body { height: 100%; }
+  body { font-family: var(--ff-body); background: var(--bg); color: var(--ink); display: flex; flex-direction: column; overflow: hidden; font-size: var(--fs-body); line-height: 1.55; -webkit-font-smoothing: antialiased; }
+
+  .top-bar { position: fixed; top: 0; left: 0; right: 0; height: 4px; background: rgba(15,15,15,0.06); z-index: 100; }
+  .top-fill { height: 100%; width: 0; background: linear-gradient(90deg, var(--primary), var(--accent)); transition: width 0.6s var(--ease-smooth); border-radius: 0 4px 4px 0; box-shadow: 0 0 12px rgba(109,40,217,0.4); }
+
+  .deck { flex: 1; position: relative; overflow: hidden; perspective: 2000px; }
+  .slide { position: absolute; inset: 0; padding: clamp(1.8rem, 3.6vh, 3rem) clamp(2.5rem, 5.5vw, 6rem) clamp(6.5rem, 11vh, 8rem); overflow-y: auto; opacity: 0; transform: translate3d(0, 40px, -100px) rotateX(-2deg); filter: blur(8px); transition: opacity 0.65s var(--ease-out), transform 0.65s var(--ease-out), filter 0.5s var(--ease-out); pointer-events: none; display: flex; backface-visibility: hidden; }
+  .slide.active { opacity: 1; transform: translate3d(0, 0, 0) rotateX(0); filter: blur(0); pointer-events: auto; }
+  .slide::-webkit-scrollbar { width: 8px; }
+  .slide::-webkit-scrollbar-thumb { background: #d4cbb8; border-radius: 8px; }
+  .slide::-webkit-scrollbar-thumb:hover { background: #b8ab91; }
+
+  .slide-inner { margin: auto; width: 100%; max-width: 1520px; display: flex; flex-direction: column; gap: clamp(1rem, 2vh, 1.6rem); min-height: calc(100vh - clamp(1.8rem, 3.6vh, 3rem) - clamp(6.5rem, 11vh, 8rem)); }
+
+  .eyebrow { display: inline-flex; align-items: center; gap: 0.55rem; font-family: var(--ff-display); font-size: 0.75rem; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; color: var(--primary); padding: 0.45rem 1rem; background: var(--primary-soft); border: 1px solid rgba(109,40,217,0.15); border-radius: 999px; width: fit-content; }
+  .eyebrow::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--primary); animation: pulseDotSmall 2s ease-in-out infinite; }
+  @keyframes pulseDotSmall { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.3); opacity: 0.7; } }
+  .eyebrow.orange { color: var(--accent); background: var(--accent-soft); border-color: rgba(255,77,0,0.15); }
+  .eyebrow.orange::before { background: var(--accent); }
+  .eyebrow.green { color: var(--success); background: var(--success-soft); border-color: rgba(5,150,105,0.15); }
+  .eyebrow.green::before { background: var(--success); }
+
+  h1, h2, h3 { font-family: var(--ff-display); color: var(--ink); letter-spacing: -0.025em; font-weight: 800; }
+  h1 { font-size: var(--fs-hero); line-height: 1; }
+  h2 { font-size: var(--fs-h2); line-height: 1.05; margin-bottom: 0.4rem; }
+  h3 { font-size: var(--fs-h3); line-height: 1.25; font-weight: 700; }
+  p { color: var(--body); }
+  .lead { font-size: var(--fs-lead); color: var(--muted); max-width: 70ch; line-height: 1.5; }
+  .slide-header { display: flex; flex-direction: column; gap: 0.6rem; }
+
+  .card { background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--r-lg); padding: clamp(1.3rem, 1.9vw, 2rem); box-shadow: var(--sh-sm); transition: transform 0.4s var(--ease-spring), box-shadow 0.4s var(--ease-out), border-color 0.3s; position: relative; overflow: hidden; }
+  .card:hover { transform: translateY(-6px) scale(1.01); box-shadow: var(--sh-lg); border-color: var(--line-2); }
+  .card p { font-size: var(--fs-sm); color: var(--body); line-height: 1.6; }
+  .card h3 { margin-bottom: 0.6rem; }
+  .card-ico { display: flex; align-items: center; justify-content: center; width: 58px; height: 58px; border-radius: 15px; font-size: 1.85rem; margin-bottom: 1rem; background: var(--primary-soft); transition: transform 0.4s var(--ease-spring); }
+  .card:hover .card-ico { transform: scale(1.1) rotate(-6deg); }
+  .card-ico.g { background: var(--success-soft); } .card-ico.o { background: var(--accent-soft); }
+  .card-ico.r { background: var(--danger-soft); } .card-ico.y { background: var(--warning-soft); }
+
+  .pill { display: inline-flex; align-items: center; gap: 0.4rem; font-size: var(--fs-xs); font-weight: 700; padding: 0.35rem 0.85rem; border-radius: 999px; border: 1px solid transparent; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(1rem, 1.6vw, 1.6rem); }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(1rem, 1.4vw, 1.4rem); }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(0.9rem, 1.2vw, 1.2rem); }
+
+  /* ============ COVER ============ */
+  .cover {
+    background:
+      radial-gradient(ellipse at 20% 15%, rgba(124,58,237,0.45), transparent 50%),
+      radial-gradient(ellipse at 80% 85%, rgba(255,77,0,0.35), transparent 50%),
+      radial-gradient(ellipse at 50% 50%, rgba(109,40,217,0.12), transparent 70%),
+      #0A0A0F;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 10% 20%, rgba(255,255,255,0.15) 1px, transparent 1px),
+      radial-gradient(circle at 30% 70%, rgba(255,255,255,0.1) 1px, transparent 1px),
+      radial-gradient(circle at 70% 30%, rgba(255,255,255,0.12) 1px, transparent 1px),
+      radial-gradient(circle at 85% 60%, rgba(255,255,255,0.08) 1px, transparent 1px),
+      radial-gradient(circle at 55% 85%, rgba(255,255,255,0.1) 1px, transparent 1px);
+    background-size: 100% 100%;
+    pointer-events: none;
+    opacity: 0.7;
+  }
+  .cover::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(196,181,253,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(196,181,253,0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    mask-image: radial-gradient(ellipse at center, black 20%, transparent 70%);
+  }
+  .cover .slide-inner { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: clamp(2rem, 4vw, 4rem); align-items: center; position: relative; z-index: 2; }
+  .cover-content { display: flex; flex-direction: column; gap: 1.6rem; }
+  .cover h1 {
+    background: linear-gradient(180deg, #FFFFFF 0%, #E0D5FF 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 60px rgba(124,58,237,0.3);
+  }
+  .cover .sub { font-size: var(--fs-lead); color: #A1A1AA; max-width: 52ch; line-height: 1.5; }
+  .cover .eyebrow { color: #C4B5FD; background: rgba(124,58,237,0.15); border-color: rgba(196,181,253,0.25); }
+  .cover .eyebrow::before { background: #C4B5FD; }
+  .cover-meta { display: flex; gap: 0.55rem; flex-wrap: wrap; }
+  .cover-meta .pill { font-size: var(--fs-sm); padding: 0.5rem 1.1rem; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #E4E4E7; backdrop-filter: blur(10px); }
+  .cover-meta .pill.hot { background: rgba(255,77,0,0.15); border-color: rgba(255,77,0,0.3); color: #FF8A50; }
+
+  /* ==== COVER ILLUSTRATION (REBUILT) ==== */
+  .cover-illustration {
+    position: relative;
+    width: 100%;
+    max-width: 480px;
+    aspect-ratio: 1/1;
+    justify-self: center;
+  }
+
+  /* Rotating glow backdrop */
+  .cover-illustration .glow-bg {
+    position: absolute;
+    inset: 15%;
+    border-radius: 50%;
+    background: conic-gradient(
+      from 0deg,
+      rgba(124,58,237,0.45) 0%,
+      rgba(255,77,0,0.35) 25%,
+      rgba(109,40,217,0.3) 50%,
+      rgba(255,77,0,0.45) 75%,
+      rgba(124,58,237,0.45) 100%
+    );
+    filter: blur(45px);
+    z-index: 0;
+    animation: rotateGlow 18s linear infinite;
+  }
+  @keyframes rotateGlow { to { transform: rotate(360deg); } }
+
+  /* Pulse rings */
+  .cover-illustration .rings {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+  }
+  .cover-illustration .rings span {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 140px; height: 140px;
+    margin: -70px 0 0 -70px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(196,181,253,0.6);
+    opacity: 0;
+    transform: scale(1);
+  }
+  .slide.active .cover-illustration .rings span {
+    animation: ringExpand 3.2s ease-out infinite;
+  }
+  .slide.active .cover-illustration .rings span:nth-child(2) { animation-delay: 1.06s; }
+  .slide.active .cover-illustration .rings span:nth-child(3) { animation-delay: 2.13s; }
+  @keyframes ringExpand {
+    0%   { transform: scale(1);   opacity: 0.9; border-color: rgba(196,181,253,0.7); }
+    70%  { opacity: 0.15; }
+    100% { transform: scale(3.4); opacity: 0;   border-color: rgba(196,181,253,0); }
+  }
+
+  /* SVG connection lines */
+  .cover-illustration .conn-svg {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    z-index: 2;
+    overflow: visible;
+  }
+  .cover-illustration .conn-line {
+    stroke: url(#lineGrad);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-dasharray: 240;
+    stroke-dashoffset: 240;
+    filter: drop-shadow(0 0 6px rgba(124,58,237,0.7));
+  }
+  .slide.active .cover-illustration .conn-line {
+    animation: drawLine 0.85s var(--ease-out) forwards;
+  }
+  .slide.active .cover-illustration .conn-line.ln-top    { animation-delay: 0.30s; }
+  .slide.active .cover-illustration .conn-line.ln-right  { animation-delay: 0.45s; }
+  .slide.active .cover-illustration .conn-line.ln-bottom { animation-delay: 0.60s; }
+  .slide.active .cover-illustration .conn-line.ln-left   { animation-delay: 0.75s; }
+  @keyframes drawLine { to { stroke-dashoffset: 0; } }
+
+  /* Energy particles flowing along lines */
+  .cover-illustration .particle {
+    opacity: 0;
+  }
+  .slide.active .cover-illustration .particle {
+    animation: particleFade 0.4s ease forwards;
+  }
+  .slide.active .cover-illustration .particle.p-top    { animation-delay: 1.15s; }
+  .slide.active .cover-illustration .particle.p-right  { animation-delay: 1.30s; }
+  .slide.active .cover-illustration .particle.p-bottom { animation-delay: 1.45s; }
+  .slide.active .cover-illustration .particle.p-left   { animation-delay: 1.60s; }
+  @keyframes particleFade { to { opacity: 1; } }
+
+  /* Hub */
+  .cover-illustration .hub {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 150px; height: 150px;
+    margin: -75px 0 0 -75px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #7C3AED 0%, #A855F7 45%, #FF4D00 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-family: var(--ff-display);
+    font-weight: 800;
+    z-index: 5;
+    opacity: 0;
+    transform: scale(0);
+    box-shadow:
+      0 0 0 8px rgba(124,58,237,0.18),
+      0 0 0 20px rgba(124,58,237,0.08),
+      0 20px 60px -10px rgba(124,58,237,0.7);
+  }
+  .slide.active .cover-illustration .hub {
+    animation:
+      hubIn 0.65s var(--ease-spring) 0.05s forwards,
+      hubPulse 3s ease-in-out 1.3s infinite;
+  }
+  @keyframes hubIn {
+    0%   { opacity: 0; transform: scale(0) rotate(-60deg); }
+    60%  { opacity: 1; transform: scale(1.1) rotate(8deg); }
+    100% { opacity: 1; transform: scale(1) rotate(0deg); }
+  }
+  @keyframes hubPulse {
+    0%, 100% {
+      box-shadow: 0 0 0 8px rgba(124,58,237,0.18), 0 0 0 20px rgba(124,58,237,0.08), 0 20px 60px -10px rgba(124,58,237,0.7);
+    }
+    50% {
+      box-shadow: 0 0 0 14px rgba(124,58,237,0.25), 0 0 0 30px rgba(124,58,237,0.1), 0 26px 80px -8px rgba(124,58,237,0.85);
+    }
+  }
+  .cover-illustration .hub .hub-icon {
+    font-size: 1.75rem;
+    margin-bottom: 0.15rem;
+    filter: drop-shadow(0 0 12px rgba(255,255,255,0.8));
+    animation: iconGlow 2.5s ease-in-out infinite;
+  }
+  @keyframes iconGlow {
+    0%, 100% { transform: scale(1); filter: drop-shadow(0 0 12px rgba(255,255,255,0.8)); }
+    50% { transform: scale(1.15); filter: drop-shadow(0 0 18px rgba(255,255,255,1)); }
+  }
+  .cover-illustration .hub .hub-label {
+    font-size: 0.78rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  }
+  .cover-illustration .hub::before {
+    content: "";
+    position: absolute;
+    inset: -34px;
+    border-radius: 50%;
+    border: 1.5px dashed rgba(196,181,253,0.4);
+    animation: spin 30s linear infinite;
+  }
+  .cover-illustration .hub::after {
+    content: "";
+    position: absolute;
+    inset: -52px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,77,0,0.25);
+    animation: spin 20s linear infinite reverse;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Cards */
+  .cover-illustration .illus-card {
+    position: absolute;
+    background: rgba(20,20,28,0.92);
+    border: 1.5px solid rgba(196,181,253,0.35);
+    border-radius: 14px;
+    padding: 0.75rem 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    z-index: 4;
+    min-width: 152px;
+    box-shadow:
+      0 12px 32px -8px rgba(0,0,0,0.6),
+      0 0 20px rgba(124,58,237,0.15);
+    opacity: 0;
+    will-change: transform, opacity;
+  }
+  .cover-illustration .illus-card .ic {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+  .cover-illustration .illus-card .ic.p { background: linear-gradient(135deg, #7C3AED, #A78BFA); }
+  .cover-illustration .illus-card .ic.o { background: linear-gradient(135deg, #FF4D00, #FF8A50); }
+  .cover-illustration .illus-card .ic.g { background: linear-gradient(135deg, #059669, #34D399); }
+  .cover-illustration .illus-card .ic.b { background: linear-gradient(135deg, #2563EB, #60A5FA); }
+  .cover-illustration .illus-card .txt { display: flex; flex-direction: column; gap: 0.05rem; }
+  .cover-illustration .illus-card .name {
+    font-family: var(--ff-display);
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: #FAFAFA;
+    line-height: 1.1;
+  }
+  .cover-illustration .illus-card .sub {
+    font-size: 0.68rem;
+    color: #A1A1AA;
+  }
+
+  /* Card positions */
+  .cover-illustration .illus-card.pos-top    { top: 0;    left: 50%; }
+  .cover-illustration .illus-card.pos-right  { top: 50%;  right: 0; }
+  .cover-illustration .illus-card.pos-bottom { bottom: 0; left: 50%; }
+  .cover-illustration .illus-card.pos-left   { top: 50%;  left: 0; }
+
+  /* Card animations - each has its own keyframes with opacity */
+  .slide.active .illus-card.pos-top {
+    animation: cardInTop 0.75s var(--ease-spring) 1.00s forwards;
+  }
+  .slide.active .illus-card.pos-right {
+    animation: cardInRight 0.75s var(--ease-spring) 1.15s forwards;
+  }
+  .slide.active .illus-card.pos-bottom {
+    animation: cardInBottom 0.75s var(--ease-spring) 1.30s forwards;
+  }
+  .slide.active .illus-card.pos-left {
+    animation: cardInLeft 0.75s var(--ease-spring) 1.45s forwards;
+  }
+
+  @keyframes cardInTop {
+    0%   { opacity: 0; transform: translate(-50%, -70px) scale(0.4); }
+    60%  { opacity: 1; transform: translate(-50%, 10px)  scale(1.08); }
+    100% { opacity: 1; transform: translate(-50%, 0)     scale(1); }
+  }
+  @keyframes cardInRight {
+    0%   { opacity: 0; transform: translate(70px, -50%)  scale(0.4); }
+    60%  { opacity: 1; transform: translate(-10px, -50%) scale(1.08); }
+    100% { opacity: 1; transform: translate(0, -50%)     scale(1); }
+  }
+  @keyframes cardInBottom {
+    0%   { opacity: 0; transform: translate(-50%, 70px)  scale(0.4); }
+    60%  { opacity: 1; transform: translate(-50%, -10px) scale(1.08); }
+    100% { opacity: 1; transform: translate(-50%, 0)     scale(1); }
+  }
+  @keyframes cardInLeft {
+    0%   { opacity: 0; transform: translate(-70px, -50%) scale(0.4); }
+    60%  { opacity: 1; transform: translate(10px, -50%)  scale(1.08); }
+    100% { opacity: 1; transform: translate(0, -50%)     scale(1); }
+  }
+
+  /* Subtle idle floating on cards after they land */
+  .slide.active .illus-card.pos-top    { animation: cardInTop 0.75s var(--ease-spring) 1.00s forwards, floatUp 4s ease-in-out 1.8s infinite; }
+  .slide.active .illus-card.pos-right  { animation: cardInRight 0.75s var(--ease-spring) 1.15s forwards, floatRight 4s ease-in-out 1.95s infinite; }
+  .slide.active .illus-card.pos-bottom { animation: cardInBottom 0.75s var(--ease-spring) 1.30s forwards, floatDown 4s ease-in-out 2.1s infinite; }
+  .slide.active .illus-card.pos-left   { animation: cardInLeft 0.75s var(--ease-spring) 1.45s forwards, floatLeft 4s ease-in-out 2.25s infinite; }
+
+  @keyframes floatUp {
+    0%, 100% { transform: translate(-50%, 0)     scale(1); }
+    50%      { transform: translate(-50%, -6px)  scale(1); }
+  }
+  @keyframes floatRight {
+    0%, 100% { transform: translate(0, -50%)     scale(1); }
+    50%      { transform: translate(6px, -50%)   scale(1); }
+  }
+  @keyframes floatDown {
+    0%, 100% { transform: translate(-50%, 0)     scale(1); }
+    50%      { transform: translate(-50%, 6px)   scale(1); }
+  }
+  @keyframes floatLeft {
+    0%, 100% { transform: translate(0, -50%)     scale(1); }
+    50%      { transform: translate(-6px, -50%)  scale(1); }
+  }
+
+  /* Bridge */
+  .bridge { display: grid; grid-template-columns: 1fr auto 1fr; gap: clamp(1rem, 2vw, 2rem); align-items: stretch; }
+  .bridge-side { background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--r-xl); padding: clamp(1.5rem, 2.2vw, 2.2rem); display: flex; flex-direction: column; gap: 1.1rem; transition: transform 0.4s var(--ease-spring), box-shadow 0.4s; }
+  .bridge-side:hover { transform: translateY(-4px); box-shadow: var(--sh-lg); }
+  .bridge-side.now { border-color: var(--primary); background: linear-gradient(180deg, var(--surface) 0%, var(--primary-soft) 200%); box-shadow: 0 0 0 4px rgba(109,40,217,0.06); }
+  .bridge-side .bs-label { font-family: var(--ff-display); font-size: 0.75rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+  .bridge-side.now .bs-label { color: var(--primary); }
+  .bridge-side h3 { font-size: clamp(1.2rem, 1.5vw, 1.5rem); margin-bottom: 0.3rem; }
+  .bridge-side ul { list-style: none; display: flex; flex-direction: column; gap: 0.7rem; }
+  .bridge-side li { font-size: var(--fs-sm); color: var(--body); display: flex; align-items: center; gap: 0.7rem; padding: 0.65rem 0.9rem; border-radius: 10px; background: var(--bg); transition: all 0.3s var(--ease-out); }
+  .bridge-side li:hover { transform: translateX(6px); background: var(--surface-2); }
+  .bridge-side.now li { background: rgba(255,255,255,0.7); }
+  .bridge-side li .bico { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; background: var(--surface-2); }
+  .bridge-side.now li .bico { background: var(--primary-soft); }
+  .bridge-arrow { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem; padding: 1rem 0; }
+  .bridge-arrow svg { width: 64px; height: 64px; color: var(--primary); }
+  .slide.active .bridge-arrow svg { animation: arrowSlide 1.8s var(--ease-smooth) infinite; }
+  @keyframes arrowSlide { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(10px); } }
+  .bridge-arrow .ar-label { font-family: var(--ff-mono); font-size: 0.72rem; font-weight: 600; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
+
+  /* Roadmap */
+  .roadmap { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(0.9rem, 1.2vw, 1.2rem); flex: 1; }
+  .rm-item { background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--r-lg); padding: clamp(1.2rem, 1.6vw, 1.7rem); position: relative; overflow: hidden; transition: transform 0.4s var(--ease-spring), box-shadow 0.4s, border-color 0.3s; box-shadow: var(--sh-xs); display: flex; flex-direction: column; gap: 0.55rem; }
+  .rm-item:hover { transform: translateY(-8px) scale(1.02); box-shadow: var(--sh-lg); border-color: var(--line-2); }
+  .rm-item::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 5px; transform: scaleX(0); transform-origin: left; transition: transform 0.7s var(--ease-out); }
+  .slide.active .rm-item::before { transform: scaleX(1); }
+  .rm-item.w1::before { background: linear-gradient(90deg, #6D28D9, #7C3AED); transition-delay: 0.15s; }
+  .rm-item.w2::before { background: linear-gradient(90deg, #0EA5E9, #06B6D4); transition-delay: 0.22s; }
+  .rm-item.w3::before { background: linear-gradient(90deg, #14B8A6, #10B981); transition-delay: 0.29s; }
+  .rm-item.w4::before { background: linear-gradient(90deg, #22C55E, #84CC16); transition-delay: 0.36s; }
+  .rm-item.w5::before { background: linear-gradient(90deg, #EAB308, #F59E0B); transition-delay: 0.43s; }
+  .rm-item.w6::before { background: linear-gradient(90deg, #F59E0B, #F97316); transition-delay: 0.5s; }
+  .rm-item.w7::before { background: linear-gradient(90deg, #F97316, #FF4D00); transition-delay: 0.57s; }
+  .rm-item.uts::before { background: linear-gradient(90deg, #FF4D00, #DC2626); transition-delay: 0.64s; }
+  .rm-item.uts { background: linear-gradient(180deg, var(--surface) 0%, #FFF6F2 100%); }
+  .rm-num { font-family: var(--ff-display); font-size: 0.75rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+  .rm-title { font-family: var(--ff-display); font-size: clamp(1.05rem, 1.2vw, 1.25rem); font-weight: 700; line-height: 1.25; }
+  .rm-desc { font-size: var(--fs-xs); color: var(--muted); line-height: 1.55; }
+
+  .highlight { background: linear-gradient(135deg, #F3EEFF 0%, #FFEDE4 100%); border: 1.5px solid rgba(109,40,217,0.15); border-radius: var(--r-lg); padding: clamp(1.3rem, 1.8vw, 1.8rem) clamp(1.5rem, 2vw, 2rem); position: relative; overflow: hidden; }
+  .highlight::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: linear-gradient(180deg, var(--primary), var(--accent)); }
+  .highlight p { color: var(--ink-2); font-size: var(--fs-sm); }
+
+  /* Glossary */
+  .glossary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(1rem, 1.4vw, 1.4rem); flex: 1; }
+  .flip { perspective: 1400px; min-height: 240px; cursor: pointer; transition: transform 0.4s var(--ease-spring); }
+  .flip:hover { transform: translateY(-8px); }
+  .flip-inner { position: relative; width: 100%; height: 100%; min-height: 240px; transition: transform 0.8s var(--ease-spring); transform-style: preserve-3d; }
+  .flip.flipped .flip-inner { transform: rotateY(180deg); }
+  .flip-front, .flip-back { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: var(--r-lg); padding: 1.5rem 1.6rem; display: flex; flex-direction: column; box-shadow: var(--sh-sm); border: 1.5px solid var(--line); overflow: hidden; }
+  .flip-front { background: linear-gradient(160deg, var(--surface) 0%, var(--surface-2) 100%); justify-content: space-between; }
+  .flip-front .term { font-family: var(--ff-display); font-size: clamp(1.5rem, 2vw, 2.1rem); font-weight: 800; color: var(--ink); line-height: 1.05; letter-spacing: -0.02em; }
+  .flip-front .hint { font-size: var(--fs-xs); color: var(--muted); display: flex; align-items: center; gap: 0.5rem; font-weight: 500; }
+  .flip-front .hint::before { content: "↻"; font-size: 1.15rem; color: var(--primary); display: inline-block; animation: rotateHint 3s linear infinite; }
+  @keyframes rotateHint { to { transform: rotate(360deg); } }
+  .flip-back { background: linear-gradient(160deg, #1A0F2E 0%, #0F0F1A 100%); color: #E4E4E7; transform: rotateY(180deg); border-color: rgba(124,58,237,0.3); }
+  .flip-back .def-title { font-family: var(--ff-display); font-size: 0.72rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: #A78BFA; margin-bottom: 0.5rem; }
+  .flip-back .def-text { font-size: 0.88rem; line-height: 1.5; color: #D4D4D8; flex: 1; }
+  .flip-back .def-analogy { margin-top: 0.8rem; padding: 0.6rem 0.85rem; background: rgba(255,77,0,0.12); border-left: 3px solid var(--accent); border-radius: 6px; font-size: 0.8rem; color: #FFB088; line-height: 1.45; }
+
+  /* Timeline */
+  .timeline { display: grid; grid-template-columns: repeat(5, 1fr); gap: clamp(1rem, 1.3vw, 1.3rem); padding: 1rem 0 0; position: relative; flex: 1; align-items: stretch; }
+  .tl-item { position: relative; display: flex; flex-direction: column; gap: 1rem; }
+  .tl-year { font-family: var(--ff-display); font-size: clamp(1.1rem, 1.4vw, 1.4rem); font-weight: 800; color: var(--ink); letter-spacing: -0.01em; text-align: center; padding: 0.5rem 0; }
+  .tl-dot { width: 32px; height: 32px; border-radius: 50%; background: var(--surface); border: 4px solid var(--primary); box-shadow: 0 0 0 6px var(--primary-soft); align-self: center; position: relative; z-index: 2; transition: transform 0.4s var(--ease-spring); }
+  .slide.active .tl-dot { animation: dotPop 0.5s var(--ease-spring) both; }
+  .slide.active .tl-item:nth-child(1) .tl-dot { animation-delay: 0.3s; }
+  .slide.active .tl-item:nth-child(2) .tl-dot { animation-delay: 0.45s; }
+  .slide.active .tl-item:nth-child(3) .tl-dot { animation-delay: 0.6s; }
+  .slide.active .tl-item:nth-child(4) .tl-dot { animation-delay: 0.75s; }
+  .slide.active .tl-item:nth-child(5) .tl-dot { animation-delay: 0.9s; }
+  @keyframes dotPop { 0% { transform: scale(0); } 60% { transform: scale(1.3); } 100% { transform: scale(1); } }
+  .tl-item:hover .tl-dot { transform: scale(1.3); }
+  .tl-item:nth-child(1) .tl-dot { border-color: #A78BFA; box-shadow: 0 0 0 6px #F3EEFF; }
+  .tl-item:nth-child(2) .tl-dot { border-color: #6D28D9; box-shadow: 0 0 0 6px #EDE4FF; }
+  .tl-item:nth-child(3) .tl-dot { border-color: #06B6D4; box-shadow: 0 0 0 6px #CFFAFE; }
+  .tl-item:nth-child(4) .tl-dot { border-color: #F59E0B; box-shadow: 0 0 0 6px #FFFBEB; }
+  .tl-item:nth-child(5) .tl-dot { border-color: #FF4D00; box-shadow: 0 0 0 6px #FFEDE4; }
+  .timeline::before { content: ""; position: absolute; top: calc(1rem + 0.5rem + 1.4rem + 16px); left: 5%; right: 5%; height: 3px; background: linear-gradient(90deg, #A78BFA, #7C3AED, #06B6D4, #F59E0B, #FF4D00); border-radius: 3px; z-index: 0; transform-origin: left; transform: scaleX(0); transition: transform 1.6s var(--ease-out) 0.2s; }
+  .slide.active .timeline::before { transform: scaleX(1); }
+  .tl-card { background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--r-lg); padding: clamp(1.2rem, 1.6vw, 1.6rem); box-shadow: var(--sh-xs); width: 100%; flex: 1; display: flex; flex-direction: column; gap: 0.6rem; transition: transform 0.4s var(--ease-spring), box-shadow 0.4s, border-color 0.3s; }
+  .tl-item:hover .tl-card { transform: translateY(-6px); box-shadow: var(--sh-lg); border-color: var(--line-2); }
+  .tl-name { font-family: var(--ff-display); font-weight: 800; font-size: clamp(1.1rem, 1.3vw, 1.3rem); color: var(--ink); line-height: 1.15; }
+  .tl-desc { font-size: var(--fs-sm); color: var(--muted); line-height: 1.55; }
+  .tl-tag { margin-top: auto; align-self: flex-start; font-family: var(--ff-mono); font-size: 0.7rem; font-weight: 700; padding: 0.25rem 0.6rem; background: var(--surface-2); border-radius: 6px; color: var(--ink-2); letter-spacing: 0.05em; }
+
+  /* Compare */
+  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(1rem, 1.6vw, 1.6rem); flex: 1; }
+  .compare-box { background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--r-xl); padding: clamp(1.5rem, 2vw, 2.2rem); box-shadow: var(--sh-sm); display: flex; flex-direction: column; transition: transform 0.4s var(--ease-spring), box-shadow 0.4s; }
+  .compare-box:hover { transform: translateY(-6px); box-shadow: var(--sh-lg); }
+  .compare-box.red-side { border-top: 5px solid var(--danger); }
+  .compare-box.green-side { border-top: 5px solid var(--success); }
+  .compare-head { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 1.3rem; font-family: var(--ff-display); font-weight: 800; font-size: clamp(1.15rem, 1.4vw, 1.4rem); }
+  .dot { width: 14px; height: 14px; border-radius: 50%; }
+  .dot.red { background: var(--danger); box-shadow: 0 0 0 5px var(--danger-soft); animation: dotPulse 2s ease-in-out infinite; }
+  .dot.green { background: var(--success); box-shadow: 0 0 0 5px var(--success-soft); animation: dotPulse 2s ease-in-out infinite 0.5s; }
+  @keyframes dotPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+  .compare-box svg { width: 100%; height: auto; margin: 0.5rem 0; }
+  .compare-box p { font-size: var(--fs-sm); color: var(--muted); margin-top: 1.2rem; line-height: 1.6; }
+
+  .draw-line { stroke-dasharray: 400; stroke-dashoffset: 400; }
+  .slide.active .compare-box.red-side .draw-line { animation: drawLine 1.2s var(--ease-out) 0.5s forwards; }
+  .slide.active .compare-box.green-side .draw-line { animation: drawLine 1.4s var(--ease-out) 0.7s forwards; }
+
+  .fade-el { opacity: 0; }
+  .slide.active .fade-el { animation: fadeUpEl 0.7s var(--ease-out) forwards; animation-delay: calc(var(--d, 0) * 0.08s + 0.3s); }
+  @keyframes fadeUpEl { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Anatomy */
+  .anatomy-flow { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; align-items: stretch; flex: 1; margin-top: 0.6rem; }
+  .an-step { position: relative; padding: clamp(1.2rem, 1.6vw, 1.6rem) clamp(0.9rem, 1.2vw, 1.2rem); background: var(--surface); border: 1.5px solid var(--line); display: flex; flex-direction: column; gap: 0.6rem; transition: all 0.4s var(--ease-spring); }
+  .an-step:first-child { border-radius: var(--r-lg) 0 0 var(--r-lg); }
+  .an-step:last-child { border-radius: 0 var(--r-lg) var(--r-lg) 0; }
+  .an-step:not(:last-child) { border-right: none; }
+  .an-step:hover { background: var(--primary-soft); border-color: var(--primary); transform: translateY(-6px) scale(1.02); box-shadow: var(--sh-lg); z-index: 2; }
+  .an-step::after { content: "→"; position: absolute; top: 50%; right: -18px; transform: translateY(-50%); color: var(--primary); font-size: 1.6rem; font-weight: 800; z-index: 3; opacity: 0; }
+  .slide.active .an-step::after { animation: arrowFade 0.5s var(--ease-spring) forwards; }
+  .slide.active .an-step:nth-child(1)::after { animation-delay: 0.7s; }
+  .slide.active .an-step:nth-child(2)::after { animation-delay: 1s; }
+  .slide.active .an-step:nth-child(3)::after { animation-delay: 1.3s; }
+  .slide.active .an-step:nth-child(4)::after { animation-delay: 1.6s; }
+  .slide.active .an-step:nth-child(5)::after { display: none; }
+  @keyframes arrowFade { from { opacity: 0; transform: translateY(-50%) translateX(-12px); } to { opacity: 1; transform: translateY(-50%) translateX(0); } }
+  .an-num { font-family: var(--ff-mono); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; color: var(--primary); background: var(--primary-soft); padding: 0.25rem 0.55rem; border-radius: 6px; width: fit-content; }
+  .an-step:nth-child(2) .an-num { background: #DBEAFE; color: #1E40AF; }
+  .an-step:nth-child(3) .an-num { background: #CFFAFE; color: #0E7490; }
+  .an-step:nth-child(4) .an-num { background: #FFFBEB; color: #B45309; }
+  .an-step:nth-child(5) .an-num { background: #FFEDE4; color: #C2410C; }
+  .an-ico { font-size: 2rem; line-height: 1; }
+  .an-title { font-family: var(--ff-display); font-size: var(--fs-sm); font-weight: 800; line-height: 1.2; color: var(--ink); }
+  .an-desc { font-size: var(--fs-xs); color: var(--muted); line-height: 1.5; }
+  .an-time { font-family: var(--ff-mono); font-size: 0.68rem; color: var(--muted); margin-top: auto; padding-top: 0.5rem; border-top: 1px dashed var(--line); }
+
+  /* NN Grid */
+  .nn-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(1rem, 1.5vw, 1.5rem); flex: 1; }
+  .nn-card { background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--r-xl); padding: clamp(1.6rem, 2vw, 2.2rem); box-shadow: var(--sh-sm); display: flex; flex-direction: column; gap: 1rem; transition: transform 0.4s var(--ease-spring), box-shadow 0.4s; position: relative; overflow: hidden; }
+  .nn-card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 5px; background: linear-gradient(90deg, #94A3B8, #64748B); transform: scaleX(0); transform-origin: left; transition: transform 0.7s var(--ease-out); }
+  .slide.active .nn-card::before { transform: scaleX(1); }
+  .slide.active .nn-card:nth-child(1)::before { transition-delay: 0.2s; }
+  .slide.active .nn-card:nth-child(2)::before { transition-delay: 0.35s; }
+  .slide.active .nn-card:nth-child(3)::before { transition-delay: 0.5s; }
+  .nn-card:hover { transform: translateY(-8px); box-shadow: var(--sh-lg); }
+  .nn-ico { width: 64px; height: 64px; border-radius: 16px; background: var(--surface-2); display: flex; align-items: center; justify-content: center; font-size: 2rem; transition: transform 0.4s var(--ease-spring); }
+  .nn-card:hover .nn-ico { transform: scale(1.1) rotate(-8deg); }
+  .nn-title { font-family: var(--ff-display); font-size: clamp(1.15rem, 1.35vw, 1.35rem); font-weight: 800; line-height: 1.2; }
+  .nn-desc { font-size: var(--fs-sm); color: var(--body); line-height: 1.6; }
+  .nn-example { margin-top: auto; padding: 0.9rem 1.1rem; background: var(--bg); border-radius: var(--r-md); border-left: 4px solid var(--muted); font-size: var(--fs-xs); color: var(--ink-2); line-height: 1.55; }
+  .nn-example strong { font-family: var(--ff-display); display: block; font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.3rem; }
+
+  /* Roles */
+  .roles-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(1rem, 1.5vw, 1.5rem); flex: 1; }
+  .role-card { background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--r-xl); padding: clamp(1.5rem, 1.9vw, 2rem); box-shadow: var(--sh-sm); display: flex; flex-direction: column; gap: 1rem; transition: transform 0.4s var(--ease-spring), box-shadow 0.4s; position: relative; overflow: hidden; }
+  .role-card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 5px; transform: scaleX(0); transform-origin: left; transition: transform 0.7s var(--ease-out); }
+  .slide.active .role-card::before { transform: scaleX(1); }
+  .slide.active .role-card.r1::before { transition-delay: 0.15s; }
+  .slide.active .role-card.r2::before { transition-delay: 0.25s; }
+  .slide.active .role-card.r3::before { transition-delay: 0.35s; }
+  .slide.active .role-card.r4::before { transition-delay: 0.45s; }
+  .role-card.r1::before { background: linear-gradient(90deg, #FF4D00, #F97316); }
+  .role-card.r2::before { background: linear-gradient(90deg, #2563EB, #06B6D4); }
+  .role-card.r3::before { background: linear-gradient(90deg, #6D28D9, #7C3AED); }
+  .role-card.r4::before { background: linear-gradient(90deg, #059669, #10B981); }
+  .role-card:hover { transform: translateY(-8px); box-shadow: var(--sh-lg); }
+  .role-ico { width: 60px; height: 60px; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.9rem; transition: transform 0.4s var(--ease-spring); }
+  .role-card:hover .role-ico { transform: scale(1.12) rotate(-6deg); }
+  .role-card.r1 .role-ico { background: var(--accent-soft); }
+  .role-card.r2 .role-ico { background: #DBEAFE; }
+  .role-card.r3 .role-ico { background: var(--primary-soft); }
+  .role-card.r4 .role-ico { background: var(--success-soft); }
+  .role-title { font-family: var(--ff-display); font-size: clamp(1.05rem, 1.25vw, 1.25rem); font-weight: 800; line-height: 1.2; }
+  .role-desc { font-size: var(--fs-sm); color: var(--body); line-height: 1.55; }
+  .role-tasks { list-style: none; display: flex; flex-direction: column; gap: 0.45rem; margin-top: auto; }
+  .role-tasks li { font-size: var(--fs-xs); color: var(--muted); display: flex; gap: 0.5rem; align-items: flex-start; line-height: 1.5; }
+  .role-tasks li::before { content: "→"; color: var(--primary); font-weight: 800; flex-shrink: 0; }
+
+  /* Drag & Drop */
+  .dd-tray { background: var(--surface-2); border: 1.5px dashed var(--line-2); border-radius: var(--r-lg); padding: 1rem 1.1rem; display: flex; flex-wrap: wrap; gap: 0.6rem; min-height: 90px; align-items: flex-start; transition: all 0.3s; }
+  .dd-tray-empty { font-family: var(--ff-display); font-size: var(--fs-sm); color: var(--muted); font-weight: 600; padding: 0.6rem; }
+  .dd-card { background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--r-md); padding: 0.7rem 1rem; font-family: var(--ff-display); font-size: var(--fs-xs); font-weight: 700; color: var(--ink); cursor: grab; user-select: none; transition: all 0.25s var(--ease-spring); box-shadow: var(--sh-xs); }
+  .dd-card:hover { transform: translateY(-3px) scale(1.02); box-shadow: var(--sh-md); border-color: var(--primary); }
+  .dd-card:active { cursor: grabbing; transform: scale(0.98); }
+  .dd-card.dragging { opacity: 0.4; transform: scale(0.95) rotate(-2deg); }
+  .dd-card.placed { cursor: default; animation: cardDropIn 0.5s var(--ease-spring); }
+  @keyframes cardDropIn { 0% { transform: scale(1.15); } 100% { transform: scale(1); } }
+  .dd-card.correct { background: var(--success-soft); border-color: var(--success); color: #065F46; }
+  .dd-card.wrong { background: var(--danger-soft); border-color: var(--danger); color: #991B1B; text-decoration: line-through; text-decoration-thickness: 2px; }
+  .dd-columns { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(1rem, 1.5vw, 1.5rem); flex: 1; margin-top: 1.2rem; }
+  .dd-col { background: var(--surface); border: 2px dashed var(--line-2); border-radius: var(--r-xl); padding: 1.1rem; display: flex; flex-direction: column; gap: 0.75rem; transition: all 0.3s var(--ease-out); min-height: 260px; }
+  .dd-col.over { border-color: var(--primary); background: var(--primary-soft); transform: scale(1.02); box-shadow: var(--sh-md); }
+  .dd-col[data-col="masalah"].over { border-color: var(--danger); background: var(--danger-soft); }
+  .dd-col[data-col="manfaat"].over { border-color: var(--success); background: var(--success-soft); }
+  .dd-col-head { display: flex; align-items: center; gap: 0.6rem; font-family: var(--ff-display); font-weight: 800; font-size: var(--fs-sm); padding-bottom: 0.75rem; border-bottom: 1.5px solid var(--line); }
+  .dd-col[data-col="masalah"] .dd-col-head { color: var(--danger); }
+  .dd-col[data-col="manfaat"] .dd-col-head { color: var(--success); }
+  .dd-col-body { display: flex; flex-direction: column; gap: 0.5rem; flex: 1; }
+  .dd-col-empty { font-size: var(--fs-xs); color: var(--muted); font-style: italic; text-align: center; padding: 1.5rem 0.5rem; }
+  .dd-score { display: flex; align-items: center; justify-content: space-between; margin-top: 1rem; padding: 0.9rem 1.2rem; background: var(--surface); border-radius: var(--r-md); border: 1.5px solid var(--line); }
+  .dd-score-text { font-family: var(--ff-display); font-weight: 700; font-size: var(--fs-sm); color: var(--ink); }
+  .dd-score-val { font-family: var(--ff-display); font-weight: 800; font-size: 1.5rem; color: var(--primary); }
+  .dd-reset { border: none; background: var(--surface-2); color: var(--ink-2); padding: 0.6rem 1.1rem; border-radius: 999px; font-family: var(--ff-body); font-size: var(--fs-xs); font-weight: 700; cursor: pointer; transition: all 0.25s; }
+  .dd-reset:hover { background: var(--ink); color: #fff; transform: translateY(-2px); box-shadow: var(--sh-md); }
+
+  /* Industry */
+  .ind-tabs { display: inline-flex; background: var(--surface-2); border-radius: 999px; padding: 5px; gap: 5px; border: 1.5px solid var(--line); align-self: flex-start; }
+  .ind-tab { border: none; background: transparent; padding: 0.7rem 1.4rem; border-radius: 999px; font-family: var(--ff-display); font-size: var(--fs-sm); font-weight: 700; color: var(--muted); cursor: pointer; transition: all 0.3s var(--ease-out); display: flex; align-items: center; gap: 0.55rem; white-space: nowrap; }
+  .ind-tab:hover { color: var(--ink-2); transform: translateY(-1px); }
+  .ind-tab.active { background: var(--surface); color: var(--ink); box-shadow: var(--sh-sm); }
+  .ind-panel { display: grid; grid-template-columns: 0.95fr 1.05fr; gap: clamp(1.5rem, 2.5vw, 2.5rem); background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--r-xl); padding: clamp(1.5rem, 2vw, 2rem); box-shadow: var(--sh-md); flex: 1; align-items: stretch; }
+  .ind-story-col { display: flex; flex-direction: column; gap: 1.1rem; }
+  .ind-story-badge { display: inline-flex; align-items: center; gap: 0.5rem; font-family: var(--ff-display); font-size: 0.7rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; padding: 0.42rem 0.9rem; border-radius: 999px; align-self: flex-start; border: 1px solid transparent; transition: all 0.4s var(--ease-out); }
+  .ind-story-badge.bank { background: #DBEAFE; color: #1E40AF; border-color: rgba(30,64,175,0.15); }
+  .ind-story-badge.hosp { background: #D1FAE5; color: #065F46; border-color: rgba(6,95,70,0.15); }
+  .ind-story-badge.logi { background: #FEF3C7; color: #92400E; border-color: rgba(146,64,14,0.15); }
+  .ind-story-title { font-family: var(--ff-display); font-size: clamp(1.3rem, 1.8vw, 1.75rem); font-weight: 800; line-height: 1.15; letter-spacing: -0.02em; }
+  .ind-story-desc { font-size: var(--fs-sm); color: var(--body); line-height: 1.6; }
+  .ind-toggle { display: inline-flex; background: var(--surface-2); border-radius: 999px; padding: 4px; gap: 4px; border: 1.5px solid var(--line); align-self: flex-start; margin-top: auto; }
+  .ind-toggle button { border: none; background: transparent; padding: 0.65rem 1.15rem; border-radius: 999px; font-family: var(--ff-body); font-size: var(--fs-xs); font-weight: 700; color: var(--muted); cursor: pointer; transition: all 0.3s var(--ease-out); display: flex; align-items: center; gap: 0.4rem; white-space: nowrap; }
+  .ind-toggle button.active { background: var(--surface); color: var(--ink); box-shadow: var(--sh-sm); }
+  .ind-toggle button.active.on { background: linear-gradient(135deg, var(--success), #10B981); color: #fff; box-shadow: 0 4px 12px rgba(5,150,105,0.3); }
+  .ind-status { background: var(--danger-soft); border-radius: var(--r-md); padding: 1rem 1.2rem; font-size: var(--fs-sm); line-height: 1.55; color: #7F1D1D; border-left: 4px solid var(--danger); transition: all 0.4s var(--ease-out); }
+  .ind-status.on { background: var(--success-soft); border-left-color: var(--success); color: #065F46; }
+  .ind-status strong { font-family: var(--ff-display); font-weight: 800; display: block; margin-bottom: 0.3rem; font-size: var(--fs-xs); letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.75; }
+  .ind-diagram { position: relative; aspect-ratio: 1/1; max-width: 500px; justify-self: center; width: 100%; align-self: center; }
+  .ind-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .ind-line { stroke: #DC2626; stroke-width: 2; stroke-dasharray: 8 8; fill: none; transition: all 0.5s var(--ease-out); }
+  .ind-line.on { stroke: #059669; stroke-width: 2.5; stroke-dasharray: 12 6; animation: lineFlow 1.5s linear infinite; }
+  @keyframes lineFlow { to { stroke-dashoffset: -36; } }
+  .ind-node { position: absolute; background: var(--surface); border: 2px solid var(--line); border-radius: var(--r-md); padding: 0.7rem 0.85rem; display: flex; align-items: center; gap: 0.55rem; width: 46%; box-shadow: var(--sh-sm); transition: all 0.45s var(--ease-spring); z-index: 2; }
+  .ind-node.on { border-color: var(--success); box-shadow: 0 4px 18px rgba(5,150,105,0.2); transform: translateY(-2px); }
+  .ind-node.on .nd-ico { background: var(--success-soft); transform: scale(1.1); }
+  .ind-node .nd-ico { width: 38px; height: 38px; border-radius: 9px; background: var(--surface-2); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; transition: all 0.4s var(--ease-spring); }
+  .ind-node .nd-txt { display: flex; flex-direction: column; gap: 0.05rem; min-width: 0; }
+  .ind-node .nd-name { font-family: var(--ff-display); font-size: 0.8rem; font-weight: 700; line-height: 1.1; color: var(--ink); }
+  .ind-node .nd-sub { font-size: 0.66rem; color: var(--muted); font-weight: 500; transition: color 0.35s ease; }
+  .ind-node.on .nd-sub { color: var(--success); font-weight: 700; }
+  .ind-node.n1 { top: 4%; left: 0; } .ind-node.n2 { top: 4%; right: 0; }
+  .ind-node.n3 { bottom: 4%; left: 0; } .ind-node.n4 { bottom: 4%; right: 0; }
+  .ind-hub { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--accent)); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.1rem; font-family: var(--ff-display); z-index: 3; box-shadow: 0 12px 32px -8px rgba(109,40,217,0.4), 0 0 0 10px var(--primary-soft); transition: all 0.5s var(--ease-spring); }
+  .ind-hub.on { background: linear-gradient(135deg, var(--success), #10B981); box-shadow: 0 12px 32px -8px rgba(5,150,105,0.4), 0 0 0 10px var(--success-soft); animation: hubActive 2.5s ease-in-out infinite; }
+  @keyframes hubActive { 0%, 100% { transform: translate(-50%, -50%) scale(1); } 50% { transform: translate(-50%, -50%) scale(1.06); } }
+  .ind-hub .hub-ico { font-size: 1.8rem; margin-bottom: 0.15rem; }
+  .ind-hub .hub-label { font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 800; }
+
+  /* Simulation */
+  .sim-wrap { background: #0A0A0F; border-radius: var(--r-2xl); padding: clamp(1.3rem, 2vw, 2rem); box-shadow: var(--sh-xl); position: relative; overflow: hidden; border: 1px solid #1F1F2E; }
+  .sim-wrap::before { content: ""; position: absolute; inset: 0; background-image: radial-gradient(circle at 20% 20%, rgba(124,58,237,0.15), transparent 40%), radial-gradient(circle at 85% 80%, rgba(255,77,0,0.1), transparent 40%); pointer-events: none; }
+  .sim-toolbar { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.4rem; padding-bottom: 1.2rem; border-bottom: 1px solid #1F1F2E; }
+  .sim-title { color: #FAFAFA; font-family: var(--ff-display); font-weight: 700; font-size: var(--fs-sm); display: flex; align-items: center; gap: 0.7rem; }
+  .sim-title-dot { width: 8px; height: 8px; background: #34D399; border-radius: 50%; box-shadow: 0 0 12px #34D399; animation: pulseDot 2s ease-in-out infinite; }
+  @keyframes pulseDot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.4); } }
+  .sim-mode { display: inline-flex; background: #131320; border-radius: 999px; padding: 4px; gap: 4px; border: 1px solid #1F1F2E; }
+  .mode-btn { border: none; background: transparent; padding: 0.65rem 1.3rem; border-radius: 999px; font-family: var(--ff-body); font-size: var(--fs-xs); font-weight: 700; color: #71717A; cursor: pointer; transition: all 0.35s var(--ease-out); display: flex; align-items: center; gap: 0.5rem; white-space: nowrap; }
+  .mode-btn:hover { color: #D4D4D8; }
+  .mode-btn.active { background: #262636; color: #FAFAFA; }
+  .mode-btn.active.on { background: linear-gradient(135deg, #059669, #10B981); color: #fff; box-shadow: 0 4px 16px rgba(16,185,129,0.4); }
+  .mode-btn .mdot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; opacity: 0.5; transition: opacity 0.3s; }
+  .mode-btn.active .mdot { opacity: 1; }
+  .sim-apps { position: relative; z-index: 1; display: grid; grid-template-columns: 1fr 130px 1fr; gap: 0.7rem; align-items: stretch; margin-bottom: 1.2rem; }
+  .app-window { background: #FAFAFA; border-radius: var(--r-lg); overflow: hidden; display: flex; flex-direction: column; min-height: 420px; box-shadow: 0 24px 48px -12px rgba(0,0,0,0.5); border: 1px solid #1F1F2E; }
+  .app-chrome { background: linear-gradient(180deg, #F4F4F5 0%, #E4E4E7 100%); padding: 0.65rem 1rem; display: flex; align-items: center; gap: 0.75rem; border-bottom: 1px solid #D4D4D8; }
+  .chrome-dots { display: flex; gap: 6px; }
+  .chrome-dots span { width: 11px; height: 11px; border-radius: 50%; }
+  .chrome-dots span:nth-child(1) { background: #FF5F57; }
+  .chrome-dots span:nth-child(2) { background: #FEBC2E; }
+  .chrome-dots span:nth-child(3) { background: #28C840; }
+  .chrome-title { font-size: 0.82rem; font-weight: 700; color: #52525B; flex: 1; text-align: center; font-family: var(--ff-display); }
+  .app-tabs { background: #F4F4F5; display: flex; padding: 0 0.85rem; gap: 0.15rem; border-bottom: 1px solid #D4D4D8; }
+  .app-tab { padding: 0.6rem 0.95rem; font-size: 0.8rem; font-weight: 700; color: #71717A; border-bottom: 2px solid transparent; font-family: var(--ff-display); }
+  .app-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+  .app-body { padding: 1rem; flex: 1; display: flex; flex-direction: column; gap: 0.65rem; overflow-y: auto; background: #FAFAFA; }
+  .app-body::-webkit-scrollbar { width: 5px; }
+  .app-body::-webkit-scrollbar-thumb { background: #D4D4D8; border-radius: 4px; }
+  .app-statusbar { background: #F4F4F5; border-top: 1px solid #D4D4D8; padding: 0.55rem 1rem; display: flex; justify-content: space-between; font-size: 0.78rem; color: #71717A; font-family: var(--ff-mono); }
+  .app-statusbar .stat-ok { color: #047857; font-weight: 700; }
+  .app-statusbar .stat-bad { color: #B91C1C; font-weight: 700; }
+  .prod-row { background: #fff; border: 1px solid #E4E4E7; border-radius: var(--r-md); padding: 0.8rem 0.95rem; display: grid; grid-template-columns: auto 1fr auto; gap: 0.85rem; align-items: center; transition: all 0.25s var(--ease-out); }
+  .prod-row:hover { border-color: #A5B4FC; box-shadow: 0 4px 12px rgba(109,40,217,0.08); transform: translateY(-1px); }
+  .prod-row.sold-out { opacity: 0.5; }
+  .prod-ico { width: 46px; height: 46px; border-radius: 12px; background: linear-gradient(135deg, #F3EEFF, #E4DBFF); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; }
+  .prod-info { min-width: 0; display: flex; flex-direction: column; gap: 0.15rem; }
+  .prod-name { font-weight: 700; font-size: 0.92rem; color: #0F0F0F; }
+  .prod-meta { font-size: 0.8rem; color: #71717A; display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap; }
+  .stock-badge { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.15rem 0.55rem; border-radius: 5px; font-weight: 800; font-size: 0.75rem; transition: all 0.3s var(--ease-spring); }
+  .stock-badge.bump { transform: scale(1.15); }
+  .stock-badge.ok { background: #ECFDF5; color: #047857; }
+  .stock-badge.low { background: #FFFBEB; color: #B45309; }
+  .stock-badge.empty { background: #FEF2F2; color: #B91C1C; }
+  .act-btn { border: none; border-radius: 9px; padding: 0.55rem 1rem; font-family: var(--ff-body); font-size: 0.8rem; font-weight: 800; cursor: pointer; transition: all 0.2s var(--ease-spring); color: #fff; white-space: nowrap; }
+  .act-btn:not(:disabled):hover { transform: translateY(-2px) scale(1.03); filter: brightness(1.1); }
+  .act-btn:not(:disabled):active { transform: translateY(0) scale(0.98); }
+  .act-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .act-btn.sell { background: linear-gradient(135deg, #6D28D9, #7C3AED); box-shadow: 0 2px 8px rgba(109,40,217,0.35); }
+  .act-btn.restock { background: linear-gradient(135deg, #059669, #10B981); box-shadow: 0 2px 8px rgba(5,150,105,0.35); }
+  .connector { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.6rem; padding: 1rem 0; }
+  .conn-rail { flex: 1; width: 3px; min-height: 80px; background: #1F1F2E; border-radius: 3px; position: relative; overflow: hidden; transition: background 0.5s var(--ease-out); }
+  .conn-rail.on { background: rgba(16,185,129,0.15); }
+  .conn-packet { position: absolute; left: 50%; transform: translateX(-50%); width: 11px; height: 11px; background: #34D399; border-radius: 50%; box-shadow: 0 0 16px #34D399, 0 0 28px rgba(52,211,153,0.5); opacity: 0; }
+  .conn-rail.on .conn-packet { opacity: 1; animation: packetFlow 2s linear infinite; }
+  .conn-packet.p2 { animation-delay: 1s; }
+  @keyframes packetFlow { 0% { top: -12px; opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } 100% { top: calc(100% + 12px); opacity: 0; } }
+  .conn-badge { font-family: var(--ff-mono); font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em; padding: 0.35rem 0.6rem; border-radius: 6px; background: #131320; border: 1px solid #1F1F2E; color: #71717A; transition: all 0.4s var(--ease-out); white-space: nowrap; }
+  .conn-badge.on { background: rgba(16,185,129,0.12); border-color: rgba(16,185,129,0.4); color: #34D399; box-shadow: 0 0 16px rgba(16,185,129,0.3); }
+  .sim-log { position: relative; z-index: 1; background: #050509; border: 1px solid #1F1F2E; border-radius: var(--r-md); padding: 1rem 1.2rem; font-family: var(--ff-mono); font-size: 0.8rem; height: clamp(130px, 17vh, 175px); overflow-y: auto; line-height: 1.7; color: #A1A1AA; }
+  .sim-log::-webkit-scrollbar { width: 5px; }
+  .sim-log::-webkit-scrollbar-thumb { background: #3F3F46; border-radius: 4px; }
+  .sim-log > div { animation: logIn 0.35s var(--ease-out); }
+  @keyframes logIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: translateX(0); } }
+  .sim-log .l-ok { color: #34D399; } .sim-log .l-bad { color: #F87171; }
+  .sim-log .l-info { color: #60A5FA; } .sim-log .l-dim { color: #52525B; }
+  .sim-log .l-head { color: #FBBF24; font-weight: 700; } .sim-log .l-time { color: #52525B; }
+  .sim-reset { background: #131320; color: #A1A1AA; border: 1px solid #1F1F2E; border-radius: 999px; padding: 0.65rem 1.25rem; font-family: var(--ff-body); font-size: var(--fs-xs); font-weight: 700; cursor: pointer; transition: all 0.25s var(--ease-out); display: flex; align-items: center; gap: 0.4rem; }
+  .sim-reset:hover { background: #262636; color: #FAFAFA; border-color: #3F3F46; transform: translateY(-2px); }
+  .sim-reset svg { transition: transform 0.6s var(--ease-out); }
+  .sim-reset:hover svg { transform: rotate(-180deg); }
+
+  .stat-block { display: flex; align-items: center; gap: 1.8rem; flex-wrap: wrap; }
+  .stat-big { font-family: var(--ff-display); font-size: clamp(3.5rem, 6vw, 5.5rem); font-weight: 800; background: linear-gradient(135deg, var(--success), #34D399); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; line-height: 1; letter-spacing: -0.04em; }
+  .countup { font-variant-numeric: tabular-nums; }
+
+  /* Reflect */
+  .reflect-grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(0.9rem, 1.3vw, 1.3rem); flex: 1; }
+  .reflect-card { background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--r-lg); padding: clamp(1.3rem, 1.7vw, 1.7rem); box-shadow: var(--sh-sm); display: flex; gap: 1rem; align-items: flex-start; transition: all 0.35s var(--ease-spring); position: relative; overflow: hidden; }
+  .reflect-card::after { content: ""; position: absolute; right: -25px; bottom: -25px; width: 100px; height: 100px; border-radius: 50%; background: radial-gradient(circle, rgba(109,40,217,0.1), transparent 70%); pointer-events: none; transition: all 0.5s var(--ease-out); }
+  .reflect-card:hover { transform: translateY(-6px); border-color: var(--primary); box-shadow: var(--sh-lg); }
+  .reflect-card:hover::after { transform: scale(1.4); background: radial-gradient(circle, rgba(109,40,217,0.18), transparent 70%); }
+  .reflect-card.full { grid-column: 1 / -1; }
+  .reflect-num { flex-shrink: 0; width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, var(--primary), var(--primary-2)); color: #fff; font-family: var(--ff-display); font-size: 1rem; font-weight: 800; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(109,40,217,0.3); transition: transform 0.4s var(--ease-spring); }
+  .reflect-card:hover .reflect-num { transform: scale(1.15) rotate(-8deg); }
+  .reflect-text { font-family: var(--ff-display); font-size: var(--fs-sm); font-weight: 600; line-height: 1.5; color: var(--ink); padding-top: 0.45rem; }
+  .reflect-text em { font-family: var(--ff-body); font-style: italic; font-weight: 500; color: var(--body); }
+
+  /* Scenario */
+  .scenario-container { display: flex; flex-direction: column; gap: clamp(1rem, 1.6vw, 1.4rem); flex: 1; }
+  .scenario { background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--r-xl); padding: clamp(1.4rem, 1.9vw, 2rem); box-shadow: var(--sh-sm); }
+  .sc-badge { display: inline-flex; align-items: center; gap: 0.4rem; font-family: var(--ff-display); font-size: 0.72rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; padding: 0.4rem 0.85rem; border-radius: 999px; background: var(--accent-soft); color: var(--accent); border: 1px solid rgba(255,77,0,0.15); margin-bottom: 1rem; }
+  .sc-title { font-family: var(--ff-display); font-size: clamp(1.02rem, 1.25vw, 1.22rem); font-weight: 700; line-height: 1.45; color: var(--ink); margin-bottom: 1.1rem; }
+  .sc-opts { display: grid; grid-template-columns: 1fr; gap: 0.65rem; }
+  .sc-opt { background: var(--bg); border: 1.5px solid var(--line); border-radius: var(--r-md); padding: 0.95rem 1.15rem; font-family: var(--ff-body); font-size: var(--fs-sm); text-align: left; cursor: pointer; color: var(--ink-2); transition: all 0.3s var(--ease-out); display: flex; flex-direction: column; gap: 0.75rem; font-weight: 500; }
+  .sc-opt-head { display: flex; align-items: flex-start; gap: 0.85rem; }
+  .sc-opt:hover:not(:disabled) { border-color: var(--primary); background: var(--primary-soft); transform: translateX(6px); }
+  .sc-opt:disabled { cursor: default; }
+  .sc-opt .letter { width: 30px; height: 30px; border-radius: 9px; background: var(--surface-2); color: var(--muted); font-weight: 800; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-family: var(--ff-display); transition: all 0.3s var(--ease-spring); }
+  .sc-opt.correct { background: var(--success-soft); border-color: var(--success); animation: correctPop 0.5s var(--ease-spring); }
+  @keyframes correctPop { 0% { transform: scale(1); } 40% { transform: scale(1.02); } 100% { transform: scale(1); } }
+  .sc-opt.correct .letter { background: var(--success); color: #fff; }
+  .sc-opt.wrong { background: var(--danger-soft); border-color: var(--danger); animation: shakeWrong 0.5s var(--ease-out); }
+  @keyframes shakeWrong { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(4px); } }
+  .sc-opt.wrong .letter { background: var(--danger); color: #fff; }
+  .sc-opt-explain { display: none; padding: 0.85rem 1rem; border-radius: var(--r-sm); font-size: var(--fs-xs); line-height: 1.55; font-weight: 500; align-items: flex-start; gap: 0.6rem; }
+  .sc-opt.show-explain .sc-opt-explain { display: flex; animation: fadeUpEl 0.4s var(--ease-out); }
+  .sc-opt.correct .sc-opt-explain { background: rgba(255,255,255,0.75); color: #065F46; border: 1px solid rgba(5,150,105,0.25); }
+  .sc-opt.wrong .sc-opt-explain { background: rgba(255,255,255,0.75); color: #991B1B; border: 1px solid rgba(220,38,38,0.25); }
+  .sc-opt-explain .ex-ico { flex-shrink: 0; font-size: 1rem; font-weight: 800; }
+
+  /* True/False Quiz */
+  .tf-grid { display: flex; flex-direction: column; gap: clamp(0.75rem, 1vw, 1rem); flex: 1; }
+  .tf-item { background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--r-lg); padding: clamp(1.1rem, 1.4vw, 1.4rem); display: grid; grid-template-columns: 1fr auto; gap: 1.2rem; align-items: center; transition: all 0.4s var(--ease-out); }
+  .tf-item.correct { background: var(--success-soft); border-color: var(--success); box-shadow: 0 4px 18px rgba(5,150,105,0.12); }
+  .tf-item.wrong { background: var(--danger-soft); border-color: var(--danger); box-shadow: 0 4px 18px rgba(220,38,38,0.12); }
+  .tf-text { font-family: var(--ff-display); font-size: var(--fs-sm); font-weight: 600; line-height: 1.45; color: var(--ink); display: flex; gap: 0.85rem; align-items: flex-start; }
+  .tf-num { flex-shrink: 0; width: 28px; height: 28px; border-radius: 8px; background: var(--surface-2); color: var(--muted); font-size: 0.78rem; font-weight: 800; display: flex; align-items: center; justify-content: center; transition: all 0.3s var(--ease-spring); }
+  .tf-item.correct .tf-num { background: var(--success); color: #fff; transform: scale(1.1); }
+  .tf-item.wrong .tf-num { background: var(--danger); color: #fff; transform: scale(1.1); }
+  .tf-buttons { display: flex; gap: 0.5rem; }
+  .tf-btn { border: 1.5px solid var(--line); background: var(--surface); padding: 0.55rem 1.1rem; border-radius: var(--r-sm); font-family: var(--ff-display); font-size: var(--fs-xs); font-weight: 800; cursor: pointer; transition: all 0.25s var(--ease-out); color: var(--ink-2); min-width: 78px; }
+  .tf-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: var(--sh-md); border-color: var(--primary); }
+  .tf-btn:disabled { cursor: default; }
+  .tf-btn.chosen.right { background: var(--success); border-color: var(--success); color: #fff; animation: correctPop 0.5s var(--ease-spring); box-shadow: 0 4px 14px rgba(5,150,105,0.35); }
+  .tf-btn.chosen.wrong { background: var(--danger); border-color: var(--danger); color: #fff; animation: shakeWrong 0.5s var(--ease-out); box-shadow: 0 4px 14px rgba(220,38,38,0.35); }
+  .tf-btn.reveal { background: var(--success-soft); border-color: var(--success); color: var(--success); }
+  .tf-btn.reveal::after { content: " ✓"; font-weight: 800; }
+  .tf-explain { grid-column: 1 / -1; margin-top: 0.6rem; padding: 0.85rem 1rem; border-radius: var(--r-sm); font-size: var(--fs-xs); color: var(--ink-2); line-height: 1.55; display: none; }
+  .tf-explain.show { display: block; animation: fadeUpEl 0.4s var(--ease-out); }
+  .tf-item.correct .tf-explain { background: rgba(255,255,255,0.75); border-left: 3px solid var(--success); }
+  .tf-item.wrong .tf-explain { background: rgba(255,255,255,0.75); border-left: 3px solid var(--danger); }
+
+  /* Pattern */
+  .pattern-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(1rem, 1.5vw, 1.5rem); flex: 1; }
+  .pattern-card { background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--r-xl); padding: clamp(1.5rem, 2vw, 2rem); box-shadow: var(--sh-sm); display: flex; flex-direction: column; gap: 1rem; transition: all 0.4s var(--ease-spring); position: relative; overflow: hidden; }
+  .pattern-card:hover { transform: translateY(-8px); box-shadow: var(--sh-lg); }
+  .pattern-card.p1 { border-top: 5px solid #06B6D4; }
+  .pattern-card.p2 { border-top: 5px solid #6D28D9; }
+  .pattern-card.p3 { border-top: 5px solid #FF4D00; }
+  .pt-num { font-family: var(--ff-display); font-size: 0.75rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+  .pt-title { font-family: var(--ff-display); font-size: clamp(1.2rem, 1.5vw, 1.5rem); font-weight: 800; line-height: 1.15; }
+  .pt-desc { font-size: var(--fs-sm); color: var(--muted); line-height: 1.55; }
+  .pt-svg { width: 100%; height: auto; margin: 0.6rem 0; }
+  .pt-svg circle, .pt-svg rect { opacity: 0; }
+  .slide.active .pt-svg circle, .slide.active .pt-svg rect { animation: nodePop 0.5s var(--ease-spring) forwards; }
+  .slide.active .pt-svg circle:nth-child(1), .slide.active .pt-svg rect:nth-child(1) { animation-delay: 0.3s; }
+  .slide.active .pt-svg circle:nth-child(2), .slide.active .pt-svg rect:nth-child(2) { animation-delay: 0.4s; }
+  .slide.active .pt-svg circle:nth-child(3), .slide.active .pt-svg rect:nth-child(3) { animation-delay: 0.5s; }
+  .slide.active .pt-svg circle:nth-child(4), .slide.active .pt-svg rect:nth-child(4) { animation-delay: 0.6s; }
+  .slide.active .pt-svg circle:nth-child(5), .slide.active .pt-svg rect:nth-child(5) { animation-delay: 0.7s; }
+  @keyframes nodePop { 0% { opacity: 0; transform: scale(0); transform-origin: center; } 60% { transform: scale(1.2); } 100% { opacity: 1; transform: scale(1); } }
+  .pt-svg line { stroke-dasharray: 200; stroke-dashoffset: 200; }
+  .slide.active .pt-svg line { animation: drawLine 1s var(--ease-out) 0.7s forwards; }
+  .pt-pro { display: flex; flex-direction: column; gap: 0.5rem; margin-top: auto; }
+  .pt-line { display: flex; gap: 0.5rem; font-size: var(--fs-xs); align-items: flex-start; }
+  .pt-line .pt-ico { font-weight: 800; flex-shrink: 0; }
+  .pt-line.pro .pt-ico { color: var(--success); }
+  .pt-line.con .pt-ico { color: var(--danger); }
+  .pt-line span:last-child { color: var(--body); line-height: 1.5; }
+
+  /* Controls */
+  .controls { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 1rem; padding: 0.65rem 0.65rem 0.65rem 1.2rem; background: rgba(15,15,15,0.92); backdrop-filter: blur(24px) saturate(180%); border: 1px solid rgba(255,255,255,0.08); border-radius: 999px; z-index: 90; box-shadow: 0 20px 40px -8px rgba(15,15,15,0.25); }
+  .nav-btn { border: none; background: transparent; color: #FAFAFA; border-radius: 999px; width: 44px; height: 44px; font-size: 1.2rem; font-weight: 700; cursor: pointer; transition: all 0.25s var(--ease-spring); display: flex; align-items: center; justify-content: center; font-family: inherit; }
+  .nav-btn:hover:not(:disabled) { background: var(--accent); color: #fff; transform: scale(1.12); }
+  .nav-btn:active:not(:disabled) { transform: scale(0.95); }
+  .nav-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+  .dots { display: flex; gap: 5px; align-items: center; }
+  .dots button { width: 6px; height: 6px; border-radius: 50%; border: none; background: #3F3F46; cursor: pointer; padding: 0; transition: all 0.35s var(--ease-spring); }
+  .dots button:hover { background: #71717A; transform: scale(1.4); }
+  .dots button.active { background: var(--accent); width: 22px; border-radius: 999px; box-shadow: 0 0 0 3px rgba(255,77,0,0.25); }
+  .counter { font-family: var(--ff-mono); font-size: 0.78rem; font-weight: 600; color: #A1A1AA; min-width: 62px; text-align: center; padding: 0 0.5rem; }
+
+  .anim { opacity: 0; transform: translateY(28px); filter: blur(4px); transition: opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out), filter 0.6s var(--ease-out); }
+  .slide.active .anim { opacity: 1; transform: translateY(0); filter: blur(0); }
+  .slide.active .anim:nth-child(1) { transition-delay: 0.08s; }
+  .slide.active .anim:nth-child(2) { transition-delay: 0.16s; }
+  .slide.active .anim:nth-child(3) { transition-delay: 0.24s; }
+  .slide.active .anim:nth-child(4) { transition-delay: 0.32s; }
+  .slide.active .anim:nth-child(5) { transition-delay: 0.40s; }
+  .slide.active .anim:nth-child(6) { transition-delay: 0.48s; }
+
+  @media (max-width: 1100px) {
+    .cover .slide-inner { grid-template-columns: 1fr; }
+    .roadmap { grid-template-columns: repeat(2, 1fr); }
+    .grid-4, .glossary-grid { grid-template-columns: repeat(2, 1fr); }
+    .bridge { grid-template-columns: 1fr; }
+    .bridge-arrow svg { transform: rotate(90deg); }
+    .sim-apps { grid-template-columns: 1fr; }
+    .connector { flex-direction: row; padding: 0.4rem 0; }
+    .conn-rail { width: 100%; height: 4px; min-height: 0; }
+    .timeline { grid-template-columns: repeat(2, 1fr); }
+    .timeline::before { display: none; }
+    .pattern-grid, .anatomy-flow, .nn-grid, .roles-grid { grid-template-columns: 1fr; }
+    .an-step:first-child, .an-step:last-child { border-radius: var(--r-lg); }
+    .an-step:not(:last-child) { border-right: 1.5px solid var(--line); border-bottom: none; }
+    .ind-panel { grid-template-columns: 1fr; }
+    .dd-columns { grid-template-columns: 1fr; }
+    .compare { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 760px) {
+    .slide { padding: 1.5rem 1.2rem 7rem; }
+    .slide-inner { min-height: auto; }
+    .grid-2, .grid-3, .grid-4, .glossary-grid, .reflect-grid, .timeline { grid-template-columns: 1fr; }
+    .dots { display: none; }
+    .controls { padding: 0.5rem 0.9rem; gap: 0.6rem; }
+    h2 { font-size: 1.75rem; }
+    .tf-item { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="top-bar"><div class="top-fill" id="topFill"></div></div>
+
+<div class="deck" id="deck">
+
+  <!-- 1. COVER -->
+  <section class="slide active cover">
+    <div class="slide-inner">
+      <div class="cover-content">
+        <span class="eyebrow anim">Minggu 1 · Sistem Terintegrasi</span>
+        <h1 class="anim">Konsep Dasar<br>Integrasi Sistem</h1>
+        <p class="sub anim">Mengapa aplikasi yang berdiri sendiri perlu dihubungkan, dan bagaimana hal itu mengubah cara bisnis bekerja.</p>
+        <div class="cover-meta anim">
+          <span class="pill hot">📖 Sebelum UTS</span>
+          <span class="pill">🎯 22 Slide</span>
+          <span class="pill">🧪 3 Simulasi</span>
+          <span class="pill">📚 Glosarium</span>
+        </div>
+      </div>
+      <div class="cover-illustration anim">
+        <div class="glow-bg"></div>
+
+        <div class="rings"><span></span><span></span><span></span></div>
+
+        <svg class="conn-svg" viewBox="0 0 480 480" preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#7C3AED"/>
+              <stop offset="100%" stop-color="#FF4D00"/>
+            </linearGradient>
+            <radialGradient id="particleGrad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#FFFFFF"/>
+              <stop offset="50%" stop-color="#FF8A50"/>
+              <stop offset="100%" stop-color="#FF4D00" stop-opacity="0"/>
+            </radialGradient>
+            <filter id="pglow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+
+          <line class="conn-line ln-top"    x1="240" y1="240" x2="240" y2="100"/>
+          <line class="conn-line ln-right"  x1="240" y1="240" x2="380" y2="240"/>
+          <line class="conn-line ln-bottom" x1="240" y1="240" x2="240" y2="380"/>
+          <line class="conn-line ln-left"   x1="240" y1="240" x2="100" y2="240"/>
+
+          <circle class="particle p-top" r="4" fill="url(#particleGrad)" filter="url(#pglow)">
+            <animateMotion dur="1.6s" repeatCount="indefinite" path="M240,240 L240,100"/>
+          </circle>
+          <circle class="particle p-right" r="4" fill="url(#particleGrad)" filter="url(#pglow)">
+            <animateMotion dur="1.6s" repeatCount="indefinite" path="M240,240 L380,240"/>
+          </circle>
+          <circle class="particle p-bottom" r="4" fill="url(#particleGrad)" filter="url(#pglow)">
+            <animateMotion dur="1.6s" repeatCount="indefinite" path="M240,240 L240,380"/>
+          </circle>
+          <circle class="particle p-left" r="4" fill="url(#particleGrad)" filter="url(#pglow)">
+            <animateMotion dur="1.6s" repeatCount="indefinite" path="M240,240 L100,240"/>
+          </circle>
+        </svg>
+
+        <div class="hub">
+          <span class="hub-icon">⚡</span>
+          <span class="hub-label">API Hub</span>
+        </div>
+
+        <div class="illus-card pos-top">
+          <div class="ic p">💻</div>
+          <div class="txt"><span class="name">Kasir POS</span><span class="sub">Point of Sale</span></div>
+        </div>
+        <div class="illus-card pos-right">
+          <div class="ic g">📦</div>
+          <div class="txt"><span class="name">Gudang</span><span class="sub">Inventory</span></div>
+        </div>
+        <div class="illus-card pos-bottom">
+          <div class="ic o">🏢</div>
+          <div class="txt"><span class="name">ERP</span><span class="sub">Enterprise</span></div>
+        </div>
+        <div class="illus-card pos-left">
+          <div class="ic b">👥</div>
+          <div class="txt"><span class="name">CRM</span><span class="sub">Pelanggan</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. BRIDGE -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="slide-header anim">
+        <span class="eyebrow orange">Jembatan</span>
+        <h2>Dari Pemrograman Web ke Sistem Terintegrasi</h2>
+        <p class="lead">Semester lalu Anda membangun satu aplikasi. Sekarang saatnya melihat aplikasi itu sebagai bagian dari ekosistem bisnis yang lebih besar.</p>
+      </div>
+      <div class="bridge">
+        <div class="bridge-side anim">
+          <span class="bs-label">◀ Semester Lalu</span>
+          <h3>Membangun aplikasi mandiri</h3>
+          <ul>
+            <li><span class="bico">🏠</span> Satu aplikasi, satu basis data</li>
+            <li><span class="bico">🧱</span> HTML, CSS, PHP, MySQL</li>
+            <li><span class="bico">📝</span> Form, halaman, CRUD</li>
+            <li><span class="bico">🎯</span> Fokus: aplikasi berjalan</li>
+          </ul>
+        </div>
+        <div class="bridge-arrow anim">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          <span class="ar-label">beralih</span>
+        </div>
+        <div class="bridge-side now anim">
+          <span class="bs-label">▶ Semester Ini</span>
+          <h3>Menghubungkan banyak aplikasi</h3>
+          <ul>
+            <li><span class="bico">🌐</span> Banyak aplikasi, berbagi data</li>
+            <li><span class="bico">🔌</span> REST API, JSON, HTTP</li>
+            <li><span class="bico">🔑</span> Autentikasi, kontrak data</li>
+            <li><span class="bico">🎯</span> Fokus: aplikasi bisa saling bicara</li>
+          </ul>
+        </div>
+      </div>
+      <div class="highlight anim">
+        <p><strong>Analogi sederhana:</strong> semester lalu Anda membangun <em>satu rumah</em> yang lengkap dan nyaman. Sekarang Anda belajar membangun <em>jalan penghubung antar rumah</em>, agar orang bisa berpindah tanpa membongkar rumahnya. Aplikasi lama Anda tidak dibuang. Ia justru menjadi bagian dari sistem yang lebih besar.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. RELEVANSI -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="slide-header anim">
+        <span class="eyebrow">Relevansi</span>
+        <h2>Untuk Apa Mahasiswa Bisnis Digital Mempelajari Ini?</h2>
+        <p class="lead">Bukan untuk menjadi programmer ahli, melainkan untuk mampu merancang, menilai, dan mengelola alur data antar sistem di dalam organisasi.</p>
+      </div>
+      <div class="grid-2">
+        <div class="card anim"><div class="card-ico">🧭</div><h3>Memahami proses bisnis menyeluruh</h3><p>Bisnis berjalan lintas divisi. Integrasi adalah cara membuat penjualan, gudang, keuangan, dan pelanggan berbicara dalam satu bahasa data.</p></div>
+        <div class="card anim"><div class="card-ico g">🌉</div><h3>Menjadi jembatan bisnis dan teknis</h3><p>Anda akan sering menjadi penghubung antara tim bisnis dan tim IT. Paham integrasi berarti bisa menerjemahkan kebutuhan bisnis menjadi spesifikasi yang jelas.</p></div>
+        <div class="card anim"><div class="card-ico o">⚙️</div><h3>Meningkatkan efisiensi operasional</h3><p>Integrasi menghapus pekerjaan menyalin data manual, mengurangi kesalahan, dan mempercepat layanan ke pelanggan.</p></div>
+        <div class="card anim"><div class="card-ico r">📊</div><h3>Mengubah data menjadi keputusan</h3><p>Data yang terhubung menghasilkan laporan waktu nyata. Manajemen dapat mengambil keputusan berbasis angka, bukan dugaan.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. ROADMAP -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="slide-header anim">
+        <span class="eyebrow">Peta Jalan</span>
+        <h2>Rencana 7 Pertemuan Sebelum UTS</h2>
+        <p class="lead">Perjalanan dari konsep sampai praktik: Anda akan merancang, membangun, mengamankan, dan mengonsumsi API.</p>
+      </div>
+      <div class="roadmap">
+        <div class="rm-item w1 anim"><div class="rm-num">Minggu 1</div><div class="rm-title">Konsep Dasar Integrasi Sistem</div><div class="rm-desc">Mengapa aplikasi mandiri perlu diintegrasikan. Studi kasus kasir dan gudang.</div></div>
+        <div class="rm-item w2 anim"><div class="rm-num">Minggu 2</div><div class="rm-title">Pola-Pola Integrasi Sistem</div><div class="rm-desc">Pola point-to-point (titik ke titik) dibandingkan pola berbasis API.</div></div>
+        <div class="rm-item w3 anim"><div class="rm-num">Minggu 3</div><div class="rm-title">Analisis Dua Sistem</div><div class="rm-desc">Menentukan titik integrasi dari dua sistem terpisah. Bisa dari proyek semester lalu.</div></div>
+        <div class="rm-item w4 anim"><div class="rm-num">Minggu 4</div><div class="rm-title">Arsitektur & Kontrak Data</div><div class="rm-desc">Merancang endpoint (titik akses) dan format data JSON yang disepakati antar sistem.</div></div>
+        <div class="rm-item w5 anim"><div class="rm-num">Minggu 5</div><div class="rm-title">Membangun REST API di PHP</div><div class="rm-desc">Praktik mengekspos data sistem sendiri sebagai JSON agar bisa diakses sistem lain.</div></div>
+        <div class="rm-item w6 anim"><div class="rm-num">Minggu 6</div><div class="rm-title">Autentikasi API Sederhana</div><div class="rm-desc">Menambahkan API key (kunci akses) agar hanya sistem berwenang yang bisa mengakses data.</div></div>
+        <div class="rm-item w7 anim"><div class="rm-num">Minggu 7</div><div class="rm-title">Mengonsumsi API Sistem Lain</div><div class="rm-desc">Memanggil API memakai PHP cURL dan menampilkan data sistem lain di aplikasi sendiri.</div></div>
+        <div class="rm-item uts anim"><div class="rm-num">Setelahnya</div><div class="rm-title">Ujian Tengah Semester</div><div class="rm-desc">Evaluasi menyeluruh atas konsep, rancangan, dan praktik integrasi yang telah dipelajari.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. DEFINISI -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="slide-header anim">
+        <span class="eyebrow">Minggu 1</span>
+        <h2>Apa Itu Integrasi Sistem?</h2>
+        <p class="lead">Sebuah definisi kerja yang akan kita pakai sepanjang semester.</p>
+      </div>
+      <div class="highlight anim" style="padding: clamp(1.8rem, 2.5vw, 2.5rem) clamp(1.8rem, 2.6vw, 2.6rem)">
+        <p style="font-size: var(--fs-lead); line-height: 1.55"><strong>Integrasi sistem</strong> adalah proses menghubungkan dua atau lebih sistem, aplikasi, atau komponen perangkat lunak agar dapat saling bertukar data, berkomunikasi, dan bekerja sama untuk mencapai tujuan bersama.</p>
+      </div>
+      <div class="grid-3">
+        <div class="card anim"><div class="card-ico">🔄</div><h3>Bertukar data</h3><p>Data mengalir dari satu sistem ke sistem lain secara otomatis, bukan lewat penyalinan manual.</p></div>
+        <div class="card anim"><div class="card-ico g">💬</div><h3>Berkomunikasi</h3><p>Sistem dapat saling mengirim permintaan dan menerima jawaban, seperti dua orang yang berbicara.</p></div>
+        <div class="card anim"><div class="card-ico o">🎯</div><h3>Bekerja sama</h3><p>Kedua sistem bersama-sama mendukung satu tujuan bisnis yang lebih besar.</p></div>
+      </div>
+      <div class="card anim">
+        <p><strong>Istilah terkait:</strong> dalam konteks organisasi, integrasi sistem sering disebut <em>Enterprise Application Integration</em> (EAI, integrasi aplikasi perusahaan). EAI adalah pendekatan arsitektur yang menyatukan berbagai aplikasi perusahaan yang beragam menjadi satu kesatuan yang terkoordinasi.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. GLOSSARY -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="slide-header anim">
+        <span class="eyebrow">Kamus Istilah</span>
+        <h2>Klik Kartu untuk Melihat Definisi</h2>
+        <p class="lead">Sepanjang semester Anda akan sering bertemu istilah ini. Kenali sejak sekarang, sebelum masuk ke praktik.</p>
+      </div>
+      <div class="glossary-grid">
+        <div class="flip anim"><div class="flip-inner"><div class="flip-front"><div class="term">API</div><div class="hint">Klik untuk definisi</div></div><div class="flip-back"><div class="def-title">Definisi</div><div class="def-text">Application Programming Interface. Perantara yang memungkinkan dua aplikasi saling berkomunikasi tanpa perlu tahu isi dalam masing-masing.</div><div class="def-analogy">Analogi: pelayan restoran yang menghubungkan pelanggan dengan dapur.</div></div></div></div>
+        <div class="flip anim"><div class="flip-inner"><div class="flip-front"><div class="term">REST</div><div class="hint">Klik untuk definisi</div></div><div class="flip-back"><div class="def-title">Definisi</div><div class="def-text">Gaya arsitektur API yang memakai protokol HTTP standar dan memanfaatkan URL untuk mengakses sumber daya.</div><div class="def-analogy">Analogi: pesan-antar makanan yang punya alamat tetap untuk setiap menu.</div></div></div></div>
+        <div class="flip anim"><div class="flip-inner"><div class="flip-front"><div class="term">Endpoint</div><div class="hint">Klik untuk definisi</div></div><div class="flip-back"><div class="def-title">Definisi</div><div class="def-text">Alamat tertentu di dalam API yang menjadi tujuan permintaan. Contoh: /produk, /pesanan, /pelanggan.</div><div class="def-analogy">Analogi: nomor meja di restoran, satu meja satu tujuan.</div></div></div></div>
+        <div class="flip anim"><div class="flip-inner"><div class="flip-front"><div class="term">JSON</div><div class="hint">Klik untuk definisi</div></div><div class="flip-back"><div class="def-title">Definisi</div><div class="def-text">JavaScript Object Notation. Format pertukaran data berbentuk teks yang mudah dibaca manusia dan mudah diproses mesin.</div><div class="def-analogy">Analogi: bahasa pengantar universal antar aplikasi.</div></div></div></div>
+        <div class="flip anim"><div class="flip-inner"><div class="flip-front"><div class="term">EAI</div><div class="hint">Klik untuk definisi</div></div><div class="flip-back"><div class="def-title">Definisi</div><div class="def-text">Enterprise Application Integration. Pendekatan menyatukan berbagai aplikasi perusahaan menjadi satu kesatuan yang terkoordinasi.</div><div class="def-analogy">Analogi: sistem saraf pusat organisasi.</div></div></div></div>
+        <div class="flip anim"><div class="flip-inner"><div class="flip-front"><div class="term">Middleware</div><div class="hint">Klik untuk definisi</div></div><div class="flip-back"><div class="def-title">Definisi</div><div class="def-text">Perangkat lunak penghubung yang berada di antara dua aplikasi dan mengurus komunikasi, penerjemahan data, serta pengaturan lalu lintas.</div><div class="def-analogy">Analogi: penerjemah bahasa di ruang rapat internasional.</div></div></div></div>
+        <div class="flip anim"><div class="flip-inner"><div class="flip-front"><div class="term">SOA</div><div class="hint">Klik untuk definisi</div></div><div class="flip-back"><div class="def-title">Definisi</div><div class="def-text">Service-Oriented Architecture. Pendekatan merancang sistem sebagai kumpulan layanan kecil yang dapat dipakai ulang oleh aplikasi lain.</div><div class="def-analogy">Analogi: satu gedung perkantoran yang menyewakan ruangan ke banyak penyewa.</div></div></div></div>
+        <div class="flip anim"><div class="flip-inner"><div class="flip-front"><div class="term">Message Queue</div><div class="hint">Klik untuk definisi</div></div><div class="flip-back"><div class="def-title">Definisi</div><div class="def-text">Antrean pesan elektronik. Pengirim meletakkan pesan, penerima mengambilnya saat siap, tanpa keduanya harus aktif bersamaan.</div><div class="def-analogy">Analogi: kotak surat, tidak harus bertemu untuk berkirim pesan.</div></div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. TIMELINE -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="slide-header anim">
+        <span class="eyebrow green">Sejarah Singkat</span>
+        <h2>Evolusi Integrasi Sistem</h2>
+        <p class="lead">Memahami perjalanan lima dekade terakhir membantu kita mengerti mengapa API menjadi standar saat ini.</p>
+      </div>
+      <div class="timeline">
+        <div class="tl-item anim"><div class="tl-year">1970-an</div><div class="tl-dot"></div><div class="tl-card"><div class="tl-name">EDI</div><div class="tl-desc">Electronic Data Interchange. Pertukaran dokumen bisnis antar perusahaan lewat format standar. Masih sangat kaku dan mahal.</div><div class="tl-tag">Fondasi</div></div></div>
+        <div class="tl-item anim"><div class="tl-year">1990-an</div><div class="tl-dot"></div><div class="tl-card"><div class="tl-name">EAI & Middleware</div><div class="tl-desc">Perusahaan mulai menyatukan banyak aplikasi internal. Middleware menjadi lapisan penghubung utama antar sistem.</div><div class="tl-tag">Korporat</div></div></div>
+        <div class="tl-item anim"><div class="tl-year">2000-an</div><div class="tl-dot"></div><div class="tl-card"><div class="tl-name">SOA</div><div class="tl-desc">Service-Oriented Architecture. Sistem dipecah menjadi layanan kecil yang bisa dipakai ulang oleh aplikasi lain.</div><div class="tl-tag">Layanan</div></div></div>
+        <div class="tl-item anim"><div class="tl-year">2010-an</div><div class="tl-dot"></div><div class="tl-card"><div class="tl-name">REST API</div><div class="tl-desc">API berbasis HTTP menjadi standar. Integrasi jauh lebih sederhana dan terbuka untuk pengembang di seluruh dunia.</div><div class="tl-tag">Standar</div></div></div>
+        <div class="tl-item anim"><div class="tl-year">2020-an</div><div class="tl-dot"></div><div class="tl-card"><div class="tl-name">Microservices</div><div class="tl-desc">Aplikasi dipecah menjadi banyak layanan kecil yang berkomunikasi lewat API dan message queue. Fleksibel namun kompleks.</div><div class="tl-tag">Modern</div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8. VISUALISASI -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="slide-header anim">
+        <span class="eyebrow">Visualisasi</span>
+        <h2>Tanpa Integrasi vs Dengan Integrasi</h2>
+        <p class="lead">Perhatikan perbedaan aliran data pada kedua gambar di bawah ini.</p>
+      </div>
+      <div class="compare">
+        <div class="compare-box red-side anim">
+          <div class="compare-head"><span class="dot red"></span><span>Tanpa Integrasi</span></div>
+          <svg viewBox="0 0 460 240" style="width:100%; height:auto;">
+            <rect x="15" y="40" width="180" height="90" rx="16" fill="#FEF2F2" stroke="#FCA5A5" stroke-width="2" class="fade-el" style="--d:1"/>
+            <text x="105" y="76" text-anchor="middle" font-size="16" font-weight="800" fill="#7F1D1D" font-family="Plus Jakarta Sans" class="fade-el" style="--d:2">Kasir</text>
+            <text x="105" y="102" text-anchor="middle" font-size="13" fill="#991B1B" font-family="Inter" class="fade-el" style="--d:3">Stok: 10 unit</text>
+            <rect x="265" y="40" width="180" height="90" rx="16" fill="#FEF2F2" stroke="#FCA5A5" stroke-width="2" class="fade-el" style="--d:4"/>
+            <text x="355" y="76" text-anchor="middle" font-size="16" font-weight="800" fill="#7F1D1D" font-family="Plus Jakarta Sans" class="fade-el" style="--d:5">Gudang</text>
+            <text x="355" y="102" text-anchor="middle" font-size="13" fill="#991B1B" font-family="Inter" class="fade-el" style="--d:6">Stok: 7 unit</text>
+            <line x1="195" y1="85" x2="265" y2="85" stroke="#DC2626" stroke-width="2.5" stroke-dasharray="6 6" class="draw-line"/>
+            <circle cx="230" cy="85" r="20" fill="#DC2626" class="fade-el" style="--d:8"/>
+            <text x="230" y="93" text-anchor="middle" font-size="24" fill="#fff" font-weight="900" class="fade-el" style="--d:9">×</text>
+            <text x="230" y="155" text-anchor="middle" font-size="13" fill="#991B1B" font-weight="700" font-family="Inter" class="fade-el" style="--d:10">data tidak tersambung</text>
+            <rect x="125" y="180" width="210" height="48" rx="10" fill="#FEF2F2" stroke="#FCA5A5" stroke-width="1.5" class="fade-el" style="--d:11"/>
+            <text x="230" y="210" text-anchor="middle" font-size="14" font-weight="800" fill="#B91C1C" font-family="Plus Jakarta Sans" class="fade-el" style="--d:12">Selisih 3 unit</text>
+          </svg>
+          <p>Setiap sistem menyimpan datanya sendiri. Data menjadi terpisah-pisah dan tidak dapat dipercaya.</p>
+        </div>
+        <div class="compare-box green-side anim">
+          <div class="compare-head"><span class="dot green"></span><span>Dengan Integrasi</span></div>
+          <svg viewBox="0 0 460 240" style="width:100%; height:auto;">
+            <rect x="15" y="40" width="180" height="90" rx="16" fill="#ECFDF5" stroke="#6EE7B7" stroke-width="2" class="fade-el" style="--d:1"/>
+            <text x="105" y="76" text-anchor="middle" font-size="16" font-weight="800" fill="#065F46" font-family="Plus Jakarta Sans" class="fade-el" style="--d:2">Kasir</text>
+            <text x="105" y="102" text-anchor="middle" font-size="13" fill="#047857" font-family="Inter" class="fade-el" style="--d:3">Stok: 7 unit</text>
+            <rect x="265" y="40" width="180" height="90" rx="16" fill="#ECFDF5" stroke="#6EE7B7" stroke-width="2" class="fade-el" style="--d:4"/>
+            <text x="355" y="76" text-anchor="middle" font-size="16" font-weight="800" fill="#065F46" font-family="Plus Jakarta Sans" class="fade-el" style="--d:5">Gudang</text>
+            <text x="355" y="102" text-anchor="middle" font-size="13" fill="#047857" font-family="Inter" class="fade-el" style="--d:6">Stok: 7 unit</text>
+            <line x1="195" y1="85" x2="265" y2="85" stroke="#059669" stroke-width="3.5" class="draw-line"/>
+            <circle cx="230" cy="85" r="16" fill="#059669" class="fade-el" style="--d:8"/>
+            <text x="230" y="92" text-anchor="middle" font-size="18" fill="#fff" font-weight="900" class="fade-el" style="--d:9">⇄</text>
+            <text x="230" y="155" text-anchor="middle" font-size="13" fill="#047857" font-weight="700" font-family="Inter" class="fade-el" style="--d:10">data tersinkronisasi</text>
+            <rect x="125" y="180" width="210" height="48" rx="10" fill="#ECFDF5" stroke="#6EE7B7" stroke-width="1.5" class="fade-el" style="--d:11"/>
+            <text x="230" y="210" text-anchor="middle" font-size="14" font-weight="800" fill="#047857" font-family="Plus Jakarta Sans" class="fade-el" style="--d:12">Selisih 0 unit</text>
+          </svg>
+          <p>Kedua sistem berbagi data yang sama. Angka stok selalu konsisten dan dapat dipercaya.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9. 5 MASALAH -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="slide-header anim">
+        <span class="eyebrow">Analisis</span>
+        <h2>Lima Masalah Aplikasi yang Berdiri Sendiri</h2>
+        <p class="lead">Inilah alasan utama mengapa integrasi menjadi kebutuhan, bukan sekadar pilihan teknis.</p>
+      </div>
+      <div class="grid-2">
+        <div class="card anim" style="border-left:5px solid #DC2626"><h3>1. Keterisolasian data</h3><p>Setiap aplikasi mengunci datanya sendiri. Satu divisi tidak dapat melihat data divisi lain secara langsung. Contoh: kasir tidak tahu stok riil gudang.</p></div>
+        <div class="card anim" style="border-left:5px solid #F97316"><h3>2. Efisiensi operasional rendah</h3><p>Pertukaran data dilakukan manual lewat lembar kerja (spreadsheet) atau surel. Memakan waktu, tenaga, dan rawan kesalahan manusia.</p></div>
+        <div class="card anim" style="border-left:5px solid #EAB308"><h3>3. Data tidak konsisten</h3><p>Karena dicatat berulang di banyak aplikasi, angka sering berbeda. Kasir mencatat 10 unit, gudang mencatat 7 unit.</p></div>
+        <div class="card anim" style="border-left:5px solid #0EA5E9"><h3>4. Duplikasi fungsi</h3><p>Fungsi seperti pencatatan pelanggan atau pajak dikerjakan di beberapa aplikasi sekaligus. Biaya pemeliharaan membengkak.</p></div>
+      </div>
+      <div class="card anim" style="border-left:5px solid #8B5CF6">
+        <h3>5. Dukungan keputusan yang lemah</h3>
+        <p>Manajemen butuh informasi menyeluruh dan waktu nyata (real-time, saat itu juga). Jika data tersebar di banyak aplikasi yang tidak terhubung, laporan menjadi lambat dan tidak lengkap.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10. ANATOMI -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="slide-header anim">
+        <span class="eyebrow green">Anatomi</span>
+        <h2>Bagaimana Satu Transaksi Mengalir</h2>
+        <p class="lead">Ketika integrasi bekerja, satu klik di kasir memicu serangkaian aksi otomatis di seluruh sistem. Ini contoh nyata dari toko sepatu.</p>
+      </div>
+      <div class="anatomy-flow">
+        <div class="an-step anim"><span class="an-num">STEP 1</span><div class="an-ico">🛒</div><div class="an-title">Kasir scan barcode</div><div class="an-desc">Pelanggan membeli sepatu. Kasir scan barcode, sistem POS mencatat transaksi.</div><div class="an-time">09:00:00</div></div>
+        <div class="an-step anim"><span class="an-num">STEP 2</span><div class="an-ico">📡</div><div class="an-title">POS kirim data ke API</div><div class="an-desc">Data transaksi dikirim ke API Gudang dalam format JSON, otomatis tanpa disentuh manusia.</div><div class="an-time">09:00:01</div></div>
+        <div class="an-step anim"><span class="an-num">STEP 3</span><div class="an-ico">📦</div><div class="an-title">Stok gudang berkurang</div><div class="an-desc">Gudang menerima data, langsung mengurangi stok sepatu. Angka di kedua sistem identik.</div><div class="an-time">09:00:02</div></div>
+        <div class="an-step anim"><span class="an-num">STEP 4</span><div class="an-ico">🔔</div><div class="an-title">Sistem deteksi stok rendah</div><div class="an-desc">Stok tinggal 3 unit. Sistem gudang otomatis menandai produk ini perlu dipesan ulang.</div><div class="an-time">09:00:03</div></div>
+        <div class="an-step anim"><span class="an-num">STEP 5</span><div class="an-ico">✉️</div><div class="an-title">PO otomatis terkirim</div><div class="an-desc">Sistem membuat pesanan pembelian (PO) ke pemasok tanpa diminta. Stok akan tiba minggu depan.</div><div class="an-time">09:00:04</div></div>
+      </div>
+      <div class="highlight anim">
+        <p><strong>Perhatikan:</strong> dari awal sampai akhir hanya butuh 4 detik. Yang tadinya memerlukan tiga orang berbeda dan bisa memakan waktu berjam-jam, kini terjadi otomatis.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11. KAPAN TIDAK PERLU -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="slide-header anim">
+        <span class="eyebrow">Keseimbangan</span>
+        <h2>Kapan Integrasi Tidak Perlu?</h2>
+        <p class="lead">Tidak semua sistem harus diintegrasikan. Ada tiga kondisi di mana integrasi justru tidak masuk akal, dan itu wajar.</p>
+      </div>
+      <div class="nn-grid">
+        <div class="nn-card anim">
+          <div class="nn-ico">🔒</div>
+          <div class="nn-title">Tidak ada data yang perlu dibagi</div>
+          <div class="nn-desc">Jika dua aplikasi benar-benar tidak pernah berbagi informasi, tidak ada alasan untuk menghubungkan mereka. Integrasi tanpa tujuan hanya menambah kerumitan.</div>
+          <div class="nn-example"><strong>Contoh</strong>Aplikasi absensi karyawan dan sistem monitoring suhu ruang server tidak perlu dihubungkan karena tidak ada data yang relevan untuk dibagi.</div>
+        </div>
+        <div class="nn-card anim">
+          <div class="nn-ico">🔀</div>
+          <div class="nn-title">Tidak ada proses bisnis yang saling bergantung</div>
+          <div class="nn-desc">Jika satu sistem berjalan tanpa perlu hasil dari sistem lain, integrasi tidak akan menambah nilai. Sistem yang benar-benar independen lebih baik dibiarkan sendiri.</div>
+          <div class="nn-example"><strong>Contoh</strong>Sistem penggajian dan sistem reservasi ruang rapat jarang saling membutuhkan. Mengintegrasikan keduanya hanya akan menambah beban tanpa manfaat jelas.</div>
+        </div>
+        <div class="nn-card anim">
+          <div class="nn-ico">⚖️</div>
+          <div class="nn-title">Biaya & risiko melebihi manfaat</div>
+          <div class="nn-desc">Integrasi memerlukan biaya pengembangan, waktu, dan risiko keamanan. Jika manfaat yang dihasilkan lebih kecil dari semua itu, lebih baik tidak diintegrasikan.</div>
+          <div class="nn-example"><strong>Contoh</strong>Mengintegrasikan sistem kasir toko kecil dengan sistem akuntansi cloud berbayar tinggi, padahal transaksi hanya 20 per hari, mungkin tidak sepadan.</div>
+        </div>
+      </div>
+      <div class="highlight anim">
+        <p><strong>Prinsip penting:</strong> integrasi adalah alat, bukan tujuan. Tanyakan selalu: masalah apa yang ingin diselesaikan, dan apakah integrasi benar-benar menyelesaikannya.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 12. LINTAS INDUSTRI -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="slide-header anim">
+        <span class="eyebrow">Lintas Industri · Simulasi</span>
+        <h2>Masalah Ini Terjadi di Semua Sektor</h2>
+        <p class="lead">Pilih industri, lalu lihat bagaimana pengalaman pengguna berubah ketika sistem diintegrasikan.</p>
+      </div>
+      <div class="ind-tabs anim" id="indTabs">
+        <button class="ind-tab active" data-ind="bank">🏦 Perbankan</button>
+        <button class="ind-tab" data-ind="hosp">🏥 Rumah Sakit</button>
+        <button class="ind-tab" data-ind="logi">🚚 Logistik</button>
+      </div>
+      <div class="ind-panel anim">
+        <div class="ind-story-col">
+          <span class="ind-story-badge bank" id="indBadge">Industri Perbankan</span>
+          <div class="ind-story-title" id="indTitle">Nasabah ingin lihat semua saldo sekaligus</div>
+          <div class="ind-story-desc" id="indDesc">Nasabah membuka aplikasi mobile banking dan berharap melihat saldo tabungan, tagihan kartu kredit, dan sisa pinjaman dalam satu layar.</div>
+          <div class="ind-toggle" id="indToggle">
+            <button class="active" data-mode="off">🔌 Tanpa Integrasi</button>
+            <button data-mode="on">🔗 Dengan Integrasi</button>
+          </div>
+          <div class="ind-status" id="indStatus">
+            <strong>Yang dialami pengguna</strong>
+            Nasabah harus membuka tiga aplikasi berbeda: satu untuk tabungan, satu untuk kartu kredit, satu untuk pinjaman. Membingungkan, melelahkan, dan sering kali data tidak sinkron.
+          </div>
+        </div>
+        <div class="ind-diagram">
+          <svg class="ind-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <line class="ind-line" id="ln1" x1="50" y1="50" x2="23" y2="14"/>
+            <line class="ind-line" id="ln2" x1="50" y1="50" x2="77" y2="14"/>
+            <line class="ind-line" id="ln3" x1="50" y1="50" x2="23" y2="86"/>
+            <line class="ind-line" id="ln4" x1="50" y1="50" x2="77" y2="86"/>
+          </svg>
+          <div class="ind-node n1" id="nd1"><div class="nd-ico">💰</div><div class="nd-txt"><div class="nd-name">Tabungan</div><div class="nd-sub" id="nd1sub">Terpisah</div></div></div>
+          <div class="ind-node n2" id="nd2"><div class="nd-ico">💳</div><div class="nd-txt"><div class="nd-name">Kartu Kredit</div><div class="nd-sub" id="nd2sub">Terpisah</div></div></div>
+          <div class="ind-node n3" id="nd3"><div class="nd-ico">🏦</div><div class="nd-txt"><div class="nd-name">Pinjaman</div><div class="nd-sub" id="nd3sub">Terpisah</div></div></div>
+          <div class="ind-node n4" id="nd4"><div class="nd-ico">👤</div><div class="nd-txt"><div class="nd-name">Profil</div><div class="nd-sub" id="nd4sub">Terpisah</div></div></div>
+          <div class="ind-hub" id="indHub"><span class="hub-ico" id="indHubIco">📱</span><span class="hub-label" id="indHubLabel">NASABAH</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 13. SIMULASI KASIR -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="slide-header anim">
+        <span class="eyebrow orange">Simulasi Interaktif</span>
+        <h2>Dua Aplikasi, Satu Alur Data</h2>
+        <p class="lead">Jalankan transaksi di KasirApp, lalu perhatikan apa yang terjadi di GudangApp. Bandingkan kedua mode.</p>
+      </div>
+      <div class="sim-wrap anim">
+        <div class="sim-toolbar">
+          <div class="sim-title"><span class="sim-title-dot"></span><span>LIVE SIMULATION</span></div>
+          <div class="sim-mode" id="modeSwitch">
+            <button class="mode-btn active" data-mode="off"><span class="mdot"></span> Tanpa Integrasi</button>
+            <button class="mode-btn" data-mode="on"><span class="mdot"></span> Dengan Integrasi</button>
+          </div>
+          <button class="sim-reset" id="btnReset">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+            Reset
+          </button>
+        </div>
+        <div class="sim-apps">
+          <div class="app-window">
+            <div class="app-chrome"><div class="chrome-dots"><span></span><span></span><span></span></div><div class="chrome-title">KasirApp — Point of Sale</div></div>
+            <div class="app-tabs"><div class="app-tab active">Katalog Produk</div><div class="app-tab">Riwayat</div><div class="app-tab">Laporan</div></div>
+            <div class="app-body" id="posBody"></div>
+            <div class="app-statusbar"><span id="posStatus">● MANDIRI</span><span id="posCount">3 produk</span></div>
+          </div>
+          <div class="connector">
+            <div class="conn-badge" id="connLabel">TERPUTUS</div>
+            <div class="conn-rail" id="connRail"><div class="conn-packet"></div><div class="conn-packet p2"></div></div>
+            <div class="conn-badge" id="connLabel2">OFFLINE</div>
+          </div>
+          <div class="app-window">
+            <div class="app-chrome"><div class="chrome-dots"><span></span><span></span><span></span></div><div class="chrome-title">GudangApp — Inventory System</div></div>
+            <div class="app-tabs"><div class="app-tab active">Stok Gudang</div><div class="app-tab">Masuk</div><div class="app-tab">Keluar</div></div>
+            <div class="app-body" id="whBody"></div>
+            <div class="app-statusbar"><span id="whStatus">● MANDIRI</span><span id="whCount">3 produk</span></div>
+          </div>
+        </div>
+        <div class="sim-log" id="simLog"><div class="l-dim">// Sistem siap. Silakan jalankan transaksi pada KasirApp.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 14. STUDI KASUS -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="slide-header anim">
+        <span class="eyebrow">Studi Kasus</span>
+        <h2>Toko Ritel Sepatu yang Mengalami Selisih Stok</h2>
+        <p class="lead">Sebuah kasus umum di industri ritel: dua aplikasi berjalan sendiri-sendiri, dan data stok menjadi tidak dapat dipercaya.</p>
+      </div>
+      <div class="grid-3">
+        <div class="card anim" style="border-top:5px solid #DC2626"><div class="card-ico r">⚠️</div><h3>Masalah</h3><p>Aplikasi kasir dan aplikasi gudang berjalan terpisah. Penghitungan stok fisik (stock opname) dan pembuatan pesanan pembelian (purchase order, PO) masih dilakukan manual memakai lembar kerja.</p></div>
+        <div class="card anim" style="border-top:5px solid #D97706"><div class="card-ico y">📉</div><h3>Dampak</h3><p>Stok di kasir tidak sesuai kondisi gudang secara waktu nyata. Selisih stok signifikan, pencatatan rumit, dan keputusan pemesanan tidak berdasar data yang valid.</p></div>
+        <div class="card anim" style="border-top:5px solid #059669"><div class="card-ico g">✅</div><h3>Solusi</h3><p>Aplikasi kasir (Point of Sale, POS) diintegrasikan dengan manajemen inventaris. Data penjualan dan stok menyatu secara waktu nyata.</p></div>
+      </div>
+      <div class="highlight anim stat-block">
+        <div class="stat-big"><span class="countup" data-target="82.67" data-decimals="2">0,00</span>%</div>
+        <div style="flex:1; min-width:240px">
+          <strong style="font-size:var(--fs-h3); display:block; margin-bottom:0.35rem">Tingkat kepuasan pengguna</strong>
+          <p style="font-size:var(--fs-sm); color:var(--muted); line-height:1.55">Diukur setelah sistem terintegrasi digunakan. Angka ini menunjukkan bahwa integrasi bukan hanya soal teknis, tetapi berdampak langsung pada kenyamanan kerja dan kualitas keputusan bisnis.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 15. SENTIMEN -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="slide-header anim">
+        <span class="eyebrow">Perluasan</span>
+        <h2>Integrasi Sistem dan Analisis Sentimen</h2>
+        <p class="lead">Integrasi juga membuka peluang baru, misalnya membaca emosi pelanggan secara otomatis dan waktu nyata.</p>
+      </div>
+      <div class="grid-2">
+        <div class="card anim" style="border-left:5px solid #6D28D9">
+          <div class="card-ico">💬</div><h3>Dasbor Layanan Pelanggan Berbasis LLM</h3>
+          <p>Penelitian tahun 2026 mengembangkan kerangka kerja untuk mengintegrasikan analisis sentimen berbasis <em>Large Language Model</em> (LLM, model bahasa besar) ke dalam papan pantau (dashboard) layanan pelanggan.</p>
+          <p style="margin-top:0.8rem">Tujuannya memantau umpan balik pelanggan secara cerdas dan waktu nyata, mengatasi keterbatasan papan pantau tradisional yang belum mampu membaca emosi pelanggan secara otomatis.</p>
+        </div>
+        <div class="card anim" style="border-left:5px solid #059669">
+          <div class="card-ico g">⚡</div><h3>Alur Pemrosesan Sentimen Waktu Nyata</h3>
+          <p>Artikel IEEE tahun 2025 mengusulkan alur pemrosesan (pipeline) analisis sentimen waktu nyata untuk umpan balik pelanggan.</p>
+          <p style="margin-top:0.8rem">Sistem ini mengintegrasikan model pembelajaran mesin (machine learning) canggih di dalam kontainer Docker untuk memproses aliran data langsung dalam skala besar.</p>
+        </div>
+      </div>
+      <div class="highlight anim">
+        <p><strong>Pelajaran penting:</strong> kedua penelitian ini menunjukkan bahwa integrasi sistem adalah fondasi. Tanpa integrasi, analisis sentimen waktu nyata tidak mungkin dilakukan karena data pelanggan tersebar di banyak kanal yang terpisah.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 16. SIAPA TERLIBAT -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="slide-header anim">
+        <span class="eyebrow">Tim</span>
+        <h2>Siapa Saja yang Terlibat dalam Integrasi?</h2>
+        <p class="lead">Integrasi bukan pekerjaan satu orang. Ada empat peran utama yang bekerja bersama dari perencanaan sampai operasional.</p>
+      </div>
+      <div class="roles-grid">
+        <div class="role-card r1 anim"><div class="role-ico">👔</div><div class="role-title">Manajer Bisnis</div><div class="role-desc">Menentukan tujuan dan prioritas integrasi. Memutuskan sistem mana yang perlu dihubungkan lebih dulu berdasarkan kebutuhan bisnis.</div><ul class="role-tasks"><li>Menetapkan prioritas proyek</li><li>Menyetujui anggaran</li><li>Menilai dampak bisnis</li></ul></div>
+        <div class="role-card r2 anim"><div class="role-ico">🔍</div><div class="role-title">Analis Sistem</div><div class="role-desc">Memetakan alur data dan proses bisnis. Menentukan titik integrasi dan menyusun kontrak data yang disepakati semua tim.</div><ul class="role-tasks"><li>Memetakan proses antar sistem</li><li>Merancang alur data</li><li>Menyusun spesifikasi API</li></ul></div>
+        <div class="role-card r3 anim"><div class="role-ico">💻</div><div class="role-title">Pengembang Backend</div><div class="role-desc">Membangun API dan endpoint yang menghubungkan sistem. Menulis kode yang memastikan data mengalir dengan benar dan aman.</div><ul class="role-tasks"><li>Membangun REST API</li><li>Menulis dokumentasi endpoint</li><li>Menguji alur data</li></ul></div>
+        <div class="role-card r4 anim"><div class="role-ico">🛡️</div><div class="role-title">Tim Keamanan Data</div><div class="role-desc">Mengatur siapa yang boleh mengakses data, untuk keperluan apa, dan bagaimana jejak audit dicatat. Melindungi data sensitif.</div><ul class="role-tasks"><li>Menetapkan kebijakan akses</li><li>Audit lalu lintas data</li><li>Uji kerentanan API</li></ul></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 17. DRAG AND DROP -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="slide-header anim">
+        <span class="eyebrow orange">Latihan Interaktif</span>
+        <h2>Klasifikasikan: Masalah atau Manfaat?</h2>
+        <p class="lead">Tarik setiap kartu ke kolom yang tepat. Setiap kartu bisa jadi masalah aplikasi mandiri atau manfaat integrasi.</p>
+      </div>
+      <div class="dd-tray anim" id="ddTray">
+        <div class="dd-card" draggable="true" data-answer="masalah">Data sering tidak sinkron antar aplikasi</div>
+        <div class="dd-card" draggable="true" data-answer="manfaat">Stok bisa dicek secara waktu nyata</div>
+        <div class="dd-card" draggable="true" data-answer="masalah">Karyawan harus menyalin data manual</div>
+        <div class="dd-card" draggable="true" data-answer="manfaat">Keputusan bisa diambil lebih cepat</div>
+        <div class="dd-card" draggable="true" data-answer="masalah">Biaya operasional membengkak</div>
+        <div class="dd-card" draggable="true" data-answer="manfaat">Laporan lebih akurat dan lengkap</div>
+        <div class="dd-card" draggable="true" data-answer="masalah">Pelanggan komplain karena data berbeda</div>
+        <div class="dd-card" draggable="true" data-answer="manfaat">Efisiensi kerja meningkat</div>
+      </div>
+      <div class="dd-columns anim">
+        <div class="dd-col" data-col="masalah"><div class="dd-col-head">⚠️ Masalah Aplikasi Mandiri</div><div class="dd-col-body" id="ddColMasalah"><div class="dd-col-empty">Tarik kartu ke sini</div></div></div>
+        <div class="dd-col" data-col="manfaat"><div class="dd-col-head">✅ Manfaat Integrasi</div><div class="dd-col-body" id="ddColManfaat"><div class="dd-col-empty">Tarik kartu ke sini</div></div></div>
+      </div>
+      <div class="dd-score anim">
+        <div class="dd-score-text">Benar: <span id="ddCorrect">0</span> dari 8 kartu</div>
+        <button class="dd-reset" id="ddReset">Ulangi</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 18. SKENARIO -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="slide-header anim">
+        <span class="eyebrow">Latihan Skenario</span>
+        <h2>Ambil Keputusan sebagai Manajer</h2>
+        <p class="lead">Setiap skenario punya satu jawaban paling tepat. Setiap pilihan punya penjelasan mengapa benar atau mengapa kurang tepat.</p>
+      </div>
+      <div class="scenario-container">
+        <div class="scenario anim" data-scenario>
+          <div class="sc-badge">🎯 Skenario 1 · Operasional Harian</div>
+          <div class="sc-title">Anda manajer sebuah toko. Setiap pagi, staf harus menyalin data penjualan dari mesin kasir ke buku besar, lalu mencatat ulang stok ke buku gudang. Proses ini memakan waktu dua jam dan sering salah.</div>
+          <div class="sc-opts">
+            <button class="sc-opt" data-correct="false" data-explain="Menambah staf memang mempercepat pekerjaan, tetapi akar masalahnya adalah proses manual itu sendiri. Selama data masih disalin dengan tangan, kesalahan manusia tetap akan terjadi, dan biaya gaji bertambah tanpa menghentikan masalah."><div class="sc-opt-head"><span class="letter">A</span><span>Menambah staf khusus untuk mempercepat penyalinan data.</span></div><div class="sc-opt-explain"><span class="ex-ico">✗</span><span>Menambah staf hanya menambal gejala, bukan menyembuhkan akar masalah.</span></div></button>
+            <button class="sc-opt" data-correct="true"><div class="sc-opt-head"><span class="letter">B</span><span>Mengintegrasikan kasir dan gudang agar data mengalir otomatis.</span></div><div class="sc-opt-explain"><span class="ex-ico">✓</span><span>Tepat. Ini menghapus pekerjaan manual dan mencegah kesalahan sejak sumbernya.</span></div></button>
+            <button class="sc-opt" data-correct="false" data-explain="Mengganti seluruh sistem terlalu berlebihan. Sistem lama masih berfungsi, hanya perlu dihubungkan. Mengganti semuanya berarti biaya besar, waktu pelatihan ulang, dan risiko gangguan operasional yang tidak perlu."><div class="sc-opt-head"><span class="letter">C</span><span>Mengganti seluruh sistem dengan sistem yang baru.</span></div><div class="sc-opt-explain"><span class="ex-ico">✗</span><span>Solusi terlalu besar untuk masalah yang bisa diselesaikan dengan integrasi.</span></div></button>
+          </div>
+        </div>
+        <div class="scenario anim" data-scenario>
+          <div class="sc-badge">🎯 Skenario 2 · Privasi Data</div>
+          <div class="sc-title">Sebuah klinik ingin menggabungkan data pasien dari tiga cabang. Namun data pasien bersifat sensitif. Apa langkah paling tepat sebelum menggabungkan?</div>
+          <div class="sc-opts">
+            <button class="sc-opt" data-correct="false" data-explain="Langsung menggabungkan data tanpa aturan akses sangat berbahaya. Data medis adalah data paling sensitif. Jika semua staf bisa melihat semua riwayat pasien tanpa batasan, pelanggaran privasi bisa terjadi dan klinik bisa terkena sanksi hukum."><div class="sc-opt-head"><span class="letter">A</span><span>Langsung menggabungkan semua data agar cepat selesai.</span></div><div class="sc-opt-explain"><span class="ex-ico">✗</span><span>Mengabaikan tata kelola data adalah kesalahan besar pada data sensitif.</span></div></button>
+            <button class="sc-opt" data-correct="true"><div class="sc-opt-head"><span class="letter">B</span><span>Menyusun aturan siapa yang berhak mengakses data dan untuk apa.</span></div><div class="sc-opt-explain"><span class="ex-ico">✓</span><span>Tepat. Tata kelola data adalah fondasi sebelum integrasi pada data sensitif.</span></div></button>
+            <button class="sc-opt" data-correct="false" data-explain="Membiarkan tiap cabang memakai sistem sendiri berarti menghindari masalah, bukan menyelesaikannya. Pasien tetap kesulitan ketika berpindah cabang, riwayat medis tetap terpisah, dan risiko salah diagnosis tetap ada."><div class="sc-opt-head"><span class="letter">C</span><span>Membiarkan tiap cabang memakai sistem sendiri tanpa integrasi.</span></div><div class="sc-opt-explain"><span class="ex-ico">✗</span><span>Menghindari masalah bukanlah menyelesaikannya. Pasien tetap tidak terlayani optimal.</span></div></button>
+          </div>
+        </div>
+        <div class="scenario anim" data-scenario>
+          <div class="sc-badge">🎯 Skenario 3 · Manajemen Perubahan</div>
+          <div class="sc-title">Sebuah perusahaan memutuskan mengintegrasikan lima aplikasi sekaligus dalam satu bulan. Setelah dua minggu, banyak data kacau dan staf kebingungan. Apa yang salah?</div>
+          <div class="sc-opts">
+            <button class="sc-opt" data-correct="false" data-explain="Pernyataan ini terlalu pesimistis. Banyak perusahaan berhasil mengintegrasikan puluhan aplikasi. Yang membedakan bukan besar kecilnya perusahaan, melainkan kualitas perencanaan dan eksekusi bertahapnya."><div class="sc-opt-head"><span class="letter">A</span><span>Integrasi memang tidak pernah berhasil di perusahaan besar.</span></div><div class="sc-opt-explain"><span class="ex-ico">✗</span><span>Ini kesimpulan yang salah. Masalahnya bukan pada integrasi, tapi pada cara mengerjakannya.</span></div></button>
+            <button class="sc-opt" data-correct="false" data-explain="Teknologi canggih tidak akan menolong jika tidak ada perencanaan. Bahkan alat terbaik akan menghasilkan kekacauan jika diterapkan tanpa kontrak data yang jelas dan tanpa uji coba bertahap."><div class="sc-opt-head"><span class="letter">B</span><span>Harusnya memakai teknologi yang lebih canggih.</span></div><div class="sc-opt-explain"><span class="ex-ico">✗</span><span>Teknologi bukan masalah utama. Perencanaanlah yang menentukan keberhasilan.</span></div></button>
+            <button class="sc-opt" data-correct="true"><div class="sc-opt-head"><span class="letter">C</span><span>Integrasi dilakukan tanpa perencanaan bertahap dan tanpa kontrak data yang jelas.</span></div><div class="sc-opt-explain"><span class="ex-ico">✓</span><span>Tepat. Ini akar masalahnya, dan ini yang akan kita pelajari detailnya di Minggu 4.</span></div></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 19. KUIS KILAT -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="slide-header anim">
+        <span class="eyebrow green">Kuis Kilat</span>
+        <h2>Benar atau Salah?</h2>
+        <p class="lead">Lima pernyataan. Tentukan benar atau salah, lalu baca penjelasan singkatnya.</p>
+      </div>
+      <div class="tf-grid" id="tfGrid">
+        <div class="tf-item anim" data-answer="false" data-explain="Salah. Tidak semua aplikasi harus diintegrasikan. Jika tidak ada data yang perlu dibagi, atau manfaatnya lebih kecil dari biayanya, integrasi justru merugikan.">
+          <div class="tf-text"><span class="tf-num">1</span><span>Semua aplikasi harus selalu diintegrasikan, tanpa kecuali.</span></div>
+          <div class="tf-buttons"><button class="tf-btn" data-val="true">Benar</button><button class="tf-btn" data-val="false">Salah</button></div>
+          <div class="tf-explain"></div>
+        </div>
+        <div class="tf-item anim" data-answer="true" data-explain="Benar. Integrasi memerlukan investasi awal berupa waktu, tenaga pengembang, dan biaya infrastruktur. Yang perlu diperhatikan adalah manfaat jangka panjangnya harus lebih besar dari investasi tersebut.">
+          <div class="tf-text"><span class="tf-num">2</span><span>Integrasi memerlukan investasi awal berupa waktu, tenaga, dan biaya.</span></div>
+          <div class="tf-buttons"><button class="tf-btn" data-val="true">Benar</button><button class="tf-btn" data-val="false">Salah</button></div>
+          <div class="tf-explain"></div>
+        </div>
+        <div class="tf-item anim" data-answer="false" data-explain="Salah. Integrasi bisa menurunkan biaya operasional jangka panjang, tetapi tidak otomatis. Tanpa perencanaan yang matang, integrasi justru bisa menambah biaya karena sistem menjadi lebih rumit.">
+          <div class="tf-text"><span class="tf-num">3</span><span>Integrasi selalu menurunkan biaya operasional secara otomatis.</span></div>
+          <div class="tf-buttons"><button class="tf-btn" data-val="true">Benar</button><button class="tf-btn" data-val="false">Salah</button></div>
+          <div class="tf-explain"></div>
+        </div>
+        <div class="tf-item anim" data-answer="true" data-explain="Benar. Inilah salah satu masalah utama aplikasi yang berdiri sendiri. Karena setiap sistem mencatat data sendiri, sering terjadi perbedaan angka. Integrasi menyatukan sumber data.">
+          <div class="tf-text"><span class="tf-num">4</span><span>Tanpa integrasi, data di satu aplikasi bisa berbeda dengan aplikasi lain.</span></div>
+          <div class="tf-buttons"><button class="tf-btn" data-val="true">Benar</button><button class="tf-btn" data-val="false">Salah</button></div>
+          <div class="tf-explain"></div>
+        </div>
+        <div class="tf-item anim" data-answer="false" data-explain="Salah. Integrasi relevan untuk semua skala organisasi. Toko kecil pun bisa mendapat manfaat besar dari integrasi kasir dan gudang. Yang menentukan bukan ukuran perusahaan.">
+          <div class="tf-text"><span class="tf-num">5</span><span>Integrasi hanya cocok untuk perusahaan besar dengan banyak divisi.</span></div>
+          <div class="tf-buttons"><button class="tf-btn" data-val="true">Benar</button><button class="tf-btn" data-val="false">Salah</button></div>
+          <div class="tf-explain"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 20. PATTERN PREVIEW -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="slide-header anim">
+        <span class="eyebrow orange">Sneak Peek Minggu 2</span>
+        <h2>Bagaimana Sistem Diintegrasikan?</h2>
+        <p class="lead">Minggu ini kita tahu <em>mengapa</em>. Minggu depan kita pelajari <em>bagaimana</em>. Ada tiga pola besar yang akan kita bandingkan.</p>
+      </div>
+      <div class="pattern-grid">
+        <div class="pattern-card p1 anim">
+          <div class="pt-num">Pola 1</div>
+          <div class="pt-title">Point-to-Point</div>
+          <div class="pt-desc">Setiap aplikasi terhubung langsung ke aplikasi lain. Sederhana untuk dua aplikasi, tetapi rumit jika aplikasi bertambah.</div>
+          <svg class="pt-svg" viewBox="0 0 200 100">
+            <line x1="44" y1="22" x2="156" y2="22" stroke="#06B6D4" stroke-width="1.8"/>
+            <line x1="44" y1="22" x2="156" y2="78" stroke="#06B6D4" stroke-width="1.8"/>
+            <line x1="44" y1="78" x2="156" y2="22" stroke="#06B6D4" stroke-width="1.8"/>
+            <line x1="44" y1="78" x2="156" y2="78" stroke="#06B6D4" stroke-width="1.8"/>
+            <circle cx="30" cy="22" r="14" fill="#CFFAFE" stroke="#06B6D4" stroke-width="2"/>
+            <circle cx="30" cy="78" r="14" fill="#CFFAFE" stroke="#06B6D4" stroke-width="2"/>
+            <circle cx="170" cy="22" r="14" fill="#CFFAFE" stroke="#06B6D4" stroke-width="2"/>
+            <circle cx="170" cy="78" r="14" fill="#CFFAFE" stroke="#06B6D4" stroke-width="2"/>
+          </svg>
+          <div class="pt-pro"><div class="pt-line pro"><span class="pt-ico">✓</span><span>Mudah dibangun untuk dua aplikasi</span></div><div class="pt-line con"><span class="pt-ico">✗</span><span>Rumit jika aplikasi banyak</span></div></div>
+        </div>
+        <div class="pattern-card p2 anim">
+          <div class="pt-num">Pola 2</div>
+          <div class="pt-title">Hub-and-Spoke</div>
+          <div class="pt-desc">Semua aplikasi terhubung ke satu perantara pusat. Lebih rapi, tetapi perantara harus sangat andal.</div>
+          <svg class="pt-svg" viewBox="0 0 200 100">
+            <line x1="42" y1="26" x2="85" y2="44" stroke="#6D28D9" stroke-width="1.8"/>
+            <line x1="42" y1="74" x2="85" y2="56" stroke="#6D28D9" stroke-width="1.8"/>
+            <line x1="158" y1="26" x2="115" y2="44" stroke="#6D28D9" stroke-width="1.8"/>
+            <line x1="158" y1="74" x2="115" y2="56" stroke="#6D28D9" stroke-width="1.8"/>
+            <circle cx="100" cy="50" r="18" fill="#EDE4FF" stroke="#6D28D9" stroke-width="2.2"/>
+            <text x="100" y="55" text-anchor="middle" font-size="10" font-weight="800" fill="#6D28D9" font-family="Plus Jakarta Sans">HUB</text>
+            <circle cx="30" cy="22" r="13" fill="#F3EEFF" stroke="#6D28D9" stroke-width="1.8"/>
+            <circle cx="30" cy="78" r="13" fill="#F3EEFF" stroke="#6D28D9" stroke-width="1.8"/>
+            <circle cx="170" cy="22" r="13" fill="#F3EEFF" stroke="#6D28D9" stroke-width="1.8"/>
+            <circle cx="170" cy="78" r="13" fill="#F3EEFF" stroke="#6D28D9" stroke-width="1.8"/>
+          </svg>
+          <div class="pt-pro"><div class="pt-line pro"><span class="pt-ico">✓</span><span>Rapi untuk banyak aplikasi</span></div><div class="pt-line con"><span class="pt-ico">✗</span><span>Perantara harus sangat andal</span></div></div>
+        </div>
+        <div class="pattern-card p3 anim">
+          <div class="pt-num">Pola 3</div>
+          <div class="pt-title">Service Bus</div>
+          <div class="pt-desc">Semua aplikasi berbagi satu jalur utama. Paling fleksibel, tetapi paling rumit untuk diatur dan dijaga.</div>
+          <svg class="pt-svg" viewBox="0 0 200 100">
+            <line x1="40" y1="31" x2="40" y2="44" stroke="#FF4D00" stroke-width="1.8"/>
+            <line x1="100" y1="31" x2="100" y2="44" stroke="#FF4D00" stroke-width="1.8"/>
+            <line x1="160" y1="31" x2="160" y2="44" stroke="#FF4D00" stroke-width="1.8"/>
+            <line x1="70" y1="58" x2="70" y2="69" stroke="#FF4D00" stroke-width="1.8"/>
+            <line x1="130" y1="58" x2="130" y2="69" stroke="#FF4D00" stroke-width="1.8"/>
+            <rect x="10" y="44" width="180" height="14" rx="7" fill="#FFEDE4" stroke="#FF4D00" stroke-width="2"/>
+            <circle cx="40" cy="20" r="11" fill="#FFEDE4" stroke="#FF4D00" stroke-width="1.8"/>
+            <circle cx="100" cy="20" r="11" fill="#FFEDE4" stroke="#FF4D00" stroke-width="1.8"/>
+            <circle cx="160" cy="20" r="11" fill="#FFEDE4" stroke="#FF4D00" stroke-width="1.8"/>
+            <circle cx="70" cy="80" r="11" fill="#FFEDE4" stroke="#FF4D00" stroke-width="1.8"/>
+            <circle cx="130" cy="80" r="11" fill="#FFEDE4" stroke="#FF4D00" stroke-width="1.8"/>
+          </svg>
+          <div class="pt-pro"><div class="pt-line pro"><span class="pt-ico">✓</span><span>Paling fleksibel dan skalabel</span></div><div class="pt-line con"><span class="pt-ico">✗</span><span>Paling rumit untuk diatur</span></div></div>
+        </div>
+      </div>
+      <div class="highlight anim">
+        <p><strong>Yang akan kita pelajari Minggu 2:</strong> kapan sebaiknya memakai point-to-point, kapan memakai hub, dan kapan memakai service bus. Tiga pola ini punya kelebihan dan kekurangan masing-masing.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 21. REFLEKSI -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="slide-header anim">
+        <span class="eyebrow">Refleksi Terbuka</span>
+        <h2>5 Pertanyaan untuk Anda Pikirkan</h2>
+        <p class="lead">Tidak ada jawaban benar atau salah. Renungkan, lalu bagikan pendapat Anda di kelas.</p>
+      </div>
+      <div class="reflect-grid">
+        <div class="reflect-card anim"><div class="reflect-num">1</div><div class="reflect-text">Menurut Anda, mengapa masih banyak organisasi yang memakai aplikasi terpisah-pisah padahal mereka tahu itu bermasalah?</div></div>
+        <div class="reflect-card anim"><div class="reflect-num">2</div><div class="reflect-text">Kalau Anda menjadi manajer sebuah toko, langkah pertama apa yang akan Anda ambil untuk memperbaiki data yang tidak konsisten?</div></div>
+        <div class="reflect-card anim"><div class="reflect-num">3</div><div class="reflect-text">Apa risiko yang mungkin muncul jika dua sistem dipaksa terintegrasi tanpa persiapan yang matang?</div></div>
+        <div class="reflect-card anim"><div class="reflect-num">4</div><div class="reflect-text">Sistem apa di sekitar Anda (kantin, perpustakaan, toko, layanan kampus) yang menurut Anda paling butuh integrasi? Mengapa?</div></div>
+        <div class="reflect-card full anim"><div class="reflect-num">5</div><div class="reflect-text">Bayangkan Anda memiliki aplikasi kasir sederhana untuk sebuah toko roti. Aplikasi itu menyimpan <em>nama pelanggan, nomor telepon, riwayat pembelian, dan catatan khusus (misalnya alergi)</em>. Jika aplikasi ini dihubungkan ke aplikasi keuangan toko, data apa yang layak dibagikan dan data apa yang sebaiknya tetap di dalam aplikasi kasir saja? Mengapa?</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 22. KESIMPULAN -->
+  <section class="slide">
+    <div class="slide-inner">
+      <div class="slide-header anim">
+        <span class="eyebrow green">Penutup</span>
+        <h2>Kesimpulan dan Jembatan ke Minggu 2</h2>
+      </div>
+      <div class="grid-2">
+        <div class="card anim" style="border-left:5px solid #059669">
+          <div class="card-ico g">📌</div>
+          <h3>Kesimpulan Minggu 1</h3>
+          <p>Integrasi sistem adalah penghubung antar aplikasi agar data dan proses dapat berjalan bersama. Aplikasi yang berdiri sendiri menimbulkan lima masalah utama: keterisolasian data, efisiensi rendah, data tidak konsisten, duplikasi fungsi, dan dukungan keputusan yang lemah.</p>
+          <p style="margin-top:0.6rem">Namun integrasi bukan tujuan. Ia adalah alat. Ada kalanya integrasi tidak diperlukan, misalnya ketika tidak ada data yang perlu dibagi atau ketika manfaatnya tidak sebanding dengan biayanya.</p>
+        </div>
+        <div class="card anim" style="border-left:5px solid #FF4D00">
+          <div class="card-ico o">🚀</div>
+          <h3>Jembatan ke Minggu 2</h3>
+          <p>Minggu ini kita sudah tahu <strong>mengapa</strong> sistem perlu diintegrasikan dan <strong>kapan</strong> integrasi tidak diperlukan. Minggu depan kita mempelajari <strong>bagaimana</strong> caranya, yaitu melalui tiga pola integrasi: point-to-point, hub-and-spoke, dan service bus.</p>
+          <p style="margin-top:0.6rem">Setiap pola punya kelebihan dan kekurangan. Memilih pola yang tepat adalah keterampilan yang akan Anda latih sepanjang semester.</p>
+        </div>
+      </div>
+      <div class="highlight anim">
+        <p><strong>Sebelum pertemuan berikutnya:</strong> pikirkan dua aplikasi yang Anda kenal (bisa aplikasi toko, kampus, atau layanan yang Anda pakai). Catat data apa yang mereka punya, dan data apa yang menurut Anda perlu dibagikan ke aplikasi lain. Catatan ini akan menjadi bahan diskusi dan latihan di Minggu 2.</p>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div class="controls">
+  <button class="nav-btn" id="prevBtn" aria-label="Sebelumnya">‹</button>
+  <div class="dots" id="dots"></div>
+  <span class="counter" id="counter">1 / 22</span>
+  <button class="nav-btn" id="nextBtn" aria-label="Berikutnya">›</button>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  const slides = Array.from(document.querySelectorAll(".slide"));
+  const dotsWrap = document.getElementById("dots");
+  const counter = document.getElementById("counter");
+  const topFill = document.getElementById("topFill");
+  const prevBtn = document.getElementById("prevBtn");
+  const nextBtn = document.getElementById("nextBtn");
+  let current = 0;
+
+  slides.forEach((_, i) => {
+    const b = document.createElement("button");
+    b.setAttribute("aria-label", "Ke slide " + (i + 1));
+    b.addEventListener("click", () => goTo(i));
+    dotsWrap.appendChild(b);
+  });
+  const dots = Array.from(dotsWrap.children);
+
+  function goTo(index) {
+    if (index < 0 || index >= slides.length) return;
+    slides[current].classList.remove("active");
+    dots[current].classList.remove("active");
+    current = index;
+    slides[current].classList.add("active");
+    dots[current].classList.add("active");
+    slides[current].scrollTop = 0;
+    updateChrome();
+    triggerSlideEffects(current);
+  }
+  function updateChrome() {
+    counter.textContent = (current + 1) + " / " + slides.length;
+    topFill.style.width = ((current + 1) / slides.length * 100) + "%";
+    prevBtn.disabled = current === 0;
+    nextBtn.disabled = current === slides.length - 1;
+  }
+  prevBtn.addEventListener("click", () => goTo(current - 1));
+  nextBtn.addEventListener("click", () => goTo(current + 1));
+  document.addEventListener("keydown", (e) => {
+    if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+    if (e.key === "ArrowRight" || e.key === "PageDown") { e.preventDefault(); goTo(current + 1); }
+    if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); goTo(current - 1); }
+    if (e.key === "Home") { e.preventDefault(); goTo(0); }
+    if (e.key === "End") { e.preventDefault(); goTo(slides.length - 1); }
+  });
+
+  function triggerSlideEffects(idx) {
+    const slide = slides[idx];
+    const counters = slide.querySelectorAll(".countup");
+    counters.forEach((el) => {
+      const target = parseFloat(el.dataset.target);
+      const decimals = parseInt(el.dataset.decimals || "0", 10);
+      const duration = 1400;
+      const start = performance.now();
+      function step(now) {
+        const elapsed = now - start;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const value = target * eased;
+        el.textContent = value.toFixed(decimals).replace(".", ",");
+        if (progress < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    });
+  }
+
+  document.querySelectorAll(".flip").forEach((card) => {
+    card.addEventListener("click", () => card.classList.toggle("flipped"));
+  });
+
+  const INDUSTRIES = {
+    bank: { badge: "Industri Perbankan", badgeClass: "bank", title: "Nasabah ingin lihat semua saldo sekaligus", desc: "Nasabah membuka aplikasi mobile banking dan berharap melihat saldo tabungan, tagihan kartu kredit, dan sisa pinjaman dalam satu layar.", hubIco: "📱", hubLabel: "NASABAH", nodes: [
+      { ico: "💰", name: "Tabungan", subOff: "Terpisah", subOn: "Tersinkron" },
+      { ico: "💳", name: "Kartu Kredit", subOff: "Terpisah", subOn: "Tersinkron" },
+      { ico: "🏦", name: "Pinjaman", subOff: "Terpisah", subOn: "Tersinkron" },
+      { ico: "👤", name: "Profil", subOff: "Terpisah", subOn: "Tersinkron" }
+    ], storyOff: "Nasabah harus membuka tiga aplikasi berbeda: satu untuk tabungan, satu untuk kartu kredit, satu untuk pinjaman. Membingungkan, melelahkan, dan sering kali data tidak sinkron.", storyOn: "Semua saldo, tagihan, dan sisa pinjaman tampil dalam satu aplikasi mobile banking. Nasabah dapat memantau kondisi keuangan dan mengambil keputusan lebih cepat." },
+    hosp: { badge: "Industri Kesehatan", badgeClass: "hosp", title: "Dokter butuh riwayat pasien yang lengkap", desc: "Seorang dokter memeriksa pasien baru dan perlu melihat riwayat penyakit, hasil laboratorium, dan resep obat yang pernah diberikan, semua dalam waktu singkat.", hubIco: "🩺", hubLabel: "DOKTER", nodes: [
+      { ico: "📋", name: "Rekam Medis", subOff: "Terpisah", subOn: "Tersinkron" },
+      { ico: "🧪", name: "Laboratorium", subOff: "Terpisah", subOn: "Tersinkron" },
+      { ico: "💊", name: "Farmasi", subOff: "Terpisah", subOn: "Tersinkron" },
+      { ico: "💳", name: "Kasir", subOff: "Terpisah", subOn: "Tersinkron" }
+    ], storyOff: "Dokter harus membuka sistem rekam medis, lalu berpindah ke sistem laboratorium, lalu ke sistem farmasi. Diagnosis lambat, dan risiko kesalahan meningkat karena informasi tidak lengkap.", storyOn: "Riwayat pasien, hasil lab, resep obat, dan status pembayaran tampil dalam satu layar. Diagnosis lebih cepat, lebih akurat, dan pasien terlayani dengan lebih baik." },
+    logi: { badge: "Industri Logistik", badgeClass: "logi", title: "Pelanggan ingin melacak paket secara waktu nyata", desc: "Pelanggan yang mengirim paket ingin tahu posisi terkini dan estimasi waktu tiba tanpa perlu menelepon berulang kali.", hubIco: "📦", hubLabel: "PELANGGAN", nodes: [
+      { ico: "🏭", name: "Gudang", subOff: "Terpisah", subOn: "Tersinkron" },
+      { ico: "🚚", name: "Kurir", subOff: "Terpisah", subOn: "Tersinkron" },
+      { ico: "📍", name: "Pelacakan", subOff: "Terpisah", subOn: "Tersinkron" },
+      { ico: "💵", name: "Billing", subOff: "Terpisah", subOn: "Tersinkron" }
+    ], storyOff: "Pelanggan harus menelepon call center berulang kali. Jawaban antar petugas sering tidak konsisten karena masing-masing melihat sistem yang berbeda. Pelanggan merasa tidak pasti.", storyOn: "Pelacakan paket waktu nyata tersedia langsung di aplikasi. Pelanggan tahu posisi paket, estimasi tiba, dan status pembayaran tanpa perlu menghubungi siapa pun." }
+  };
+  let currentInd = "bank";
+  let indIntegrated = false;
+  const indTabs = document.querySelectorAll(".ind-tab");
+  const indBadge = document.getElementById("indBadge");
+  const indTitle = document.getElementById("indTitle");
+  const indDesc = document.getElementById("indDesc");
+  const indToggle = document.querySelectorAll("#indToggle button");
+  const indStatus = document.getElementById("indStatus");
+  const indHub = document.getElementById("indHub");
+  const indHubIco = document.getElementById("indHubIco");
+  const indHubLabel = document.getElementById("indHubLabel");
+
+  function renderIndustry() {
+    const ind = INDUSTRIES[currentInd];
+    indBadge.textContent = ind.badge;
+    indBadge.className = "ind-story-badge " + ind.badgeClass;
+    indTitle.textContent = ind.title;
+    indDesc.textContent = ind.desc;
+    indHubIco.textContent = ind.hubIco;
+    indHubLabel.textContent = ind.hubLabel;
+    ind.nodes.forEach((n, i) => {
+      const idx = i + 1;
+      const nd = document.getElementById("nd" + idx);
+      nd.querySelector(".nd-ico").textContent = n.ico;
+      nd.querySelector(".nd-name").textContent = n.name;
+      document.getElementById("nd" + idx + "sub").textContent = indIntegrated ? n.subOn : n.subOff;
+      nd.classList.toggle("on", indIntegrated);
+    });
+    ["ln1","ln2","ln3","ln4"].forEach((id) => document.getElementById(id).classList.toggle("on", indIntegrated));
+    indHub.classList.toggle("on", indIntegrated);
+    indStatus.classList.toggle("on", indIntegrated);
+    const strongEl = indStatus.querySelector("strong");
+    strongEl.textContent = indIntegrated ? "Yang dialami pengguna (DENGAN integrasi)" : "Yang dialami pengguna (TANPA integrasi)";
+    indStatus.innerHTML = '<strong>' + strongEl.textContent + '</strong>' + (indIntegrated ? ind.storyOn : ind.storyOff);
+    indStatus.classList.toggle("on", indIntegrated);
+  }
+  indTabs.forEach((tab) => {
+    tab.addEventListener("click", () => {
+      indTabs.forEach((t) => t.classList.remove("active"));
+      tab.classList.add("active");
+      currentInd = tab.dataset.ind;
+      renderIndustry();
+    });
+  });
+  indToggle.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      indToggle.forEach((b) => b.classList.remove("active", "on"));
+      btn.classList.add("active");
+      indIntegrated = btn.dataset.mode === "on";
+      if (indIntegrated) btn.classList.add("on");
+      renderIndustry();
+    });
+  });
+
+  const PRODUCTS = [
+    { id: "p1", name: "Sneakers Pro", price: 450000, icon: "👟", posStock: 8, whStock: 8 },
+    { id: "p2", name: "Formal Classic", price: 380000, icon: "👞", posStock: 6, whStock: 6 },
+    { id: "p3", name: "Boots Adventure", price: 520000, icon: "🥾", posStock: 5, whStock: 5 }
+  ];
+  let integrated = false;
+  const posBody = document.getElementById("posBody");
+  const whBody = document.getElementById("whBody");
+  const posStatus = document.getElementById("posStatus");
+  const whStatus = document.getElementById("whStatus");
+  const posCount = document.getElementById("posCount");
+  const whCount = document.getElementById("whCount");
+  const connRail = document.getElementById("connRail");
+  const connLabel = document.getElementById("connLabel");
+  const connLabel2 = document.getElementById("connLabel2");
+  const simLog = document.getElementById("simLog");
+  const modeBtns = document.querySelectorAll(".mode-btn");
+
+  function formatRp(n) { return "Rp " + n.toLocaleString("id-ID"); }
+  function stockClass(n) { if (n === 0) return "empty"; if (n <= 3) return "low"; return "ok"; }
+
+  function renderApps(bumpId) {
+    posBody.innerHTML = PRODUCTS.map((p) => `
+      <div class="prod-row ${p.posStock === 0 ? "sold-out" : ""}">
+        <div class="prod-ico">${p.icon}</div>
+        <div class="prod-info">
+          <div class="prod-name">${p.name}</div>
+          <div class="prod-meta">${formatRp(p.price)}<span class="stock-badge ${stockClass(p.posStock)} ${bumpId === p.id ? "bump" : ""}">Stok ${p.posStock}</span></div>
+        </div>
+        <button class="act-btn sell" data-sell="${p.id}" ${p.posStock === 0 ? "disabled" : ""}>Jual</button>
+      </div>
+    `).join("");
+    whBody.innerHTML = PRODUCTS.map((p) => `
+      <div class="prod-row">
+        <div class="prod-ico">${p.icon}</div>
+        <div class="prod-info">
+          <div class="prod-name">${p.name}</div>
+          <div class="prod-meta">Tersedia<span class="stock-badge ${stockClass(p.whStock)} ${bumpId === p.id ? "bump" : ""}">${p.whStock} unit</span></div>
+        </div>
+        <button class="act-btn restock" data-restock="${p.id}">+ Datang</button>
+      </div>
+    `).join("");
+    posBody.querySelectorAll("[data-sell]").forEach((btn) => btn.addEventListener("click", () => sell(btn.dataset.sell)));
+    whBody.querySelectorAll("[data-restock]").forEach((btn) => btn.addEventListener("click", () => restock(btn.dataset.restock)));
+    posCount.textContent = PRODUCTS.length + " produk";
+    whCount.textContent = PRODUCTS.length + " produk";
+  }
+
+  function updateConnectionUI() {
+    if (integrated) {
+      connRail.classList.add("on");
+      connLabel.textContent = "TERSAMBUNG"; connLabel.classList.add("on");
+      connLabel2.textContent = "ONLINE"; connLabel2.classList.add("on");
+      posStatus.textContent = "● SINKRON"; posStatus.className = "stat-ok";
+      whStatus.textContent = "● SINKRON"; whStatus.className = "stat-ok";
+    } else {
+      connRail.classList.remove("on");
+      connLabel.textContent = "TERPUTUS"; connLabel.classList.remove("on");
+      connLabel2.textContent = "OFFLINE"; connLabel2.classList.remove("on");
+      posStatus.textContent = "● MANDIRI"; posStatus.className = "stat-bad";
+      whStatus.textContent = "● MANDIRI"; whStatus.className = "stat-bad";
+    }
+  }
+
+  function addLog(text, cls) {
+    const line = document.createElement("div");
+    line.className = cls || "";
+    const time = new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    line.innerHTML = '<span class="l-time">[' + time + ']</span> ' + text;
+    simLog.appendChild(line);
+    simLog.scrollTop = simLog.scrollHeight;
+  }
+
+  function sell(id) {
+    const p = PRODUCTS.find((x) => x.id === id);
+    if (!p || p.posStock === 0) return;
+    p.posStock -= 1;
+    addLog("[KASIR] " + p.name + " terjual. Stok kasir: " + p.posStock + ".", "l-info");
+    if (integrated) {
+      if (p.whStock > 0) p.whStock -= 1;
+      addLog("→ Sinkronisasi ke gudang. Stok gudang: " + p.whStock + ".", "l-ok");
+    } else {
+      addLog("→ Gudang tidak diperbarui. Stok gudang tetap: " + p.whStock + ".", "l-bad");
+    }
+    renderApps(id);
+  }
+  function restock(id) {
+    const p = PRODUCTS.find((x) => x.id === id);
+    if (!p) return;
+    p.whStock += 5;
+    addLog("[GUDANG] " + p.name + " datang 5 unit. Stok gudang: " + p.whStock + ".", "l-info");
+    if (integrated) {
+      p.posStock += 5;
+      addLog("→ Sinkronisasi ke kasir. Stok kasir: " + p.posStock + ".", "l-ok");
+    } else {
+      addLog("→ Kasir tidak diperbarui. Stok kasir tetap: " + p.posStock + ".", "l-bad");
+    }
+    renderApps(id);
+  }
+  function resetSim() {
+    PRODUCTS[0].posStock = 8; PRODUCTS[0].whStock = 8;
+    PRODUCTS[1].posStock = 6; PRODUCTS[1].whStock = 6;
+    PRODUCTS[2].posStock = 5; PRODUCTS[2].whStock = 5;
+    simLog.innerHTML = '<div class="l-dim">// Simulasi direset. Semua stok kembali ke angka awal.</div>';
+    renderApps();
+  }
+  modeBtns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      modeBtns.forEach((b) => b.classList.remove("active", "on"));
+      btn.classList.add("active");
+      integrated = btn.dataset.mode === "on";
+      if (integrated) {
+        btn.classList.add("on");
+        PRODUCTS.forEach((p) => { p.whStock = p.posStock; });
+        addLog("Mode integrasi aktif. Data kedua aplikasi langsung diselaraskan.", "l-head");
+      } else {
+        addLog("Mode mandiri aktif. Kedua aplikasi berjalan sendiri-sendiri.", "l-head");
+      }
+      updateConnectionUI();
+      renderApps();
+    });
+  });
+  document.getElementById("btnReset").addEventListener("click", resetSim);
+
+  document.querySelectorAll("[data-scenario]").forEach((sc) => {
+    const opts = sc.querySelectorAll(".sc-opt");
+    opts.forEach((opt) => {
+      opt.addEventListener("click", () => {
+        if (sc.dataset.done) return;
+        sc.dataset.done = "1";
+        opts.forEach((o) => {
+          o.disabled = true;
+          if (o.dataset.correct === "true") o.classList.add("correct", "show-explain");
+        });
+        if (opt.dataset.correct !== "true") opt.classList.add("wrong", "show-explain");
+        else opt.classList.add("show-explain");
+      });
+    });
+  });
+
+  const ddTray = document.getElementById("ddTray");
+  const ddColMasalah = document.getElementById("ddColMasalah");
+  const ddColManfaat = document.getElementById("ddColManfaat");
+  const ddCorrectEl = document.getElementById("ddCorrect");
+  let ddCorrectCount = 0;
+  let draggedCard = null;
+
+  function updateDdScore() { if (ddCorrectEl) ddCorrectEl.textContent = ddCorrectCount; }
+
+  function checkEmptyStates() {
+    [ddColMasalah, ddColManfaat].forEach((col) => {
+      const cards = col.querySelectorAll(".dd-card");
+      const empty = col.querySelector(".dd-col-empty");
+      if (cards.length > 0 && empty) empty.style.display = "none";
+      if (cards.length === 0 && empty) empty.style.display = "block";
+    });
+  }
+
+  function handleDrop(card, targetCol) {
+    const answer = card.dataset.answer;
+    const colType = targetCol.dataset.col;
+    card.classList.add("placed");
+    card.draggable = false;
+    if (answer === colType) { card.classList.add("correct"); ddCorrectCount++; }
+    else { card.classList.add("wrong"); }
+    const body = targetCol.querySelector(".dd-col-body");
+    const empty = body.querySelector(".dd-col-empty");
+    if (empty) empty.style.display = "none";
+    body.appendChild(card);
+    updateDdScore();
+    checkEmptyStates();
+  }
+
+  document.querySelectorAll(".dd-card").forEach((card) => {
+    card.addEventListener("dragstart", (e) => {
+      if (card.classList.contains("placed")) { e.preventDefault(); return; }
+      draggedCard = card;
+      card.classList.add("dragging");
+    });
+    card.addEventListener("dragend", () => {
+      card.classList.remove("dragging");
+      draggedCard = null;
+    });
+  });
+
+  [ddTray, ...document.querySelectorAll(".dd-col")].forEach((zone) => {
+    if (!zone) return;
+    zone.addEventListener("dragover", (e) => {
+      if (!draggedCard) return;
+      e.preventDefault();
+      if (zone.classList.contains("dd-col")) zone.classList.add("over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("over"));
+    zone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      zone.classList.remove("over");
+      if (!draggedCard) return;
+      if (zone.classList.contains("dd-col")) handleDrop(draggedCard, zone);
+    });
+  });
+
+  const ddResetBtn = document.getElementById("ddReset");
+  if (ddResetBtn) {
+    ddResetBtn.addEventListener("click", () => {
+      const allCards = document.querySelectorAll(".dd-card");
+      allCards.forEach((c) => {
+        c.classList.remove("correct", "wrong", "placed", "dragging");
+        c.draggable = true;
+        ddTray.appendChild(c);
+      });
+      ddCorrectCount = 0;
+      updateDdScore();
+      checkEmptyStates();
+    });
+  }
+  checkEmptyStates();
+
+  document.querySelectorAll("#tfGrid .tf-item").forEach((item) => {
+    const answer = item.dataset.answer;
+    const explain = item.querySelector(".tf-explain");
+    explain.textContent = item.dataset.explain;
+    const btns = item.querySelectorAll(".tf-btn");
+
+    btns.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        if (item.dataset.done) return;
+        item.dataset.done = "1";
+
+        const chosen = btn.dataset.val;
+        const isCorrect = chosen === answer;
+
+        btns.forEach((b) => {
+          b.disabled = true;
+          if (b.dataset.val === answer && b !== btn) {
+            b.classList.add("reveal");
+          }
+        });
+
+        btn.classList.add("chosen");
+        btn.classList.add(isCorrect ? "right" : "wrong");
+        item.classList.add(isCorrect ? "correct" : "wrong");
+        explain.classList.add("show");
+      });
+    });
+  });
+
+  dots[0].classList.add("active");
+  updateChrome();
+  renderApps();
+  updateConnectionUI();
+  renderIndustry();
+  setTimeout(() => triggerSlideEffects(0), 400);
+})();
+</script>
+</body>
+</html>
