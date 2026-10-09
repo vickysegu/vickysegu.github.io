@@ -42,8 +42,20 @@ jobs:
           PRODI:      "BISNIS DIGITAL"
           SCHOLAR_ID: "zxh3WngAAAAJ"
           OUTPUT_FILE: "data.json"
+        # continue-on-error agar workflow tidak fail total 
+        # kalau skrip return non-zero karena network error
+        continue-on-error: true
         run: python update_profile.py
-        continue-on-error: false
+
+      - name: 🔍 Cek Hasil
+        run: |
+          if [ -f data.json ]; then
+            echo "✓ data.json ada"
+            python -c "import json; d=json.load(open('data.json')); print(f\"status={d.get('status')} | publikasi={len(d.get('publikasi',[]))} | pendidikan={len(d.get('pendidikan',[]))}\")"
+          else
+            echo "✗ data.json TIDAK ADA — gagal total"
+            exit 1
+          fi
 
       - name: 💾 Commit & Push jika Ada Perubahan
         run: |
