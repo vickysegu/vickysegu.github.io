@@ -2347,18 +2347,15 @@ window.addEventListener('resize',()=>{
 });
 </script>
 
-<!-- ═══════════════════════════════════════════════════════════
-     MATERI EXPLORER — baca folder Materi/ + Embedded Viewer
-     ═══════════════════════════════════════════════════════════ -->
 <script>
 (function(){
 'use strict';
 const GH={owner:'vickysegu',repo:'vickysegu.github.io',base:'Materi'};
+const IS_TOUCH=matchMedia('(pointer:coarse)').matches;
 
 function encPath(p){return p.split('/').map(encodeURIComponent).join('/');}
 function ghPages(path){return `https://${GH.owner}.github.io/${encPath(path)}`;}
 function rawUrl(f){return f.download_url||`https://raw.githubusercontent.com/${GH.owner}/${GH.repo}/HEAD/${encPath(f.path)}`;}
-
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 function fileIcon(name,isDir){
   if(isDir)return '📁';
@@ -2376,12 +2373,7 @@ function fileIcon(name,isDir){
   if(/^(js|ts|py|java|c|cpp|h|css|php|rb|go|sql|sh)$/.test(e))return '📄';
   return '📎';
 }
-function fmtSize(b){
-  if(!b)return '';
-  if(b<1024)return b+' B';
-  if(b<1048576)return Math.round(b/1024)+' KB';
-  return (b/1048576).toFixed(1)+' MB';
-}
+function fmtSize(b){if(!b)return '';if(b<1024)return b+' B';if(b<1048576)return Math.round(b/1024)+' KB';return (b/1048576).toFixed(1)+' MB';}
 function kindOf(ext){
   ext=(ext||'').toLowerCase();
   if(/^(png|jpg|jpeg|gif|webp|svg|bmp|avif|ico)$/.test(ext))return 'img';
@@ -2394,24 +2386,12 @@ function kindOf(ext){
   return 'other';
 }
 
-const state={current:GH.base,stack:[],items:[],view:'icons',loading:false,tree:{}};
+const state={current:GH.base,stack:[],items:[],view:'icons',loading:false,tree:{},source:''};
 
-const CACHE_TTL=5*60*1000;
-const BLOCK_KEY='xp_gh_block_until';
-let indexPromise=null;
+/* ───────── DATA LAYER: cache → Tree API → materi-index.json → Contents API ───────── */
+const IDX_KEY='xp_idx_v1',IDX_TTL=10*60*1000,BLOCK_KEY='xp_gh_block_until';
+let idxMem=null,idxPromise=null;
 
-function loadIndex(){
-  if(!indexPromise){
-    indexPromise=fetch('./materi-index.json',{cache:'no-cache'})
-      .then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
-      .then(j=>(j&&j.tree)||{})
-      .catch(()=>{indexPromise=null;return null;});
-  }
-  return indexPromise;
-}
-function readCache(p){try{return JSON.parse(sessionStorage.getItem('xpc_'+p)||'null');}catch(e){return null;}}
-function writeCache(p,d){try{sessionStorage.setItem('xpc_'+p,JSON.stringify({t:Date.now(),d}));}catch(e){}}
-function dropCache(p){try{sessionStorage.removeItem('xpc_'+p);}catch(e){}}
 function apiBlocked(){try{return Date.now()<(+sessionStorage.getItem(BLOCK_KEY)||0);}catch(e){return false;}}
 function blockApi(r){
   let until=Date.now()+10*60*1000;
@@ -2419,101 +2399,109 @@ function blockApi(r){
   if(reset)until=Math.min(reset*1000+2000,Date.now()+70*60*1000);
   try{sessionStorage.setItem(BLOCK_KEY,String(until));}catch(e){}
 }
-
-const CACHE_TTL=5*60*1000;
-const BLOCK_KEY='xp_gh_block_until';
-let indexPromise=null;
-
-function loadIndex(){
-  if(!indexPromise){
-    indexPromise=fetch('./materi-index.json',{cache:'no-cache'})
-      .then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
-      .then(j=>(j&&j.tree)||{})
-      .catch(()=>{indexPromise=null;return null;});
+function sortItems(a){
+  return a.sort((x,y)=>(x.type===y.type?0:(x.type==='dir'?-1:1))||x.name.localeCompare(y.name,'en',{numeric:true}));
+}
+function buildFromTree(entries){
+  const idx={};idx[GH.base]=[];
+  entries.forEach(e=>{
+    const p=e.path;
+    if(p!==GH.base&&!p.startsWith(GH.base+'/'))return;
+    if(p===GH.base)return;
+    const name=p.split('/').pop();
+    if(name.startsWith('.'))return;
+    if(e.type==='tree')idx[p]=idx[p]||[];
+    const parent=p.slice(0,p.lastIndexOf('/'));
+    (idx[parent]=idx[parent]||[]).push({name,path:p,type:e.type==='tree'?'dir':'file',size:e.size||0});
+  });
+  Object.keys(idx).forEach(k=>sortItems(idx[k]));
+  return idx;
+}
+async function treeIndex(){
+  if(apiBlocked())throw new Error('API GitHub sedang dibatasi');
+  for(const b of ['HEAD','main','master']){
+    const r=await fetch(`https://api.github.com/repos/${GH.owner}/${GH.repo}/git/trees/${b}?recursive=1`,{headers:{'Accept':'application/vnd.github+json'}});
+    if(r.status===403||r.status===429){blockApi(r);throw new Error('Rate limit GitHub');}
+    if(!r.ok)continue;
+    const j=await r.json();
+    if(j.truncated)throw new Error('Repo terlalu besar untuk Tree API');
+    return buildFromTree(j.tree||[]);
   }
-  return indexPromise;
+  throw new Error('Tree API tidak menemukan repo');
 }
-function readCache(p){try{return JSON.parse(sessionStorage.getItem('xpc_'+p)||'null');}catch(e){return null;}}
-function writeCache(p,d){try{sessionStorage.setItem('xpc_'+p,JSON.stringify({t:Date.now(),d}));}catch(e){}}
-function dropCache(p){try{sessionStorage.removeItem('xpc_'+p);}catch(e){}}
-function apiBlocked(){try{return Date.now()<(+sessionStorage.getItem(BLOCK_KEY)||0);}catch(e){return false;}}
-function blockApi(r){
-  let until=Date.now()+10*60*1000;
-  const reset=r&&r.headers?+r.headers.get('x-ratelimit-reset'):0;
-  if(reset)until=Math.min(reset*1000+2000,Date.now()+70*60*1000);
-  try{sessionStorage.setItem(BLOCK_KEY,String(until));}catch(e){}
+async function jsonIndex(){
+  const r=await fetch('./materi-index.json',{cache:'no-cache'});
+  if(!r.ok)throw new Error('materi-index.json: HTTP '+r.status);
+  const j=await r.json();
+  if(!j||!j.tree)throw new Error('materi-index.json tidak valid');
+  return j.tree;
 }
-
-async function fetchFolder(path){
-  const cached=readCache(path);
-  if(cached&&Date.now()-cached.t<CACHE_TTL){window.__materiSource='cache';return cached.d;}
-  let apiErr=null;
-  if(!apiBlocked()){
+function loadIndex(){
+  if(idxMem)return Promise.resolve(idxMem);
+  if(idxPromise)return idxPromise;
+  idxPromise=(async()=>{
     try{
-      const url=`https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${encPath(path)}`;
-      const r=await fetch(url,{headers:{'Accept':'application/vnd.github.v3+json'}});
-      if(r.ok){
-        const files=await r.json();
-        if(!Array.isArray(files))throw new Error('Response bukan array');
-        writeCache(path,files);
-        window.__materiSource='api';
-        return files;
-      }
-      if(r.status===403||r.status===429)blockApi(r);
-      let m='HTTP '+r.status;
-      if(r.status===404)m=`Folder "${path}" tidak ditemukan`;
-      if(r.status===403||r.status===429)m='Rate limit GitHub';
-      apiErr=new Error(m);
-    }catch(e){apiErr=e;}
-  }
-  const idx=await loadIndex();
-  if(idx&&Array.isArray(idx[path])){window.__materiSource='index';return idx[path];}
-  if(cached){window.__materiSource='cache';return cached.d;}
-  throw apiErr||new Error('Rate limit GitHub dan materi-index.json belum tersedia');
+      const c=JSON.parse(sessionStorage.getItem(IDX_KEY)||'null');
+      if(c&&Date.now()-c.t<IDX_TTL&&c.d&&c.d[GH.base]){idxMem=c.d;state.source='cache';return idxMem;}
+    }catch(e){}
+    const errs=[];
+    try{idxMem=await treeIndex();state.source='api';}
+    catch(e){
+      errs.push(e.message);
+      try{idxMem=await jsonIndex();state.source='indeks';}
+      catch(e2){errs.push(e2.message);idxMem=null;}
+    }
+    if(idxMem){try{sessionStorage.setItem(IDX_KEY,JSON.stringify({t:Date.now(),d:idxMem}));}catch(e){}}
+    else window.__materiErrs=errs;
+    idxPromise=null;
+    return idxMem;
+  })();
+  return idxPromise;
 }
-
-function renderSidebar(){
-  const treeEl=document.getElementById('expTreeItems');
-  if(!treeEl)return;
-  let titleEl=treeEl.querySelector('.exp-tree-title');
-  if(!titleEl){
-    titleEl=document.createElement('div');
-    titleEl.className='exp-tree-title';
-    titleEl.innerHTML='📂 Materi Kuliah';
-    treeEl.insertBefore(titleEl,treeEl.firstChild);
+async function contentsFolder(path){
+  const r=await fetch(`https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${encPath(path)}`,{headers:{'Accept':'application/vnd.github.v3+json'}});
+  if(r.status===403||r.status===429){blockApi(r);throw new Error('Rate limit GitHub');}
+  if(!r.ok)throw new Error(r.status===404?`Folder "${path}" tidak ditemukan`:'HTTP '+r.status);
+  const files=await r.json();
+  if(!Array.isArray(files))throw new Error('Response bukan array');
+  return sortItems(files.map(f=>({name:f.name,path:f.path,type:f.type==='dir'?'dir':'file',size:f.size||0,download_url:f.download_url})));
+}
+async function fetchFolder(path){
+  const idx=await loadIndex();
+  if(idx&&Array.isArray(idx[path]))return idx[path];
+  if(!apiBlocked()){
+    try{state.source='api';return await contentsFolder(path);}catch(e){}
   }
+  const why=(window.__materiErrs||[]).join(' · ')||'tidak ada sumber data tersedia';
+  throw new Error('Gagal memuat Materi ('+why+'). Pastikan folder "Materi" ada di repo, atau jalankan workflow materi-index.');
+}
+function clearIdx(){idxMem=null;try{sessionStorage.removeItem(IDX_KEY);}catch(e){}}
+
+/* ───────── UI ───────── */
+function renderSidebar(){
+  const treeEl=document.getElementById('expTreeItems');if(!treeEl)return;
+  let titleEl=treeEl.querySelector('.exp-tree-title');
+  if(!titleEl){titleEl=document.createElement('div');titleEl.className='exp-tree-title';titleEl.innerHTML='📂 Materi Kuliah';treeEl.insertBefore(titleEl,treeEl.firstChild);}
   titleEl.onclick=()=>navigate(GH.base,true);
   titleEl.classList.toggle('active',state.current===GH.base);
-
   treeEl.querySelectorAll('.exp-tree-item').forEach(el=>el.remove());
-
   function renderNode(path,name,depth){
-    const el=document.createElement('div');
-    el.className='exp-tree-item';
-    el.style.paddingLeft=(10+depth*14)+'px';
+    const el=document.createElement('div');el.className='exp-tree-item';el.style.paddingLeft=(10+depth*14)+'px';
     const isCurrent=path===state.current;
     el.innerHTML=`<span class="ic">${isCurrent?'📂':'📁'}</span><span>${esc(name)}</span>`;
-    el.onclick=()=>{
-      if(path!==state.current)navigate(path);
-      if(window.innerWidth<=720)document.getElementById('expTree')?.classList.remove('open');
-    };
+    el.onclick=()=>{if(path!==state.current)navigate(path);if(window.innerWidth<=720)document.getElementById('expTree')?.classList.remove('open');};
     if(isCurrent)el.classList.add('active');
     treeEl.appendChild(el);
-    const kids=state.tree[path]?.children||[];
-    kids.forEach(c=>renderNode(c.path,c.name,depth+1));
+    (state.tree[path]?.children||[]).forEach(c=>renderNode(c.path,c.name,depth+1));
   }
   (state.tree[GH.base]?.children||[]).forEach(c=>renderNode(c.path,c.name,0));
 }
 
 function renderItems(items){
-  const filesEl=document.getElementById('expFiles');
-  const crumb=document.getElementById('expCrumb');
-  const status=document.getElementById('expStatus');
-  const title=document.getElementById('expTitle');
+  const filesEl=document.getElementById('expFiles'),crumb=document.getElementById('expCrumb'),
+        status=document.getElementById('expStatus'),title=document.getElementById('expTitle');
   if(!filesEl)return;
-
   filesEl.className='exp-files'+(state.view==='list'?' list-view':'');
-
   if(!items.length){
     filesEl.innerHTML='<div style="grid-column:1/-1;padding:32px;color:#8892a3;text-align:center;font-size:12px;">📭 Folder ini kosong.</div>';
   }else{
@@ -2526,116 +2514,93 @@ function renderItems(items){
         <div class="exp-file-name">${esc(f.name)}</div>
         <div class="exp-file-meta">${meta}</div></div>`;
     }).join('');
-
     filesEl.querySelectorAll('.exp-file').forEach((el,idx)=>{
-      const f=items[idx];
-      const isDir=f.type==='dir';
-      const isTouch=matchMedia('(pointer:coarse)').matches;
-el.onclick=()=>{
-  if(isTouch){if(isDir)navigate(f.path);else openFileEmbedded(f);return;}
-  filesEl.querySelectorAll('.exp-file').forEach(x=>x.classList.remove('active'));
-  el.classList.add('active');try{Sound.click();}catch(e){}
-};
+      const f=items[idx],isDir=f.type==='dir';
+      const open=()=>{
+        if(isDir){navigate(f.path);return;}
+        if(IS_TOUCH&&/\.pdf$/i.test(f.name)){window.open(ghPages(f.path),'_blank','noopener');return;}
+        openFileEmbedded(f);
       };
-      el.ondblclick=()=>{if(isDir)navigate(f.path);else openFileEmbedded(f);};
+      el.onclick=()=>{
+        if(IS_TOUCH){open();return;}
+        filesEl.querySelectorAll('.exp-file').forEach(x=>x.classList.remove('active'));
+        el.classList.add('active');try{Sound.click();}catch(e){}
+      };
+      el.ondblclick=open;
       el.oncontextmenu=e=>{
         e.preventDefault();
-        const menu=[{label:'Buka',ico:'📂',handler:()=>{if(isDir)navigate(f.path);else openFileEmbedded(f);}}];
+        const menu=[{label:'Buka',ico:'📂',handler:open}];
         if(!isDir){
           const web=ghPages(f.path);
           menu.push(
             {label:'Buka di Tab Baru',ico:'↗️',handler:()=>window.open(web,'_blank','noopener')},
             {label:'Download',ico:'⬇️',handler:()=>{const a=document.createElement('a');a.href=rawUrl(f);a.download=f.name;a.click();}},
-            {label:'Copy URL',ico:'📋',handler:()=>{navigator.clipboard?.writeText(web);}}
-          );
+            {label:'Copy URL',ico:'📋',handler:()=>{navigator.clipboard?.writeText(web);}});
         }
         menu.push('---',{label:'Properties',ico:'⚙️',handler:()=>{
-          try{showDialog(f.name,isDir?'📁':'📄',
-            `Tipe: ${isDir?'Folder':'File'}<br>Path: <code>${esc(f.path)}</code><br>${isDir?'':`Ukuran: ${fmtSize(f.size)}<br>`}`,null);}catch(e){}
+          try{showDialog(f.name,isDir?'📁':'📄',`Tipe: ${isDir?'Folder':'File'}<br>Path: <code>${esc(f.path)}</code><br>${isDir?'':`Ukuran: ${fmtSize(f.size)}<br>`}`,null);}catch(e){}
         }});
         try{showContextMenu(e.clientX,e.clientY,menu);}catch(e){}
       };
     });
   }
-
   if(crumb){
     const parts=state.current.split('/');
     crumb.innerHTML=parts.map((p,i)=>{
-      const isLast=i===parts.length-1;const path=parts.slice(0,i+1).join('/');
+      const isLast=i===parts.length-1,path=parts.slice(0,i+1).join('/');
       return `<span class="exp-crumb${isLast?' current':''}" data-path="${esc(path)}" style="${isLast?'':'cursor:pointer;color:#2f6fed;'}">${i===0?'📁 ':'📂 '}${esc(p)}</span>`;
     }).join('<span class="exp-sep-b">▸</span>');
-    crumb.querySelectorAll('.exp-crumb').forEach(c=>{
-      c.onclick=()=>{if(c.classList.contains('current'))return;navigate(c.dataset.path,true);};
-    });
+    crumb.querySelectorAll('.exp-crumb').forEach(c=>{c.onclick=()=>{if(c.classList.contains('current'))return;navigate(c.dataset.path,true);};});
   }
-
-  if(status)status.textContent=items.length+' objects';
-  if(title){const last=state.current.split('/').pop()||'Materi';title.textContent=last;}
-  const tt=document.querySelector('#expTreeToggle .t-text');
-  if(tt){const last=state.current.split('/').pop()||'Materi';tt.textContent=last;}
-
+  if(status)status.textContent=items.length+' objects'+(state.source==='indeks'?' · dari indeks':'');
+  const last=state.current.split('/').pop()||'Materi';
+  if(title)title.textContent=last;
+  const tt=document.querySelector('#expTreeToggle .t-text');if(tt)tt.textContent=last;
   renderSidebar();
 }
 
 async function navigate(path,replace){
   if(state.loading)return;state.loading=true;
-  if(!replace)state.stack.push(state.current);
-  state.current=path;
-
-  const filesEl=document.getElementById('expFiles');
-  const status=document.getElementById('expStatus');
+  const prev=state.current;
+  const filesEl=document.getElementById('expFiles'),status=document.getElementById('expStatus');
   if(filesEl)filesEl.innerHTML=`<div style="grid-column:1/-1;padding:28px;color:#666;display:flex;gap:10px;align-items:center;justify-content:center;font-size:12px;">
     <div style="width:16px;height:16px;border:2px solid #ccc;border-top-color:#3d7ad4;border-radius:50%;animation:iespin .8s linear infinite;"></div>Memuat…</div>`;
   if(status)status.textContent='Loading…';
-
   try{
     const items=await fetchFolder(path);
-    state.items=items;
-    state.tree[path]={
-      name:path.split('/').pop()||'Materi',
-      children:items.filter(f=>f.type==='dir').map(f=>({path:f.path,name:f.name}))
-    };
+    if(!replace)state.stack.push(prev);
+    state.current=path;state.items=items;
+    state.tree[path]={name:path.split('/').pop()||'Materi',children:items.filter(f=>f.type==='dir').map(f=>({path:f.path,name:f.name}))};
     if(path!==GH.base){
-      const parentPath=path.split('/').slice(0,-1).join('/')||GH.base;
-      if(!state.tree[parentPath])state.tree[parentPath]={name:parentPath.split('/').pop()||'Materi',children:[]};
-      if(!state.tree[parentPath].children.some(c=>c.path===path))
-        state.tree[parentPath].children.push({path,name:path.split('/').pop()});
+      const pp=path.split('/').slice(0,-1).join('/')||GH.base;
+      if(!state.tree[pp])state.tree[pp]={name:pp.split('/').pop()||'Materi',children:[]};
+      if(!state.tree[pp].children.some(c=>c.path===path))state.tree[pp].children.push({path,name:path.split('/').pop()});
     }
     renderItems(items);
-    if(window.__materiSource==='index'){const s=document.getElementById('expStatus');if(s)s.textContent+=' · dari indeks';}
   }catch(err){
     console.error('[Materi]',err);
     if(filesEl)filesEl.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:30px;">
       <div style="font-size:40px;margin-bottom:10px;">⚠️</div>
       <div style="font-weight:700;color:#c33;">Gagal memuat folder</div>
-      <div style="font-size:11.5px;color:#666;margin-top:8px;">${esc(err.message)}</div>
+      <div style="font-size:11.5px;color:#666;margin-top:8px;max-width:420px;margin-left:auto;margin-right:auto;line-height:1.5;">${esc(err.message)}</div>
       <button id="materiRetry" style="margin-top:14px;padding:6px 16px;background:linear-gradient(180deg,#3d7ad4,#1e56c8);color:#fff;border:none;border-radius:3px;cursor:pointer;font-weight:600;">🔄 Coba Lagi</button></div>`;
-    document.getElementById('materiRetry')?.addEventListener('click',()=>navigate(path,true));
+    document.getElementById('materiRetry')?.addEventListener('click',()=>{clearIdx();try{sessionStorage.removeItem(BLOCK_KEY);}catch(e){}navigate(path,true);});
     if(status)status.textContent='Error';
   }finally{state.loading=false;}
 }
 
+/* ───────── VIEWER ───────── */
 const viewerWins=new Map();let viewerCounter=0;
 function openFileEmbedded(file){
   if(!file||file.type==='dir')return;
-  const ext=(file.name.split('.').pop()||'').toLowerCase();
-  const kind=kindOf(ext);
-  const web=ghPages(file.path);
-  const dl=rawUrl(file);
-
-  let id=viewerWins.get(file.path);
-  const isNew=!id;
+  const ext=(file.name.split('.').pop()||'').toLowerCase(),kind=kindOf(ext);
+  const web=ghPages(file.path),dl=rawUrl(file);
+  let id=viewerWins.get(file.path);const isNew=!id;
   if(!id){id='mv'+(++viewerCounter);viewerWins.set(file.path,id);}
-
-  const bar=`
-    <div class="mv-bar">
-      <span class="mv-name">${fileIcon(file.name,false)} ${esc(file.name)}</span>
-      <span class="grow"></span>
+  const bar=`<div class="mv-bar"><span class="mv-name">${fileIcon(file.name,false)} ${esc(file.name)}</span><span class="grow"></span>
       <a class="mv-btn" href="${esc(dl)}" download="${esc(file.name)}">⬇ Download</a>
       <a class="mv-btn" href="${esc(web)}" target="_blank" rel="noopener">↗ Tab baru</a>
-      <button class="mv-btn" data-mv-close>Tutup</button>
-    </div>`;
-
+      <button class="mv-btn" data-mv-close>Tutup</button></div>`;
   let stageHtml='',hintHtml='';
   if(kind==='img')stageHtml=`<div class="mv-stage" data-k="img"><img src="${esc(web)}" alt=""></div>`;
   else if(kind==='vid')stageHtml=`<div class="mv-stage" data-k="vid"><video src="${esc(web)}" controls playsinline></video></div>`;
@@ -2643,83 +2608,44 @@ function openFileEmbedded(file){
   else if(kind==='pdf'){stageHtml=`<div class="mv-stage" data-k="pdf"><iframe src="${esc(web)}" title="${esc(file.name)}"></iframe></div>`;hintHtml=`<div class="mv-hint">Tidak tampil? Klik "Tab baru" atau "Download".</div>`;}
   else if(kind==='web'){stageHtml=`<div class="mv-stage" data-k="web"><iframe src="${esc(web)}" title="${esc(file.name)}" allow="fullscreen; autoplay"></iframe></div>`;hintHtml=`<div class="mv-hint">Halaman HTML — interaktif langsung di sini.</div>`;}
   else if(kind==='off'){const off=`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(web)}`;
-    stageHtml=`<div class="mv-stage" data-k="off"><iframe src="${esc(off)}" title="${esc(file.name)}"></iframe></div>`;
-    hintHtml=`<div class="mv-hint">Pratinjau Office (butuh https).</div>`;}
+    stageHtml=`<div class="mv-stage" data-k="off"><iframe src="${esc(off)}" title="${esc(file.name)}"></iframe></div>`;hintHtml=`<div class="mv-hint">Pratinjau Office (butuh https).</div>`;}
   else if(kind==='txt')stageHtml=`<div class="mv-stage" data-k="txt" id="mvTxtStage"><pre>Memuat…</pre></div>`;
-  else stageHtml=`<div class="mv-stage" data-k="other"><div class="mv-note">
-      <div class="big">${fileIcon(file.name,false)}</div>
+  else stageHtml=`<div class="mv-stage" data-k="other"><div class="mv-note"><div class="big">${fileIcon(file.name,false)}</div>
       <p style="font-weight:700;margin-bottom:8px;">${esc(file.name)}</p>
       <p style="color:#666;">Format <b>${esc((ext||'').toUpperCase())}</b> tidak bisa ditampilkan.</p>
-      <p style="margin-top:16px;">
-        <a class="mv-btn" href="${esc(dl)}" download="${esc(file.name)}" style="margin-right:6px;">⬇ Download</a>
-        <a class="mv-btn" href="${esc(web)}" target="_blank" rel="noopener">↗ Tab baru</a>
-      </p></div></div>`;
-
+      <p style="margin-top:16px;"><a class="mv-btn" href="${esc(dl)}" download="${esc(file.name)}" style="margin-right:6px;">⬇ Download</a>
+      <a class="mv-btn" href="${esc(web)}" target="_blank" rel="noopener">↗ Tab baru</a></p></div></div>`;
   const html=`<div class="mv">${bar}${stageHtml}${hintHtml}</div>`;
   let win;
-  if(isNew){
-    win=createMiniWindow(id,file.name,fileIcon(file.name,false),html,'860px','640px');
-  }else{
+  if(isNew)win=createMiniWindow(id,file.name,fileIcon(file.name,false),html,'860px','640px');
+  else{
     win=document.getElementById('mini-'+id);
-    if(win){
-      const body=win.querySelector('.window-body');
-      if(body)body.innerHTML=html;
-      win.classList.remove('hidden');
-      const t=win.querySelector('.tb-title');if(t)t.textContent=file.name;
-    }
+    if(win){const body=win.querySelector('.window-body');if(body)body.innerHTML=html;win.classList.remove('hidden');
+      const t=win.querySelector('.tb-title');if(t)t.textContent=file.name;}
   }
-
   if(kind==='txt'&&win){
     const stage=win.querySelector('#mvTxtStage pre');
-    if(stage){
-      fetch(web).then(r=>r.text()).then(t=>{
-        stage.textContent=t.length>500000?t.slice(0,500000)+'\n\n… (dipotong)':t;
-      }).catch(()=>{stage.textContent='Gagal memuat file.';});
-    }
+    if(stage)fetch(web).then(r=>r.text()).then(t=>{stage.textContent=t.length>500000?t.slice(0,500000)+'\n\n… (dipotong)':t;}).catch(()=>{stage.textContent='Gagal memuat file.';});
   }
-
   win?.querySelectorAll('[data-mv-close]').forEach(b=>{
-    b.onclick=()=>{
-      win.querySelectorAll('video,audio').forEach(m=>m.pause());
-      closeApp(win.id.replace('mini-',''));
-    };
+    b.onclick=()=>{win.querySelectorAll('video,audio').forEach(m=>m.pause());closeApp(win.id.replace('mini-',''));};
   });
 }
 
-function rebind(id,h){
-  const el=document.getElementById(id);if(!el)return;
-  const c=el.cloneNode(true);el.parentNode.replaceChild(c,el);c.onclick=h;
-}
-rebind('expBackBtn',()=>{
-  if(state.stack.length>0){const prev=state.stack.pop();navigate(prev,true);}
-  else try{Sound.click();}catch(e){}
-});
-rebind('expUpBtn',()=>{
-  if(state.current===GH.base)return;
-  const parts=state.current.split('/');parts.pop();
-  navigate(parts.join('/')||GH.base,true);
-});
-rebind('expRefreshBtn',()=>{dropCache(state.current);navigate(state.current,true);});
-
-/* Mobile sidebar toggle */
-rebind('expTreeToggle',()=>{
-  const tree=document.getElementById('expTree');
-  if(!tree)return;
-  tree.classList.toggle('open');
-  try{Sound.click();}catch(e){}
-});
-
+/* ───────── TOMBOL ───────── */
+function rebind(id,h){const el=document.getElementById(id);if(!el)return;const c=el.cloneNode(true);el.parentNode.replaceChild(c,el);c.onclick=h;}
+rebind('expBackBtn',()=>{if(state.stack.length>0){const p=state.stack.pop();navigate(p,true);}else try{Sound.click();}catch(e){}});
+rebind('expUpBtn',()=>{if(state.current===GH.base)return;const parts=state.current.split('/');parts.pop();navigate(parts.join('/')||GH.base,true);});
+rebind('expRefreshBtn',()=>{clearIdx();try{sessionStorage.removeItem(BLOCK_KEY);}catch(e){}navigate(state.current,true);});
+rebind('expTreeToggle',()=>{const t=document.getElementById('expTree');if(!t)return;t.classList.toggle('open');try{Sound.click();}catch(e){}});
 const vb=document.querySelector('.exp-view-btn');
-if(vb){
-  const c=vb.cloneNode(true);vb.parentNode.replaceChild(c,vb);
-  c.onclick=()=>{state.view=state.view==='icons'?'list':'icons';renderItems(state.items);try{Sound.click();}catch(e){}};
-}
+if(vb){const c=vb.cloneNode(true);vb.parentNode.replaceChild(c,vb);c.onclick=()=>{state.view=state.view==='icons'?'list':'icons';renderItems(state.items);try{Sound.click();}catch(e){}};}
 
 window.renderExplorer=()=>{if(!state.items.length)navigate(GH.base,true);else renderItems(state.items);};
 window.__explorerInit=()=>{state.tree={};state.stack=[];state.items=[];navigate(GH.base,true);};
-window.__explorerRefresh=()=>{dropCache(state.current);navigate(state.current,true);};
+window.__explorerRefresh=()=>{clearIdx();navigate(state.current,true);};
 
-console.log('[XP] Explorer v5 — mobile dropdown fixed ✓');
+console.log('[XP] Explorer v6 — Tree API + indeks JSON ✓');
 })();
 </script>
 
