@@ -302,14 +302,14 @@ textarea{resize:vertical;min-height:50px}
         <div class="card-head">
           <h3>📂 Daftar Materi Ajar (materi-index.json)</h3>
           <div style="display:flex;gap:6px;">
-            <button class="primary sm" onclick="addMateriItem()">+ Tambah File/Folder</button>
+            <button class="primary sm" onclick="addMateriItem()">+ Tambah Materi</button>
             <button class="ghost sm" onclick="downloadMateriIndex()">⬇ Download materi-index.json</button>
           </div>
         </div>
         <div class="alert-box">
           <b>⚠️ PENTING:</b> Editor ini hanya membuat struktur indeks (<code>materi-index.json</code>). 
-          Pastikan Anda mengunggah file fisik (PDF, video, HTML, dll) ke folder <b>Materi</b> di repositori GitHub Anda 
-          agar dapat diakses oleh portfolio. File <code>materi-index.json</code> akan disimpan di <b>root directory</b> (sejajar dengan index.html).
+          Anda bisa menambahkan <b>File/Folder Lokal</b> (yang diupload ke GitHub) atau <b>Link/URL Eksternal</b> (YouTube, Google Drive, dll). 
+          File <code>materi-index.json</code> akan disimpan di <b>root directory</b> (sejajar dengan index.html).
         </div>
         <div id="list-materi"></div>
       </div>
@@ -325,7 +325,7 @@ textarea{resize:vertical;min-height:50px}
   </div>
 </div>
 
-<!-- MODAL SIMPAN (SEKARANG TERPISAH) -->
+<!-- MODAL SIMPAN -->
 <div class="modal-bg" id="saveModal">
   <div class="modal">
     <div class="modal-head">
@@ -684,7 +684,7 @@ function renderPublikasi(){
 function renderMateri(){
   const arr = S_MATERI.tree?.["Materi"] || [];
   const el = document.getElementById('list-materi');
-  if(!arr.length){ el.innerHTML='<div class="empty">Belum ada materi. Klik "+ Tambah File/Folder".</div>'; return; }
+  if(!arr.length){ el.innerHTML='<div class="empty">Belum ada materi. Klik "+ Tambah Materi".</div>'; return; }
   el.innerHTML = arr.map((it,i)=>`
     <div class="file-item">
       <span class="ftype">${it.type === 'dir' ? '📁 Folder' : (it.type === 'link' ? '🔗 Link' : '📄 File')}</span>
@@ -760,7 +760,7 @@ function syncBeforeMutate(){
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   CRUD MATERI
+   CRUD MATERI (UPDATED WITH LINK SUPPORT)
 ═══════════════════════════════════════════════════════════════════ */
 function addMateriItem(){
   const choice = prompt("Pilih tipe materi:\n1. Link / URL Eksternal (YouTube, Drive, dll)\n2. File / Folder Lokal (GitHub)\n\nKetik angka 1 atau 2:", "1");
@@ -781,7 +781,6 @@ function addMateriItem(){
     updateStats();
     toast(`✓ Link ditambahkan`);
   } else {
-    // Logika lama untuk File/Folder Lokal
     const name = prompt("Nama file/folder (contoh: Slide1.pdf atau Algoritma):");
     if(!name) return;
     const path = prompt("Path lengkap (contoh: Materi/Algoritma/Slide1.pdf):", `Materi/${name}`);
@@ -804,9 +803,10 @@ function editMateriItem(i){
   const item = arr[i];
   const newName = prompt("Edit Nama:", item.name);
   if(newName === null) return;
-  const newPath = prompt("Edit Path:", item.path);
+  const newPath = prompt("Edit Path/URL:", item.path);
   if(newPath === null) return;
-  const newType = confirm("Apakah ini Folder? (OK = Folder, Cancel = File)") ? "dir" : "file";
+  const newType = confirm("Apakah ini Folder? (OK = Folder, Cancel = File/Link)") ? "dir" : (item.type === 'link' ? 'link' : 'file');
+  
   syncBeforeMutate();
   S_MATERI.tree["Materi"][i] = { ...item, name: newName, path: newPath, type: newType };
   scheduleDraftSave();
@@ -1229,7 +1229,7 @@ function closeSaveModal(){ document.getElementById('saveModal').classList.remove
 
 /* ═══════════════════════════════════════════════════════════════════
    UTIL
-═══════════════════════════════════════════════════════════════════ */
+═══════════════════════════════════════════════════════════════════════ */
 function sleep(ms){ return new Promise(r=> setTimeout(r, ms)); }
 
 let toastT;
