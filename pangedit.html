@@ -129,7 +129,7 @@ textarea{resize:vertical;min-height:50px}
 /* ═══════════ MODAL ═══════════ */
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;display:none;align-items:center;justify-content:center;padding:20px}
 .modal-bg.open{display:flex}
-.modal{background:var(--xp-bg);border:2px solid #0831d9;border-radius:6px;padding:0;max-width:650px;width:100%;max-height:90vh;display:flex;flex-direction:column}
+.modal{background:var(--xp-bg);border:2px solid #0831d9;border-radius:6px;padding:0;max-width:700px;width:100%;max-height:90vh;display:flex;flex-direction:column}
 .modal-head{background:linear-gradient(180deg,#0058ee,#003fb0);color:#fff;padding:8px 12px;font-weight:700;font-size:12px;display:flex;justify-content:space-between;align-items:center;border-radius:4px 4px 0 0}
 .modal-head button{background:transparent;border:none;color:#fff;font-size:16px;cursor:pointer;font-weight:700}
 .modal-body{padding:16px;overflow-y:auto;background:#fff}
@@ -325,7 +325,7 @@ textarea{resize:vertical;min-height:50px}
   </div>
 </div>
 
-<!-- MODAL SIMPAN -->
+<!-- MODAL SIMPAN (SEKARANG TERPISAH) -->
 <div class="modal-bg" id="saveModal">
   <div class="modal">
     <div class="modal-head">
@@ -333,22 +333,10 @@ textarea{resize:vertical;min-height:50px}
       <button onclick="closeSaveModal()">✕</button>
     </div>
     <div class="modal-body">
-      <div class="alert-box">
-        <b>🚨 Mengatasi Error 401 (Unauthorized):</b><br>
-        Jika push gagal, token GitHub Anda tidak valid atau kadaluarsa. 
-        Buat <b>Classic Token</b> baru di <a href="https://github.com/settings/tokens" target="_blank">GitHub Settings > Developer Settings > Tokens (classic)</a>, 
-        centang scope <b><code>repo</code></b>, lalu paste token baru di bawah.
-      </div>
-      <div class="card" style="background:#f7f5ed;">
-        <h3 style="font-size:11px;color:var(--xp-text);margin-bottom:6px;">METODE 1 — DOWNLOAD</h3>
-        <p style="font-size:10px;color:#666;margin-bottom:10px;">Unduh file JSON, lalu commit manual ke repositori GitHub Anda.</p>
-        <div style="display:flex;gap:8px;">
-          <button class="primary" onclick="saveDownload()">⬇ Download data.json</button>
-          <button class="ghost" onclick="downloadMateriIndex()">⬇ Download materi-index.json</button>
-        </div>
-      </div>
-      <div class="card" style="background:#f7f5ed;margin-top:12px;">
-        <h3 style="font-size:11px;color:var(--xp-text);margin-bottom:6px;">METODE 2 — PUSH KE GITHUB</h3>
+      
+      <!-- KONFIGURASI GITHUB -->
+      <div class="card" style="background:#f7f5ed; margin-bottom:16px;">
+        <h3 style="font-size:11px;color:var(--xp-text);margin-bottom:6px;">⚙️ Konfigurasi GitHub (Wajib untuk Push)</h3>
         <label>Personal Access Token (ghp_...)</label>
         <input type="text" id="ghToken" placeholder="ghp_...">
         <div class="row">
@@ -356,16 +344,40 @@ textarea{resize:vertical;min-height:50px}
           <div><label>Repo</label><input type="text" id="ghRepo" value="vickysegu.github.io"></div>
         </div>
         <div class="row">
-          <div><label>Path data.json</label><input type="text" id="ghPath" value="data.json" readonly></div>
-          <div><label>Path materi-index.json</label><input type="text" id="ghPathMateri" value="materi-index.json" readonly></div>
-        </div>
-        <div class="row">
           <div><label>Branch</label><input type="text" id="ghBranch" value="main"></div>
-          <div><label>Commit Message</label><input type="text" id="ghMsg" value="Update data & materi via editor"></div>
+          <div><label>Commit Message</label><input type="text" id="ghMsg" value="Update via editor"></div>
         </div>
-        <div style="margin-top:12px;">
-          <button class="primary" onclick="saveGitHub()">🚀 Push Kedua File ke GitHub</button>
+      </div>
+
+      <!-- FILE 1: DATA.JSON -->
+      <div class="card" style="background:#fff; border:2px solid var(--accent); margin-bottom:16px;">
+        <h3 style="font-size:12px;color:var(--xp-text);margin-bottom:10px; border-bottom:1px solid var(--border); padding-bottom:6px;">📄 data.json</h3>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="ghost" onclick="saveDownload()">⬇ Download data.json</button>
+          <button class="primary" onclick="saveGitHub('data')">🚀 Push data.json ke GitHub</button>
         </div>
+      </div>
+
+      <!-- FILE 2: MATERI-INDEX.JSON -->
+      <div class="card" style="background:#fff; border:2px solid var(--warn); margin-bottom:16px;">
+        <h3 style="font-size:12px;color:var(--xp-text);margin-bottom:10px; border-bottom:1px solid var(--border); padding-bottom:6px;">📂 materi-index.json</h3>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="ghost" onclick="downloadMateriIndex()">⬇ Download materi-index.json</button>
+          <button class="primary" onclick="saveGitHub('materi')">🚀 Push materi-index.json ke GitHub</button>
+        </div>
+      </div>
+
+      <!-- PUSH KEDUANYA -->
+      <div style="text-align:center; margin-top:10px;">
+        <button class="primary" style="padding:10px 24px; font-size:13px;" onclick="saveGitHub('both')">🚀 Push Kedua File Sekaligus</button>
+      </div>
+
+      <!-- WARNING 401 -->
+      <div class="alert-box" style="margin-top:20px; margin-bottom:0;">
+        <b>🚨 Mengatasi Error 401 (Unauthorized):</b><br>
+        Jika push gagal, token GitHub Anda tidak valid atau kadaluarsa. 
+        Buat <b>Classic Token</b> baru di <a href="https://github.com/settings/tokens" target="_blank">GitHub Settings > Developer Settings > Tokens (classic)</a>, 
+        centang scope <b><code>repo</code></b>, lalu paste token baru di kolom atas.
       </div>
     </div>
     <div class="modal-foot">
@@ -390,7 +402,7 @@ let S = { status:"success", pesan:"", profil:{}, pendidikan:[],
 let S_MATERI = { tree: { "Materi": [] } };
 let selectedPubs = new Set();
 let dirty = false;
-let activeMode = 'data'; // 'data' atau 'materi'
+let activeMode = 'data';
 
 const TABS_DATA = [
   ["profil",     "👤 Profil"],
@@ -411,16 +423,12 @@ const TABS_MATERI = [
 ═══════════════════════════════════════════════════════════════════ */
 function switchMode(mode) {
   activeMode = mode;
-  
   document.getElementById('btn-mode-data').classList.toggle('active', mode === 'data');
   document.getElementById('btn-mode-materi').classList.toggle('active', mode === 'materi');
-  
   document.getElementById('tabs-data').style.display = mode === 'data' ? 'flex' : 'none';
   document.getElementById('tabs-materi').style.display = mode === 'materi' ? 'flex' : 'none';
-  
   document.getElementById('sections-data').style.display = mode === 'data' ? 'block' : 'none';
   document.getElementById('sections-materi').style.display = mode === 'materi' ? 'block' : 'none';
-  
   buildTabs();
   const firstTab = mode === 'data' ? 'profil' : 'materi';
   activateTab(firstTab);
@@ -429,10 +437,8 @@ function switchMode(mode) {
 function buildTabs(){
   const tabs = activeMode === 'data' ? TABS_DATA : TABS_MATERI;
   const containerId = activeMode === 'data' ? 'tabs-data' : 'tabs-materi';
-  
   document.getElementById(containerId).innerHTML = tabs.map(([id,label])=>
     `<div class="tab" data-tab="${id}">${label}<span class="count" id="tabcount-${id}"></span></div>`).join('');
-    
   document.querySelectorAll(`#${containerId} .tab`).forEach(t=>{
     t.onclick = ()=> activateTab(t.dataset.tab);
   });
@@ -441,14 +447,11 @@ function buildTabs(){
 function activateTab(tabId) {
   const containerId = activeMode === 'data' ? 'tabs-data' : 'tabs-materi';
   const sectionContainer = activeMode === 'data' ? 'sections-data' : 'sections-materi';
-  
   document.querySelectorAll(`#${containerId} .tab`).forEach(x=>x.classList.remove('active'));
   document.querySelector(`#${containerId} .tab[data-tab="${tabId}"]`)?.classList.add('active');
-  
   document.querySelectorAll(`#${sectionContainer} .section`).forEach(x=>x.classList.remove('active'));
   const targetSec = document.querySelector(`#${sectionContainer} .section[data-sec="${tabId}"]`);
   if(targetSec) targetSec.classList.add('active');
-  
   if(tabId === 'raw') renderRaw();
   if(tabId === 'materi-raw') renderRawMateri();
   if(tabId === 'materi') renderMateri();
@@ -458,11 +461,9 @@ async function loadFromServer(){
   try{
     const r = await fetch('./data.json?t='+Date.now());
     if(r.ok) S = await r.json();
-    
     const rMateri = await fetch('./materi-index.json?t='+Date.now());
     if(rMateri.ok) S_MATERI = await rMateri.json();
     else S_MATERI = { tree: { "Materi": [] } };
-
     renderAll();
     toast('Data dimuat dari server');
     checkDraftRecovery();
@@ -507,9 +508,7 @@ function checkDraftRecovery(){
     localStorage.removeItem(DRAFT_TIME);
     return;
   }
-  const ago = age < 1 ? 'baru saja'
-    : age < 60 ? Math.round(age)+' menit lalu'
-    : Math.round(age/60)+' jam lalu';
+  const ago = age < 1 ? 'baru saja' : age < 60 ? Math.round(age)+' menit lalu' : Math.round(age/60)+' jam lalu';
   if(confirm(`Ada draft tersimpan (${ago}). Muat draft?`)){
     try{
       S = JSON.parse(raw);
@@ -723,13 +722,11 @@ function collect(){
   document.querySelectorAll('.section[data-sec="profil"] [data-f]').forEach(inp=>{
     if(inp.value.trim()) profil[inp.dataset.f] = inp.value.trim();
   });
-
   const pendidikan = [];
   document.querySelectorAll('#list-pendidikan .card[data-idx]').forEach(c=>{
     const o = {}; c.querySelectorAll('[data-k]').forEach(i=> o[i.dataset.k]=i.value.trim());
     if(Object.values(o).some(v=>v)) pendidikan.push(o);
   });
-
   const mengajar = [];
   document.querySelectorAll('#list-mengajar .card').forEach(c=>{
     const kampus = c.querySelector('[data-k="nama_kampus"]')?.value.trim() || '';
@@ -740,24 +737,20 @@ function collect(){
     });
     if(kampus || mks.length) mengajar.push({nama_kampus:kampus, mata_kuliah:mks});
   });
-
   const pengabdian = [];
   document.querySelectorAll('#list-pengabdian .card[data-idx]').forEach(c=>{
     const o = {}; c.querySelectorAll('[data-k]').forEach(i=> o[i.dataset.k]=i.value.trim());
     if(o.judul) pengabdian.push(o);
   });
-
   const publikasi = [];
   document.querySelectorAll('#list-publikasi .card[data-idx]').forEach(c=>{
     const o = {}; c.querySelectorAll('[data-k]').forEach(i=> o[i.dataset.k]=i.value.trim());
     if(o.judul) publikasi.push(o);
   });
-
   publikasi.forEach((p,i)=>{
     const orig = (S.publikasi||[])[i];
     if(orig?._accreditation && !p._accreditation) p._accreditation = orig._accreditation;
   });
-
   return { status:"success", pesan:S.pesan||"", profil, pendidikan, mengajar, pengabdian, publikasi };
 }
 
@@ -775,7 +768,6 @@ function addMateriItem(){
   const path = prompt("Path lengkap (contoh: Materi/Algoritma/Slide1.pdf):", `Materi/${name}`);
   if(!path) return;
   const type = confirm("Apakah ini Folder? (Klik OK untuk Folder, Cancel untuk File)") ? "dir" : "file";
-  
   syncBeforeMutate();
   if(!S_MATERI.tree["Materi"]) S_MATERI.tree["Materi"] = [];
   S_MATERI.tree["Materi"].push({ name, path, type, size: 0 });
@@ -794,7 +786,6 @@ function editMateriItem(i){
   const newPath = prompt("Edit Path:", item.path);
   if(newPath === null) return;
   const newType = confirm("Apakah ini Folder? (OK = Folder, Cancel = File)") ? "dir" : "file";
-  
   syncBeforeMutate();
   S_MATERI.tree["Materi"][i] = { ...item, name: newName, path: newPath, type: newType };
   scheduleDraftSave();
@@ -1134,12 +1125,12 @@ function downloadMateriIndex(){
   toast('materi-index.json diunduh');
 }
 
-async function saveGitHub(){
+async function saveGitHub(target) {
   const token  = document.getElementById('ghToken').value.trim();
   const owner  = document.getElementById('ghOwner').value.trim();
   const repo   = document.getElementById('ghRepo').value.trim();
   const branch = document.getElementById('ghBranch').value.trim() || 'main';
-  const msg    = document.getElementById('ghMsg').value.trim() || 'Update data & materi via editor';
+  const msg    = document.getElementById('ghMsg').value.trim() || 'Update via editor';
   
   if(!token){ 
     toast('Token kosong! Isi token GitHub Anda.', true); 
@@ -1160,16 +1151,13 @@ async function saveGitHub(){
     const api = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
     let sha = null;
     
-    // Cek apakah file sudah ada
     const gr = await fetch(`${api}?ref=${branch}`, {headers});
     if(gr.ok) {
       const data = await gr.json();
       sha = data.sha;
-    } else if(gr.status === 404) {
-      // File belum ada, akan dibuat baru
     } else if(gr.status === 401) {
       throw new Error('401 Unauthorized: Token GitHub tidak valid atau kadaluarsa. Buat Classic Token baru dengan scope "repo".');
-    } else {
+    } else if(gr.status !== 404) {
       throw new Error(`Cek file ${path} gagal: HTTP ${gr.status}`);
     }
     
@@ -1188,11 +1176,15 @@ async function saveGitHub(){
   };
 
   try {
-    toast('Mengirim data.json...', 'info');
-    await pushFile('data.json', collect());
+    if(target === 'data' || target === 'both'){
+      toast('Mengirim data.json...', 'info');
+      await pushFile('data.json', collect());
+    }
     
-    toast('Mengirim materi-index.json...', 'info');
-    await pushFile('materi-index.json', S_MATERI);
+    if(target === 'materi' || target === 'both'){
+      toast('Mengirim materi-index.json...', 'info');
+      await pushFile('materi-index.json', S_MATERI);
+    }
 
     toast('✓ Push berhasil! Tunggu 30-60s.');
     dirty = false;
