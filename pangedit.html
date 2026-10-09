@@ -58,6 +58,23 @@ body{font-family:Tahoma,'Trebuchet MS',Verdana,Arial,sans-serif;
 .topbar .stats b{color:var(--xp-text)}
 .actions{display:flex;gap:6px;flex-wrap:wrap}
 
+/* ═══════════ MAIN NAVIGATION (NEW) ═══════════ */
+.main-nav{
+  display:flex;gap:2px;padding:4px 8px;background:linear-gradient(180deg,#4a7fc7,#3568b8 40%,#2350a0 70%,#1a4088);
+  border-bottom:2px solid #16306b;
+}
+.main-nav button{
+  padding:8px 20px;font-size:12px;font-weight:700;color:#fff;
+  background:transparent;border:1px solid transparent;border-radius:4px;
+  cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;
+}
+.main-nav button:hover{background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3)}
+.main-nav button.active{
+  background:var(--xp-bg);color:var(--xp-text);border-color:var(--border);
+  border-bottom-color:transparent;position:relative;top:2px;
+  box-shadow:inset 0 1px 0 #fff;
+}
+
 /* ═══════════ BUTTONS ═══════════ */
 button{font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;
   padding:5px 12px;border-radius:3px;border:1px solid #003c74;
@@ -88,7 +105,7 @@ button:disabled{opacity:.4;cursor:not-allowed}
 /* ═══════════ SECTIONS ═══════════ */
 .section{display:none;padding:16px;background:#fff}
 .section.active{display:block}
-.section[data-sec="raw"],.section[data-sec="materi"]{background:#f0f4fa}
+.section[data-sec="raw"],.section[data-sec="materi"],.section[data-sec="materi-raw"]{background:#f0f4fa}
 
 /* ═══════════ CARDS ═══════════ */
 .card{background:var(--xp-bg);border:1px solid var(--border);border-radius:4px;padding:12px;margin-bottom:10px}
@@ -181,105 +198,127 @@ textarea{resize:vertical;min-height:50px}
     </div>
   </div>
 
-  <!-- TABS -->
-  <div class="tabs" id="tabs"></div>
-
-  <!-- PROFIL -->
-  <div class="section active" data-sec="profil">
-    <div class="card">
-      <div class="card-head"><h3>👤 Profil Utama</h3></div>
-      <label>Nama Lengkap</label><input type="text" data-f="nama">
-      <div class="row">
-        <div><label>NIDN</label><input type="text" data-f="nidn"></div>
-        <div><label>NUPTK</label><input type="text" data-f="nuptk"></div>
-      </div>
-      <label>Nama Perguruan Tinggi</label><input type="text" data-f="nama_pt">
-      <div class="row">
-        <div><label>Singkatan PT</label><input type="text" data-f="sinkatan_pt"></div>
-        <div><label>Program Studi</label><input type="text" data-f="nama_prodi"></div>
-      </div>
-      <label>ID (opsional)</label><input type="text" data-f="id">
-    </div>
+  <!-- MAIN NAVIGATION (NEW) -->
+  <div class="main-nav">
+    <button id="btn-mode-data" class="active" onclick="switchMode('data')">👤 Manajemen Data Diri</button>
+    <button id="btn-mode-materi" onclick="switchMode('materi')">📂 Manajemen Materi Ajar</button>
   </div>
 
-  <!-- PENDIDIKAN -->
-  <div class="section" data-sec="pendidikan">
-    <div class="card">
-      <div class="card-head">
-        <h3>🎓 Riwayat Pendidikan</h3>
-        <button class="primary sm" onclick="addItem('pendidikan')">+ Tambah</button>
-      </div>
-      <div id="list-pendidikan"></div>
-    </div>
-  </div>
+  <!-- TABS CONTAINER (DYNAMIC) -->
+  <div id="tabs-data" class="tabs"></div>
+  <div id="tabs-materi" class="tabs" style="display:none"></div>
 
-  <!-- MENGAJAR -->
-  <div class="section" data-sec="mengajar">
-    <div class="card">
-      <div class="card-head">
-        <h3>📚 Riwayat Mengajar</h3>
-        <button class="primary sm" onclick="addCampus()">+ Tambah Kampus</button>
-      </div>
-      <div id="list-mengajar"></div>
-    </div>
-  </div>
-
-  <!-- PENGABDIAN -->
-  <div class="section" data-sec="pengabdian">
-    <div class="card">
-      <div class="card-head">
-        <h3>🤝 Pengabdian & Penelitian</h3>
-        <button class="primary sm" onclick="addItem('pengabdian')">+ Tambah</button>
-      </div>
-      <div id="list-pengabdian"></div>
-    </div>
-  </div>
-
-  <!-- PUBLIKASI -->
-  <div class="section" data-sec="publikasi">
-    <div class="progress" id="pubProgress">
-      <div class="progress-top"><span id="pubProgressText">Memproses...</span><span id="pubProgressEta"></span></div>
-      <div class="progress-bar"><div class="progress-bar-fill" id="pubProgressFill"></div></div>
-    </div>
-    <div class="card">
-      <div class="card-head">
-        <h3>📖 Publikasi</h3>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;">
-          <button class="primary sm" onclick="addItem('publikasi')">+ Tambah</button>
-          <button class="ghost sm" onclick="enrichAll()">🔍 Enrich Semua</button>
-          <button class="ghost sm" onclick="fixAllYears()">📅 Perbaiki Tahun</button>
-          <button class="ghost sm" onclick="checkAllAccreditation()">🏅 Cek Akreditasi</button>
-          <button class="ghost sm" onclick="sortByYear()">↓ Sort Tahun</button>
-          <button class="danger sm" onclick="batchDelete()" id="btnBatchDel" style="display:none;">🗑 Hapus <span id="selCount">0</span></button>
+  <!-- ================= DATA DIRI SECTIONS ================= -->
+  <div id="sections-data">
+    <!-- PROFIL -->
+    <div class="section active" data-sec="profil">
+      <div class="card">
+        <div class="card-head"><h3>👤 Profil Utama</h3></div>
+        <label>Nama Lengkap</label><input type="text" data-f="nama">
+        <div class="row">
+          <div><label>NIDN</label><input type="text" data-f="nidn"></div>
+          <div><label>NUPTK</label><input type="text" data-f="nuptk"></div>
         </div>
-      </div>
-      <div id="list-publikasi"></div>
-    </div>
-  </div>
-
-  <!-- MATERI (NEW) -->
-  <div class="section" data-sec="materi">
-    <div class="card">
-      <div class="card-head">
-        <h3>📂 Materi Ajar (materi-index.json)</h3>
-        <div style="display:flex;gap:6px;">
-          <button class="primary sm" onclick="addMateriItem()">+ Tambah File/Folder</button>
-          <button class="ghost sm" onclick="downloadMateriIndex()">⬇ Download materi-index.json</button>
+        <label>Nama Perguruan Tinggi</label><input type="text" data-f="nama_pt">
+        <div class="row">
+          <div><label>Singkatan PT</label><input type="text" data-f="sinkatan_pt"></div>
+          <div><label>Program Studi</label><input type="text" data-f="nama_prodi"></div>
         </div>
+        <label>ID (opsional)</label><input type="text" data-f="id">
       </div>
-      <p style="font-size:11px;color:#666;margin-bottom:12px;">
-        Editor ini hanya membuat struktur indeks (<code>materi-index.json</code>). 
-        Pastikan Anda mengunggah file fisik (PDF, video, HTML) ke folder <b>Materi</b> di repositori GitHub Anda.
-      </p>
-      <div id="list-materi"></div>
+    </div>
+
+    <!-- PENDIDIKAN -->
+    <div class="section" data-sec="pendidikan">
+      <div class="card">
+        <div class="card-head">
+          <h3>🎓 Riwayat Pendidikan</h3>
+          <button class="primary sm" onclick="addItem('pendidikan')">+ Tambah</button>
+        </div>
+        <div id="list-pendidikan"></div>
+      </div>
+    </div>
+
+    <!-- MENGAJAR -->
+    <div class="section" data-sec="mengajar">
+      <div class="card">
+        <div class="card-head">
+          <h3>📚 Riwayat Mengajar</h3>
+          <button class="primary sm" onclick="addCampus()">+ Tambah Kampus</button>
+        </div>
+        <div id="list-mengajar"></div>
+      </div>
+    </div>
+
+    <!-- PENGABDIAN -->
+    <div class="section" data-sec="pengabdian">
+      <div class="card">
+        <div class="card-head">
+          <h3>🤝 Pengabdian & Penelitian</h3>
+          <button class="primary sm" onclick="addItem('pengabdian')">+ Tambah</button>
+        </div>
+        <div id="list-pengabdian"></div>
+      </div>
+    </div>
+
+    <!-- PUBLIKASI -->
+    <div class="section" data-sec="publikasi">
+      <div class="progress" id="pubProgress">
+        <div class="progress-top"><span id="pubProgressText">Memproses...</span><span id="pubProgressEta"></span></div>
+        <div class="progress-bar"><div class="progress-bar-fill" id="pubProgressFill"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>📖 Publikasi</h3>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button class="primary sm" onclick="addItem('publikasi')">+ Tambah</button>
+            <button class="ghost sm" onclick="enrichAll()">🔍 Enrich Semua</button>
+            <button class="ghost sm" onclick="fixAllYears()">📅 Perbaiki Tahun</button>
+            <button class="ghost sm" onclick="checkAllAccreditation()">🏅 Cek Akreditasi</button>
+            <button class="ghost sm" onclick="sortByYear()">↓ Sort Tahun</button>
+            <button class="danger sm" onclick="batchDelete()" id="btnBatchDel" style="display:none;">🗑 Hapus <span id="selCount">0</span></button>
+          </div>
+        </div>
+        <div id="list-publikasi"></div>
+      </div>
+    </div>
+
+    <!-- RAW JSON DATA -->
+    <div class="section" data-sec="raw">
+      <div class="card">
+        <div class="card-head"><h3>{ } JSON Mentah (data.json)</h3></div>
+        <textarea class="raw" id="rawJson" readonly></textarea>
+      </div>
     </div>
   </div>
 
-  <!-- RAW JSON -->
-  <div class="section" data-sec="raw">
-    <div class="card">
-      <div class="card-head"><h3>{ } JSON Mentah (data.json)</h3></div>
-      <textarea class="raw" id="rawJson" readonly></textarea>
+  <!-- ================= MATERI SECTIONS ================= -->
+  <div id="sections-materi" style="display:none">
+    <!-- MATERI MANAGER -->
+    <div class="section" data-sec="materi">
+      <div class="card">
+        <div class="card-head">
+          <h3>📂 Daftar Materi Ajar (materi-index.json)</h3>
+          <div style="display:flex;gap:6px;">
+            <button class="primary sm" onclick="addMateriItem()">+ Tambah File/Folder</button>
+            <button class="ghost sm" onclick="downloadMateriIndex()">⬇ Download materi-index.json</button>
+          </div>
+        </div>
+        <div style="background:#fff4d6;border:1px solid #d6a468;color:#7a4a00;padding:8px 12px;border-radius:4px;margin-bottom:12px;font-size:11px;line-height:1.5;">
+          <b>⚠️ PENTING:</b> Editor ini hanya membuat struktur indeks (<code>materi-index.json</code>). 
+          Pastikan Anda mengunggah file fisik (PDF, video, HTML, dll) ke folder <b>Materi</b> di repositori GitHub Anda 
+          agar dapat diakses oleh portfolio.
+        </div>
+        <div id="list-materi"></div>
+      </div>
+    </div>
+
+    <!-- RAW JSON MATERI -->
+    <div class="section" data-sec="materi-raw">
+      <div class="card">
+        <div class="card-head"><h3>{ } JSON Mentah (materi-index.json)</h3></div>
+        <textarea class="raw" id="rawMateriJson" readonly></textarea>
+      </div>
     </div>
   </div>
 </div>
@@ -341,33 +380,75 @@ let S = { status:"success", pesan:"", profil:{}, pendidikan:[],
 let S_MATERI = { tree: { "Materi": [] } };
 let selectedPubs = new Set();
 let dirty = false;
+let activeMode = 'data'; // 'data' atau 'materi'
 
-const TABS = [
+const TABS_DATA = [
   ["profil",     "👤 Profil"],
   ["pendidikan", "🎓 Pendidikan"],
   ["mengajar",   "📚 Mengajar"],
   ["pengabdian", "🤝 Pengabdian"],
   ["publikasi",  "📖 Publikasi"],
-  ["materi",     "📂 Materi"],
-  ["raw",        "{ } JSON"]
+  ["raw",        "{ } JSON Data"]
+];
+
+const TABS_MATERI = [
+  ["materi",     "📂 Daftar Materi"],
+  ["materi-raw", "{ } JSON Materi"]
 ];
 
 /* ═══════════════════════════════════════════════════════════════════
-   INIT
+   INIT & MODE SWITCHING
 ═══════════════════════════════════════════════════════════════════ */
+function switchMode(mode) {
+  activeMode = mode;
+  
+  // Update main nav buttons
+  document.getElementById('btn-mode-data').classList.toggle('active', mode === 'data');
+  document.getElementById('btn-mode-materi').classList.toggle('active', mode === 'materi');
+  
+  // Show/hide tab containers
+  document.getElementById('tabs-data').style.display = mode === 'data' ? 'flex' : 'none';
+  document.getElementById('tabs-materi').style.display = mode === 'materi' ? 'flex' : 'none';
+  
+  // Show/hide section containers
+  document.getElementById('sections-data').style.display = mode === 'data' ? 'block' : 'none';
+  document.getElementById('sections-materi').style.display = mode === 'materi' ? 'block' : 'none';
+  
+  // Rebuild tabs and activate first tab of the mode
+  buildTabs();
+  const firstTab = mode === 'data' ? 'profil' : 'materi';
+  activateTab(firstTab);
+}
+
 function buildTabs(){
-  document.getElementById('tabs').innerHTML = TABS.map(([id,label],i)=>
-    `<div class="tab ${i===0?'active':''}" data-tab="${id}">${label}<span class="count" id="tabcount-${id}"></span></div>`).join('');
-  document.querySelectorAll('.tab').forEach(t=>{
-    t.onclick = ()=>{
-      document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
-      document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));
-      t.classList.add('active');
-      document.querySelector(`.section[data-sec="${t.dataset.tab}"]`).classList.add('active');
-      if(t.dataset.tab==='raw') renderRaw();
-      if(t.dataset.tab==='materi') renderMateri();
-    };
+  const tabs = activeMode === 'data' ? TABS_DATA : TABS_MATERI;
+  const containerId = activeMode === 'data' ? 'tabs-data' : 'tabs-materi';
+  
+  document.getElementById(containerId).innerHTML = tabs.map(([id,label])=>
+    `<div class="tab" data-tab="${id}">${label}<span class="count" id="tabcount-${id}"></span></div>`).join('');
+    
+  document.querySelectorAll(`#${containerId} .tab`).forEach(t=>{
+    t.onclick = ()=> activateTab(t.dataset.tab);
   });
+}
+
+function activateTab(tabId) {
+  const containerId = activeMode === 'data' ? 'tabs-data' : 'tabs-materi';
+  const sectionContainer = activeMode === 'data' ? 'sections-data' : 'sections-materi';
+  
+  // Update active tab button
+  document.querySelectorAll(`#${containerId} .tab`).forEach(x=>x.classList.remove('active'));
+  document.querySelector(`#${containerId} .tab[data-tab="${tabId}"]`)?.classList.add('active');
+  
+  // Update visible section
+  document.querySelectorAll(`#${sectionContainer} .section`).forEach(x=>x.classList.remove('active'));
+  const targetSec = document.querySelector(`#${sectionContainer} .section[data-sec="${tabId}"]`);
+  if(targetSec) targetSec.classList.add('active');
+  
+  // Render specific content if needed
+  if(tabId === 'raw') renderRaw();
+  if(tabId === 'materi-raw') renderRawMateri();
+  if(tabId === 'materi') renderMateri();
 }
 
 async function loadFromServer(){
@@ -460,6 +541,7 @@ function renderAll(){
   renderPublikasi();
   renderMateri();
   renderRaw();
+  renderRawMateri();
   updateTabCounts();
   updateStats();
 }
@@ -624,6 +706,10 @@ function renderRaw(){
   document.getElementById('rawJson').value = JSON.stringify(collect(), null, 4);
 }
 
+function renderRawMateri(){
+  document.getElementById('rawMateriJson').value = JSON.stringify(S_MATERI, null, 4);
+}
+
 function esc(v){ return v==null?'':String(v).replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -692,6 +778,7 @@ function addMateriItem(){
   S_MATERI.tree["Materi"].push({ name, path, type, size: 0 });
   scheduleDraftSave();
   renderMateri();
+  renderRawMateri();
   updateStats();
   toast(`✓ ${type==='dir'?'Folder':'File'} ditambahkan`);
 }
@@ -709,6 +796,7 @@ function editMateriItem(i){
   S_MATERI.tree["Materi"][i] = { ...item, name: newName, path: newPath, type: newType };
   scheduleDraftSave();
   renderMateri();
+  renderRawMateri();
   toast('✓ Materi diperbarui');
 }
 
@@ -718,6 +806,7 @@ function removeMateriItem(i){
   S_MATERI.tree["Materi"].splice(i, 1);
   scheduleDraftSave();
   renderMateri();
+  renderRawMateri();
   updateStats();
   toast('Materi dihapus', 'info');
 }
