@@ -141,9 +141,6 @@ textarea{resize:vertical;min-height:50px}
 .progress-bar-fill{height:100%;background:linear-gradient(90deg,#3d7ad4,#1e56c8);transition:width .3s;width:0%}
 
 .empty{color:#8892a3;text-align:center;padding:20px;font-size:12px;font-style:italic}
-.discover-item{background:#fff;border:1px solid var(--border);border-radius:4px;padding:10px;margin-bottom:6px}
-.discover-item h4{font-size:12px;font-weight:700;margin-bottom:4px;color:var(--xp-text)}
-.discover-item .meta{font-size:10px;color:#666;margin-bottom:6px}
 .badge-sinta{display:inline-block;padding:2px 8px;border-radius:999px;font-size:9px;font-weight:800;text-transform:uppercase}
 .sinta-1,.sinta-2{background:#fff3c4;color:#9a5a10;border:1px solid #d6a468}
 .sinta-3,.sinta-4{background:#e0f2fe;color:#1a4088;border:1px solid #95a9c8}
@@ -172,6 +169,30 @@ textarea{resize:vertical;min-height:50px}
   background:#e8f0fb;
   box-shadow:inset 0 0 0 2px rgba(47,111,237,.15);
 }
+.drop-zone.disabled{
+  opacity:.5;
+  pointer-events:none;
+}
+.target-folder-box{
+  background:#fff; border:2px solid var(--accent); border-radius:4px;
+  padding:10px 12px; margin-bottom:12px;
+}
+.target-folder-box.unset{ border-color:var(--warn); background:#fff8e5; }
+.target-folder-box .tf-label{
+  font-size:10px; text-transform:uppercase; letter-spacing:.4px;
+  color:#4a4a4a; font-weight:700; margin-bottom:4px;
+}
+.target-folder-box .tf-value{
+  display:flex; align-items:center; gap:8px;
+}
+.target-folder-box .tf-path{
+  flex:1; font-family:'Courier New',monospace; font-size:11px;
+  color:#1a4088; font-weight:700; padding:5px 8px;
+  background:#f0f4fa; border-radius:2px; border:1px solid #cfdef7;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.target-folder-box.unset .tf-path{ color:#9a5a10; font-style:italic; font-weight:400; }
+
 .staging-item{
   display:flex; align-items:center; gap:8px;
   padding:5px 8px; background:#fff;
@@ -184,7 +205,7 @@ textarea{resize:vertical;min-height:50px}
   min-width:34px; text-align:center;
 }
 .staging-item .name{
-  flex:0 0 28%; font-weight:600; color:#1a4088;
+  flex:0 0 26%; font-weight:600; color:#1a4088;
   overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
 }
 .staging-item .path-input{
@@ -201,6 +222,30 @@ textarea{resize:vertical;min-height:50px}
 .staging-item .status.uploading{background:#fff3c4; color:#9a5a10;}
 .staging-item .status.done     {background:#dcfce7; color:#15803d;}
 .staging-item .status.error    {background:#fee2e2; color:#b82c05;}
+
+/* ═══════════ FOLDER PICKER ═══════════ */
+.folder-list{
+  max-height:220px; overflow-y:auto;
+  border:1px solid #7f9db9; background:#fff;
+  padding:4px; border-radius:2px;
+}
+.folder-list .folder-opt{
+  display:flex; align-items:center; gap:8px;
+  padding:6px 8px; cursor:pointer; border-radius:3px;
+  text-transform:none; letter-spacing:0; margin:0;
+  font-size:11px; font-weight:600; color:#1a4088;
+}
+.folder-list .folder-opt:hover{ background:#e8f0fb; }
+.folder-list .folder-opt input[type=radio]{ margin:0; accent-color:var(--accent); }
+.folder-list .folder-opt .opt-name{ flex:0 0 auto; }
+.folder-list .folder-opt .opt-path{
+  font-size:9px; color:#8892a3; font-family:'Courier New',monospace;
+  font-weight:400; margin-left:auto;
+}
+.folder-list .empty-folder{
+  padding:12px; text-align:center; color:#8892a3; font-style:italic;
+  font-size:11px; font-weight:400; letter-spacing:0; text-transform:none;
+}
 </style>
 </head>
 <body>
@@ -325,9 +370,9 @@ textarea{resize:vertical;min-height:50px}
           </div>
         </div>
         <div class="alert-box">
-          <b>⚠️ PENTING:</b> Editor ini hanya membuat struktur indeks (<code>materi-index.json</code>). 
-          Anda bisa menambahkan <b>File/Folder Lokal</b> (yang diupload ke GitHub) atau <b>Link/URL Eksternal</b> (YouTube, Google Drive, dll). 
-          File <code>materi-index.json</code> akan disimpan di <b>root directory</b> (sejajar dengan index.html).
+          <b>⚠️ PENTING:</b> Semua materi <b>wajib berada di dalam folder matkul</b>.
+          Saat menambah link atau file, Anda akan diminta memilih atau membuat folder dulu.
+          Struktur: <code>Materi/&lt;nama-matkul&gt;/...</code>
         </div>
         <div id="list-materi"></div>
       </div>
@@ -340,17 +385,27 @@ textarea{resize:vertical;min-height:50px}
           <button class="ghost sm" onclick="clearStaging()">🗑 Bersihkan Staging</button>
         </div>
         <div class="alert-box">
-          <b>ℹ️ Cara pakai:</b> Drop file <i>atau folder</i> ke area di bawah, atau klik tombol pilih.
-          Edit path tujuan jika perlu, lalu klik <b>Push Semua</b>. File akan di-commit
-          <b>bersamaan dengan update <code>materi-index.json</code></b> dalam 1 commit.<br><br>
-          <b>⚠️ Batas:</b> maksimum <b>25 MB per file</b> (file lebih besar → pakai tipe Link).
-          Staging <b>hilang jika halaman di-refresh</b> (file tidak disimpan di draft).
+          <b>ℹ️ Cara pakai:</b> Pilih <b>Target Folder</b> dulu, lalu drop file/folder.
+          Semua file akan disimpan di dalam folder tersebut dan di-push bareng
+          <code>materi-index.json</code> dalam 1 commit.<br>
+          <b>⚠️ Batas:</b> maksimum <b>25 MB per file</b> (lebih besar → pakai tipe Link).
+          Staging <b>hilang jika halaman di-refresh</b>.
         </div>
 
-        <div id="dropZone" class="drop-zone">
+        <!-- TARGET FOLDER -->
+        <div class="target-folder-box unset" id="targetFolderBox">
+          <div class="tf-label">📁 Target Folder (Wajib — semua file masuk ke sini)</div>
+          <div class="tf-value">
+            <div class="tf-path" id="targetFolderPath">Belum dipilih — klik tombol di kanan</div>
+            <button class="primary sm" onclick="pickUploadFolder()">📁 Pilih / Buat</button>
+            <button class="ghost sm" onclick="clearUploadFolder()" id="btnClearTargetFolder" style="display:none;">×</button>
+          </div>
+        </div>
+
+        <div id="dropZone" class="drop-zone disabled">
           <div style="font-size:32px; margin-bottom:6px;">📁</div>
-          <div style="font-weight:700; color:var(--xp-text); margin-bottom:4px;">
-            Drop file atau folder di sini
+          <div style="font-weight:700; color:var(--xp-text); margin-bottom:4px;" id="dropZoneHint">
+            ⚠️ Pilih target folder dulu di atas
           </div>
           <div style="color:#666; font-size:11px; margin-bottom:10px;">atau</div>
           <div style="display:flex; gap:6px; justify-content:center; flex-wrap:wrap;">
@@ -372,7 +427,6 @@ textarea{resize:vertical;min-height:50px}
               <span id="stagingSize">0 B</span>)
             </h3>
             <div style="display:flex; gap:6px; flex-wrap:wrap;">
-              <button class="ghost sm" onclick="autoPrefixStaging()">🔧 Auto-prefix "Materi/"</button>
               <button class="primary sm" id="btnUploadAll" onclick="uploadAllStaging()">
                 🚀 Push Semua ke GitHub
               </button>
@@ -402,6 +456,7 @@ textarea{resize:vertical;min-height:50px}
   </div>
 </div>
 
+<!-- MODAL SIMPAN -->
 <div class="modal-bg" id="saveModal">
   <div class="modal">
     <div class="modal-head">
@@ -457,6 +512,31 @@ textarea{resize:vertical;min-height:50px}
   </div>
 </div>
 
+<!-- MODAL FOLDER PICKER -->
+<div class="modal-bg" id="folderPicker">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-head">
+      <span id="folderPickerTitle">📁 Pilih Folder</span>
+      <button onclick="closeFolderPicker()">✕</button>
+    </div>
+    <div class="modal-body">
+      <label>Pilih folder yang sudah ada:</label>
+      <div class="folder-list" id="folderPickerList"></div>
+
+      <label style="margin-top:14px;">Atau buat folder baru:</label>
+      <input type="text" id="folderPickerNew" placeholder="Contoh: Algoritma (boleh nested: Pemrograman/Dasar)">
+      <div style="font-size:10px; color:#666; margin-top:4px; line-height:1.4;">
+        Folder baru akan dibuat di dalam <code>Materi/</code>.
+        Boleh nested pakai <code>/</code> (contoh: <code>Pemrograman/Dasar</code>).
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button onclick="closeFolderPicker()">Batal</button>
+      <button class="primary" onclick="confirmFolderPicker()">✓ Pilih</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -467,6 +547,7 @@ const EMAIL = "vicky.setia.gunawan@upertis.ac.id";
 const DRAFT_KEY = "editor_draft_datajson";
 const DRAFT_TIME = "editor_draft_ts";
 const MATERI_KEY = "editor_materi_index";
+const ROOT_FOLDER = "Materi";
 
 let S = { status:"success", pesan:"", profil:{}, pendidikan:[],
           mengajar:[], pengabdian:[], publikasi:[] };
@@ -474,6 +555,10 @@ let S_MATERI = { tree: { "Materi": [] } };
 let selectedPubs = new Set();
 let dirty = false;
 let activeMode = 'data';
+
+/* Upload state */
+let uploadTargetFolder = null;   // {name, path}
+let staging = [];
 
 const TABS_DATA = [
   ["profil",     "👤 Profil"],
@@ -527,7 +612,7 @@ function activateTab(tabId) {
   if(tabId === 'raw') renderRaw();
   if(tabId === 'materi-raw') renderRawMateri();
   if(tabId === 'materi') renderMateri();
-  if(tabId === 'upload') renderStaging();
+  if(tabId === 'upload') { renderTargetFolder(); renderStaging(); }
 }
 
 async function loadFromServer(){
@@ -617,6 +702,8 @@ function renderAll(){
   renderMateri();
   renderRaw();
   renderRawMateri();
+  renderTargetFolder();
+  renderStaging();
   updateTabCounts();
   updateStats();
 }
@@ -829,45 +916,156 @@ function collect(){
 
 function syncBeforeMutate(){ 
   S = { ...S, ...collect() }; 
-  S_MATERI = { tree: { "Materi": [...(S_MATERI.tree?.["Materi"] || [])] } };
+  if (!S_MATERI.tree) S_MATERI.tree = { "Materi": [] };
+  if (!S_MATERI.tree["Materi"]) S_MATERI.tree["Materi"] = [];
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   CRUD MATERI
+   FOLDER HELPERS
+═══════════════════════════════════════════════════════════════════ */
+function sanitizeFolderName(name){
+  return String(name).split('/').map(seg =>
+    seg.replace(/[\\:*?"<>|]/g, '_').trim()
+  ).filter(Boolean).join('/');
+}
+
+/** Pastikan chain folder ("Materi/A/B") terdaftar sebagai dir entries. */
+function ensureFolderChain(folderPath, arr){
+  if (!folderPath || folderPath === ROOT_FOLDER) return;
+  const parts = folderPath.split('/');
+  // Skip kalau bukan dimulai dari ROOT_FOLDER
+  if (parts[0] !== ROOT_FOLDER) return;
+  let acc = ROOT_FOLDER;
+  for (let i = 1; i < parts.length; i++){
+    acc = acc + '/' + parts[i];
+    if (!arr.some(m => m.type === 'dir' && m.path === acc)){
+      arr.push({ name: parts[i], path: acc, type: 'dir', size: 0 });
+    }
+  }
+}
+
+/** Ambil semua folder (type=dir) selain root "Materi", sorted by path. */
+function getAllFolders(){
+  const arr = S_MATERI.tree?.["Materi"] || [];
+  return arr
+    .filter(x => x.type === 'dir' && x.path && x.path !== ROOT_FOLDER)
+    .sort((a,b)=> a.path.localeCompare(b.path));
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   FOLDER PICKER MODAL
+═══════════════════════════════════════════════════════════════════ */
+let folderPickerCallback = null;
+
+function pickFolder(title, callback){
+  folderPickerCallback = callback;
+  document.getElementById('folderPickerTitle').textContent = title || '📁 Pilih Folder';
+  document.getElementById('folderPickerNew').value = '';
+  renderFolderPickerList();
+  document.getElementById('folderPicker').classList.add('open');
+  setTimeout(()=> document.getElementById('folderPickerNew').focus(), 50);
+}
+
+function renderFolderPickerList(){
+  const folders = getAllFolders();
+  const el = document.getElementById('folderPickerList');
+  if (!folders.length){
+    el.innerHTML = `<div class="empty-folder">Belum ada folder.<br>Buat folder baru di kolom bawah ↓</div>`;
+    return;
+  }
+  el.innerHTML = folders.map((d,i)=>`
+    <label class="folder-opt">
+      <input type="radio" name="folderPick" value="${esc(d.path)}" ${i===0?'checked':''}>
+      <span class="opt-name">📁 ${esc(d.name)}</span>
+      <span class="opt-path">${esc(d.path)}</span>
+    </label>
+  `).join('');
+}
+
+function confirmFolderPicker(){
+  const sel = document.querySelector('input[name="folderPick"]:checked');
+  const newRaw = document.getElementById('folderPickerNew').value.trim();
+
+  let chosen = null;
+
+  if (newRaw){
+    const safe = sanitizeFolderName(newRaw);
+    if (!safe){ toast('Nama folder tidak valid', true); return; }
+    const full = ROOT_FOLDER + '/' + safe;
+    chosen = { name: safe.split('/').pop(), path: full, isNew: true };
+  } else if (sel){
+    const p = sel.value;
+    chosen = { name: p.split('/').pop(), path: p, isNew: false };
+  } else {
+    toast('Pilih folder atau isi nama folder baru', true);
+    return;
+  }
+
+  const cb = folderPickerCallback;
+  closeFolderPicker();
+  if (cb) cb(chosen);
+}
+
+function closeFolderPicker(){
+  document.getElementById('folderPicker').classList.remove('open');
+  folderPickerCallback = null;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   CRUD MATERI (WAJIB FOLDER)
 ═══════════════════════════════════════════════════════════════════ */
 function addMateriItem(){
-  const choice = prompt("Pilih tipe materi:\n1. Link / URL Eksternal (YouTube, Drive, dll)\n2. File / Folder Lokal (GitHub)\n\nKetik angka 1 atau 2:", "1");
-  if(!choice) return;
-  
-  if(choice === "1"){
-    const name = prompt("Nama Materi (contoh: Video Pembelajaran Algoritma):");
-    if(!name) return;
-    const url = prompt("URL Lengkap (contoh: https://youtube.com/...):");
-    if(!url) return;
-    
-    syncBeforeMutate();
-    if(!S_MATERI.tree["Materi"]) S_MATERI.tree["Materi"] = [];
-    S_MATERI.tree["Materi"].push({ name, path: url, type: "link", size: 0 });
-    scheduleDraftSave();
-    renderMateri();
-    renderRawMateri();
-    updateStats();
-    toast(`✓ Link ditambahkan`);
+  const choice = prompt(
+    "Tambah Materi:\n" +
+    "1. Link / URL Eksternal (YouTube, Drive, dll)\n" +
+    "2. File / Folder manual (referensi ke path di GitHub)\n\n" +
+    "Ketik angka 1 atau 2:",
+    "1"
+  );
+  if (!choice) return;
+
+  if (choice === "1"){
+    pickFolder('📁 Pilih folder untuk Link', (folder)=>{
+      const name = prompt("Nama Materi (contoh: Video Algoritma Dasar):");
+      if(!name){ toast('Dibatalkan', 'info'); return; }
+      const url = prompt("URL Lengkap (contoh: https://youtube.com/...):");
+      if(!url){ toast('Dibatalkan', 'info'); return; }
+
+      syncBeforeMutate();
+      ensureFolderChain(folder.path, S_MATERI.tree["Materi"]);
+      const fullPath = folder.path + '/' + name;
+      S_MATERI.tree["Materi"].push({ name, path: fullPath, type: "link", size: 0 });
+
+      scheduleDraftSave();
+      renderMateri();
+      renderRawMateri();
+      updateStats();
+      toast(`✓ Link ditambahkan ke "${folder.name}"`);
+    });
+  } else if (choice === "2"){
+    pickFolder('📁 Pilih folder untuk File/Folder', (folder)=>{
+      const name = prompt("Nama file/folder (contoh: Slide1.pdf atau Algoritma):");
+      if(!name){ toast('Dibatalkan', 'info'); return; }
+      const type = confirm("Apakah ini Folder?\n\nOK = Folder\nCancel = File") ? "dir" : "file";
+
+      syncBeforeMutate();
+      ensureFolderChain(folder.path, S_MATERI.tree["Materi"]);
+      const fullPath = folder.path + '/' + name;
+
+      if (S_MATERI.tree["Materi"].some(m => m.path === fullPath)){
+        toast('Path sudah ada di index', 'warn');
+        return;
+      }
+      S_MATERI.tree["Materi"].push({ name, path: fullPath, type, size: 0 });
+
+      scheduleDraftSave();
+      renderMateri();
+      renderRawMateri();
+      updateStats();
+      toast(`✓ ${type==='dir'?'Folder':'File'} ditambahkan ke "${folder.name}"`);
+    });
   } else {
-    const name = prompt("Nama file/folder (contoh: Slide1.pdf atau Algoritma):");
-    if(!name) return;
-    const path = prompt("Path lengkap (contoh: Materi/Algoritma/Slide1.pdf):", `Materi/${name}`);
-    if(!path) return;
-    const type = confirm("Apakah ini Folder? (Klik OK untuk Folder, Cancel untuk File)") ? "dir" : "file";
-    
-    syncBeforeMutate();
-    if(!S_MATERI.tree["Materi"]) S_MATERI.tree["Materi"] = [];
-    S_MATERI.tree["Materi"].push({ name, path, type, size: 0 });
-    scheduleDraftSave();
-    renderMateri();
-    renderRawMateri();
-    updateStats();
-    toast(`✓ ${type==='dir'?'Folder':'File'} ditambahkan`);
+    toast('Pilihan tidak valid', 'warn');
   }
 }
 
@@ -879,7 +1077,7 @@ function editMateriItem(i){
   const newPath = prompt("Edit Path/URL:", item.path);
   if(newPath === null) return;
   const newType = confirm("Apakah ini Folder? (OK = Folder, Cancel = File/Link)") ? "dir" : (item.type === 'link' ? 'link' : 'file');
-  
+
   syncBeforeMutate();
   S_MATERI.tree["Materi"][i] = { ...item, name: newName, path: newPath, type: newType };
   scheduleDraftSave();
@@ -940,9 +1138,9 @@ function toggleSelect(i, checked){
 
 function batchDelete(){
   if(!selectedPubs.size) return;
-  if(!confirm(`Hapus ${selectedPubs.size} publikasi terpilih?`)) return;
-  syncBeforeMutate();
   const removed = selectedPubs.size;
+  if(!confirm(`Hapus ${removed} publikasi terpilih?`)) return;
+  syncBeforeMutate();
   S.publikasi = S.publikasi.filter((_,i)=> !selectedPubs.has(i));
   selectedPubs.clear();
   scheduleDraftSave();
@@ -1341,10 +1539,74 @@ window.addEventListener('beforeunload', e=>{
 });
 
 /* ═══════════════════════════════════════════════════════════════════
-   UPLOAD FILE → GITHUB
+   UPLOAD: TARGET FOLDER
+═══════════════════════════════════════════════════════════════════ */
+function pickUploadFolder(){
+  pickFolder('📁 Pilih folder tujuan upload', (folder)=>{
+    syncBeforeMutate();
+    ensureFolderChain(folder.path, S_MATERI.tree["Materi"]);
+    uploadTargetFolder = folder;
+    applyTargetFolderToStaging();
+    scheduleDraftSave();
+    renderTargetFolder();
+    renderStaging();
+    renderMateri();
+    renderRawMateri();
+    toast(`✓ Target folder: ${folder.name}`);
+  });
+}
+
+function clearUploadFolder(){
+  uploadTargetFolder = null;
+  applyTargetFolderToStaging();
+  renderTargetFolder();
+  renderStaging();
+}
+
+function renderTargetFolder(){
+  const box = document.getElementById('targetFolderBox');
+  const pathEl = document.getElementById('targetFolderPath');
+  const clearBtn = document.getElementById('btnClearTargetFolder');
+  const dropZone = document.getElementById('dropZone');
+  const hint = document.getElementById('dropZoneHint');
+
+  if (!box) return;
+
+  if (uploadTargetFolder){
+    box.classList.remove('unset');
+    pathEl.textContent = uploadTargetFolder.path + '/';
+    clearBtn.style.display = 'inline-block';
+    dropZone.classList.remove('disabled');
+    hint.innerHTML = `⬇️ Drop file/folder untuk dimasukkan ke <b>${esc(uploadTargetFolder.name)}/</b>`;
+  } else {
+    box.classList.add('unset');
+    pathEl.textContent = 'Belum dipilih — klik tombol di kanan';
+    clearBtn.style.display = 'none';
+    dropZone.classList.add('disabled');
+    hint.textContent = '⚠️ Pilih target folder dulu di atas';
+  }
+}
+
+function applyTargetFolderToStaging(){
+  if (!uploadTargetFolder){
+    // reset ke originalPath
+    for (const it of staging){
+      if (it.status === 'done') continue;
+      it.path = it.originalPath;
+    }
+    return;
+  }
+  const base = uploadTargetFolder.path + '/';
+  for (const it of staging){
+    if (it.status === 'done') continue;
+    it.path = base + it.originalPath;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   UPLOAD: STAGING
 ═══════════════════════════════════════════════════════════════════ */
 const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
-let staging = [];
 
 function uid(){ return Math.random().toString(36).slice(2) + Date.now().toString(36); }
 
@@ -1387,10 +1649,13 @@ function addFilesToStaging(files, basePrefix){
     const target = (basePrefix + rel).replace(/^\/+/, '');
     if (f.size > MAX_UPLOAD_BYTES){ rejected.push(f.name); continue; }
     staging.push({
-      id: uid(), file: f, name: f.name, path: target,
+      id: uid(), file: f, name: f.name,
+      originalPath: target,
+      path: target,           // akan diprefix saat target folder diset
       size: f.size, status: 'pending', error: null
     });
   }
+  applyTargetFolderToStaging();
   renderStaging();
   if (rejected.length) toast(`${rejected.length} file > 25 MB dilewati`, 'warn');
 }
@@ -1413,10 +1678,13 @@ async function addDropItems(dataTransfer){
   for (const c of collected){
     if (c.file.size > MAX_UPLOAD_BYTES){ rejected.push(c.file.name); continue; }
     staging.push({
-      id: uid(), file: c.file, name: c.file.name, path: c.path,
+      id: uid(), file: c.file, name: c.file.name,
+      originalPath: c.path,
+      path: c.path,
       size: c.file.size, status: 'pending', error: null
     });
   }
+  applyTargetFolderToStaging();
   renderStaging();
   if (rejected.length) toast(`${rejected.length} file > 25 MB dilewati`, 'warn');
   if (collected.length) toast(`+${collected.length} file masuk staging`, 'info');
@@ -1467,18 +1735,9 @@ function clearStaging(){
   renderStaging();
 }
 
-function autoPrefixStaging(){
-  let changed = 0;
-  for (const it of staging){
-    if (!/^materi\//i.test(it.path) && !/^\//.test(it.path)){
-      it.path = 'Materi/' + it.path.replace(/^\/+/, '');
-      changed++;
-    }
-  }
-  renderStaging();
-  toast(changed ? `✓ ${changed} path di-prefix "Materi/"` : 'Semua path sudah benar', 'info');
-}
-
+/* ═══════════════════════════════════════════════════════════════════
+   UPLOAD: GITHUB PUSH
+═══════════════════════════════════════════════════════════════════ */
 function getGitHubCfg(){
   const g = (id, key, def) => {
     const el = document.getElementById(id);
@@ -1558,20 +1817,13 @@ async function pushBatchBlobs(entries, cfg, onProgress){
   return commitRes.sha;
 }
 
-function ensureDirEntries(materiArr, filePath){
-  const parts = filePath.split('/');
-  parts.pop();
-  let acc = '';
-  for (const part of parts){
-    acc = acc ? `${acc}/${part}` : part;
-    if (!materiArr.some(m => m.type === 'dir' && m.path === acc)){
-      materiArr.push({ name: part, path: acc, type: 'dir', size: 0 });
-    }
-  }
-}
-
 async function uploadAllStaging(){
   if (!staging.length) return;
+
+  if (!uploadTargetFolder){
+    toast('⚠️ Pilih target folder dulu sebelum push', true);
+    return;
+  }
 
   const cfg = getGitHubCfg();
   if (!cfg.token){
@@ -1582,10 +1834,16 @@ async function uploadAllStaging(){
   const pending = staging.filter(s => s.status !== 'done');
   if (!pending.length){ toast('Semua file sudah di-upload', 'info'); return; }
 
+  const basePrefix = uploadTargetFolder.path + '/';
+
   for (const it of pending){
     const p = (it.path || '').trim();
     if (!p){ toast(`File "${it.name}" belum punya path`, true); return; }
-    if (/^\//.test(p) || p.includes('..') || p.includes('//')){
+    if (!p.startsWith(basePrefix)){
+      toast(`Path "${p}" tidak dimulai dari "${basePrefix}"`, true);
+      return;
+    }
+    if (p.includes('..') || p.includes('//')){
       toast(`Path tidak valid: "${p}"`, true); return;
     }
   }
@@ -1607,14 +1865,22 @@ async function uploadAllStaging(){
     }
 
     syncBeforeMutate();
-    const currentArr = S_MATERI.tree?.["Materi"] ? [...S_MATERI.tree["Materi"]] : [];
+
+    // Pastikan chain folder target ada di index
+    ensureFolderChain(uploadTargetFolder.path, S_MATERI.tree["Materi"]);
+
+    // Pastikan chain folder per file (kalau file di dalam subfolder)
+    const currentArr = S_MATERI.tree["Materi"];
     for (const it of pending){
-      ensureDirEntries(currentArr, it.path);
+      const parentDir = it.path.split('/').slice(0, -1).join('/');
+      ensureFolderChain(parentDir, currentArr);
+
       const exists = currentArr.some(m => m.path === it.path && m.type === 'file');
       if (!exists){
         currentArr.push({ name: it.name, path: it.path, type: 'file', size: it.size });
       }
     }
+
     const newIndex = { tree: { "Materi": currentArr } };
     const indexB64 = btoa(unescape(encodeURIComponent(JSON.stringify(newIndex, null, 4))));
 
@@ -1650,6 +1916,9 @@ async function uploadAllStaging(){
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   INIT UPLOAD UI
+═══════════════════════════════════════════════════════════════════ */
 function initUploadUI(){
   const dropZone = document.getElementById('dropZone');
   if (!dropZone) return;
@@ -1657,7 +1926,7 @@ function initUploadUI(){
   ['dragenter', 'dragover'].forEach(ev =>
     dropZone.addEventListener(ev, e => {
       e.preventDefault(); e.stopPropagation();
-      dropZone.classList.add('dragover');
+      if (uploadTargetFolder) dropZone.classList.add('dragover');
     })
   );
   ['dragleave', 'drop'].forEach(ev =>
@@ -1668,13 +1937,29 @@ function initUploadUI(){
     })
   );
 
-  dropZone.addEventListener('drop', e => { addDropItems(e.dataTransfer); });
+  dropZone.addEventListener('drop', e => {
+    if (!uploadTargetFolder){
+      toast('⚠️ Pilih target folder dulu', true);
+      return;
+    }
+    addDropItems(e.dataTransfer);
+  });
 
   document.getElementById('uploadFiles').addEventListener('change', e => {
+    if (!uploadTargetFolder){
+      toast('⚠️ Pilih target folder dulu', true);
+      e.target.value = '';
+      return;
+    }
     addFilesToStaging([...e.target.files]);
     e.target.value = '';
   });
   document.getElementById('uploadFolder').addEventListener('change', e => {
+    if (!uploadTargetFolder){
+      toast('⚠️ Pilih target folder dulu', true);
+      e.target.value = '';
+      return;
+    }
     addFilesToStaging([...e.target.files]);
     e.target.value = '';
   });
