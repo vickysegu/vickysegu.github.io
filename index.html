@@ -734,7 +734,8 @@ button,.dicon,.menubar>span,.sm-item,.task-btn,.exp-file,.oe-msg,.oe-folder,.tbt
   .oe-folders-list{display:none!important;}
   .oe-folders-stats{display:none;}
   .oe-folder-select{display:block;width:100%;padding:9px 12px;font-size:13px;font-family:inherit;font-weight:600;color:#1a4088;background:#fff;border:1px solid #7f9db9;border-radius:5px;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path fill='%231a4088' d='M6 9L1 4h10z'/></svg>");background-repeat:no-repeat;background-position:right 10px center;padding-right:30px;}
-  .oe-list-pane{width:100%;flex:0 0 auto;max-height:32vh;border-right:none;border-bottom:1px solid #d6e0ee;background:linear-gradient(180deg,#4a7fc7,#3568b8 40%,#2350a0 70%,#1a4088);}
+  
+  .oe-list-pane{order:1;width:100%;flex:0 0 auto;max-height:60vh;border-right:none;border-bottom:1px solid #d6e0ee;background:linear-gradient(180deg,#4a7fc7,#3568b8 40%,#2350a0 70%,#1a4088);}
   .oe-list-head{padding:10px 12px;}
   .oe-lh-title{font-size:14px;}
   .oe-lh-sub{font-size:8.5px;margin-bottom:0;}
@@ -743,7 +744,29 @@ button,.dicon,.menubar>span,.sm-item,.task-btn,.exp-file,.oe-msg,.oe-folder,.tbt
   .oe-msg-icon{width:20px;height:20px;font-size:14px;}
   .oe-msg-subj{font-size:11px;}
   .oe-msg-year{font-size:9px;}
-  .oe-preview{flex:1;min-height:0;overflow-y:auto;}
+  
+  .oe-back-btn{
+    order:2;
+    display:none;
+    width:100%;
+    padding:12px 16px;
+    background:linear-gradient(180deg,#2a5fa8,#1a4088);
+    color:#fff;
+    border:none;
+    border-bottom:1px solid #16306b;
+    font-weight:700;
+    font-size:13px;
+    text-align:left;
+    align-items:center;
+    gap:8px;
+    flex-shrink:0;
+    font-family:inherit;
+    cursor:pointer;
+  }
+  .oe-back-btn.show{display:flex;}
+  .oe-back-btn:active{filter:brightness(.9);}
+  
+  .oe-preview{order:3;flex:1;min-height:0;overflow-y:auto;}
   .oe-prev-top{padding:14px 16px;gap:12px;align-items:center;}
   .oe-prev-ico{width:40px;height:40px;font-size:18px;border-radius:10px;}
   .oe-prev-cat{font-size:8.5px;padding:1px 7px;letter-spacing:.6px;margin-bottom:6px;}
@@ -764,19 +787,7 @@ button,.dicon,.menubar>span,.sm-item,.task-btn,.exp-file,.oe-msg,.oe-folder,.tbt
   .oe-prev-empty .big{font-size:44px;margin-bottom:10px;}
   .oe-prev-empty h3{font-size:12.5px;}
   .oe-prev-empty p{font-size:10.5px;}
-  /* Hide list fully when collapsed + show back button */
   .oe-list-pane.collapsed{display:none;}
-  .oe-back-btn{
-    position:absolute;top:10px;left:10px;z-index:20;
-    display:none;align-items:center;gap:6px;
-    padding:7px 14px;font-size:11.5px;font-weight:700;
-    color:#fff;font-family:inherit;
-    background:linear-gradient(180deg,#3d7ad4,#1e56c8);
-    border:1px solid #1a4bb5;border-radius:5px;
-    box-shadow:0 2px 8px rgba(0,0,0,.35);cursor:pointer;
-  }
-  .oe-back-btn.show{display:inline-flex;}
-  .oe-back-btn:active{filter:brightness(.9);}
 
   .excel-grid{min-width:680px;}
   .dlg{width:100%;}
@@ -999,8 +1010,9 @@ button,.dicon,.menubar>span,.sm-item,.task-btn,.exp-file,.oe-msg,.oe-folder,.tbt
           </div>
           <div class="oe-msg-list" id="oeListBody"></div>
         </div>
-        <div class="oe-preview" id="oePreview"></div>
+        <!-- Back button moved here, order is handled by CSS -->
         <button class="oe-back-btn" id="oeBackBtn" type="button">← Kembali ke Daftar</button>
+        <div class="oe-preview" id="oePreview"></div>
       </div>
       <div class="statusbar"><span class="grow" id="oeStatus" role="status" aria-live="polite">0 kegiatan</span><span class="zone">📧 Outlook Express</span></div>
     </div>
@@ -2135,17 +2147,25 @@ document.querySelector('.oe-refresh-btn')?.addEventListener('click',()=>{
 document.getElementById('oeFolderSelect').addEventListener('change',e=>{oeFilter=e.target.value;
   document.querySelectorAll('.oe-folder').forEach(x=>x.classList.toggle('active',x.dataset.folder===oeFilter));
   renderOutlookList();Sound.click();});
-document.addEventListener('click',e=>{
-  if(window.innerWidth>720)return;
-  const msg=e.target.closest('.oe-msg');
-  if(msg){
-    document.querySelector('.oe-list-pane')?.classList.add('collapsed');
-    document.getElementById('oeBackBtn')?.classList.add('show');
-  }
-  if(e.target.closest('#oeBackBtn')){
-    document.querySelector('.oe-list-pane')?.classList.remove('collapsed');
-    document.getElementById('oeBackBtn')?.classList.remove('show');
-    Sound.click();
+
+// FIXED EVENT LISTENER FOR MOBILE BACK BUTTON
+document.addEventListener('click', e => {
+  if (window.innerWidth > 720) return;
+  const backBtn = e.target.closest('#oeBackBtn');
+  const msg = e.target.closest('.oe-msg');
+  const listPane = document.querySelector('.oe-list-pane');
+  const backBtnEl = document.getElementById('oeBackBtn');
+
+  if (msg) {
+    listPane?.classList.add('collapsed');
+    backBtnEl?.classList.add('show');
+    // Scroll preview to top
+    const preview = document.getElementById('oePreview');
+    if (preview) preview.scrollTop = 0;
+  } else if (backBtn) {
+    listPane?.classList.remove('collapsed');
+    backBtnEl?.classList.remove('show');
+    if (typeof Sound !== 'undefined') Sound.click();
   }
 });
 
