@@ -687,9 +687,9 @@ function renderMateri(){
   if(!arr.length){ el.innerHTML='<div class="empty">Belum ada materi. Klik "+ Tambah File/Folder".</div>'; return; }
   el.innerHTML = arr.map((it,i)=>`
     <div class="file-item">
-      <span class="ftype">${it.type === 'dir' ? '📁 Folder' : '📄 File'}</span>
+      <span class="ftype">${it.type === 'dir' ? '📁 Folder' : (it.type === 'link' ? '🔗 Link' : '📄 File')}</span>
       <span class="fname">${esc(it.name)}</span>
-      <span class="fpath">${esc(it.path)}</span>
+      <span class="fpath" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(it.path)}</span>
       <div style="display:flex;gap:4px;">
         <button class="ghost sm" onclick="editMateriItem(${i})">✏️</button>
         <button class="danger sm" onclick="removeMateriItem(${i})">×</button>
@@ -763,19 +763,40 @@ function syncBeforeMutate(){
    CRUD MATERI
 ═══════════════════════════════════════════════════════════════════ */
 function addMateriItem(){
-  const name = prompt("Nama file/folder (contoh: Slide1.pdf atau Algoritma):");
-  if(!name) return;
-  const path = prompt("Path lengkap (contoh: Materi/Algoritma/Slide1.pdf):", `Materi/${name}`);
-  if(!path) return;
-  const type = confirm("Apakah ini Folder? (Klik OK untuk Folder, Cancel untuk File)") ? "dir" : "file";
-  syncBeforeMutate();
-  if(!S_MATERI.tree["Materi"]) S_MATERI.tree["Materi"] = [];
-  S_MATERI.tree["Materi"].push({ name, path, type, size: 0 });
-  scheduleDraftSave();
-  renderMateri();
-  renderRawMateri();
-  updateStats();
-  toast(`✓ ${type==='dir'?'Folder':'File'} ditambahkan`);
+  const choice = prompt("Pilih tipe materi:\n1. Link / URL Eksternal (YouTube, Drive, dll)\n2. File / Folder Lokal (GitHub)\n\nKetik angka 1 atau 2:", "1");
+  if(!choice) return;
+  
+  if(choice === "1"){
+    const name = prompt("Nama Materi (contoh: Video Pembelajaran Algoritma):");
+    if(!name) return;
+    const url = prompt("URL Lengkap (contoh: https://youtube.com/...):");
+    if(!url) return;
+    
+    syncBeforeMutate();
+    if(!S_MATERI.tree["Materi"]) S_MATERI.tree["Materi"] = [];
+    S_MATERI.tree["Materi"].push({ name, path: url, type: "link", size: 0 });
+    scheduleDraftSave();
+    renderMateri();
+    renderRawMateri();
+    updateStats();
+    toast(`✓ Link ditambahkan`);
+  } else {
+    // Logika lama untuk File/Folder Lokal
+    const name = prompt("Nama file/folder (contoh: Slide1.pdf atau Algoritma):");
+    if(!name) return;
+    const path = prompt("Path lengkap (contoh: Materi/Algoritma/Slide1.pdf):", `Materi/${name}`);
+    if(!path) return;
+    const type = confirm("Apakah ini Folder? (Klik OK untuk Folder, Cancel untuk File)") ? "dir" : "file";
+    
+    syncBeforeMutate();
+    if(!S_MATERI.tree["Materi"]) S_MATERI.tree["Materi"] = [];
+    S_MATERI.tree["Materi"].push({ name, path, type, size: 0 });
+    scheduleDraftSave();
+    renderMateri();
+    renderRawMateri();
+    updateStats();
+    toast(`✓ ${type==='dir'?'Folder':'File'} ditambahkan`);
+  }
 }
 
 function editMateriItem(i){
