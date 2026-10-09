@@ -1,162 +1,90 @@
-<!-- ═══════════════════════════════════════════════════════
-     FIX: Profil & Materi (dari index (2).html)
-     Tempel ini PALING BAWAH, sebelum </body>
-     ═══════════════════════════════════════════════════════ -->
+<!-- ═══════════════════════════════════════════════════════════
+     FIX 2: MATERI baca GitHub folder (diadaptasi dari index(2).html)
+     Ganti sumber explorer dari data/materi.json → GitHub API
+     ═══════════════════════════════════════════════════════════ -->
 <script>
 (function(){
 'use strict';
+const esc = s => String(s==null?'':s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
-/* ─────────────────────────────────────────────────────────
-   FIX 1: PROFIL — render ulang dengan data dari data.json
-   ───────────────────────────────────────────────────────── */
-function renderProfileFixed(){
-  const p = window.XP_PROFILE || {};
-  const main = document.getElementById('cpMain');
-  if(!main) return;
+/* Konfigurasi repo — sesuaikan jika berbeda */
+const GH = {
+  owner: 'vickysegu',
+  repo:  'vickysegu.github.io',
+  base:  'Materi',   // folder root yang dibaca
+  cacheTTL: 5 * 60 * 1000
+};
 
-  const edu = (window.PORTFOLIO_DATA && window.PORTFOLIO_DATA.pendidikan) || [];
-  const eduSorted = [...edu].sort((a,b)=>(+b.tahun||0)-(+a.tahun||0));
-  const initials = (p.nama||'VS').trim().split(/\s+/).slice(0,2).map(s=>s[0]||'').join('').toUpperCase() || 'VS';
-  const totalMK   = (window.XP_EXCEL||[]).length;
-  const totalPub  = (window.XP_PUBLICATIONS||[]).length;
-  const totalSrv  = (window.XP_PENGABDIAN||[]).length;
-
-  main.innerHTML = `
-    <div class="cp-hero" id="sec-hero">
-      <div class="cp-hero-content">
-        <div class="cp-hero-avatar">${initials}<div class="verified">✓</div></div>
-        <div class="cp-hero-info">
-          <h2>${p.nama||'Memuat…'}</h2>
-          <div class="role">Dosen · ${p.nama_prodi||'Akademisi'}</div>
-          <p class="bio">${p.nama_pt?`Dosen di ${p.nama_pt}, program studi ${p.nama_prodi||'—'}. `:''}NIDN ${p.nidn||'—'}.</p>
-          <div class="cp-hero-actions">
-            <button class="cp-action primary" id="cpDownloadBtn">📥 Download CV</button>
-            <button class="cp-action" id="cpContactBtn">✉️ Kontak</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="cp-stats">
-      <div class="cp-stat"><div class="cp-stat-icon">📚</div><div><div class="cp-stat-num">${totalMK}</div><div class="cp-stat-lbl">Mata Kuliah</div></div></div>
-      <div class="cp-stat"><div class="cp-stat-icon">📄</div><div><div class="cp-stat-num">${totalPub}</div><div class="cp-stat-lbl">Publikasi</div></div></div>
-      <div class="cp-stat"><div class="cp-stat-icon">🤝</div><div><div class="cp-stat-num">${totalSrv}</div><div class="cp-stat-lbl">Pengabdian</div></div></div>
-      <div class="cp-stat"><div class="cp-stat-icon">🎓</div><div><div class="cp-stat-num">${edu.length}</div><div class="cp-stat-lbl">Pendidikan</div></div></div>
-    </div>
-
-    <div class="cp-sections">
-      <section class="cp-section" id="sec-data">
-        <div class="cp-section-head"><div class="sec-ico">📋</div><h3>Data Pribadi</h3></div>
-        <div class="cp-info-grid">
-          <div class="cp-info-item"><div class="info-ico">👤</div><div class="info-txt"><span class="lbl">Nama Lengkap</span><span class="val">${p.nama||'—'}</span></div></div>
-          <div class="cp-info-item"><div class="info-ico">💼</div><div class="info-txt"><span class="lbl">Program Studi</span><span class="val">${p.nama_prodi||'—'}</span></div></div>
-          <div class="cp-info-item"><div class="info-ico">🆔</div><div class="info-txt"><span class="lbl">NIDN</span><span class="val">${p.nidn||'—'}</span></div></div>
-          <div class="cp-info-item"><div class="info-ico">🏛️</div><div class="info-txt"><span class="lbl">Perguruan Tinggi</span><span class="val">${p.nama_pt||'—'}</span></div></div>
-          <div class="cp-info-item"><div class="info-ico">✉️</div><div class="info-txt"><span class="lbl">E-mail</span><span class="val link">vicky.setia@upertis.ac.id</span></div></div>
-          <div class="cp-info-item"><div class="info-ico">🌐</div><div class="info-txt"><span class="lbl">Website</span><span class="val link">vickysegu.github.io</span></div></div>
-        </div>
-      </section>
-
-      <section class="cp-section" id="sec-pendidikan">
-        <div class="cp-section-head"><div class="sec-ico">🎓</div><h3>Riwayat Pendidikan</h3></div>
-        <div class="cp-timeline">
-          ${eduSorted.length ? eduSorted.map(e=>`
-            <div class="cp-tl-item expanded">
-              <div class="cp-tl-head" data-toggle>
-                <div>
-                  <span class="tl-title">${e.jenjang||''} ${e.prodi && e.prodi!=='N/A' ? e.prodi : ''}</span>
-                  <p class="tl-sub" style="margin-top:4px;">🏛️ ${e.pt||'—'}</p>
-                </div>
-                <span class="tl-year">${e.tahun||''}</span>
-              </div>
-              <div class="tl-detail"><ul>
-                <li>Jenjang: ${e.jenjang||'-'}</li>
-                <li>Program Studi: ${e.prodi && e.prodi!=='N/A' ? e.prodi : '-'}</li>
-                <li>Perguruan Tinggi: ${e.pt||'-'}</li>
-                <li>Tahun Lulus: ${e.tahun||'-'}</li>
-              </ul></div>
-            </div>
-          `).join('') : '<p style="color:#666;padding:20px;">Data pendidikan tidak tersedia.</p>'}
-        </div>
-      </section>
-
-      <section class="cp-section" id="sec-keahlian">
-        <div class="cp-section-head"><div class="sec-ico">⚡</div><h3>Bidang Keahlian</h3></div>
-        <div class="skill-grid">
-          <div class="skill-item"><div class="skill-head"><span>Web Development</span><span>95%</span></div><div class="skill-bar"><div class="skill-fill" style="width:95%"></div></div></div>
-          <div class="skill-item"><div class="skill-head"><span>UI/UX Design</span><span>90%</span></div><div class="skill-bar"><div class="skill-fill" style="width:90%"></div></div></div>
-          <div class="skill-item"><div class="skill-head"><span>Artificial Intelligence</span><span>85%</span></div><div class="skill-bar"><div class="skill-fill" style="width:85%"></div></div></div>
-          <div class="skill-item"><div class="skill-head"><span>Sistem Informasi</span><span>88%</span></div><div class="skill-bar"><div class="skill-fill" style="width:88%"></div></div></div>
-        </div>
-      </section>
-
-      <section class="cp-section" id="sec-kontak">
-        <div class="cp-section-head"><div class="sec-ico">✉️</div><h3>Hubungi Saya</h3></div>
-        <form class="contact-form" id="contactForm">
-          <div><label>Nama</label><input type="text" required placeholder="Nama Anda"></div>
-          <div><label>Email</label><input type="email" required placeholder="email@example.com"></div>
-          <div class="full"><label>Pesan</label><textarea required placeholder="Tulis pesan…"></textarea></div>
-          <button class="submit" type="submit">📨 Kirim Pesan</button>
-        </form>
-      </section>
-    </div>`;
-
-  // Toggle timeline
-  main.querySelectorAll('[data-toggle]').forEach(h=>{
-    h.onclick = () => {
-      h.closest('.cp-tl-item').classList.toggle('expanded');
-      try{ Sound.click(); }catch(e){}
-    };
-  });
-
-  // Buttons
-  const dl = document.getElementById('cpDownloadBtn');
-  if(dl) dl.onclick = () => { try{ showProgressDialog('Downloading','📥','Menyiapkan CV…',0,()=>{ showDialog('Complete','✅','CV berhasil diunduh!',null); }); }catch(e){} };
-  const ct = document.getElementById('cpContactBtn');
-  if(ct) ct.onclick = () => { const el=document.getElementById('sec-kontak'); if(el) main.scrollTo({top:el.offsetTop-10,behavior:'smooth'}); };
-  const cf = document.getElementById('contactForm');
-  if(cf) cf.onsubmit = e => {
-    e.preventDefault();
-    try{ showProgressDialog('Mengirim','✉️','Menghubungi server…',0,()=>{ showDialog('Terkirim','✅','Terima kasih!',null); }); }catch(e2){}
-    e.target.reset();
-  };
-}
-
-// Timpa versi global
-window.renderProfile = renderProfileFixed;
-
-/* ─────────────────────────────────────────────────────────
-   FIX 2: MATERI — ambil dari GitHub API (seperti index (2))
-   ───────────────────────────────────────────────────────── */
-const GH_OWNER = 'vickysegu';
-const GH_REPO  = 'vickysegu.github.io';
-const GH_BASE  = 'Materi';
-
-const GH = { current: GH_BASE, history: [], items: [], view: 'icons' };
-
-function ghIcon(ext){
-  ext = (ext||'').toLowerCase();
-  if(/^(png|jpg|jpeg|gif|webp|svg|bmp|avif)$/.test(ext)) return '🖼️';
-  if(/^(mp4|webm|ogv|mov|avi|m4v)$/.test(ext)) return '🎬';
-  if(/^(mp3|wav|ogg|m4a|aac|flac)$/.test(ext)) return '🎵';
-  if(ext==='pdf') return '📕';
-  if(/^(docx?|odt|rtf)$/.test(ext)) return '📘';
-  if(/^(xlsx?|ods|csv)$/.test(ext)) return '📗';
-  if(/^(pptx?|odp)$/.test(ext)) return '📙';
-  if(/^(html?|htm)$/.test(ext)) return '🌐';
-  if(/^(zip|rar|7z|tar|gz)$/.test(ext)) return '🗜️';
-  if(/^(txt|md|json|xml|log|yml|yaml)$/.test(ext)) return '📝';
+/* Icon berdasarkan ekstensi */
+function fileIcon(name, isDir){
+  if(isDir) return '📁';
+  const ext = (name.split('.').pop()||'').toLowerCase();
+  if(/^(png|jpg|jpeg|gif|webp|svg|bmp|avif|ico)$/.test(ext)) return '🖼️';
+  if(/^(mp4|webm|ogv|mov|m4v)$/.test(ext))                     return '🎬';
+  if(/^(mp3|wav|ogg|m4a|aac|flac)$/.test(ext))                 return '🎵';
+  if(ext === 'pdf')                                            return '📕';
+  if(/^(docx?|odt|rtf)$/.test(ext))                            return '📘';
+  if(/^(xlsx?|ods|csv)$/.test(ext))                            return '📗';
+  if(/^(pptx?|odp)$/.test(ext))                                return '📙';
+  if(/^(html?|htm)$/.test(ext))                                return '🌐';
+  if(/^(zip|rar|7z|tar|gz)$/.test(ext))                        return '🗜️';
+  if(/^(txt|md|json|xml|log|yml|yaml)$/.test(ext))             return '📝';
   if(/^(js|ts|py|java|c|cpp|h|css|php|rb|go|sql|sh)$/.test(ext)) return '📄';
   return '📎';
 }
-function ghFmtSize(b){
+function fmtSize(b){
   if(!b) return '';
   if(b<1024) return b+' B';
   if(b<1048576) return Math.round(b/1024)+' KB';
   return (b/1048576).toFixed(1)+' MB';
 }
 
-async function renderExplorerGitHub(){
+/* State */
+const state = {
+  stack: [GH.base],     // path stack untuk Back/Up
+  current: GH.base,
+  items: [],
+  view: 'icons',
+  loading: false
+};
+
+/* Cache helpers */
+function cacheKey(path){ return 'xp_gh_'+path; }
+function getCache(path){
+  try{
+    const raw = sessionStorage.getItem(cacheKey(path));
+    if(!raw) return null;
+    const obj = JSON.parse(raw);
+    if(Date.now() - obj.t > GH.cacheTTL) return null;
+    return obj.d;
+  }catch(e){ return null; }
+}
+function setCache(path, data){
+  try{ sessionStorage.setItem(cacheKey(path), JSON.stringify({t:Date.now(), d:data})); }catch(e){}
+}
+
+/* Fetch 1 folder dari GitHub Contents API */
+async function fetchGitHubFolder(path, force){
+  if(!force){
+    const c = getCache(path);
+    if(c) return c;
+  }
+  const url = `https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${path}`;
+  const r = await fetch(url, {headers:{'Accept':'application/vnd.github.v3+json'}});
+  if(!r.ok) {
+    let msg = `HTTP ${r.status}`;
+    if(r.status === 404) msg = `Folder "${path}" tidak ditemukan di repo ${GH.owner}/${GH.repo}`;
+    if(r.status === 403) msg = 'Rate limit GitHub tercapai. Coba lagi dalam ~1 jam atau pakai token.';
+    throw new Error(msg);
+  }
+  const files = await r.json();
+  if(!Array.isArray(files)) throw new Error('Response GitHub bukan array');
+  setCache(path, files);
+  return files;
+}
+
+/* Render file/folder ke tampilan Explorer XP */
+function renderItems(items){
   const filesEl = document.getElementById('expFiles');
   const crumb   = document.getElementById('expCrumb');
   const status  = document.getElementById('expStatus');
@@ -164,213 +92,233 @@ async function renderExplorerGitHub(){
   const treeEl  = document.getElementById('expTreeItems');
   if(!filesEl) return;
 
-  filesEl.className = 'exp-files' + (GH.view==='list' ? ' list-view' : '');
-  filesEl.innerHTML = '<div style="grid-column:1/-1;padding:20px;color:#666;display:flex;gap:10px;align-items:center;"><div style="width:16px;height:16px;border:2px solid #ccc;border-top-color:#3d7ad4;border-radius:50%;animation:iespin .8s linear infinite;"></div> Memuat dari GitHub…</div>';
+  filesEl.className = 'exp-files' + (state.view==='list' ? ' list-view' : '');
+
+  if(!items.length){
+    filesEl.innerHTML = '<div style="grid-column:1/-1;padding:24px;color:#666;text-align:center;">Folder ini kosong.</div>';
+  } else {
+    filesEl.innerHTML = items.map((f,i)=>{
+      const isDir = f.type === 'dir';
+      const ext = !isDir ? (f.name.split('.').pop()||'').toLowerCase() : '';
+      const meta = isDir ? 'Folder' : (fmtSize(f.size) + (ext ? ' · '+ext.toUpperCase() : ''));
+      return `<div class="exp-file" data-i="${i}">
+        <div class="exp-file-icon">${fileIcon(f.name, isDir)}</div>
+        <div class="exp-file-name">${esc(f.name)}</div>
+        <div class="exp-file-meta">${meta}</div>
+      </div>`;
+    }).join('');
+
+    filesEl.querySelectorAll('.exp-file').forEach((el,idx)=>{
+      const f = items[idx];
+      const isDir = f.type === 'dir';
+      const webUrl = `https://${GH.owner}.github.io/${f.path}`;
+
+      el.onclick = () => {
+        filesEl.querySelectorAll('.exp-file').forEach(x=>x.classList.remove('active'));
+        el.classList.add('active');
+        try{ Sound.click(); }catch(e){}
+      };
+      el.ondblclick = () => {
+        if(isDir) navigate(f.path);
+        else window.open(webUrl, '_blank', 'noopener');
+      };
+      el.oncontextmenu = e => {
+        e.preventDefault();
+        const menu = [
+          {label: isDir?'Buka':'Buka di Tab Baru', ico:'📂', handler: ()=>{
+            if(isDir) navigate(f.path);
+            else window.open(webUrl, '_blank', 'noopener');
+          }}
+        ];
+        if(!isDir){
+          menu.push(
+            {label:'Download', ico:'⬇️', handler: ()=>{
+              const a = document.createElement('a');
+              a.href = f.download_url; a.download = f.name; a.click();
+            }},
+            {label:'Copy URL', ico:'📋', handler: ()=>{
+              navigator.clipboard?.writeText(webUrl);
+            }}
+          );
+        }
+        menu.push('---');
+        menu.push({label:'Properties', ico:'⚙️', handler: ()=>{
+          try{ showDialog(f.name, isDir?'📁':'📄',
+            `Tipe: ${isDir?'Folder':'File'}<br>` +
+            `Path: <code>${esc(f.path)}</code><br>` +
+            (isDir ? '' : `Ukuran: ${fmtSize(f.size)}<br>`) +
+            `Repo: ${GH.owner}/${GH.repo}`, null); }catch(e){}
+        }});
+        try{ showContextMenu(e.clientX, e.clientY, menu); }catch(e){}
+      };
+    });
+  }
+
+  /* Breadcrumb */
+  if(crumb){
+    const parts = state.current.split('/');
+    crumb.innerHTML = parts.map((p,i)=>{
+      const isLast = i === parts.length-1;
+      const path = parts.slice(0,i+1).join('/');
+      return `<span class="exp-crumb${isLast?' current':''}" data-path="${esc(path)}" style="${isLast?'':'cursor:pointer;color:#2f6fed;'}">${i===0?'📁 ':'📂 '}${esc(p)}</span>`;
+    }).join('<span class="exp-sep-b">▸</span>');
+    crumb.querySelectorAll('.exp-crumb').forEach(c=>{
+      c.onclick = () => {
+        if(c.classList.contains('current')) return;
+        navigate(c.dataset.path, true);
+      };
+    });
+  }
+
+  /* Sidebar tree */
+  if(treeEl){
+    treeEl.querySelectorAll('.exp-tree-item').forEach(x=>x.remove());
+    const dirs = items.filter(f=>f.type==='dir');
+    if(!dirs.length){
+      const e = document.createElement('div');
+      e.style.cssText = 'padding:10px;color:#8892a3;font-size:11px;';
+      e.textContent = 'Tidak ada subfolder';
+      treeEl.appendChild(e);
+    } else {
+      dirs.forEach(d=>{
+        const el = document.createElement('div');
+        el.className = 'exp-tree-item';
+        el.innerHTML = `<span class="ic">📁</span><span>${esc(d.name)}</span>`;
+        el.onclick = () => navigate(d.path);
+        treeEl.appendChild(el);
+      });
+    }
+  }
+
+  if(status) status.textContent = items.length + ' objects';
+  if(title){
+    const last = state.current.split('/').pop();
+    title.textContent = last || 'Materi';
+  }
+  const toggleText = document.querySelector('#expTreeToggle .t-text');
+  if(toggleText){
+    const last = state.current.split('/').pop();
+    if(toggleText) toggleText.textContent = last || 'Materi';
+  }
+}
+
+/* Navigate ke path baru */
+async function navigate(path, replace){
+  if(state.loading) return;
+  state.loading = true;
+  if(!replace) state.stack.push(state.current);
+  state.current = path;
+
+  const filesEl = document.getElementById('expFiles');
+  const status  = document.getElementById('expStatus');
+  if(filesEl){
+    filesEl.innerHTML = `<div style="grid-column:1/-1;padding:24px;color:#666;display:flex;gap:10px;align-items:center;">
+      <div style="width:16px;height:16px;border:2px solid #ccc;border-top-color:#3d7ad4;border-radius:50%;animation:iespin .8s linear infinite;"></div>
+      Memuat dari GitHub…</div>`;
+  }
   if(status) status.textContent = 'Loading…';
 
-  const apiUrl = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH.current}`;
-
   try{
-    const res = await fetch(apiUrl);
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    const files = await res.json();
-    if(!Array.isArray(files)) throw new Error('Response bukan array');
-
-    GH.items = files;
-    const folderName = GH.current.split('/').pop() || 'Materi';
-    if(title) title.textContent = folderName;
-
-    // Breadcrumb
-    if(crumb){
-      const parts = GH.current.split('/');
-      crumb.innerHTML = parts.map((p,i)=>{
-        const isLast = i===parts.length-1;
-        const path = parts.slice(0,i+1).join('/');
-        return `<span class="exp-crumb${isLast?' current':''}" data-path="${path}" style="cursor:pointer;${isLast?'':'color:#2f6fed;'}">${i===0?'📁 ':'📂 '}${p}</span>`;
-      }).join('<span class="exp-sep-b">▸</span>');
-      crumb.querySelectorAll('.exp-crumb').forEach(c=>{
-        c.onclick = () => {
-          if(c.classList.contains('current')) return;
-          GH.history.push(GH.current);
-          GH.current = c.dataset.path;
-          renderExplorerGitHub();
-        };
+    const items = await fetchGitHubFolder(path);
+    state.items = items;
+    renderItems(items);
+  }catch(err){
+    console.error('[Materi]', err);
+    if(filesEl){
+      filesEl.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:30px;">
+        <div style="font-size:40px;margin-bottom:10px;">⚠️</div>
+        <div style="font-weight:700;color:#c33;">Gagal memuat folder</div>
+        <div style="font-size:11.5px;color:#666;margin-top:8px;">${esc(err.message)}</div>
+        <button id="materiRetry" style="margin-top:14px;padding:6px 16px;background:linear-gradient(180deg,#3d7ad4,#1e56c8);color:#fff;border:none;border-radius:3px;cursor:pointer;font-weight:600;">🔄 Coba Lagi</button>
+      </div>`;
+      document.getElementById('materiRetry')?.addEventListener('click', ()=>{
+        sessionStorage.removeItem(cacheKey(path));
+        navigate(path, true);
       });
     }
-
-    // Files
-    if(!files.length){
-      filesEl.innerHTML = '<div style="grid-column:1/-1;padding:24px;color:#666;">Folder kosong.</div>';
-    } else {
-      filesEl.innerHTML = files.map((f,i)=>{
-        const isDir = f.type==='dir';
-        const ext = !isDir ? (f.name.split('.').pop()||'') : '';
-        const icon = isDir ? '📁' : ghIcon(ext);
-        const meta = isDir ? 'Folder' : (ghFmtSize(f.size) + (ext ? ' · '+ext.toUpperCase() : ''));
-        return `<div class="exp-file" data-idx="${i}">
-          <div class="exp-file-icon">${icon}</div>
-          <div class="exp-file-name">${f.name}</div>
-          <div class="exp-file-meta">${meta}</div>
-        </div>`;
-      }).join('');
-
-      filesEl.querySelectorAll('.exp-file').forEach((el,idx)=>{
-        const file = files[idx];
-        el.onclick = () => {
-          filesEl.querySelectorAll('.exp-file').forEach(x=>x.classList.remove('active'));
-          el.classList.add('active');
-          try{ Sound.click(); }catch(e){}
-        };
-        el.ondblclick = () => openGHFile(file);
-        el.oncontextmenu = e => {
-          e.preventDefault();
-          const isDir = file.type==='dir';
-          const webUrl = `https://${GH_OWNER}.github.io/${file.path}`;
-          const items = [
-            {label:'Open', ico:'📂', handler:()=>openGHFile(file)},
-            !isDir && {label:'Buka di Tab Baru', ico:'↗️', handler:()=>window.open(webUrl,'_blank','noopener')},
-            !isDir && {label:'Download', ico:'⬇️', handler:()=>{
-              const a=document.createElement('a'); a.href=file.download_url; a.download=file.name; a.click();
-            }},
-            '---',
-            {label:'Properties', ico:'⚙️', handler:()=>{
-              try{ showDialog(file.name, isDir?'📁':'📄',
-                `Tipe: ${isDir?'Folder':'File'}<br>Ukuran: ${isDir?'-':ghFmtSize(file.size)}<br>Path: ${file.path}`, null); }catch(e){}
-            }}
-          ].filter(Boolean);
-          try{ showContextMenu(e.clientX, e.clientY, items); }catch(e){}
-        };
-      });
-    }
-
-    // Sidebar tree (folder-folder)
-    if(treeEl){
-      treeEl.querySelectorAll('.exp-tree-item').forEach(x=>x.remove());
-      const dirs = files.filter(f=>f.type==='dir');
-      if(dirs.length === 0){
-        const empty = document.createElement('div');
-        empty.style.cssText = 'padding:10px;color:#8892a3;font-size:11px;';
-        empty.textContent = 'Tidak ada subfolder';
-        treeEl.appendChild(empty);
-      } else {
-        dirs.forEach(d=>{
-          const el = document.createElement('div');
-          el.className = 'exp-tree-item';
-          el.innerHTML = `<span class="ic">📁</span><span>${d.name}</span>`;
-          el.onclick = () => {
-            GH.history.push(GH.current);
-            GH.current = d.path;
-            renderExplorerGitHub();
-            try{ Sound.click(); }catch(e){}
-          };
-          treeEl.appendChild(el);
-        });
-      }
-    }
-
-    if(status) status.textContent = files.length + ' objects';
-  } catch(err){
-    console.error('[Materi] Gagal fetch GitHub:', err);
-    filesEl.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:30px;">
-      <div style="font-size:40px;margin-bottom:10px;">⚠️</div>
-      <div style="font-weight:700;color:#c33;">Gagal memuat dari GitHub</div>
-      <div style="font-size:11px;color:#666;margin-top:6px;">${err.message}</div>
-      <div style="font-size:11px;color:#666;margin-top:6px;">Pastikan repo <b>${GH_OWNER}/${GH_REPO}</b> publik dan folder <b>${GH_BASE}</b> ada.</div>
-      <button onclick="window.renderExplorer()" style="margin-top:12px;padding:6px 14px;background:linear-gradient(180deg,#3d7ad4,#1e56c8);color:#fff;border:none;border-radius:3px;cursor:pointer;font-weight:600;">Coba Lagi</button>
-    </div>`;
     if(status) status.textContent = 'Error';
+  }finally{
+    state.loading = false;
   }
 }
 
-function openGHFile(file){
-  if(file.type === 'dir'){
-    GH.history.push(GH.current);
-    GH.current = file.path;
-    renderExplorerGitHub();
-    return;
+/* Override renderExplorer global (dipanggil saat init & refresh) */
+window.renderExplorer = function(){
+  if(!state.items.length) return navigate(GH.base, true);
+  renderItems(state.items);
+};
+
+/* Hook: panggil explorer pertama kali saat user buka app atau klik desktop */
+const _openApp = window.openApp;
+let _opened = false;
+window.openApp = function(id){
+  const r = _openApp.apply(this, arguments);
+  if(id === 'explorer' && !_opened){
+    _opened = true;
+    setTimeout(()=>navigate(GH.base, true), 50);
+  } else if(id === 'explorer'){
+    setTimeout(()=>renderItems(state.items), 30);
   }
-  const webUrl = `https://${GH_OWNER}.github.io/${file.path}`;
-  window.open(webUrl, '_blank', 'noopener');
-}
+  return r;
+};
 
-window.renderExplorer = renderExplorerGitHub;
-
-/* ─────────────────────────────────────────────────────────
-   FIX 3: Pasang listener baru (strip yang lama dulu)
-   ───────────────────────────────────────────────────────── */
+/* Re-bind tombol toolbar dengan versi GitHub-aware */
 function rebind(id, handler){
   const el = document.getElementById(id);
   if(!el) return;
-  const clone = el.cloneNode(true);
-  el.parentNode.replaceChild(clone, el);
-  clone.onclick = handler;
+  const c = el.cloneNode(true);
+  el.parentNode.replaceChild(c, el);
+  c.onclick = handler;
 }
-
-rebind('expBackBtn', () => {
-  if(GH.history.length){
-    GH.current = GH.history.pop();
-    renderExplorerGitHub();
+rebind('expBackBtn', ()=>{
+  if(state.stack.length > 1){
+    state.stack.pop();
+    const prev = state.stack[state.stack.length-1];
+    navigate(prev, true);
   } else {
     try{ Sound.click(); }catch(e){}
   }
 });
-
-rebind('expUpBtn', () => {
-  if(GH.current === GH_BASE) return;
-  const parts = GH.current.split('/');
+rebind('expUpBtn', ()=>{
+  if(state.current === GH.base) return;
+  const parts = state.current.split('/');
   parts.pop();
-  GH.history.push(GH.current);
-  GH.current = parts.join('/') || GH_BASE;
-  renderExplorerGitHub();
+  const up = parts.join('/') || GH.base;
+  state.stack.push(state.current);
+  navigate(up, true);
+});
+rebind('expRefreshBtn', ()=>{
+  sessionStorage.removeItem(cacheKey(state.current));
+  navigate(state.current, true);
 });
 
-rebind('expRefreshBtn', () => {
-  renderExplorerGitHub();
-});
-
-// View toggle
+/* View toggle */
 const viewBtn = document.querySelector('.exp-view-btn');
 if(viewBtn){
-  const clone = viewBtn.cloneNode(true);
-  viewBtn.parentNode.replaceChild(clone, viewBtn);
-  clone.onclick = () => {
-    GH.view = GH.view === 'icons' ? 'list' : 'icons';
-    renderExplorerGitHub();
+  const c = viewBtn.cloneNode(true);
+  viewBtn.parentNode.replaceChild(c, viewBtn);
+  c.onclick = ()=>{
+    state.view = state.view === 'icons' ? 'list' : 'icons';
+    renderItems(state.items);
     try{ Sound.click(); }catch(e){}
   };
 }
 
-/* ─────────────────────────────────────────────────────────
-   FIX 4: Panggil otomatis saat window dibuka
-   ───────────────────────────────────────────────────────── */
-const _origOpenApp = window.openApp;
-window.openApp = function(id){
-  const r = _origOpenApp.apply(this, arguments);
-  if(id === 'control')  setTimeout(()=>{ try{ renderProfileFixed(); }catch(e){console.warn(e);} }, 60);
-  if(id === 'explorer') setTimeout(()=>{ try{ renderExplorerGitHub(); }catch(e){console.warn(e);} }, 60);
-  return r;
-};
+/* Muat pertama kali (background) */
+setTimeout(()=>{
+  const appExpl = document.getElementById('app-explorer');
+  if(appExpl && !appExpl.classList.contains('hidden')) navigate(GH.base, true);
+}, 1200);
 
-// Kalau sudah login, langsung render sekarang
-function tryInitialRender(){
-  const welcomeGone = document.getElementById('welcomeScreen')?.classList.contains('hidden');
-  if(!welcomeGone) return;
-  try{ renderProfileFixed(); }catch(e){}
-  try{ renderExplorerGitHub(); }catch(e){}
-}
-// Cek beberapa kali (untuk handle kalau welcome belum diklik)
-let tries = 0;
-const iv = setInterval(()=>{
-  tries++;
-  tryInitialRender();
-  if(tries > 40) clearInterval(iv); // stop setelah ~10 detik
-}, 250);
-
-// Juga hook ke welcome user click (kalau belum login)
-document.querySelectorAll('.welcome-user').forEach(u=>{
-  u.addEventListener('click', ()=>{ setTimeout(tryInitialRender, 200); });
+/* Kalau user langsung klik desktop icon explorer sebelum klik lain */
+document.querySelectorAll('[data-open="explorer"]').forEach(el=>{
+  el.addEventListener('click', ()=>{
+    setTimeout(()=>{
+      if(!state.items.length) navigate(GH.base, true);
+    }, 100);
+  }, true);
 });
 
-console.log('[XP Fix] Profil & Materi (GitHub) sudah di-patch.');
+console.log('[XP Fix] Explorer sekarang membaca folder GitHub:', GH.owner+'/'+GH.repo+'/'+GH.base, '✓');
 })();
 </script>
