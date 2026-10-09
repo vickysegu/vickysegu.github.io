@@ -2,8 +2,7 @@ import re, sys, shutil
 
 src = sys.argv[1] if len(sys.argv) > 1 else 'index.html'
 html = open(src, encoding='utf-8').read()
-if 'PATCH v6' in html:
-    sys.exit('Sudah pernah dipatch (ada marker PATCH v6).')
+
 
 def need(cond, msg):
     if not cond:
