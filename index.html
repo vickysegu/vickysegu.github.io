@@ -11,34 +11,136 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <link rel="preload" href="./data.json" as="fetch" crossorigin> <!-- ← NEW -->
 
   <style>
     /* ═══════════════════════════════════════════════════════════════
-       NOTIFIKASI TRANSPARAN (GLASS) & CHIPS
+       ROOT & THEME VARIABLES
     ═══════════════════════════════════════════════════════════════ */
-    .semester-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-    .chip {
-      background: rgba(255, 255, 255, 0.12);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      color: var(--text-primary);
-      padding: 4px 10px;
-      border-radius: var(--radius-pill);
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
-      backdrop-filter: blur(4px);
-      transition: background 0.2s ease, transform 0.2s ease;
+    :root {
+      --font-system: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --text-primary:     #ffffff;
+      --text-secondary:   rgba(255, 255, 255, 0.92);
+      --text-tertiary:    rgba(255, 255, 255, 0.78);  /* ← dinaikkan utk kontras */
+      --accent:           #22c55e;
+      --accent-muted:     rgba(34, 197, 94, 0.18);
+      --warn:             #facc15;
+      --danger:           #ef4444;
+      --radius-pill:      9999px;
+      --radius-xl:        32px;
+      --radius-lg:        20px;
+      --radius-md:        16px;
+      --safe-top:         env(safe-area-inset-top, 0px);
+      --safe-bottom:      env(safe-area-inset-bottom, 0px);
+      --safe-left:        env(safe-area-inset-left, 0px);
+      --safe-right:       env(safe-area-inset-right, 0px);
     }
-    .chip:hover { background: rgba(255,255,255,0.2); transform: translateY(-1px); }
 
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; overflow: hidden; }
+
+    /* ═══════════════════════════════════════════════════════════════
+       BACKGROUND — FLUID UNTUK SEMUA UKURAN LAYAR
+       Mobile/tablet kecil: gradient murni (cepat & cantik)
+       Desktop: gambar Unsplash dengan fallback gradient
+    ═══════════════════════════════════════════════════════════════ */
+    body {
+      font-family: var(--font-system);
+      background-color: #0a1628;
+      background-image:
+        radial-gradient(ellipse at top left, rgba(34, 197, 94, 0.15), transparent 55%),
+        radial-gradient(ellipse at bottom right, rgba(59, 130, 246, 0.18), transparent 55%),
+        linear-gradient(145deg, #0a1a2f 0%, #0f172a 50%, #050b18 100%);
+      background-attachment: fixed;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding:
+        calc(var(--safe-top) + 24px)
+        calc(var(--safe-right) + 16px)
+        calc(var(--safe-bottom) + 24px)
+        calc(var(--safe-left) + 16px);
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Layer gambar desktop saja (≥ 768px) */
+    @media (min-width: 768px) {
+      body::after {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background-image: url('https://images.unsplash.com/photo-1723621901726-eacc52c8fc4d?q=75&w=1600&auto=format&fit=crop');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        opacity: 0;
+        z-index: -2;
+        animation: bgFadeIn 1.2s ease forwards;
+      }
+      @keyframes bgFadeIn { to { opacity: 1; } }
+    }
+
+    /* Overlay gelap */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 20, 35, 0.55);
+      backdrop-filter: brightness(0.92);
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    @media (max-width: 767px) {
+      body::before { background: rgba(10, 20, 35, 0.35); backdrop-filter: none; }
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       SKIP LINK
+    ═══════════════════════════════════════════════════════════════ */
+    .skip-link {
+      position: absolute;
+      top: -100px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--accent);
+      color: #0f172a;
+      padding: 10px 18px;
+      border-radius: 0 0 12px 12px;
+      font-weight: 800;
+      font-size: 13px;
+      text-decoration: none;
+      z-index: 10000;
+      transition: top 0.2s ease;
+    }
+    .skip-link:focus { top: 0; outline: 3px solid #fff; }
+
+    /* ═══════════════════════════════════════════════════════════════
+       FOCUS RING KONSISTEN
+    ═══════════════════════════════════════════════════════════════ */
+    :focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 3px;
+      border-radius: 8px;
+    }
+    button:focus { outline: none; }
+    button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+    /* ═══════════════════════════════════════════════════════════════
+       CHIP NOTIFIKASI
+    ═══════════════════════════════════════════════════════════════ */
     #chip-notif {
-      position: fixed; top: 0; left: 50%;
+      position: fixed;
+      top: calc(var(--safe-top) + 8px);
+      left: 50%;
       transform: translate(-50%, -30px);
-      z-index: 9999; opacity: 0;
+      z-index: 9999;
+      opacity: 0;
       transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.34, 1.3, 0.64, 1);
-      background: rgba(20, 25, 40, 0.7);
+      background: rgba(20, 25, 40, 0.78);
       backdrop-filter: blur(16px) saturate(180%);
       -webkit-backdrop-filter: blur(16px) saturate(180%);
       border: 1px solid rgba(255, 255, 255, 0.25);
@@ -50,75 +152,56 @@
       letter-spacing: 0.2px;
       max-width: calc(100vw - 32px);
       box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
-      display: none; align-items: center; justify-content: center; gap: 8px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
     }
     #chip-notif.show { display: flex; }
     @media (max-width: 640px) {
       #chip-notif { font-size: 12px; padding: 10px 16px; }
     }
     .checkmark {
-      font-size: 16px; color: #22c55e; display: inline-block;
+      font-size: 16px;
+      color: #22c55e;
+      display: inline-block;
       transition: transform 0.25s cubic-bezier(0.34, 1.3, 0.64, 1);
     }
     .checkmark.animate { transform: scale(1.35); }
     .checkmark.warn { color: #facc15; }
 
     /* ═══════════════════════════════════════════════════════════════
-       ROOT & THEME VARIABLES
-    ═══════════════════════════════════════════════════════════════ */
-    :root {
-      --font-system: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-      --text-primary:     #ffffff;
-      --text-secondary:   rgba(255, 255, 255, 0.9);
-      --text-tertiary:    rgba(255, 255, 255, 0.68);
-      --accent:           #22c55e;
-      --accent-muted:     rgba(34, 197, 94, 0.18);
-      --warn:             #facc15;
-      --danger:           #ef4444;
-      --radius-pill:      9999px;
-      --radius-xl:        32px;
-      --radius-lg:        20px;
-      --radius-md:        16px;
-      --safe-top:         env(safe-area-inset-top, 20px);
-      --safe-bottom:      env(safe-area-inset-bottom, 20px);
-    }
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { width: 100%; height: 100%; overflow: hidden; }
-
-    body {
-      font-family: var(--font-system);
-      background: #0f172a url('https://images.unsplash.com/photo-1723621901726-eacc52c8fc4d?q=80&w=2070&auto=format') center/cover no-repeat fixed;
-      color: var(--text-primary);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: calc(var(--safe-top) + 30px) 20px var(--safe-bottom) 20px;
-      -webkit-font-smoothing: antialiased;
-      text-rendering: optimizeLegibility;
-    }
-    @media (max-width: 768px) {
-      body { background-image: linear-gradient(145deg, #0a1a2f, #0f172a); }
-    }
-    body::before {
-      content: '';
-      position: fixed; inset: 0;
-      background: rgba(10, 20, 35, 0.55);
-      backdrop-filter: brightness(0.9);
-      z-index: -1;
-    }
-
-    /* ═══════════════════════════════════════════════════════════════
        LAYOUT UTAMA
     ═══════════════════════════════════════════════════════════════ */
     .app-container {
-      width: 100%; max-width: 1100px; height: 100%; max-height: 850px;
-      display: flex; flex-direction: column; gap: 20px;
-      opacity: 0; transition: opacity 0.6s ease;
+      width: 100%;
+      max-width: 1100px;
+      height: 100%;
+      max-height: 850px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      opacity: 0;
+      transition: opacity 0.6s ease;
     }
-    @media (min-width: 768px) {
-      .app-container { flex-direction: row; height: 85vh; }
-      body { padding: var(--safe-top) 20px var(--safe-bottom) 20px; }
+
+    @media (min-width: 1024px) {
+      .app-container {
+        flex-direction: row;
+        height: 85dvh;
+        max-height: 850px;
+        gap: 20px;
+      }
+    }
+
+    /* Tablet 768–1023: layout kolom (sidebar atas, main bawah) */
+    @media (min-width: 768px) and (max-width: 1023px) {
+      .app-container {
+        flex-direction: column;
+        height: 92dvh;
+        max-height: none;
+        gap: 14px;
+      }
     }
 
     /* GLASS PANEL */
@@ -133,182 +216,567 @@
       border-radius: var(--radius-xl);
     }
 
+    /* Mobile: blur dikurangi untuk performa */
+    @media (max-width: 767px) {
+      .glass-panel {
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.78) 0%, rgba(15, 23, 42, 0.62) 100%);
+      }
+    }
+
     /* ═══════════════════════════════════════════════════════════════
        SIDEBAR (PROFIL)
     ═══════════════════════════════════════════════════════════════ */
     .sidebar {
-      flex: 0 0 auto; padding: 24px; display: flex; flex-direction: row;
-      align-items: center; gap: 20px; overflow: hidden;
+      flex: 0 0 auto;
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 16px;
+      overflow: hidden;
+      position: relative;
     }
+
     .avatar-wrapper {
-      width: 80px; height: 80px; flex-shrink: 0; border-radius: var(--radius-pill);
+      width: 60px;
+      height: 60px;
+      flex-shrink: 0;
+      border-radius: var(--radius-pill);
       padding: 3px;
       background: linear-gradient(135deg, rgba(255,255,255,0.55), rgba(255,255,255,0.1));
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
       transition: transform 0.35s cubic-bezier(0.34, 1.3, 0.64, 1);
+      will-change: transform;
     }
     .avatar-wrapper:hover { transform: scale(1.05); }
     .avatar-inner {
-      width: 100%; height: 100%; border-radius: inherit;
+      width: 100%;
+      height: 100%;
+      border-radius: inherit;
       background: rgba(0,0,0,0.4);
-      display: flex; align-items: center; justify-content: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       overflow: hidden;
     }
-    .avatar-inner img { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; }
-    #cv-photo { width: auto; height: auto; max-width: 90%; max-height: 90%; object-fit: contain; background: #1e293b; border-radius: inherit; }
+    .avatar-inner img {
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+    }
+    #cv-photo {
+      width: auto;
+      height: auto;
+      max-width: 90%;
+      max-height: 90%;
+      object-fit: contain;
+      background: #1e293b;
+      border-radius: inherit;
+    }
+
     .profile-info { flex: 1; min-width: 0; }
-    .profile-name { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 2px; text-shadow: 0 2px 5px rgba(0,0,0,0.4); }
-    .profile-role { font-size: 13px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; text-shadow: 0 1px 3px rgba(0,0,0,0.5); transition: color 0.4s ease; }
-    .profile-bio { display: none; }
-    .social-links { display: flex; gap: 8px; margin-top: 12px; }
+    .profile-name {
+      font-size: clamp(16px, 3.8vw, 22px);
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 2px;
+      text-shadow: 0 2px 5px rgba(0,0,0,0.4);
+      line-height: 1.2;
+    }
+    .profile-role {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 6px;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+      transition: color 0.4s ease;
+      line-height: 1.35;
+    }
+    #prof-nidn {
+      font-size: 11px !important;
+      margin-top: -4px !important;
+      color: var(--text-tertiary);
+      text-transform: none;
+      letter-spacing: 0.3px;
+    }
+    .profile-bio {
+      display: none;
+      font-size: 14.5px;
+      line-height: 1.55;
+      color: var(--text-secondary);
+      margin-top: 20px;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+
+    /* Mobile: social links sebagai FAB kolom di kanan bawah */
+    .social-links { display: flex; gap: 8px; margin-top: 0; }
+
     .social-btn {
-      width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
-      border-radius: var(--radius-pill); background: rgba(255,255,255,0.1);
-      color: var(--text-primary); border: 1px solid rgba(255,255,255,0.2);
-      text-decoration: none; transition: 0.2s ease;
-      position: relative; overflow: hidden; cursor: pointer;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-pill);
+      background: rgba(255,255,255,0.1);
+      color: var(--text-primary);
+      border: 1px solid rgba(255,255,255,0.2);
+      text-decoration: none;
+      transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
     }
     .social-btn::before {
-      content: ''; position: absolute; inset: 0;
+      content: '';
+      position: absolute;
+      inset: 0;
       background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), var(--accent), transparent);
-      opacity: 0; transition: opacity 0.3s; pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
     }
-    .social-btn:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.4); }
+    .social-btn:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255,255,255,0.4);
+      background: rgba(255,255,255,0.15);
+    }
     .social-btn:hover::before { opacity: 0.5; }
 
-    @media (min-width: 768px) {
-      .sidebar { flex: 0 0 320px; flex-direction: column; text-align: center; padding: 48px 32px; justify-content: center; }
-      .avatar-wrapper { width: 150px; height: 150px; margin-bottom: 16px; }
+    /* Desktop sidebar */
+    @media (min-width: 1024px) {
+      .sidebar {
+        flex: 0 0 320px;
+        flex-direction: column;
+        text-align: center;
+        padding: 44px 32px;
+        justify-content: center;
+        gap: 20px;
+      }
+      .avatar-wrapper { width: 150px; height: 150px; margin-bottom: 0; }
       .profile-name { font-size: 28px; margin-bottom: 4px; }
-      .profile-bio { display: block; font-size: 14.5px; line-height: 1.55; color: var(--text-secondary); margin-top: 20px; text-shadow: 0 1px 3px rgba(0,0,0,0.3); }
-      .social-links { justify-content: center; margin-top: 24px; }
+      .profile-role { font-size: 13px; letter-spacing: 1px; }
+      #prof-nidn { font-size: 12px !important; }
+      .profile-bio { display: block; }
+      .social-links { justify-content: center; margin-top: 4px; }
+    }
+
+    /* Tablet 768–1023: sidebar horizontal, bio hidden */
+    @media (min-width: 768px) and (max-width: 1023px) {
+      .sidebar {
+        padding: 18px 24px;
+        gap: 20px;
+      }
+      .avatar-wrapper { width: 76px; height: 76px; }
+      .profile-name { font-size: 22px; }
+      .profile-bio { display: none; }
+      .social-links { margin-top: 0; }
+    }
+
+    /* Mobile FAB untuk social (muncul di kanan bawah) */
+    @media (max-width: 767px) {
+      .sidebar { justify-content: flex-start; }
+      .social-links {
+        position: fixed;
+        right: calc(var(--safe-right) + 14px);
+        bottom: calc(var(--safe-bottom) + 110px);
+        flex-direction: column;
+        gap: 10px;
+        z-index: 900;
+        margin: 0;
+      }
+      .social-btn {
+        width: 44px;
+        height: 44px;
+        background: rgba(15, 23, 42, 0.82);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+      }
     }
 
     /* ═══════════════════════════════════════════════════════════════
        MAIN WINDOW & TABS
     ═══════════════════════════════════════════════════════════════ */
-    .main-window { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; min-width: 0; }
+    .main-window {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+      min-width: 0;
+      min-height: 0;
+    }
+
     .window-header {
-      padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.15);
-      display: flex; gap: 8px; overflow-x: auto;
-      scrollbar-width: none; flex-shrink: 0;
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.15);
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scrollbar-width: none;
+      flex-shrink: 0;
+      position: relative;
+      scroll-behavior: smooth;
     }
     .window-header::-webkit-scrollbar { display: none; }
 
-    .nav-tab {
-      padding: 10px 20px; border-radius: var(--radius-pill); border: 1px solid transparent;
-      background: transparent; color: var(--text-tertiary); font-family: inherit;
-      font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s ease;
-      display: flex; align-items: center; gap: 8px; white-space: nowrap;
-      position: relative; overflow: hidden;
-      -webkit-tap-highlight-color: transparent;
+    /* Edge fade kanan */
+    .window-header::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: 28px;
+      background: linear-gradient(to left, rgba(15,23,42,0.75), transparent);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.25s ease;
     }
-    .nav-tab:hover { color: var(--text-secondary); background: rgba(255,255,255,0.08); transform: translateY(-1px); }
-    .nav-tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-    .nav-tab.active {
-      background: rgba(255,255,255,0.2); color: #ffffff; border-color: rgba(255,255,255,0.35);
+    .window-header.has-scroll-right::after { opacity: 1; }
+
+    /* Sliding indicator */
+    .tab-indicator {
+      position: absolute;
+      top: 12px;
+      height: calc(100% - 24px);
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255,255,255,0.35);
+      border-radius: var(--radius-pill);
       box-shadow: inset 0 1px 1px rgba(255,255,255,0.25), 0 4px 12px rgba(0,0,0,0.2);
+      transition: transform 0.4s cubic-bezier(0.34, 1.25, 0.64, 1), width 0.4s cubic-bezier(0.34, 1.25, 0.64, 1), opacity 0.3s;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0;
     }
+    .tab-indicator.ready { opacity: 1; }
+
+    .nav-tab {
+      padding: 10px 18px;
+      min-height: 44px;   /* ← Tap target */
+      border-radius: var(--radius-pill);
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-tertiary);
+      font-family: inherit;
+      font-size: 13.5px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: color 0.2s ease, transform 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      position: relative;
+      overflow: visible;
+      -webkit-tap-highlight-color: transparent;
+      z-index: 1;
+    }
+    .nav-tab:hover {
+      color: var(--text-secondary);
+      transform: translateY(-1px);
+    }
+    .nav-tab:active { transform: scale(0.94); transition: transform 0.08s ease; }
+    .nav-tab.active { color: #ffffff; }
+
     .badge-count {
-      background: var(--accent); color: #0f172a; padding: 2px 7px; border-radius: 20px;
-      font-size: 11px; font-weight: 800; margin-left: 6px;
-      min-width: 20px; text-align: center;
+      background: var(--accent);
+      color: #0f172a;
+      padding: 2px 7px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 800;
+      margin-left: 6px;
+      min-width: 20px;
+      text-align: center;
       transition: transform 0.2s ease;
+      font-variant-numeric: tabular-nums;
     }
     .nav-tab.active .badge-count { transform: scale(1.05); }
 
-    .window-body { flex: 1; overflow-y: auto; padding: 24px; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
+    .window-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 22px;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+      min-height: 0;
+    }
     .window-body::-webkit-scrollbar { width: 6px; }
     .window-body::-webkit-scrollbar-track { background: transparent; }
-    .window-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.25); border-radius: 10px; }
+    .window-body::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.25);
+      border-radius: 10px;
+    }
     .window-body::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.4); }
 
-    .content-section { display: none; animation: fadeIn 0.35s ease forwards; }
-    .content-section.active { display: block; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    /* Scroll progress bar */
+    #scroll-progress {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), #60a5fa);
+      width: 0;
+      transition: width 0.08s linear;
+      z-index: 12;
+      border-radius: 0 3px 3px 0;
+      pointer-events: none;
+    }
+
+    .content-section { display: none; }
+    .content-section.active {
+      display: block;
+      animation: fadeIn 0.4s cubic-bezier(0.34, 1.2, 0.64, 1) forwards;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 
     /* ELEMEN KONTEN */
-    .section-title { font-size: 18px; font-weight: 800; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; letter-spacing: -0.2px; }
+    .section-title {
+      font-size: clamp(16px, 2.2vw, 18px);
+      font-weight: 800;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      letter-spacing: -0.2px;
+    }
     .section-title i { color: var(--accent); }
-    .grid-list { display: grid; grid-template-columns: 1fr; gap: 16px; }
-    @media (min-width: 1024px) { .grid-list { grid-template-columns: 1fr 1fr; } }
 
-    /* ========== GLOW TRACKING CURSOR PADA KARTU ========== */
+    .grid-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 14px;
+    }
+    @media (max-width: 767px) {
+      .grid-list { grid-template-columns: 1fr; gap: 12px; }
+    }
+
+    /* ========== GLASS CARD + STAGGER ========== */
     .glass-card {
-      background: rgba(0, 0, 0, 0.25); backdrop-filter: blur(8px);
-      border: 1px solid rgba(255, 255, 255, 0.12); border-radius: var(--radius-lg);
-      padding: 16px; box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.08);
-      display: flex; gap: 16px; transition: all 0.25s cubic-bezier(0.34, 1.1, 0.64, 1);
-      position: relative; overflow: hidden;
+      background: rgba(0, 0, 0, 0.28);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: var(--radius-lg);
+      padding: 14px 16px;
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.08);
+      display: flex;
+      gap: 14px;
+      transition: transform 0.25s cubic-bezier(0.34, 1.1, 0.64, 1),
+                  background 0.25s ease,
+                  border-color 0.25s ease;
+      position: relative;
+      overflow: hidden;
+      min-height: 44px;   /* tap target */
+      opacity: 0;
+      animation: cardIn 0.55s cubic-bezier(0.34, 1.2, 0.64, 1) forwards;
+      animation-delay: calc(var(--i, 0) * 40ms);
     }
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(16px) scale(0.96); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
     .glass-card::before {
-      content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
       background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), var(--accent), transparent 60%);
-      opacity: 0; transition: opacity 0.3s ease; pointer-events: none; z-index: 0;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+      z-index: 0;
     }
-    .glass-card:hover::before { opacity: 0.35; }
+    .glass-card:hover::before { opacity: 0.32; }
     .glass-card > * { position: relative; z-index: 1; }
-    .glass-card:hover { transform: translateY(-3px); background: rgba(0,0,0,0.35); border-color: rgba(255,255,255,0.28); }
+    .glass-card:hover {
+      transform: translateY(-3px);
+      background: rgba(0,0,0,0.38);
+      border-color: rgba(255,255,255,0.28);
+    }
 
     .card-icon {
-      width: 46px; height: 46px; flex-shrink: 0; border-radius: var(--radius-md);
-      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 13px; font-weight: 800; z-index: 2;
+      width: 46px;
+      height: 46px;
+      flex-shrink: 0;
+      border-radius: var(--radius-md);
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 800;
+      z-index: 2;
       letter-spacing: -0.3px;
+      transition: transform 0.35s cubic-bezier(0.34, 1.3, 0.64, 1), background 0.3s ease;
     }
+    .glass-card:hover .card-icon {
+      transform: rotate(-6deg) scale(1.06);
+      background: var(--accent-muted);
+    }
+
     .card-info { flex: 1; min-width: 0; }
-    .item-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; line-height: 1.4; word-break: break-word; }
-    .item-title a { color: inherit; text-decoration: none; transition: color 0.2s; }
+    .item-title {
+      font-size: clamp(13.5px, 1.3vw, 15px);
+      font-weight: 700;
+      margin-bottom: 6px;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+    .item-title a {
+      color: inherit;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
     .item-title a:hover { color: var(--accent); }
-    .item-desc { font-size: 13px; color: var(--text-tertiary); margin-bottom: 8px; line-height: 1.4; }
+    .item-desc {
+      font-size: 12.5px;
+      color: var(--text-tertiary);
+      margin-bottom: 8px;
+      line-height: 1.45;
+    }
     .item-meta { display: flex; flex-wrap: wrap; gap: 6px; }
     .badge {
-      background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 6px; padding: 4px 8px; font-size: 10px; font-weight: 700;
-      text-transform: uppercase; letter-spacing: 0.3px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
     }
-    .badge.highlight { background: var(--accent-muted); color: var(--accent); border-color: rgba(34,197,94,0.4); }
+    .badge.highlight {
+      background: var(--accent-muted);
+      color: var(--accent);
+      border-color: rgba(34,197,94,0.4);
+    }
 
-    .campus-group { margin-bottom: 28px; }
+    .campus-group { margin-bottom: 24px; }
     .campus-title {
-      font-size: 16px; font-weight: 700; color: var(--text-secondary); margin-bottom: 14px;
-      padding-bottom: 8px; border-bottom: 2px solid rgba(255,255,255,0.2); display: inline-block;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid rgba(255,255,255,0.2);
+      display: inline-block;
     }
     .campus-title i { margin-right: 8px; color: var(--accent); }
 
-    /* MOBILE NAVBAR (FLOATING) */
+    /* Semester chips */
+    .semester-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .chip {
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: var(--text-primary);
+      padding: 5px 11px;
+      border-radius: var(--radius-pill);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      backdrop-filter: blur(4px);
+      transition: background 0.2s ease, transform 0.2s ease;
+      min-height: 24px;
+      display: inline-flex;
+      align-items: center;
+    }
+    .chip:hover { background: rgba(255,255,255,0.2); transform: translateY(-1px); }
+
+    /* ═══════════════════════════════════════════════════════════════
+       MOBILE BOTTOM NAV (FLOATING)
+    ═══════════════════════════════════════════════════════════════ */
     @media (max-width: 767px) {
       .window-header {
-        position: fixed; bottom: 20px; left: 16px; right: 16px; z-index: 1000;
-        background: rgba(15,23,42,0.75); backdrop-filter: blur(24px);
-        -webkit-backdrop-filter: blur(24px);
-        border: 1px solid rgba(255,255,255,0.2); border-radius: 32px;
-        padding: 8px 12px; justify-content: space-between; gap: 4px;
-        box-shadow: 0 12px 40px rgba(0,0,0,0.35);
-        bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+        position: fixed;
+        left: calc(var(--safe-left) + 14px);
+        right: calc(var(--safe-right) + 14px);
+        bottom: calc(var(--safe-bottom) + 16px);
+        z-index: 1000;
+        background: rgba(15,23,42,0.85);
+        backdrop-filter: blur(24px) saturate(180%);
+        -webkit-backdrop-filter: blur(24px) saturate(180%);
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 28px;
+        padding: 8px 10px;
+        justify-content: space-between;
+        gap: 2px;
+        box-shadow: 0 12px 40px rgba(0,0,0,0.45);
+        overflow: visible;
       }
-      .window-body { padding-bottom: 110px; }
+      .window-header::after { display: none; }
+      .tab-indicator { display: none; }  /* mobile pakai tab active style langsung */
+
+      .window-body { padding-bottom: 130px; }
+
       .nav-tab {
-        flex-direction: column; padding: 8px 6px; gap: 4px; flex: 1;
-        border-radius: 26px; min-height: 64px; justify-content: center;
+        flex-direction: column;
+        padding: 8px 4px;
+        gap: 3px;
+        flex: 1;
+        border-radius: 22px;
+        min-height: 56px;
+        justify-content: center;
+        font-size: 10px;
+        min-width: 0;
       }
-      .nav-tab i { font-size: 20px; }
-      .nav-tab .tab-text { font-size: 10.5px; }
-      .badge-count { position: absolute; top: 6px; right: 8px; margin-left: 0; }
+      .nav-tab i { font-size: 18px; }
+      .nav-tab .tab-text { font-size: 10px; font-weight: 700; }
+
+      .nav-tab.active {
+        background: rgba(255,255,255,0.18);
+        box-shadow: inset 0 1px 1px rgba(255,255,255,0.2);
+      }
+
+      .badge-count {
+        position: absolute;
+        top: 4px;
+        right: 6px;
+        margin-left: 0;
+        font-size: 9px;
+        padding: 1px 5px;
+        min-width: 16px;
+        box-shadow: 0 0 0 2px rgba(15,23,42,0.9);
+      }
     }
 
     /* ═══════════════════════════════════════════════════════════════
-       LOADER
+       LOADER + SKELETON
     ═══════════════════════════════════════════════════════════════ */
     #page-loader {
-      position: fixed; inset: 0; z-index: 999; background: #0f172a;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 20px; transition: opacity 0.4s ease;
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      background: #0f172a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      transition: opacity 0.4s ease;
     }
     #page-loader.hidden { opacity: 0; pointer-events: none; }
     .spinner {
-      width: 40px; height: 40px;
+      width: 40px;
+      height: 40px;
       border: 3px solid rgba(255,255,255,0.15);
       border-top-color: var(--accent);
       border-radius: 50%;
@@ -317,75 +785,168 @@
     .spinner.sm { width: 20px; height: 20px; border-width: 2px; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ═══════════════════════════════════════════════════════════════
-       STATUS BANNER (PARTIAL DATA) ← NEW
-    ═══════════════════════════════════════════════════════════════ */
-    #status-banner {
-      display: none;
-      margin: 16px 20px 0 20px;
-      padding: 10px 14px;
-      background: rgba(250, 204, 21, 0.12);
-      border: 1px solid rgba(250, 204, 21, 0.35);
-      border-radius: var(--radius-md);
-      color: #fde68a;
-      font-size: 12.5px;
-      font-weight: 600;
-      line-height: 1.45;
-      align-items: center;
-      gap: 10px;
-      backdrop-filter: blur(8px);
-      animation: fadeIn 0.4s ease;
+    /* Skeleton shimmer */
+    .skeleton-card {
+      background: rgba(0,0,0,0.2);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      display: flex;
+      gap: 14px;
+      min-height: 78px;
+      overflow: hidden;
+      position: relative;
     }
-    #status-banner.show { display: flex; }
-    #status-banner i.fa-triangle-exclamation { color: var(--warn); font-size: 15px; flex-shrink: 0; }
-    #status-banner .banner-text { flex: 1; }
-    #status-banner .banner-close {
-      background: transparent; border: none; color: #fde68a; cursor: pointer;
-      font-size: 14px; padding: 4px 6px; border-radius: 6px; transition: background 0.2s;
+    .skeleton-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg,
+        rgba(255,255,255,0) 0%,
+        rgba(255,255,255,0.08) 50%,
+        rgba(255,255,255,0) 100%);
+      animation: shimmer 1.5s infinite;
+    }
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+    .skeleton-icon {
+      width: 46px;
+      height: 46px;
+      border-radius: var(--radius-md);
+      background: rgba(255,255,255,0.08);
       flex-shrink: 0;
     }
-    #status-banner .banner-close:hover { background: rgba(255,255,255,0.1); }
+    .skeleton-lines { flex: 1; display: flex; flex-direction: column; gap: 8px; justify-content: center; }
+    .skeleton-line {
+      height: 12px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.08);
+    }
+    .skeleton-line.long { width: 80%; }
+    .skeleton-line.short { width: 45%; }
 
     /* ═══════════════════════════════════════════════════════════════
-       ERROR STATE
+       ERROR / EMPTY STATE
     ═══════════════════════════════════════════════════════════════ */
     .error-box {
-      text-align: center; padding: 32px 20px;
-      display: flex; flex-direction: column; align-items: center; gap: 12px;
+      text-align: center;
+      padding: 32px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
     }
-    .error-box i.fa-circle-exclamation { font-size: 42px; color: var(--danger); }
+    .error-box i.fa-circle-exclamation,
+    .error-box i.fa-triangle-exclamation { font-size: 42px; color: var(--danger); }
     .error-box h3 { font-size: 16px; font-weight: 800; color: var(--danger); }
-    .error-box p { font-size: 13px; color: var(--text-tertiary); line-height: 1.55; max-width: 420px; }
+    .error-box p {
+      font-size: 13px;
+      color: var(--text-tertiary);
+      line-height: 1.55;
+      max-width: 420px;
+    }
     .error-box code {
-      background: rgba(0,0,0,0.35); padding: 2px 6px; border-radius: 4px;
-      font-size: 12px; color: #fca5a5;
+      background: rgba(0,0,0,0.35);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+      color: #fca5a5;
     }
     .retry-btn {
-      margin-top: 8px; padding: 10px 20px; border-radius: var(--radius-pill);
-      background: var(--accent); color: #0f172a; border: none; cursor: pointer;
-      font-weight: 800; font-family: inherit; font-size: 13px;
+      margin-top: 8px;
+      padding: 12px 22px;
+      min-height: 44px;
+      border-radius: var(--radius-pill);
+      background: var(--accent);
+      color: #0f172a;
+      border: none;
+      cursor: pointer;
+      font-weight: 800;
+      font-family: inherit;
+      font-size: 13px;
       transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
-    .retry-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(34,197,94,0.3); }
+    .retry-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(34,197,94,0.3);
+    }
 
-    /* Empty state */
     .empty-state {
       grid-column: 1 / -1;
-      text-align: center; padding: 32px 20px;
-      color: var(--text-tertiary); font-size: 13.5px;
-      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      text-align: center;
+      padding: 36px 20px;
+      color: var(--text-tertiary);
+      font-size: 13.5px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
     }
-    .empty-state i { font-size: 28px; opacity: 0.5; }
+    .empty-state i.fa-solid { font-size: 32px; opacity: 0.55; }
+    .empty-state .empty-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      min-height: 40px;
+      border-radius: var(--radius-pill);
+      background: var(--accent-muted);
+      color: var(--accent);
+      border: 1px solid rgba(34,197,94,0.4);
+      font-size: 12.5px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: transform 0.2s ease, background 0.2s ease;
+      margin-top: 4px;
+    }
+    .empty-cta:hover { transform: translateY(-2px); background: rgba(34,197,94,0.28); }
 
+    /* ═══════════════════════════════════════════════════════════════
+       LANDSCAPE MOBILE
+    ═══════════════════════════════════════════════════════════════ */
+    @media (max-height: 500px) and (orientation: landscape) and (max-width: 900px) {
+      body { padding: 8px; }
+      .app-container { height: 100dvh; max-height: none; gap: 8px; }
+      .sidebar { padding: 10px 14px; }
+      .avatar-wrapper { width: 44px; height: 44px; }
+      .profile-name { font-size: 14px; }
+      .profile-role { font-size: 10px; margin-bottom: 0; }
+      #prof-nidn { display: none; }
+      .window-header {
+        position: static;
+        border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+        padding: 6px 10px;
+        margin: 0;
+      }
+      .nav-tab { flex-direction: row; min-height: 40px; padding: 6px 12px; font-size: 11.5px; }
+      .nav-tab .tab-text { font-size: 11.5px; }
+      .nav-tab i { font-size: 14px; }
+      .badge-count { position: static; margin-left: 4px; font-size: 9px; padding: 1px 5px; min-width: 14px; box-shadow: none; }
+      .window-body { padding: 12px; padding-bottom: 12px; }
+      .social-links { display: none; }
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       REDUCED MOTION
+    ═══════════════════════════════════════════════════════════════ */
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
         animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
       }
+      .glass-card { opacity: 1; }
+      .tab-indicator { transition: none; }
     }
   </style>
 </head>
 <body>
+
+<!-- Skip link untuk aksesibilitas -->
+<a href="#scroll-area" class="skip-link">Lewati ke konten</a>
 
 <div id="page-loader">
   <div class="spinner"></div>
@@ -400,81 +961,93 @@
 <div class="app-container" id="app-container">
 
   <aside class="glass-panel sidebar">
-    <div class="avatar-wrapper">
+    <div class="avatar-wrapper" id="avatar-wrapper">
       <div class="avatar-inner">
-        <img id="cv-photo" src="profile.jpg" alt="Foto Vicky Setia Gunawan"
-             onerror="this.style.display='none'; document.getElementById('cv-avatar-fallback').style.display='block';">
-        <i id="cv-avatar-fallback" class="fa-solid fa-user" style="display: none; font-size: 48px; color: #94a3b8;"></i>
+        <img id="cv-photo" src="profile.jpg" alt="Foto Vicky Setia Gunawan" loading="lazy" decoding="async">
+        <i id="cv-avatar-fallback" class="fa-solid fa-user" style="display: none; font-size: 40px; color: #94a3b8;"></i>
       </div>
     </div>
     <div class="profile-info">
       <h1 class="profile-name" id="prof-name">—</h1>
       <div class="profile-role" id="prof-role">—</div>
-      <div class="profile-role" id="prof-nidn" style="font-size:12px; margin-top:-6px;">—</div>
+      <div class="profile-role" id="prof-nidn">—</div>
       <p class="profile-bio">
         Dosen aktif di bidang Bisnis Digital dengan keahlian dalam pengembangan sistem informasi, kecerdasan buatan, dan pemrograman web. Aktif berkontribusi melalui penelitian dan publikasi ilmiah.
       </p>
       <div class="social-links">
-        <a href="#" class="social-btn" onclick="event.preventDefault(); copyEmail();" title="Salin email" aria-label="Salin email">
-          <i class="fa-solid fa-envelope"></i>
+        <a href="#" class="social-btn" id="btn-copy-email" title="Salin email" aria-label="Salin email">
+          <i class="fa-solid fa-envelope" aria-hidden="true"></i>
         </a>
         <a href="https://www.linkedin.com/in/vickysetiagunawan/" class="social-btn" target="_blank" rel="noopener" title="LinkedIn" aria-label="LinkedIn">
-          <i class="fa-brands fa-linkedin-in"></i>
+          <i class="fa-brands fa-linkedin-in" aria-hidden="true"></i>
         </a>
         <a href="https://scholar.google.com/citations?user=zxh3WngAAAAJ&hl=en" class="social-btn" target="_blank" rel="noopener" title="Google Scholar" aria-label="Google Scholar">
-          <i class="fa-solid fa-graduation-cap"></i>
+          <i class="fa-solid fa-graduation-cap" aria-hidden="true"></i>
         </a>
       </div>
     </div>
   </aside>
 
   <main class="glass-panel main-window">
-    <header class="window-header" role="tablist">
-      <button class="nav-tab active" data-tab="edu" role="tab" aria-selected="true">
-        <i class="fa-solid fa-user-graduate"></i><span class="tab-text">Profil</span>
+    <div class="window-header" id="window-header" role="tablist" aria-label="Navigasi tab portofolio">
+      <div class="tab-indicator" id="tab-indicator" aria-hidden="true"></div>
+
+      <button class="nav-tab active" data-tab="edu" role="tab" id="tab-btn-edu"
+              aria-selected="true" aria-controls="tab-edu" tabindex="0">
+        <i class="fa-solid fa-user-graduate" aria-hidden="true"></i>
+        <span class="tab-text">Profil</span>
       </button>
-      <button class="nav-tab" data-tab="teach" role="tab" aria-selected="false">
-        <i class="fa-solid fa-chalkboard-user"></i><span class="tab-text">Mengajar</span>
-        <span class="badge-count" id="count-teach">0</span>
+
+      <button class="nav-tab" data-tab="teach" role="tab" id="tab-btn-teach"
+              aria-selected="false" aria-controls="tab-teach" tabindex="-1">
+        <i class="fa-solid fa-chalkboard-user" aria-hidden="true"></i>
+        <span class="tab-text">Mengajar</span>
+        <span class="badge-count" id="count-teach" aria-label="jumlah mata kuliah">0</span>
       </button>
-      <button class="nav-tab" data-tab="pub" role="tab" aria-selected="false">
-        <i class="fa-solid fa-book-open"></i><span class="tab-text">Publikasi</span>
-        <span class="badge-count" id="count-pub">0</span>
+
+      <button class="nav-tab" data-tab="pub" role="tab" id="tab-btn-pub"
+              aria-selected="false" aria-controls="tab-pub" tabindex="-1">
+        <i class="fa-solid fa-book-open" aria-hidden="true"></i>
+        <span class="tab-text">Publikasi</span>
+        <span class="badge-count" id="count-pub" aria-label="jumlah publikasi">0</span>
       </button>
-      <button class="nav-tab" data-tab="srv" role="tab" aria-selected="false">
-        <i class="fa-solid fa-handshake-angle"></i><span class="tab-text">Pengabdian</span>
-        <span class="badge-count" id="count-srv">0</span>
+
+      <button class="nav-tab" data-tab="srv" role="tab" id="tab-btn-srv"
+              aria-selected="false" aria-controls="tab-srv" tabindex="-1">
+        <i class="fa-solid fa-handshake-angle" aria-hidden="true"></i>
+        <span class="tab-text">Pengabdian</span>
+        <span class="badge-count" id="count-srv" aria-label="jumlah pengabdian">0</span>
       </button>
-      <button class="nav-tab" data-tab="github" role="tab" aria-selected="false">
-        <i class="fa-solid fa-book"></i><span class="tab-text">Perkuliahan</span>
+
+      <button class="nav-tab" data-tab="github" role="tab" id="tab-btn-github"
+              aria-selected="false" aria-controls="tab-github" tabindex="-1">
+        <i class="fa-solid fa-book" aria-hidden="true"></i>
+        <span class="tab-text">Perkuliahan</span>
       </button>
     </header>
 
-    <!-- ← NEW: banner peringatan saat status "partial" -->
-    <div id="status-banner" role="alert">
-      <i class="fa-solid fa-triangle-exclamation"></i>
-      <div class="banner-text" id="status-banner-text">—</div>
-      <button class="banner-close" onclick="dismissBanner()" aria-label="Tutup">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
-    </div>
-
     <div class="window-body" id="scroll-area">
-      <div class="content-section active" id="tab-edu" role="tabpanel">
-        <h2 class="section-title"><i class="fa-solid fa-clock-rotate-left"></i> Riwayat Pendidikan</h2>
+      <div id="scroll-progress" aria-hidden="true"></div>
+
+      <div class="content-section active" id="tab-edu" role="tabpanel" aria-labelledby="tab-btn-edu" tabindex="0">
+        <h2 class="section-title"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i> Riwayat Pendidikan</h2>
         <div class="grid-list" id="edu-grid"></div>
       </div>
-      <div class="content-section" id="tab-teach" role="tabpanel"><div id="teach-content"></div></div>
-      <div class="content-section" id="tab-pub" role="tabpanel"><div class="grid-list" id="pub-content"></div></div>
-      <div class="content-section" id="tab-srv" role="tabpanel"><div class="grid-list" id="srv-content"></div></div>
 
-      <div class="content-section" id="tab-github" role="tabpanel">
-        <div class="grid-list" id="github-content">
-          <div class="empty-state">
-            <div class="spinner sm"></div>
-            <span>Memuat data dari GitHub...</span>
-          </div>
-        </div>
+      <div class="content-section" id="tab-teach" role="tabpanel" aria-labelledby="tab-btn-teach" tabindex="0">
+        <div id="teach-content"></div>
+      </div>
+
+      <div class="content-section" id="tab-pub" role="tabpanel" aria-labelledby="tab-btn-pub" tabindex="0">
+        <div class="grid-list" id="pub-content"></div>
+      </div>
+
+      <div class="content-section" id="tab-srv" role="tabpanel" aria-labelledby="tab-btn-srv" tabindex="0">
+        <div class="grid-list" id="srv-content"></div>
+      </div>
+
+      <div class="content-section" id="tab-github" role="tabpanel" aria-labelledby="tab-btn-github" tabindex="0">
+        <div class="grid-list" id="github-content"></div>
       </div>
     </div>
   </main>
@@ -484,7 +1057,18 @@
   'use strict';
 
   // ═══════════════════════════════════════════════════════════════════
-  // 1. TAB NAVIGATION + SCROLL PERSIST
+  // KONSTANTA GLOBAL
+  // ═══════════════════════════════════════════════════════════════════
+  const REDUCE_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const EMAIL = 'vicky.setia@upertis.ac.id';
+  const CACHE_KEY = 'portfolio_data_v2';
+  const CACHE_TTL = 5 * 60 * 1000; // 5 menit
+  const GH_OWNER = 'vickysegu';
+  const GH_REPO = 'vickysegu.github.io';
+  const GH_BASE = 'Materi';
+
+  // ═══════════════════════════════════════════════════════════════════
+  // 1. TAB NAVIGATION + SLIDING INDICATOR + SCROLL PERSIST
   // ═══════════════════════════════════════════════════════════════════
   const scrollPositions = new Map();
   let currentTab = 'edu';
@@ -499,13 +1083,30 @@
     const saved = scrollPositions.get(tabId);
     area.scrollTop = (saved !== undefined) ? saved : 0;
   }
-  function openTab(tabId, btn) {
-    if (navigator.vibrate) navigator.vibrate(8);
+
+  function moveIndicator(btn) {
+    const ind = document.getElementById('tab-indicator');
+    const header = document.getElementById('window-header');
+    if (!ind || !header || !btn) return;
+    // Skip untuk mobile (indicator hidden via CSS)
+    if (window.matchMedia('(max-width: 767px)').matches) {
+      ind.classList.remove('ready');
+      return;
+    }
+    const btnRect = btn.getBoundingClientRect();
+    const headerRect = header.getBoundingClientRect();
+    ind.style.transform = `translateX(${btnRect.left - headerRect.left + header.scrollLeft}px)`;
+    ind.style.width = btnRect.width + 'px';
+    ind.classList.add('ready');
+  }
+
+  function doOpenTab(tabId, btn) {
     saveCurrentScroll();
     document.querySelectorAll('.content-section').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.nav-tab').forEach(el => {
       el.classList.remove('active');
       el.setAttribute('aria-selected', 'false');
+      el.setAttribute('tabindex', '-1');
     });
     const target = document.getElementById('tab-' + tabId);
     if (target) target.classList.add('active');
@@ -513,9 +1114,20 @@
     if (targetBtn) {
       targetBtn.classList.add('active');
       targetBtn.setAttribute('aria-selected', 'true');
+      targetBtn.setAttribute('tabindex', '0');
+      moveIndicator(targetBtn);
     }
     currentTab = tabId;
     restoreScroll(tabId);
+  }
+
+  function openTab(tabId, btn) {
+    if (navigator.vibrate && !REDUCE_MOTION) navigator.vibrate(8);
+    if (document.startViewTransition && !REDUCE_MOTION) {
+      document.startViewTransition(() => doOpenTab(tabId, btn));
+    } else {
+      doOpenTab(tabId, btn);
+    }
   }
 
   document.querySelectorAll('.nav-tab').forEach(btn => {
@@ -525,15 +1137,37 @@
     });
   });
 
-  // Keyboard navigation untuk tab (kiri/kanan) ← NEW
-  document.querySelector('.window-header')?.addEventListener('keydown', (e) => {
-    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+  // Keyboard: ArrowLeft/Right, Home/End
+  document.getElementById('window-header')?.addEventListener('keydown', (e) => {
+    const keys = ['ArrowLeft', 'ArrowRight', 'Home', 'End'];
+    if (!keys.includes(e.key)) return;
+    e.preventDefault();
     const tabs = [...document.querySelectorAll('.nav-tab')];
     const idx = tabs.findIndex(t => t.classList.contains('active'));
-    const next = e.key === 'ArrowRight' ? (idx + 1) % tabs.length : (idx - 1 + tabs.length) % tabs.length;
+    let next = idx;
+    if (e.key === 'ArrowRight') next = (idx + 1) % tabs.length;
+    else if (e.key === 'ArrowLeft') next = (idx - 1 + tabs.length) % tabs.length;
+    else if (e.key === 'Home') next = 0;
+    else if (e.key === 'End') next = tabs.length - 1;
     tabs[next].focus();
     tabs[next].click();
   });
+
+  // Reposition indicator pada resize
+  window.addEventListener('resize', () => {
+    const active = document.querySelector('.nav-tab.active');
+    if (active) moveIndicator(active);
+    updateHeaderScrollFade();
+  });
+
+  // Header scroll fade (indikator ada konten ke kanan)
+  function updateHeaderScrollFade() {
+    const header = document.getElementById('window-header');
+    if (!header) return;
+    const atEnd = header.scrollLeft + header.clientWidth >= header.scrollWidth - 4;
+    header.classList.toggle('has-scroll-right', !atEnd);
+  }
+  document.getElementById('window-header')?.addEventListener('scroll', updateHeaderScrollFade);
 
   // ═══════════════════════════════════════════════════════════════════
   // 2. UTIL
@@ -552,46 +1186,75 @@
       '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
     }[c]));
   }
-  function emptyState(icon, text) {
-    return `<div class="empty-state"><i class="fa-solid ${icon}"></i><span>${escapeHtml(text)}</span></div>`;
+  function emptyState(icon, text, cta) {
+    const ctaHtml = cta
+      ? `<a class="empty-cta" href="${escapeHtml(cta.href)}" target="_blank" rel="noopener">
+           <i class="fa-solid ${escapeHtml(cta.icon || 'fa-arrow-up-right-from-square')}" aria-hidden="true"></i>
+           ${escapeHtml(cta.text)}
+         </a>`
+      : '';
+    return `<div class="empty-state">
+      <i class="fa-solid ${icon}" aria-hidden="true"></i>
+      <span>${escapeHtml(text)}</span>
+      ${ctaHtml}
+    </div>`;
+  }
+  function countUp(el, target, duration = 700) {
+    if (!el) return;
+    if (REDUCE_MOTION || target <= 0) { el.textContent = String(target); return; }
+    const start = performance.now();
+    const from = 0;
+    function tick(now) {
+      const p = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = String(Math.floor(from + (target - from) * eased));
+      if (p < 1) requestAnimationFrame(tick);
+      else el.textContent = String(target);
+    }
+    requestAnimationFrame(tick);
+  }
+  function showSkeleton(container, count = 3) {
+    if (!container) return;
+    container.innerHTML = Array.from({ length: count }).map(() => `
+      <div class="skeleton-card">
+        <div class="skeleton-icon"></div>
+        <div class="skeleton-lines">
+          <div class="skeleton-line long"></div>
+          <div class="skeleton-line short"></div>
+        </div>
+      </div>
+    `).join('');
   }
 
   // ═══════════════════════════════════════════════════════════════════
-  // 3. STATUS BANNER (partial data) ← NEW
+  // 3. LOAD DATA JSON (dengan cache sessionStorage)
   // ═══════════════════════════════════════════════════════════════════
-  function showStatusBanner(message) {
-    if (sessionStorage.getItem('bannerDismissed') === '1') return;
-    const banner = document.getElementById('status-banner');
-    const txt = document.getElementById('status-banner-text');
-    if (!banner || !txt) return;
-    txt.textContent = message || 'Sebagian data mungkin tidak terbaru.';
-    banner.classList.add('show');
-  }
-  function dismissBanner() {
-    const banner = document.getElementById('status-banner');
-    if (banner) banner.classList.remove('show');
-    sessionStorage.setItem('bannerDismissed', '1');
+  async function fetchData() {
+    // Coba cache dulu
+    try {
+      const raw = sessionStorage.getItem(CACHE_KEY);
+      if (raw) {
+        const { ts, data } = JSON.parse(raw);
+        if (Date.now() - ts < CACHE_TTL) return data;
+      }
+    } catch (_) {}
+
+    const res = await fetch('./data.json', { cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (!data || !data.profil) throw new Error('Struktur data tidak valid');
+
+    try {
+      sessionStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data }));
+    } catch (_) {}
+    return data;
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // 4. LOAD DATA JSON (FIXED: toleran terhadap status "partial")
-  // ═══════════════════════════════════════════════════════════════════
   async function loadData() {
     try {
-      const res = await fetch('./data.json?t=' + Date.now(), { cache: 'no-store' });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-      const data = await res.json();
-
-      // ← FIX UTAMA: terima "success" ATAU "partial"
-      if (!data || !data.profil) throw new Error('Struktur data tidak valid');
-
-      if (data.status === 'partial' && data.pesan) {
-        console.warn('[Data partial]', data.pesan);
-        showStatusBanner(data.pesan);
-      }
-
+      const data = await fetchData();
       const p = data.profil;
+
       document.getElementById('prof-name').textContent = p.nama || '—';
       document.getElementById('prof-role').textContent = `Dosen ${p.nama_prodi || ''}`.trim();
       document.getElementById('prof-nidn').textContent =
@@ -601,23 +1264,27 @@
       const eduSorted = [...(data.pendidikan || [])].sort((a, b) => (+b.tahun || 0) - (+a.tahun || 0));
       const eduEl = document.getElementById('edu-grid');
       eduEl.innerHTML = eduSorted.length
-        ? eduSorted.map(e => `
-          <div class="glass-card">
-            <div class="card-icon"><i class="fa-solid fa-graduation-cap"></i></div>
-            <div class="card-info">
-              <div class="item-title">${escapeHtml(e.pt)}</div>
-              <div class="item-desc">${escapeHtml(e.jenjang)} • ${escapeHtml(e.prodi && e.prodi !== 'N/A' ? e.prodi : '-')}</div>
-              <div class="item-meta"><span class="badge highlight">Lulus ${escapeHtml(e.tahun)}</span></div>
-            </div>
-          </div>
-        `).join('')
+        ? eduSorted.map((e, i) => {
+            const prodi = e.prodi && e.prodi !== 'N/A' ? e.prodi : null;
+            const desc = [e.jenjang, prodi].filter(Boolean).map(escapeHtml).join(' • ');
+            return `
+              <div class="glass-card" style="--i:${i}">
+                <div class="card-icon"><i class="fa-solid fa-graduation-cap" aria-hidden="true"></i></div>
+                <div class="card-info">
+                  <div class="item-title">${escapeHtml(e.pt)}</div>
+                  <div class="item-desc">${desc || '-'}</div>
+                  <div class="item-meta"><span class="badge highlight">Lulus ${escapeHtml(e.tahun)}</span></div>
+                </div>
+              </div>
+            `;
+          }).join('')
         : emptyState('fa-graduation-cap', 'Belum ada data pendidikan.');
 
       // ─── MENGAJAR ───────────────────────────────────────────────
       const tc = document.getElementById('teach-content');
       if (!data.mengajar || !data.mengajar.length) {
         tc.innerHTML = emptyState('fa-chalkboard', 'Belum ada data mengajar.');
-        document.getElementById('count-teach').textContent = '0';
+        countUp(document.getElementById('count-teach'), 0);
       } else {
         let totalCourses = 0;
         const sortedKampus = [...data.mengajar]
@@ -627,13 +1294,13 @@
           const sortedMatkul = [...(kampus.mata_kuliah || [])]
             .sort((a, b) => getLatestYear(b.semester) - getLatestYear(a.semester));
 
-          const coursesHtml = sortedMatkul.map(mk => {
+          const coursesHtml = sortedMatkul.map((mk, i) => {
             totalCourses++;
             const semesters = String(mk.semester || '').split(',').map(s => s.trim()).filter(Boolean);
             const chipsHtml = semesters.map(s => `<span class="chip">${escapeHtml(s)}</span>`).join('');
             return `
-              <div class="glass-card" style="margin-bottom:12px;">
-                <div class="card-icon"><i class="fa-solid fa-chalkboard"></i></div>
+              <div class="glass-card" style="--i:${i}">
+                <div class="card-icon"><i class="fa-solid fa-chalkboard" aria-hidden="true"></i></div>
                 <div class="card-info">
                   <div class="item-title">${escapeHtml(mk.nama)}</div>
                   <div class="semester-chips">${chipsHtml}</div>
@@ -642,42 +1309,46 @@
             `;
           }).join('');
 
-          // ← FIX: hapus typo "nama_camp_"
           const namaKampus = kampus.nama_kampus || kampus.nama_camp_ || 'Kampus';
           return `
             <div class="campus-group">
-              <div class="campus-title"><i class="fa-solid fa-building-columns"></i> ${escapeHtml(namaKampus)}</div>
+              <div class="campus-title"><i class="fa-solid fa-building-columns" aria-hidden="true"></i> ${escapeHtml(namaKampus)}</div>
               <div class="grid-list">${coursesHtml}</div>
             </div>
           `;
         }).join('');
 
-        document.getElementById('count-teach').textContent = totalCourses;
+        countUp(document.getElementById('count-teach'), totalCourses);
       }
 
       // ─── PUBLIKASI ──────────────────────────────────────────────
       const pubDiv = document.getElementById('pub-content');
+      const pubCountEl = document.getElementById('count-pub');
       if (!data.publikasi || !data.publikasi.length) {
-        pubDiv.innerHTML = emptyState('fa-book-open', 'Belum ada publikasi.');
-        document.getElementById('count-pub').textContent = '0';
+        pubDiv.innerHTML = emptyState(
+          'fa-book-open',
+          'Belum ada publikasi.',
+          { href: 'https://scholar.google.com/citations?user=zxh3WngAAAAJ&hl=en', text: 'Lihat Google Scholar', icon: 'fa-graduation-cap' }
+        );
+        countUp(pubCountEl, 0);
       } else {
         const sortedPub = [...data.publikasi].sort((a, b) => (parseInt(b.tahun) || 0) - (parseInt(a.tahun) || 0));
-        document.getElementById('count-pub').textContent = sortedPub.length;
+        countUp(pubCountEl, sortedPub.length);
 
-        pubDiv.innerHTML = sortedPub.map(pub => {
+        pubDiv.innerHTML = sortedPub.map((pub, i) => {
           const judul = escapeHtml(pub.judul);
           const titleHtml = pub.link
-            ? `<a href="${escapeHtml(pub.link)}" target="_blank" rel="noopener">${judul} <i class="fa-solid fa-up-right-from-square" style="font-size:10px;"></i></a>`
+            ? `<a href="${escapeHtml(pub.link)}" target="_blank" rel="noopener">${judul} <i class="fa-solid fa-up-right-from-square" style="font-size:10px;" aria-hidden="true"></i></a>`
             : judul;
           const sitasi = parseInt(pub.sitasi || 0, 10);
           return `
-            <div class="glass-card">
+            <div class="glass-card" style="--i:${i}">
               <div class="card-icon">${escapeHtml(pub.tahun || '—')}</div>
               <div class="card-info">
                 <div class="item-title">${titleHtml}</div>
                 <div class="item-meta">
                   <span class="badge">${escapeHtml(pub.jenis || '—')}</span>
-                  ${sitasi > 0 ? `<span class="badge highlight"><i class="fa-solid fa-quote-right"></i> ${sitasi}</span>` : ''}
+                  ${sitasi > 0 ? `<span class="badge highlight"><i class="fa-solid fa-quote-right" aria-hidden="true"></i> ${sitasi}</span>` : ''}
                 </div>
               </div>
             </div>
@@ -687,15 +1358,16 @@
 
       // ─── PENGABDIAN ─────────────────────────────────────────────
       const srvDiv = document.getElementById('srv-content');
+      const srvCountEl = document.getElementById('count-srv');
       if (!data.pengabdian || !data.pengabdian.length) {
         srvDiv.innerHTML = emptyState('fa-handshake-angle', 'Belum ada data pengabdian.');
-        document.getElementById('count-srv').textContent = '0';
+        countUp(srvCountEl, 0);
       } else {
         const sortedSrv = [...data.pengabdian].sort((a, b) => (parseInt(b.tahun) || 0) - (parseInt(a.tahun) || 0));
-        document.getElementById('count-srv').textContent = sortedSrv.length;
+        countUp(srvCountEl, sortedSrv.length);
 
-        srvDiv.innerHTML = sortedSrv.map(item => `
-          <div class="glass-card">
+        srvDiv.innerHTML = sortedSrv.map((item, i) => `
+          <div class="glass-card" style="--i:${i}">
             <div class="card-icon">${escapeHtml(item.tahun || '—')}</div>
             <div class="card-info">
               <div class="item-title">${escapeHtml(item.judul)}</div>
@@ -705,16 +1377,21 @@
         `).join('');
       }
 
-      // ─── SELESAI: hilangkan loader ──────────────────────────────
       hideLoader();
-      initCursorGlow();
+      requestAnimationFrame(() => {
+        initCursorGlow();
+        const active = document.querySelector('.nav-tab.active');
+        if (active) moveIndicator(active);
+        updateHeaderScrollFade();
+      });
 
     } catch (err) {
-      console.error('[loadData]', err);
+      if (err.name !== 'AbortError') console.error('[loadData]', err);
       const loader = document.getElementById('page-loader');
+      if (!loader) return;
       loader.innerHTML = `
         <div class="error-box">
-          <i class="fa-solid fa-circle-exclamation"></i>
+          <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
           <h3>Gagal memuat data.json</h3>
           <p>
             Pastikan file <code>data.json</code> ada di folder yang sama dengan HTML ini,
@@ -722,7 +1399,7 @@
             <b>bukan</b> dibuka langsung dengan klik ganda (<code>file://</code>).
           </p>
           <button class="retry-btn" onclick="location.reload()">
-            <i class="fa-solid fa-rotate-right"></i> Coba Lagi
+            <i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Coba Lagi
           </button>
         </div>`;
     }
@@ -739,10 +1416,8 @@
     }, 450);
   }
 
-  window.addEventListener('DOMContentLoaded', loadData);
-
   // ═══════════════════════════════════════════════════════════════════
-  // 5. COPY EMAIL DENGAN NOTIF TRANSPARAN
+  // 4. COPY EMAIL + NOTIF
   // ═══════════════════════════════════════════════════════════════════
   function showChip(text, isWarn = false) {
     const chip = document.getElementById('chip-notif');
@@ -757,7 +1432,7 @@
     chip.classList.add('show');
     requestAnimationFrame(() => {
       chip.style.opacity = '1';
-      chip.style.transform = 'translate(-50%, 20px)';
+      chip.style.transform = 'translate(-50%, 0)';
     });
     check.classList.add('animate');
     setTimeout(() => check.classList.remove('animate'), 300);
@@ -771,14 +1446,12 @@
   }
 
   async function copyEmail() {
-    const email = 'vicky.setia@upertis.ac.id';
     try {
       if (navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(email);
+        await navigator.clipboard.writeText(EMAIL);
       } else {
-        // Fallback untuk http:// non-secure context
         const ta = document.createElement('textarea');
-        ta.value = email;
+        ta.value = EMAIL;
         ta.style.position = 'fixed';
         ta.style.opacity = '0';
         document.body.appendChild(ta);
@@ -788,69 +1461,50 @@
       }
       showChip('Email berhasil disalin');
     } catch (e) {
-      console.warn(e);
       showChip('Gagal menyalin email', true);
     }
   }
+  document.getElementById('btn-copy-email')?.addEventListener('click', e => {
+    e.preventDefault();
+    copyEmail();
+  });
 
   // ═══════════════════════════════════════════════════════════════════
-  // 6. EKSTRAKSI WARNA DOMINAN DARI BACKGROUND
+  // 5. FALLBACK FOTO PROFIL
   // ═══════════════════════════════════════════════════════════════════
-  function extractDominantColorFromBg() {
-    const bodyStyle = getComputedStyle(document.body);
-    const bgImage = bodyStyle.backgroundImage;
-    if (!bgImage || bgImage === 'none' || !bgImage.startsWith('url')) return;
+  (function initPhotoFallback() {
+    const img = document.getElementById('cv-photo');
+    const fb = document.getElementById('cv-avatar-fallback');
+    if (!img || !fb) return;
+    img.addEventListener('error', () => {
+      img.style.display = 'none';
+      fb.style.display = 'block';
+    }, { once: true });
+  })();
 
-    const urlMatch = bgImage.match(/url\(["']?([^"')]+)["']?\)/);
-    if (!urlMatch) return;
+  // ═══════════════════════════════════════════════════════════════════
+  // 6. PARALLAX AVATAR + CURSOR GLOW (matikan jika reduce motion)
+  // ═══════════════════════════════════════════════════════════════════
+  function initParallax() {
+    if (REDUCE_MOTION) return;
+    const sidebar = document.querySelector('.sidebar');
+    const avatar = document.getElementById('avatar-wrapper');
+    if (!sidebar || !avatar) return;
+    if (window.matchMedia('(max-width: 767px)').matches) return;
 
-    const img = new Image();
-    img.crossOrigin = 'Anonymous';
-    img.src = urlMatch[1];
-    img.onload = () => {
-      try {
-        const canvas = document.createElement('canvas');
-        const size = 64; // sample kecil biar cepat
-        canvas.width = size; canvas.height = size;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, size, size);
-        const { data } = ctx.getImageData(0, 0, size, size);
-
-        let r = 0, g = 0, b = 0;
-        const total = data.length / 4;
-        for (let i = 0; i < data.length; i += 4) {
-          r += data[i]; g += data[i + 1]; b += data[i + 2];
-        }
-        r = Math.floor(r / total); g = Math.floor(g / total); b = Math.floor(b / total);
-
-        const max = Math.max(r, g, b), min = Math.min(r, g, b);
-        let hue = 0;
-        if (max !== min) {
-          if (max === r) hue = 60 * ((g - b) / (max - min));
-          else if (max === g) hue = 60 * (2 + (b - r) / (max - min));
-          else hue = 60 * (4 + (r - g) / (max - min));
-          if (hue < 0) hue += 360;
-        }
-        const accentColor = `hsl(${hue}, 70%, 55%)`;
-        const accentMuted = `hsla(${hue}, 70%, 65%, 0.25)`;
-        document.documentElement.style.setProperty('--accent', accentColor);
-        document.documentElement.style.setProperty('--accent-muted', accentMuted);
-
-        document.querySelectorAll('.profile-role').forEach(el => {
-          if (el.id !== 'prof-nidn') el.style.color = accentColor;
-        });
-      } catch (e) {
-        console.warn('Warna dominan tidak dapat diekstrak:', e);
-      }
-    };
-    img.onerror = () => console.warn('Gagal memuat background untuk ekstraksi warna.');
+    sidebar.addEventListener('mousemove', (e) => {
+      const r = sidebar.getBoundingClientRect();
+      const x = (e.clientX - r.left - r.width / 2) / r.width;
+      const y = (e.clientY - r.top - r.height / 2) / r.height;
+      avatar.style.transform = `translate(${x * 8}px, ${y * 8}px) scale(1.04)`;
+    });
+    sidebar.addEventListener('mouseleave', () => {
+      avatar.style.transform = '';
+    });
   }
-  window.addEventListener('load', () => setTimeout(extractDominantColorFromBg, 300));
 
-  // ═══════════════════════════════════════════════════════════════════
-  // 7. GLOW TRACKING KURSOR
-  // ═══════════════════════════════════════════════════════════════════
   function initCursorGlow() {
+    if (REDUCE_MOTION) return;
     const cards = document.querySelectorAll('.glass-card');
     const socialBtns = document.querySelectorAll('.social-btn');
 
@@ -867,7 +1521,7 @@
     };
 
     cards.forEach(card => {
-      if (card.dataset.glowBound) return; // hindari double-bind
+      if (card.dataset.glowBound) return;
       card.dataset.glowBound = '1';
       card.addEventListener('mousemove', (e) => updateGlow(e, card));
       card.addEventListener('mouseleave', () => resetGlow(card));
@@ -881,24 +1535,102 @@
   }
 
   // ═══════════════════════════════════════════════════════════════════
-  // 8. FETCH DATA FOLDER GITHUB
+  // 7. EKSTRAKSI WARNA DOMINAN (HANYA DESKTOP)
   // ═══════════════════════════════════════════════════════════════════
-  const ghOwner = 'vickysegu';
-  const ghRepo = 'vickysegu.github.io';
-  const ghBasePath = 'Materi';
+  function extractDominantColorFromBg() {
+    if (window.matchMedia('(max-width: 767px)').matches) return;
+    const bgImage = getComputedStyle(document.body, '::after').backgroundImage;
+    if (!bgImage || bgImage === 'none' || !bgImage.startsWith('url')) return;
 
-  async function loadGitHubFiles(currentPath = ghBasePath) {
-    const apiUrl = `https://api.github.com/repos/${ghOwner}/${ghRepo}/contents/${currentPath}`;
+    const urlMatch = bgImage.match(/url\(["']?([^"')]+)["']?\)/);
+    if (!urlMatch) return;
+
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.src = urlMatch[1];
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        const size = 64;
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, size, size);
+        const { data } = ctx.getImageData(0, 0, size, size);
+
+        let r = 0, g = 0, b = 0;
+        const total = data.length / 4;
+        for (let i = 0; i < data.length; i += 4) {
+          r += data[i]; g += data[i + 1]; b += data[i + 2];
+        }
+        r = Math.floor(r / total);
+        g = Math.floor(g / total);
+        b = Math.floor(b / total);
+
+        const max = Math.max(r, g, b);
+        const min = Math.min(r, g, b);
+        let hue = 0;
+        if (max !== min) {
+          if (max === r) hue = 60 * ((g - b) / (max - min));
+          else if (max === g) hue = 60 * (2 + (b - r) / (max - min));
+          else hue = 60 * (4 + (r - g) / (max - min));
+          if (hue < 0) hue += 360;
+        }
+        const accentColor = `hsl(${hue}, 70%, 55%)`;
+        const accentMuted = `hsla(${hue}, 70%, 65%, 0.25)`;
+        document.documentElement.style.setProperty('--accent', accentColor);
+        document.documentElement.style.setProperty('--accent-muted', accentMuted);
+
+        document.querySelectorAll('.profile-role').forEach(el => {
+          if (el.id !== 'prof-nidn') el.style.color = accentColor;
+        });
+      } catch (e) {
+        /* silent */
+      }
+    };
+    img.onerror = () => {};
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // 8. SCROLL PROGRESS BAR
+  // ═══════════════════════════════════════════════════════════════════
+  function initScrollProgress() {
+    const area = document.getElementById('scroll-area');
+    const bar = document.getElementById('scroll-progress');
+    if (!area || !bar) return;
+    area.addEventListener('scroll', () => {
+      const p = area.scrollTop / Math.max(1, area.scrollHeight - area.clientHeight);
+      bar.style.width = (p * 100) + '%';
+    }, { passive: true });
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // 9. GITHUB FOLDER FETCH (dengan AbortController + cache)
+  // ═══════════════════════════════════════════════════════════════════
+  let ghController = null;
+  const ghCache = new Map(); // path -> files[]
+
+  async function loadGitHubFiles(currentPath = GH_BASE) {
     const githubContainer = document.getElementById('github-content');
+    if (!githubContainer) return;
 
-    githubContainer.innerHTML = `
-      <div class="empty-state" style="grid-column:1/-1;">
-        <div class="spinner sm"></div>
-        <span>Memuat isi folder...</span>
-      </div>`;
+    // Cek cache
+    if (ghCache.has(currentPath)) {
+      renderGitHubFiles(ghCache.get(currentPath), currentPath);
+      return;
+    }
+
+    // Abort request sebelumnya
+    ghController?.abort();
+    ghController = new AbortController();
+
+    // Skeleton loading
+    showSkeleton(githubContainer, 4);
+
+    const apiUrl = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${currentPath}`;
 
     try {
-      const response = await fetch(apiUrl);
+      const response = await fetch(apiUrl, { signal: ghController.signal });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const files = await response.json();
 
@@ -907,85 +1639,145 @@
         return;
       }
 
-      // Sort: folder dulu, lalu file; alfabetis
-      files.sort((a, b) => {
-        if (a.type !== b.type) return a.type === 'dir' ? -1 : 1;
-        return a.name.localeCompare(b.name, 'id', { numeric: true });
-      });
-
-      let html = '';
-
-      // Tombol "Kembali" jika bukan di root
-      if (currentPath !== ghBasePath) {
-        const parts = currentPath.split('/');
-        parts.pop();
-        const parentPath = parts.join('/') || ghBasePath;
-        html += `
-          <div class="glass-card" style="cursor:pointer; border-color:var(--accent); background:rgba(34,197,94,0.08);"
-               onclick="loadGitHubFiles('${escapeHtml(parentPath)}')">
-            <div class="card-icon" style="color:var(--accent);"><i class="fa-solid fa-arrow-left"></i></div>
-            <div class="card-info">
-              <div class="item-title">Kembali</div>
-              <div class="item-desc">Ke folder sebelumnya</div>
-            </div>
-          </div>`;
-      }
-
-      html += files.map(file => {
-        const safePath = escapeHtml(file.path);
-        const safeName = escapeHtml(file.name);
-
-        if (file.type === 'dir') {
-          return `
-            <div class="glass-card" style="cursor:pointer;" onclick="loadGitHubFiles('${safePath}')">
-              <div class="card-icon"><i class="fa-solid fa-folder" style="color:#facc15;"></i></div>
-              <div class="card-info">
-                <div class="item-title">${safeName}</div>
-                <div class="item-meta"><span class="badge">Folder</span></div>
-              </div>
-            </div>`;
-        }
-
-        const webUrl = `https://${ghOwner}.github.io/${file.path}`;
-        const isHtml = file.name.endsWith('.html');
-        const iconFile = isHtml ? 'fa-solid fa-book-open-reader' : 'fa-solid fa-file-code';
-        const colorFile = isHtml ? 'color:#e34f26;' : 'color:#60a5fa;';
-
-        return `
-          <div class="glass-card">
-            <div class="card-icon"><i class="${iconFile}" style="${colorFile}"></i></div>
-            <div class="card-info">
-              <div class="item-title">
-                <a href="${escapeHtml(webUrl)}" target="_blank" rel="noopener">
-                  ${safeName} <i class="fa-solid fa-up-right-from-square" style="font-size:10px;"></i>
-                </a>
-              </div>
-              <div class="item-meta">
-                <span class="badge highlight">${isHtml ? 'Web Page' : 'File'}</span>
-              </div>
-            </div>
-          </div>`;
-      }).join('');
-
-      githubContainer.innerHTML = html;
-      initCursorGlow();
+      ghCache.set(currentPath, files);
+      renderGitHubFiles(files, currentPath);
 
     } catch (error) {
+      if (error.name === 'AbortError') return;
       console.error('[GitHub]', error);
       githubContainer.innerHTML = `
         <div class="error-box" style="grid-column:1/-1;">
-          <i class="fa-solid fa-triangle-exclamation"></i>
+          <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
           <h3>Gagal memuat folder</h3>
           <p>Periksa koneksi internet atau coba lagi sebentar.</p>
-          <button class="retry-btn" onclick="loadGitHubFiles('${escapeHtml(currentPath)}')">
-            <i class="fa-solid fa-rotate-right"></i> Coba Lagi
+          <button class="retry-btn" data-retry="${escapeHtml(currentPath)}">
+            <i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Coba Lagi
           </button>
         </div>`;
     }
   }
 
+  function renderGitHubFiles(files, currentPath) {
+    const githubContainer = document.getElementById('github-content');
+    if (!githubContainer) return;
+
+    files.sort((a, b) => {
+      if (a.type !== b.type) return a.type === 'dir' ? -1 : 1;
+      return a.name.localeCompare(b.name, 'id', { numeric: true });
+    });
+
+    let html = '';
+
+    // Tombol kembali
+    if (currentPath !== GH_BASE) {
+      const parts = currentPath.split('/');
+      parts.pop();
+      const parentPath = parts.join('/') || GH_BASE;
+      html += `
+        <div class="glass-card" data-gh-path="${escapeHtml(parentPath)}" role="button" tabindex="0"
+             aria-label="Kembali ke folder sebelumnya"
+             style="cursor:pointer; border-color:var(--accent); background:rgba(34,197,94,0.08); --i:0;">
+          <div class="card-icon" style="color:var(--accent);">
+            <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+          </div>
+          <div class="card-info">
+            <div class="item-title">Kembali</div>
+            <div class="item-desc">Ke folder sebelumnya</div>
+          </div>
+        </div>`;
+    }
+
+    const offset = currentPath !== GH_BASE ? 1 : 0;
+
+    html += files.map((file, i) => {
+      const safePath = escapeHtml(file.path);
+      const safeName = escapeHtml(file.name);
+      const idx = i + offset;
+
+      if (file.type === 'dir') {
+        return `
+          <div class="glass-card" data-gh-path="${safePath}" role="button" tabindex="0"
+               aria-label="Buka folder ${safeName}" style="cursor:pointer; --i:${idx};">
+            <div class="card-icon"><i class="fa-solid fa-folder" style="color:#facc15;" aria-hidden="true"></i></div>
+            <div class="card-info">
+              <div class="item-title">${safeName}</div>
+              <div class="item-meta"><span class="badge">Folder</span></div>
+            </div>
+          </div>`;
+      }
+
+      const webUrl = `https://${GH_OWNER}.github.io/${file.path}`;
+      const isHtml = file.name.endsWith('.html');
+      const iconFile = isHtml ? 'fa-solid fa-book-open-reader' : 'fa-solid fa-file-code';
+      const colorFile = isHtml ? 'color:#e34f26;' : 'color:#60a5fa;';
+
+      return `
+        <div class="glass-card" style="--i:${idx};">
+          <div class="card-icon"><i class="${iconFile}" style="${colorFile}" aria-hidden="true"></i></div>
+          <div class="card-info">
+            <div class="item-title">
+              <a href="${escapeHtml(webUrl)}" target="_blank" rel="noopener">
+                ${safeName} <i class="fa-solid fa-up-right-from-square" style="font-size:10px;" aria-hidden="true"></i>
+              </a>
+            </div>
+            <div class="item-meta">
+              <span class="badge highlight">${isHtml ? 'Web Page' : 'File'}</span>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+
+    githubContainer.innerHTML = html;
+    initCursorGlow();
+  }
+
+  // Delegasi event untuk GitHub container
+  (function initGitHubDelegation() {
+    const container = document.getElementById('github-content');
+    if (!container) return;
+
+    const handleActivate = (target) => {
+      const card = target.closest('[data-gh-path]');
+      if (card) {
+        loadGitHubFiles(card.dataset.ghPath);
+        return;
+      }
+      const retryBtn = target.closest('[data-retry]');
+      if (retryBtn) {
+        loadGitHubFiles(retryBtn.dataset.retry);
+      }
+    };
+
+    container.addEventListener('click', (e) => handleActivate(e.target));
+    container.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        const card = e.target.closest('[data-gh-path]');
+        if (card) {
+          e.preventDefault();
+          loadGitHubFiles(card.dataset.ghPath);
+        }
+      }
+    });
+  })();
+
+  // ═══════════════════════════════════════════════════════════════════
+  // 10. INIT SEMUA (SATU LISTENER)
+  // ═══════════════════════════════════════════════════════════════════
   window.addEventListener('DOMContentLoaded', () => {
-    loadGitHubFiles(ghBasePath);
+    initScrollProgress();
+    initParallax();
+    loadData();
+    loadGitHubFiles(GH_BASE);
+
+    // Ekstraksi warna setelah bg desktop termuat
+    window.addEventListener('load', () => {
+      setTimeout(extractDominantColorFromBg, 500);
+    }, { once: true });
+  });
+
+  // Cleanup saat unload
+  window.addEventListener('beforeunload', () => {
+    ghController?.abort();
   });
 </script>
 
