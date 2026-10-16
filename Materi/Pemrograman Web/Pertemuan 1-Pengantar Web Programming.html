@@ -1,0 +1,2077 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pertemuan 1: Pengantar Web Programming & Arsitektur Client-Server</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            900: '#1e1b4b',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* Interactive Technical Term Highlight */
+        .tech-term {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.05rem 0.45rem;
+            margin: 0 0.1rem;
+            font-weight: 700;
+            color: #4338ca;
+            background: linear-gradient(120deg, #e0e7ff 0%, #ede9fe 100%);
+            border-bottom: 2px dashed #6366f1;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            white-space: nowrap;
+        }
+        .dark .tech-term {
+            color: #a5b4fc;
+            background: linear-gradient(120deg, rgba(79, 70, 229, 0.25) 0%, rgba(124, 58, 237, 0.25) 100%);
+            border-bottom-color: #818cf8;
+        }
+        .tech-term:hover {
+            transform: translateY(-2px);
+            background: #4f46e5;
+            color: #ffffff !important;
+            border-bottom-style: solid;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35);
+        }
+        .tech-term::after {
+            content: "\f059";
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            font-size: 0.7em;
+            opacity: 0.75;
+        }
+
+        /* Slide transition */
+        .slide-view {
+            animation: slideFadeIn 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes slideFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(12px) scale(0.99);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Packet Animation in Client-Server Simulator */
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.6); }
+            50% { box-shadow: 0 0 0 12px rgba(99, 102, 241, 0); }
+        }
+        .active-node {
+            animation: pulseGlow 1.5s infinite;
+            border-color: #4f46e5 !important;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col justify-between transition-colors duration-300">
+
+    <!-- TOP HEADER NAVIGATION -->
+    <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+        <!-- Progress Bar -->
+        <div class="w-full h-1.5 bg-slate-200 dark:bg-slate-800">
+            <div id="topProgressBar" class="h-full bg-gradient-to-r from-indigo-600 via-violet-600 to-emerald-500 transition-all duration-300" style="width: 10%;"></div>
+        </div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2">
+            <!-- Left: Course Info & Slide Selector Button -->
+            <div class="flex items-center gap-3">
+                <button onclick="toggleSlideDrawer()" class="p-2.5 rounded-xl bg-slate-100 hover:bg-indigo-50 text-slate-700 hover:text-indigo-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition flex items-center gap-2 text-sm font-semibold border border-slate-200 dark:border-slate-700" title="Daftar Slide">
+                    <i class="fa-solid fa-layer-group text-indigo-600 dark:text-indigo-400"></i>
+                    <span class="hidden sm:inline">Daftar Slide</span>
+                    <span id="slideCounterBadge" class="px-2 py-0.5 text-xs rounded-full bg-indigo-600 text-white font-bold">1 / 10</span>
+                </button>
+
+                <div class="hidden md:block">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 border border-amber-300/50">Pertemuan 1 • Bloom C2</span>
+                        <h1 id="headerSlideTitle" class="text-sm font-bold text-slate-800 dark:text-slate-100 truncate max-w-md">Pengantar Web Programming & Arsitektur Client-Server</h1>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Quick Actions (Glossary, Guide, Dark Mode) -->
+            <div class="flex items-center gap-2">
+                <button onclick="openGlossaryIndex()" class="px-3 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-950/70 dark:hover:bg-indigo-900/80 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-xs sm:text-sm font-bold flex items-center gap-2 transition shadow-sm">
+                    <i class="fa-solid fa-book-open-reader"></i>
+                    <span>Kamus Istilah</span>
+                    <span class="hidden sm:inline-block px-1.5 py-0.2 bg-indigo-600 text-white rounded-full text-[11px]">22</span>
+                </button>
+
+                <button onclick="toggleTheme()" class="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition" title="Ganti Mode Terang/Gelap">
+                    <i id="themeIcon" class="fa-solid fa-moon"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- SLIDE LIST DRAWER (MODAL/SIDEBAR) -->
+    <div id="slideDrawerBackdrop" onclick="toggleSlideDrawer()" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-40 hidden opacity-0 transition-opacity duration-300"></div>
+    <aside id="slideDrawer" class="fixed top-0 left-0 bottom-0 w-80 sm:w-96 bg-white dark:bg-slate-900 z-50 shadow-2xl border-r border-slate-200 dark:border-slate-800 transform -translate-x-full transition-transform duration-300 flex flex-col">
+        <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Navigasi Materi</span>
+                <h2 class="text-lg font-extrabold text-slate-900 dark:text-white">Pertemuan 1 (10 Slide)</h2>
+            </div>
+            <button onclick="toggleSlideDrawer()" class="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div id="drawerSlideList" class="p-4 overflow-y-auto space-y-2 flex-1">
+            <!-- Populated dynamically via JS -->
+        </div>
+        <div class="p-4 bg-slate-50 dark:bg-slate-800/60 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 flex items-center justify-between">
+            <span><i class="fa-regular fa-keyboard mr-1"></i> Gunakan tombol panah <b>← →</b></span>
+            <span>Kognitif: <b>C2 (Memahami)</b></span>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex flex-col justify-center">
+        
+        <!-- Tip Banner for Beginners -->
+        <div class="mb-5 bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-emerald-500/10 border border-indigo-200 dark:border-indigo-800/70 rounded-2xl p-3 sm:px-5 flex flex-wrap items-center justify-between gap-2 text-xs sm:text-sm">
+            <div class="flex items-center gap-2.5">
+                <span class="w-7 h-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow">
+                    <i class="fa-solid fa-wand-magic-sparkles text-xs"></i>
+                </span>
+                <p class="text-slate-700 dark:text-slate-200">
+                    <b>Tips Mahasiswa Baru:</b> Bingung dengan kata asing? Klik kata yang <span class="tech-term" onclick="showTerm('website')">bergaris bawah ungu</span> untuk melihat arti bahasa awam & kutipan <b>W3Schools / MDN</b>!
+                </p>
+            </div>
+            <span id="slideCategoryPill" class="px-3 py-1 rounded-full text-xs font-bold bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs border border-slate-200 dark:border-slate-700">
+                Bagian 1: Pengenalan
+            </span>
+        </div>
+
+        <!-- DYNAMIC SLIDE VIEWPORT -->
+        <div id="slideViewport" class="bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-slate-200/90 dark:border-slate-800 p-5 sm:p-8 lg:p-10 min-h-[540px] flex flex-col justify-between relative overflow-hidden">
+            <!-- Slide Content injected here -->
+        </div>
+
+    </main>
+
+    <!-- BOTTOM FOOTER CONTROLS -->
+    <footer class="sticky bottom-0 z-20 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 py-3 px-4 sm:px-8">
+        <div class="max-w-6xl mx-auto flex items-center justify-between gap-4">
+            <button id="prevSlideBtn" onclick="changeSlide(-1)" class="px-4 sm:px-5 py-2.5 rounded-xl font-bold text-sm bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                <i class="fa-solid fa-arrow-left"></i>
+                <span>Sebelumnya</span>
+            </button>
+
+            <!-- Slide Dots (Desktop) -->
+            <div id="slideDotsContainer" class="hidden md:flex items-center gap-2">
+                <!-- Generated by JS -->
+            </div>
+
+            <!-- Mobile Counter -->
+            <div class="md:hidden text-xs font-bold text-slate-500 dark:text-slate-400" id="mobileFooterCounter">
+                Slide 1 dari 10
+            </div>
+
+            <button id="nextSlideBtn" onclick="changeSlide(1)" class="px-5 sm:px-6 py-2.5 rounded-xl font-bold text-sm bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/25 transition flex items-center gap-2">
+                <span id="nextBtnText">Selanjutnya</span>
+                <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </div>
+    </footer>
+
+    <!-- TECHNICAL TERM EXPLANATION MODAL (POPUP) -->
+    <div id="termModalBackdrop" onclick="closeTermModal(event)" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl transform transition-all animate-[slideFadeIn_0.25s_ease-out]">
+            <div class="flex items-start justify-between gap-4 mb-4">
+                <div class="flex items-center gap-3">
+                    <div id="termIconBox" class="w-12 h-12 rounded-2xl bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xl font-bold shrink-0">
+                        <i class="fa-solid fa-book-bookmark"></i>
+                    </div>
+                    <div>
+                        <span id="termCategoryBadge" class="text-[11px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">Istilah Teknis</span>
+                        <h3 id="termTitle" class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white mt-0.5">Nama Istilah</h3>
+                    </div>
+                </div>
+                <button onclick="closeTermModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Bahasa Awam -->
+            <div class="mb-4 p-4 rounded-2xl bg-emerald-50/90 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/70">
+                <div class="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 mb-1">
+                    <i class="fa-solid fa-lightbulb"></i> Penjelasan Bahasa Awam (Analogi)
+                </div>
+                <p id="termLayman" class="text-sm text-slate-700 dark:text-slate-200 leading-relaxed"></p>
+            </div>
+
+            <!-- Definisi Teknis & Referensi -->
+            <div class="mb-5 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/70">
+                <div class="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-1">
+                    <i class="fa-solid fa-graduation-cap"></i> Definisi Teknis Standar Industri
+                </div>
+                <p id="termTechnical" class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed mb-3"></p>
+                <div class="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-700 text-xs">
+                    <span id="termSourceName" class="font-semibold text-slate-500 dark:text-slate-400">Sumber: W3Schools</span>
+                    <a id="termSourceUrl" href="#" target="_blank" rel="noopener noreferrer" class="font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1">
+                        <span>Baca Referensi Resmi</span>
+                        <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="flex justify-end">
+                <button onclick="closeTermModal()" class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-slate-900 dark:bg-indigo-600 text-white text-sm font-bold hover:opacity-90 transition">
+                    Mengerti, Lanjutkan Belajar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ALL GLOSSARY LIST MODAL -->
+    <div id="glossaryModalBackdrop" onclick="closeGlossaryIndex()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-3xl max-w-4xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-[slideFadeIn_0.25s_ease-out]">
+            <div class="p-5 sm:p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Glosarium Pertemuan 1</span>
+                    <h3 class="text-xl font-extrabold text-slate-900 dark:text-white">Kamus Istilah Pemrograman Web (Awam & W3Schools/MDN)</h3>
+                </div>
+                <button onclick="closeGlossaryIndex()" class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400"></i>
+                    <input id="glossarySearchInput" oninput="renderGlossaryList(this.value)" type="text" placeholder="Cari istilah teknis (misal: localhost, XAMPP, PHP, Front-End, Apache...)" class="w-full pl-10 pr-4 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+            <div id="glossaryListGrid" class="p-5 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /********************************************************************
+         * 1. DATABASE KAMUS ISTILAH TEKNIS (DENGAN SUMBER W3SCHOOLS / MDN)
+         ********************************************************************/
+        const GLOSSARY_DB = {
+            "website": {
+                title: "Website (Situs Web)",
+                category: "Konsep Dasar",
+                layman: "Ibarat sebuah ruko atau toko di dunia maya yang buka 24 jam. Orang dari mana saja bisa mampir melihat profil usaha, katalog barang, hingga memesan produk lewat layar HP atau laptop.",
+                technical: "Kumpulan halaman web yang saling terhubung dan dapat diakses publik melalui internet menggunakan satu nama domain (seperti tokokopi.com) dan ditampilkan oleh Web Browser.",
+                source: "MDN Web Docs - What is a website?",
+                url: "https://developer.mozilla.org/en-US/docs/Learn/Common_questions/Web_mechanics/Pages_sites_servers_and_search_engines"
+            },
+            "statis": {
+                title: "Web Statis (Static Web)",
+                category: "Jenis Website",
+                layman: "Ibarat brosur cetak yang dilaminating. Tampilannya tetap sama untuk semua pengunjung dan tidak bisa berubah sendiri kecuali pemiliknya membongkar ulang kode HTML-nya.",
+                technical: "Halaman web yang kontennya dikirim oleh server persis seperti yang tersimpan di dalam file (HTML/CSS/JS) tanpa pemrosesan data dari database di sisi server.",
+                source: "MDN Web Docs - Static vs Dynamic Sites",
+                url: "https://developer.mozilla.org/en-US/docs/Learn/Server-side/First_steps/Client-Server_overview"
+            },
+            "dinamis": {
+                title: "Web Dinamis (Dynamic Web)",
+                category: "Jenis Website",
+                layman: "Ibarat kasir & etalase pintar di minimarket. Kalau stok barang habis atau admin menambah produk baru, halaman web otomatis berubah tanpa perlu mengedit kodenya.",
+                technical: "Website yang kontennya dihasilkan secara real-time oleh bahasa pemrograman sisi server (seperti PHP) dan mengambil data terbaru dari Database (MySQL) sesuai permintaan pengguna.",
+                source: "W3Schools - PHP Introduction",
+                url: "https://www.w3schools.com/php/php_intro.asp"
+            },
+            "client": {
+                title: "Client (Klien / Pengunjung)",
+                category: "Arsitektur Web",
+                layman: "Ibarat pelanggan yang datang ke restoran. Tugasnya meminta daftar menu, memilih pesanan, dan menikmati hidangan yang sudah jadi di meja makan.",
+                technical: "Perangkat pengguna (HP, Laptop, PC) beserta aplikasi Web Browser (Chrome, Edge, Safari) yang meminta (request) halaman atau data dari Server dan menampilkannya ke layar pengguna.",
+                source: "MDN Web Docs - Client-Server Overview",
+                url: "https://developer.mozilla.org/en-US/docs/Learn/Server-side/First_steps/Client-Server_overview"
+            },
+            "server": {
+                title: "Web Server (Peladen)",
+                category: "Arsitektur Web",
+                layman: "Ibarat dapur restoran beserta pelayannya yang selalu siaga 24 jam. Ketika pelanggan (Client) meminta menu atau memesan makanan, dapur inilah yang menyiapkan dan mengantarkannya.",
+                technical: "Komputer atau perangkat lunak (seperti Apache) yang menyimpan file-file website, memproses kode Back-End, dan mengirimkan hasilnya kembali ke Browser Client melalui protokol HTTP.",
+                source: "MDN Web Docs - What is a web server?",
+                url: "https://developer.mozilla.org/en-US/docs/Learn/Common_questions/Web_mechanics/What_is_a_web_server"
+            },
+            "browser": {
+                title: "Web Browser (Peramban)",
+                category: "Perangkat Lunak",
+                layman: "Aplikasi 'penerjemah' di HP atau laptop kamu (seperti Google Chrome, Mozilla Firefox, Safari). Browser mengubah baris kode HTML & CSS yang rumit menjadi tampilan visual yang indah.",
+                technical: "Perangkat lunak di sisi Client yang bertugas mengirim HTTP Request ke server dan merender (menerjemahkan) kode HTML, CSS, dan JavaScript menjadi halaman web interaktif.",
+                source: "W3Schools - What is a Browser?",
+                url: "https://www.w3schools.com/whatis/whatis_browser.asp"
+            },
+            "http": {
+                title: "HTTP Request & Response",
+                category: "Protokol Komunikasi",
+                layman: "Ibarat bahasa percakapan sopan antara Pelanggan dan Pelayan Restoran. 'Request' adalah saat kamu memesan ('Mas, pesan Kopi Gayo 1'), dan 'Response' adalah saat pelayan mengantar kopinya ke mejamu.",
+                technical: "Hypertext Transfer Protocol (HTTP) adalah aturan komunikasi data di web. Client mengirimkan HTTP Request (seperti GET atau POST), lalu Server membalasnya dengan HTTP Response berisi halaman HTML atau data.",
+                source: "W3Schools - What is HTTP?",
+                url: "https://www.w3schools.com/whatis/whatis_http.asp"
+            },
+            "frontend": {
+                title: "Front-End (Sisi Depan / Tampilan)",
+                category: "Komponen Web",
+                layman: "Ibarat ruang makan restoran: dekorasi dinding, warna meja, buku menu bergambar, dan tombol panggil pelayan. Semua yang bisa dilihat dan disentuh langsung oleh mata pengunjung.",
+                technical: "Bagian dari website yang berjalan langsung di dalam Browser pengguna (Client-side). Dibangun menggunakan tiga teknologi utama: HTML (struktur), CSS (desain/tampilan), dan JavaScript (interaksi).",
+                source: "W3Schools - Front-End Roadmap",
+                url: "https://www.w3schools.com/whatis/whatis_frontenddev.asp"
+            },
+            "backend": {
+                title: "Back-End (Sisi Belakang / Dapur Server)",
+                category: "Komponen Web",
+                layman: "Ibarat dapur tertutup di belakang restoran. Pelanggan tidak bisa melihat cara koki meracik bumbu atau mengecek stok di kulkas, mereka hanya tahu makanan sampai di meja dengan lezat.",
+                technical: "Bagian website yang berjalan di belakang layar pada Web Server (Server-side). Bertugas memproses logika bisnis, mengecek keamanan/login, serta mengambil dan menyimpan data ke Database (menggunakan PHP).",
+                source: "W3Schools - Full Stack & Back-End",
+                url: "https://www.w3schools.com/whatis/whatis_fullstack.asp"
+            },
+            "database": {
+                title: "Database (Basis Data)",
+                category: "Penyimpanan Data",
+                layman: "Ibarat gudang logistik atau lemari arsip super rapi yang memiliki rak-rak berlabel. Semua daftar nama produk UMKM, harga, stok, hingga daftar pesanan disimpan permanen di sini.",
+                technical: "Kumpulan data yang terorganisir secara sistematis (biasanya dalam bentuk tabel baris dan kolom) sehingga mudah dicari, ditambah, diubah, dan dihapus secara elektronik.",
+                source: "W3Schools - MySQL & Database Intro",
+                url: "https://www.w3schools.com/mysql/mysql_intro.asp"
+            },
+            "html": {
+                title: "HTML (HyperText Markup Language)",
+                category: "Bahasa Front-End",
+                layman: "Ibarat kerangka tulang manusia atau pondasi batu bata rumah. HTML menentukan: 'Oh, di bagian atas ada judul toko, di bawahnya ada foto produk, lalu ada tabel harga.' Belum ada warna-warni cantik.",
+                technical: "Bahasa markup standar untuk membuat struktur halaman web menggunakan elemen-elemen tag seperti <h1> untuk judul, <p> untuk paragraf, <img> untuk gambar, dan <form> untuk formulir.",
+                source: "W3Schools - HTML Introduction",
+                url: "https://www.w3schools.com/html/html_intro.asp"
+            },
+            "css": {
+                title: "CSS (Cascading Style Sheets)",
+                category: "Bahasa Front-End",
+                layman: "Ibarat pakaian, cat tembok, dan dekorasi interior. Tanpa CSS, website hanya tampak seperti dokumen ketikan hitam-putih tahun 90-an. CSS membuatnya berwarna, rapi, dan pas di layar HP maupun laptop.",
+                technical: "Bahasa stylesheet yang digunakan untuk mengatur tata letak (layout), warna, jenis huruf (font), jarak (spacing), dan tampilan responsif dari elemen-elemen HTML.",
+                source: "W3Schools - CSS Introduction",
+                url: "https://www.w3schools.com/css/css_intro.asp"
+            },
+            "javascript": {
+                title: "JavaScript (JS)",
+                category: "Bahasa Front-End",
+                layman: "Ibarat sistem saraf dan otot penggerak. Kalau tombol 'Tambah ke Keranjang' diklik lalu muncul angka notifikasi tanpa harus memuat ulang (reload) seluruh layar, itu kerjaannya JavaScript!",
+                technical: "Bahasa pemrograman yang berjalan di sisi browser untuk membuat halaman web menjadi hidup dan interaktif, seperti memanipulasi DOM, animasi, dan memvalidasi isian form sebelum dikirim ke server.",
+                source: "W3Schools - JavaScript Introduction",
+                url: "https://www.w3schools.com/js/js_intro.asp"
+            },
+            "php": {
+                title: "PHP (Hypertext Preprocessor)",
+                category: "Bahasa Back-End",
+                layman: "Ibarat Koki Kepala di dapur Server. Ketika pengunjung meminta daftar produk UMKM, PHP pergi ke gudang Database MySQL, mengambil data produk, meraciknya menjadi HTML, lalu menyajikannya ke pengunjung.",
+                technical: "Bahasa scripting open-source di sisi server (server-side) yang sangat populer untuk pengembangan web dinamis dan dapat disisipkan langsung ke dalam kode HTML.",
+                source: "W3Schools - PHP Tutorial",
+                url: "https://www.w3schools.com/php/default.asp"
+            },
+            "mysql": {
+                title: "MySQL",
+                category: "Mesin Database",
+                layman: "Ibarat sistem manajemen gudang digital berbentuk tabel (mirip Excel tetapi jauh lebih canggih, cepat, dan aman) yang dipakai oleh PHP untuk menyimpan ribuan data produk dan transaksi.",
+                technical: "Relational Database Management System (RDBMS) berbasis open-source yang menggunakan bahasa SQL (Structured Query Language) untuk mengelola data di dalam tabel yang saling berelasi.",
+                source: "W3Schools - MySQL Tutorial",
+                url: "https://www.w3schools.com/mysql/default.asp"
+            },
+            "xampp": {
+                title: "XAMPP",
+                category: "Aplikasi Praktikum",
+                layman: "Ibarat 'Paket Dapur Server Instan' dalam satu kali klik instalasi. Daripada pusing menginstal server satu per satu, kita cukup instal XAMPP di laptop, dan laptop kita langsung berubah menjadi Server!",
+                technical: "Paket perangkat lunak gratis lintas platform (X = Cross-Platform) yang membundel Apache Web Server (A), MySQL/MariaDB Database (M), PHP (P), dan Perl (P) untuk kebutuhan pengembangan lokal.",
+                source: "Apache Friends - About XAMPP",
+                url: "https://www.apachefriends.org/index.html"
+            },
+            "apache": {
+                title: "Apache HTTP Server",
+                category: "Komponen XAMPP",
+                layman: "Mesin pelayan utama di dalam XAMPP. Kalau tombol 'Start' pada baris Apache di XAMPP belum kamu nyalakan, maka browser tidak akan dilayani saat kamu mengetik alamat localhost.",
+                technical: "Perangkat lunak Web Server open-source yang menerima permintaan HTTP dari browser dan menyajikan halaman web (baik file HTML biasa maupun hasil olahan PHP).",
+                source: "MDN Web Docs - Apache HTTP Server",
+                url: "https://developer.mozilla.org/en-US/docs/Glossary/Apache"
+            },
+            "phpmyadmin": {
+                title: "phpMyAdmin",
+                category: "Alat Visual Database",
+                layman: "Aplikasi pengatur gudang Database yang bisa dibuka langsung di browser (`localhost/phpmyadmin`). Kita bisa membuat database dan tabel produk cukup dengan klik-klik tombol tanpa harus menghafal kode rumit di awal!",
+                technical: "Aplikasi web gratis berbasis PHP yang menyediakan antarmuka grafis (GUI) untuk mengelola database MySQL/MariaDB (membuat tabel, menjalankan query SQL, ekspor/impor data).",
+                source: "phpMyAdmin Official Documentation",
+                url: "https://www.phpmyadmin.net/"
+            },
+            "localhost": {
+                title: "Localhost (127.0.0.1)",
+                category: "Alamat Server Lokal",
+                layman: "Alamat rumah server di dalam laptopmu sendiri! Saat belajar membuat website, kita belum perlu menyewa internet hosting berbayar. Cukup ketik `http://localhost` di browser untuk menguji website buatanmu.",
+                technical: "Nama host standar (yang mengarah ke alamat IP loopback 127.0.0.1) yang merujuk pada komputer lokal yang sedang digunakan, memungkinkan pengujian aplikasi web tanpa koneksi internet.",
+                source: "MDN Web Docs - Localhost",
+                url: "https://developer.mozilla.org/en-US/docs/Glossary/Localhost"
+            },
+            "vscode": {
+                title: "VS Code (Visual Studio Code)",
+                category: "Code Editor",
+                layman: "Buku tulis canggih khusus programmer. Berbeda dengan Notepad biasa, VS Code memberi warna berbeda pada setiap kode, memberi tahu kalau ada salah ketik, dan melengkapi ketikan kode secara otomatis.",
+                technical: "Source-code editor ringan namun kuat buatan Microsoft yang mendukung penyorotan sintaks, auto-complete (IntelliSense), dan ribuan ekstensi untuk HTML, CSS, JS, dan PHP.",
+                source: "W3Schools - HTML Editors",
+                url: "https://www.w3schools.com/html/html_editors.asp"
+            },
+            "htdocs": {
+                title: "Folder htdocs",
+                category: "Lokasi Penyimpanan",
+                layman: "Etalase resmi milik XAMPP (biasanya di `C:\\xampp\\htdocs`). Semua file tugas website PHP kamu WAJIB disimpan di dalam folder ini agar bisa dibuka melalui alamat `http://localhost/namafolder`.",
+                technical: "Direktori root dokumen publik (DocumentRoot) default pada Apache di XAMPP tempat server mencari file web yang diminta oleh pengguna melalui browser.",
+                source: "Apache Server Documentation",
+                url: "https://httpd.apache.org/docs/2.4/urlmapping.html"
+            },
+            "crud": {
+                title: "CRUD (Create, Read, Update, Delete)",
+                category: "Operasi Data",
+                layman: "4 jurus wajib setiap aplikasi web: Tambah data baru (Create), Tampilkan daftar data (Read), Edit data yang salah (Update), dan Hapus data (Delete). Kita akan menguasai ini untuk katalog produk UMKM!",
+                technical: "Empat fungsi dasar penyimpanan data persisten dalam aplikasi berbasis database, yang berkorespondensi dengan perintah SQL: INSERT (Create), SELECT (Read), UPDATE (Update), dan DELETE (Delete).",
+                source: "MDN Web Docs - CRUD",
+                url: "https://developer.mozilla.org/en-US/docs/Glossary/CRUD"
+            }
+        };
+
+        // Helper to generate clickable technical term span
+        function term(key, customLabel = null) {
+            const item = GLOSSARY_DB[key];
+            if (!item) return customLabel || key;
+            const label = customLabel || item.title.split(' (')[0];
+            return `<span class="tech-term" onclick="showTerm('${key}')" title="Klik untuk penjelasan awam & referensi">${label}</span>`;
+        }
+
+        // State Variables
+        let currentSlideIndex = 0;
+        const TOTAL_SLIDES = 10;
+
+        // Interactive states inside slides
+        let roadmapSelectedPhase = 0;
+        let webTypeMode = 'statis'; // 'statis' or 'dinamis'
+        let dynamicStockCount = 25;
+        let dynamicProducts = [
+            { id: 1, nama: "Kopi Arabika Gayo 250g", kategori: "Minuman", harga: "Rp 65.000", stok: 24 },
+            { id: 2, nama: "Keripik Singkong Balado", kategori: "Camilan", harga: "Rp 18.000", stok: 50 },
+            { id: 3, nama: "Sambal Roa Asli Manado", kategori: "Kuliner", harga: "Rp 42.000", stok: 15 }
+        ];
+
+        // Slide 5 Client-Server Animation State
+        let csScenario = 0;
+        let csStep = 0;
+        let csTimer = null;
+
+        // Slide 6 Front-End Toggles
+        let feToggleHTML = true;
+        let feToggleCSS = true;
+        let feToggleJS = true;
+        let feDemoCartCount = 0;
+
+        // Slide 8 XAMPP Simulator State
+        let xamppApacheRunning = false;
+        let xamppMysqlRunning = false;
+        let xamppBrowserUrl = "http://localhost/umkm_kopi";
+
+        // Slide 10 Checklist & Quiz State
+        let checklistState = [false, false, false, false, false];
+        let quizAnswers = {};
+
+        /********************************************************************
+         * 2. DEFINISI 10 SLIDE MATERI PERTEMUAN 1
+         ********************************************************************/
+        const SLIDES = [
+            // ================= SLIDE 1: COVER & WELCOME =================
+            {
+                id: 1,
+                category: "1. Pembuka & Orientasi",
+                title: "Selamat Datang di Dunia Pemrograman Web!",
+                render: () => `
+                    <div class="slide-view flex flex-col justify-between h-full gap-6">
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                            <!-- Left Column -->
+                            <div class="lg:col-span-7 space-y-5">
+                                <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-xs font-extrabold uppercase tracking-wider">
+                                    <i class="fa-solid fa-rocket"></i> Pertemuan 1 dari 16 • Tingkat Kognitif Bloom: C2 (Memahami)
+                                </div>
+
+                                <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 dark:text-white leading-tight">
+                                    Pengantar Web Programming & Arsitektur <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600 dark:from-indigo-400 dark:to-violet-400">Client-Server</span>
+                                </h2>
+
+                                <p class="text-base sm:text-lg text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    Belum pernah menulis kode sama sekali? <b>Tenang, kamu berada di tempat yang tepat!</b> Di pertemuan pertama ini, kita belum akan menghafal kode yang rumit. Kita akan memahami <b>cara kerja sebuah ${term('website', 'Website')} di balik layar</b> dan menyiapkan peralatan tempur di laptop masing-masing.
+                                </p>
+
+                                <!-- 3 Target Pertemuan Hari Ini -->
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                                    <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700">
+                                        <div class="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold mb-2">
+                                            <i class="fa-solid fa-sitemap"></i>
+                                        </div>
+                                        <h4 class="font-bold text-sm text-slate-900 dark:text-white">1. Paham Konsep</h4>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Mengerti peran ${term('frontend', 'Front-End')}, ${term('backend', 'Back-End')}, dan ${term('database', 'Database')}.</p>
+                                    </div>
+                                    <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700">
+                                        <div class="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold mb-2">
+                                            <i class="fa-solid fa-screwdriver-wrench"></i>
+                                        </div>
+                                        <h4 class="font-bold text-sm text-slate-900 dark:text-white">2. Siap Peralatan</h4>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Instalasi ${term('xampp', 'XAMPP')} & ${term('vscode', 'VS Code')} hingga ${term('localhost', 'localhost')} aktif.</p>
+                                    </div>
+                                    <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700">
+                                        <div class="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold mb-2">
+                                            <i class="fa-solid fa-store"></i>
+                                        </div>
+                                        <h4 class="font-bold text-sm text-slate-900 dark:text-white">3. Studi Kasus UMKM</h4>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Mengenal proyek nyata <b>Website Katalog UMKM</b> yang akan kita bangun.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right Column: Interactive Quick Card -->
+                            <div class="lg:col-span-5">
+                                <div class="p-6 rounded-3xl bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-800 text-white shadow-2xl relative overflow-hidden">
+                                    <div class="absolute -right-10 -bottom-10 w-44 h-44 bg-white/10 rounded-full blur-2xl"></div>
+                                    <div class="flex items-center justify-between mb-4">
+                                        <span class="px-3 py-1 rounded-full bg-white/20 text-xs font-bold backdrop-blur-xs">Coba Interaksi Sekarang!</span>
+                                        <i class="fa-solid fa-hand-pointer text-xl animate-bounce"></i>
+                                    </div>
+                                    <h3 class="text-xl font-extrabold mb-2">Cara Menggunakan Slide Ini:</h3>
+                                    <ul class="space-y-3 text-sm text-indigo-100 mb-6">
+                                        <li class="flex items-start gap-2.5">
+                                            <i class="fa-solid fa-circle-check text-emerald-300 mt-1"></i>
+                                            <span>Setiap ada istilah asing yang bergaris bawah seperti <button onclick="showTerm('localhost')" class="px-2 py-0.5 rounded bg-white text-indigo-900 font-bold underline">Localhost ?</button>, <b>klik saja</b> untuk membaca arti bahasa awamnya!</span>
+                                        </li>
+                                        <li class="flex items-start gap-2.5">
+                                            <i class="fa-solid fa-circle-check text-emerald-300 mt-1"></i>
+                                            <span>Di beberapa slide berikutnya terdapat <b>Simulator Interaktif</b>. Jangan ragu menekan tombol-tombol simulasi yang ada.</span>
+                                        </li>
+                                        <li class="flex items-start gap-2.5">
+                                            <i class="fa-solid fa-circle-check text-emerald-300 mt-1"></i>
+                                            <span>Target Output Praktikum Hari Ini: <b>XAMPP terinstal & berjalan; halaman localhost tampil di browser</b>.</span>
+                                        </li>
+                                    </ul>
+                                    <button onclick="changeSlide(1)" class="w-full py-3 rounded-xl bg-white text-indigo-700 font-extrabold text-sm hover:bg-indigo-50 transition flex items-center justify-center gap-2 shadow-lg">
+                                        <span>Mulai Perjalanan Belajar</span>
+                                        <i class="fa-solid fa-arrow-right"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+
+            // ================= SLIDE 2: PETA PERJALANAN 16 PERTEMUAN =================
+            {
+                id: 2,
+                category: "2. Peta Kurikulum",
+                title: "Peta Perjalanan Kita Selama 1 Semester (16 Pertemuan)",
+                render: () => {
+                    const phases = [
+                        {
+                            title: "Fase 1: Pondasi & Tampilan (Front-End)",
+                            weeks: "Pertemuan 1 – 6",
+                            badge: "Kita Mulai di Sini!",
+                            color: "indigo",
+                            desc: "Kita belajar merancang tampilan depan website UMKM agar cantik di layar HP/Laptop dan bisa merespons klik pengguna.",
+                            items: [
+                                { pert: "Pert. 1", topik: "Pengantar Web, Client-Server & Instalasi XAMPP", output: "XAMPP & Localhost Aktif (C2)" },
+                                { pert: "Pert. 2", topik: "HTML Dasar (Heading, Gambar, Tabel, Form)", output: "Halaman Profil UMKM Statis (C3)" },
+                                { pert: "Pert. 3", topik: "CSS Dasar (Warna, Font, Box Model)", output: "Halaman Produk dengan Styling (C3)" },
+                                { pert: "Pert. 4", topik: "CSS Lanjutan: Layout Responsif (Flexbox/Grid)", output: "Katalog Produk Responsif HP & Desktop (C3, C6)" },
+                                { pert: "Pert. 5", topik: "JavaScript Dasar: DOM & Event Klik", output: "Interaksi Tombol Keranjang & Hide/Show (C3)" },
+                                { pert: "Pert. 6", topik: "JavaScript Lanjutan: Validasi Form Pemesanan", output: "Form Pemesanan Tervalidasi (C3, C4)" }
+                            ]
+                        },
+                        {
+                            title: "Fase 2: Jembatan ke Server & UTS",
+                            weeks: "Pertemuan 7 – 8",
+                            badge: "Evaluasi Tengah",
+                            color: "amber",
+                            desc: "Mulai menyentuh bahasa Back-End (PHP) untuk menerima kiriman data dari formulir HTML, lalu diuji pada UTS.",
+                            items: [
+                                { pert: "Pert. 7", topik: "Pengantar PHP Dasar & Request GET/POST", output: "Program PHP Penerima Data Form (C3)" },
+                                { pert: "Pert. 8", topik: "Ujian Tengah Semester (UTS Praktik)", output: "Web Statis Responsif + Olah Form PHP (Bobot 30%)" }
+                            ]
+                        },
+                        {
+                            title: "Fase 3: Database MySQL & Operasi CRUD",
+                            weeks: "Pertemuan 9 – 13",
+                            badge: "Inti Web Dinamis",
+                            color: "emerald",
+                            desc: "Menghubungkan website dengan gudang data MySQL agar produk UMKM bisa ditambah, tampil, diedit, dan dihapus secara permanen.",
+                            items: [
+                                { pert: "Pert. 9", topik: "Pengantar Database Relasional & phpMyAdmin", output: "Database & Tabel Produk secara Visual/GUI (C3, C4)" },
+                                { pert: "Pert. 10", topik: "Query Dasar SQL (SELECT, INSERT, UPDATE, DELETE)", output: "Kumpulan Query CRUD Dasar (C3)" },
+                                { pert: "Pert. 11", topik: "Koneksi PHP ke MySQL (mysqli/PDO)", output: "Web Menampilkan Data dari Database (C3)" },
+                                { pert: "Pert. 12", topik: "Operasi Create & Read (Tambah & Tampil Produk)", output: "Fitur Tambah Produk ke Database (C3)" },
+                                { pert: "Pert. 13", topik: "Operasi Update & Delete (Edit & Hapus Produk)", output: "Aplikasi CRUD Produk Lengkap (C3)" }
+                            ]
+                        },
+                        {
+                            title: "Fase 4: Keamanan Login & Proyek Akhir UMKM",
+                            weeks: "Pertemuan 14 – 16",
+                            badge: "Siap Jadi Konsultan",
+                            color: "purple",
+                            desc: "Mengamankan halaman admin dengan sistem Login Session dan mempresentasikan aplikasi layaknya Konsultan Digital UMKM.",
+                            items: [
+                                { pert: "Pert. 14", topik: "Autentikasi Sederhana (Login Admin) & Session", output: "Halaman Login Terintegrasi Session (C3, C4)" },
+                                { pert: "Pert. 15", topik: "Integrasi & Penyempurnaan Proyek Akhir", output: "Draf Aplikasi Manajemen Produk UMKM (C6, P4, A3)" },
+                                { pert: "Pert. 16", topik: "UAS: Presentasi & Demo Konsultan Digital UMKM", output: "Portofolio Aplikasi Web & Hosting (Bobot 40%)" }
+                            ]
+                        }
+                    ];
+                    const active = phases[roadmapSelectedPhase];
+
+                    return `
+                        <div class="slide-view space-y-6">
+                            <div>
+                                <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">
+                                    Ke Mana Arah Belajar Kita? <span class="text-indigo-600 dark:text-indigo-400">Klik Tiap Fase!</span>
+                                </h2>
+                                <p class="text-sm sm:text-base text-slate-600 dark:text-slate-300 mt-1">
+                                    Semua pertemuan dari Minggu 1 hingga 16 saling menyambung untuk membangun satu karya utuh: <b>Aplikasi Web Manajemen Produk UMKM</b>.
+                                </p>
+                            </div>
+
+                            <!-- 4 Phase Tabs -->
+                            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                                ${phases.map((p, idx) => `
+                                    <button onclick="selectRoadmapPhase(${idx})" class="text-left p-4 rounded-2xl border-2 transition-all ${roadmapSelectedPhase === idx ? 'border-indigo-600 bg-indigo-50/80 dark:bg-indigo-950/60 shadow-md' : 'border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 hover:border-indigo-300'}">
+                                        <div class="flex items-center justify-between mb-1">
+                                            <span class="text-xs font-extrabold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">${p.weeks}</span>
+                                            ${idx === 0 ? '<span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>' : ''}
+                                        </div>
+                                        <div class="font-extrabold text-sm text-slate-900 dark:text-white line-clamp-2">${p.title}</div>
+                                    </button>
+                                `).join('')}
+                            </div>
+
+                            <!-- Selected Phase Detail Box -->
+                            <div class="p-5 sm:p-6 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+                                <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                                    <div>
+                                        <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-600 text-white">${active.weeks}</span>
+                                        <h3 class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white mt-1">${active.title}</h3>
+                                    </div>
+                                    <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-xl">${active.desc}</p>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                    ${active.items.map(it => `
+                                        <div class="p-3.5 rounded-xl bg-white dark:bg-slate-900 border ${it.pert === 'Pert. 1' ? 'border-2 border-indigo-600 ring-4 ring-indigo-500/10' : 'border-slate-200 dark:border-slate-800'} flex flex-col justify-between">
+                                            <div>
+                                                <div class="flex items-center justify-between">
+                                                    <span class="text-xs font-extrabold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">${it.pert}</span>
+                                                    ${it.pert === 'Pert. 1' ? '<span class="text-[11px] font-bold text-indigo-600 dark:text-indigo-400"><i class="fa-solid fa-location-dot mr-1"></i>Hari Ini</span>' : ''}
+                                                </div>
+                                                <h4 class="font-bold text-sm text-slate-900 dark:text-white mt-2">${it.topik}</h4>
+                                            </div>
+                                            <div class="mt-3 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs text-emerald-700 dark:text-emerald-400 font-semibold flex items-center gap-1.5">
+                                                <i class="fa-solid fa-bullseye"></i>
+                                                <span>Output: ${it.output}</span>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            },
+
+            // ================= SLIDE 3: APA ITU WEB PROGRAMMING? STATIS VS DINAMIS =================
+            {
+                id: 3,
+                category: "3. Konsep Dasar",
+                title: "Apa Bedanya Website Statis vs Website Dinamis?",
+                render: () => `
+                    <div class="slide-view space-y-6">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div>
+                                <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">
+                                    Mengapa Kita Belajar ${term('statis', 'Web Statis')} hingga ${term('dinamis', 'Web Dinamis')}?
+                                </h2>
+                                <p class="text-sm sm:text-base text-slate-600 dark:text-slate-300 mt-1">
+                                    Coba tekan tombol sakelar di bawah ini dan uji langsung perbedaan antara brosur online biasa dengan aplikasi web yang terhubung ke ${term('database', 'Database')}!
+                                </p>
+                            </div>
+
+                            <!-- Mode Switcher -->
+                            <div class="inline-flex p-1.5 rounded-2xl bg-slate-200/80 dark:bg-slate-800 self-start shrink-0">
+                                <button onclick="switchWebType('statis')" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition ${webTypeMode === 'statis' ? 'bg-white dark:bg-slate-900 text-indigo-600 shadow-sm' : 'text-slate-600 dark:text-slate-400'}">
+                                    1. Mode Web Statis (Pert. 2–6)
+                                </button>
+                                <button onclick="switchWebType('dinamis')" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition ${webTypeMode === 'dinamis' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400'}">
+                                    2. Mode Web Dinamis (Pert. 7–16)
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Interactive Comparison Workspace -->
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+                            <!-- Explanation Card -->
+                            <div class="lg:col-span-5 p-6 rounded-2xl border ${webTypeMode === 'statis' ? 'bg-amber-50/60 border-amber-200 dark:bg-amber-950/20 dark:border-amber-800/60' : 'bg-emerald-50/60 border-emerald-200 dark:bg-emerald-950/20 dark:border-emerald-800/60'} flex flex-col justify-between">
+                                <div class="space-y-4">
+                                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-extrabold ${webTypeMode === 'statis' ? 'bg-amber-200/70 text-amber-900 dark:bg-amber-900 dark:text-amber-200' : 'bg-emerald-200/70 text-emerald-900 dark:bg-emerald-900 dark:text-emerald-200'}">
+                                        <i class="fa-solid ${webTypeMode === 'statis' ? 'fa-file-code' : 'fa-server'}"></i>
+                                        <span>${webTypeMode === 'statis' ? 'Analogi: Brosur Cetak Dilaminating' : 'Analogi: Etalase Pintar & Kasir Otomatis'}</span>
+                                    </div>
+
+                                    <h3 class="text-xl font-extrabold text-slate-900 dark:text-white">
+                                        ${webTypeMode === 'statis' ? 'Website Statis (Hanya Front-End)' : 'Website Dinamis (Front-End + Back-End + Database)'}
+                                    </h3>
+
+                                    <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                                        ${webTypeMode === 'statis' 
+                                            ? `Dibangun hanya menggunakan ${term('html', 'HTML')}, ${term('css', 'CSS')}, dan ${term('javascript', 'JavaScript')}. Jika pemilik UMKM ingin mengubah harga atau mengurangi stok barang, programmer harus <b>membuka file kode dan mengetik ulang angkanya secara manual</b>.` 
+                                            : `Dibangun dengan tambahan mesin belakang layar yaitu ${term('php', 'PHP')} dan gudang penyimpanan ${term('mysql', 'MySQL')}. Ketika pembeli memesan barang, stok di database <b>otomatis berkurang</b> dan tersimpan permanen!`}
+                                    </p>
+
+                                    <div class="p-3.5 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 text-xs space-y-1.5">
+                                        <div class="font-bold text-slate-900 dark:text-white">Teknologi yang Bekerja:</div>
+                                        <div class="flex flex-wrap gap-1.5">
+                                            <span class="px-2 py-1 rounded bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-300 font-bold">HTML</span>
+                                            <span class="px-2 py-1 rounded bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 font-bold">CSS</span>
+                                            <span class="px-2 py-1 rounded bg-yellow-100 text-yellow-800 dark:bg-yellow-950 dark:text-yellow-300 font-bold">JavaScript</span>
+                                            ${webTypeMode === 'dinamis' ? `
+                                                <span class="px-2 py-1 rounded bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 font-bold">+ PHP (Back-End)</span>
+                                                <span class="px-2 py-1 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-bold">+ MySQL (Database)</span>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4 pt-3 border-t border-slate-200/80 dark:border-slate-700 text-xs text-slate-500 dark:text-slate-400">
+                                    <i class="fa-solid fa-circle-info mr-1"></i> Coba klik tombol <b>"Beli 1 Bungkus"</b> pada simulasi toko di sebelah kanan!
+                                </div>
+                            </div>
+
+                            <!-- Live Mini Store Simulation -->
+                            <div class="lg:col-span-7 p-6 rounded-2xl bg-slate-100 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 flex flex-col justify-between">
+                                <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-200 dark:border-slate-700">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-3 h-3 rounded-full bg-rose-400"></span>
+                                        <span class="w-3 h-3 rounded-full bg-amber-400"></span>
+                                        <span class="w-3 h-3 rounded-full bg-emerald-400"></span>
+                                        <span class="ml-2 font-mono text-xs text-slate-500 dark:text-slate-400">Simulasi Toko UMKM: Kopi Nusantara</span>
+                                    </div>
+                                    <span class="text-xs font-bold px-2.5 py-0.5 rounded-full ${webTypeMode === 'statis' ? 'bg-amber-200 text-amber-900' : 'bg-emerald-200 text-emerald-900'}">
+                                        ${webTypeMode === 'statis' ? 'Tanpa Database' : 'Terhubung Database MySQL'}
+                                    </span>
+                                </div>
+
+                                <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row items-center gap-5">
+                                    <div class="w-24 h-24 rounded-2xl bg-gradient-to-br from-amber-600 to-orange-800 text-white flex flex-col items-center justify-center shrink-0 shadow-md">
+                                        <i class="fa-solid fa-mug-hot text-3xl mb-1"></i>
+                                        <span class="text-[10px] font-bold uppercase tracking-wider">Kopi Gayo</span>
+                                    </div>
+                                    <div class="flex-1 text-center sm:text-left">
+                                        <h4 class="text-lg font-extrabold text-slate-900 dark:text-white">Kopi Arabika Gayo Kemasan 250g</h4>
+                                        <p class="text-indigo-600 dark:text-indigo-400 font-extrabold text-base">Rp 65.000</p>
+                                        <div class="mt-2 inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs font-bold">
+                                            <span>Sisa Stok di Layar:</span>
+                                            <span id="simStockBadge" class="text-sm font-extrabold text-emerald-600 dark:text-emerald-400">${webTypeMode === 'statis' ? '25 (Ketikan Manual di HTML)' : dynamicStockCount + ' (Data Tabel MySQL)'}</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex flex-col gap-2 w-full sm:w-auto">
+                                        <button onclick="simulateBuyProduct()" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow transition flex items-center justify-center gap-1.5">
+                                            <i class="fa-solid fa-cart-shopping"></i>
+                                            <span>Beli 1 Bungkus</span>
+                                        </button>
+                                        <button onclick="simulateRefreshBrowser()" class="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs transition flex items-center justify-center gap-1.5">
+                                            <i class="fa-solid fa-rotate-right"></i>
+                                            <span>Refresh Halaman</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Simulation Log Message -->
+                                <div id="staticDynamicFeedback" class="mt-4 p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-300 flex items-start gap-2.5">
+                                    <i class="fa-solid fa-terminal text-indigo-600 mt-0.5"></i>
+                                    <span>Klik tombol <b>"Beli 1 Bungkus"</b> lalu coba klik <b>"Refresh Halaman"</b> untuk melihat perbedaan perilaku data!</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+
+            // ================= SLIDE 4: ANALOGI RESTORAN (CLIENT-SERVER) =================
+            {
+                id: 4,
+                category: "4. Analogi Awam",
+                title: "Analogi Restoran: Memahami Front-End, Back-End & Database",
+                render: () => `
+                    <div class="slide-view space-y-6">
+                        <div>
+                            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">
+                                Jangan Pusing Dulu! Bayangkan Website Seperti <span class="text-indigo-600 dark:text-indigo-400">Sebuah Restoran</span> 🍽️
+                            </h2>
+                            <p class="text-sm sm:text-base text-slate-600 dark:text-slate-300 mt-1">
+                                Dalam arsitektur ${term('client', 'Client')} – ${term('server', 'Server')}, setiap bagian punya tugas masing-masing layaknya kru restoran. Perhatikan 4 peran utama berikut:
+                            </p>
+                        </div>
+
+                        <!-- 4 Analogy Cards -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <!-- Card 1: Client / Front-End -->
+                            <div class="p-5 rounded-2xl bg-gradient-to-b from-blue-50/90 to-white dark:from-blue-950/30 dark:to-slate-900 border border-blue-200 dark:border-blue-800/70 flex flex-col justify-between">
+                                <div>
+                                    <div class="flex items-center justify-between mb-3">
+                                        <span class="px-2.5 py-1 rounded-lg bg-blue-600 text-white text-xs font-extrabold">1. Ruang Makan & Menu</span>
+                                        <i class="fa-solid fa-book-open text-2xl text-blue-500"></i>
+                                    </div>
+                                    <h3 class="font-extrabold text-base text-slate-900 dark:text-white mb-1">Di Dunia Web: ${term('frontend', 'Front-End')}</h3>
+                                    <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed mt-2">
+                                        Meja yang rapi, buku menu bergambar indah, dan tombol panggil pelayan di HP/Laptop pelanggan (${term('browser', 'Browser')}).
+                                    </p>
+                                </div>
+                                <div class="mt-4 pt-3 border-t border-blue-200/60 dark:border-blue-800/60 text-xs">
+                                    <span class="font-bold text-slate-500 dark:text-slate-400 block mb-1">Bahasa yang dipakai:</span>
+                                    <div class="flex flex-wrap gap-1">
+                                        ${term('html', 'HTML')} ${term('css', 'CSS')} ${term('javascript', 'JS')}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Card 2: HTTP Request/Response -->
+                            <div class="p-5 rounded-2xl bg-gradient-to-b from-amber-50/90 to-white dark:from-amber-950/30 dark:to-slate-900 border border-amber-200 dark:border-amber-800/70 flex flex-col justify-between">
+                                <div>
+                                    <div class="flex items-center justify-between mb-3">
+                                        <span class="px-2.5 py-1 rounded-lg bg-amber-600 text-white text-xs font-extrabold">2. Pelayan Restoran</span>
+                                        <i class="fa-solid fa-bell-concierge text-2xl text-amber-500"></i>
+                                    </div>
+                                    <h3 class="font-extrabold text-base text-slate-900 dark:text-white mb-1">Di Dunia Web: ${term('http', 'HTTP Request')}</h3>
+                                    <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed mt-2">
+                                        Pelayan yang mencatat pesanan dari meja pelanggan, berlari mengantarkannya ke dapur, lalu membawa hidangan matang kembali ke meja.
+                                    </p>
+                                </div>
+                                <div class="mt-4 pt-3 border-t border-amber-200/60 dark:border-amber-800/60 text-xs">
+                                    <span class="font-bold text-slate-500 dark:text-slate-400 block mb-1">Perangkat Pelayan:</span>
+                                    <div class="flex flex-wrap gap-1">
+                                        ${term('apache', 'Apache Web Server')}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Card 3: Back-End (PHP) -->
+                            <div class="p-5 rounded-2xl bg-gradient-to-b from-purple-50/90 to-white dark:from-purple-950/30 dark:to-slate-900 border border-purple-200 dark:border-purple-800/70 flex flex-col justify-between">
+                                <div>
+                                    <div class="flex items-center justify-between mb-3">
+                                        <span class="px-2.5 py-1 rounded-lg bg-purple-600 text-white text-xs font-extrabold">3. Koki di Dapur</span>
+                                        <i class="fa-solid fa-kitchen-set text-2xl text-purple-500"></i>
+                                    </div>
+                                    <h3 class="font-extrabold text-base text-slate-900 dark:text-white mb-1">Di Dunia Web: ${term('backend', 'Back-End')}</h3>
+                                    <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed mt-2">
+                                        Koki bekerja di ruang tertutup. Ia membaca catatan pesanan, mengambil bahan mentah dari kulkas, memasaknya, dan menatanya di piring.
+                                    </p>
+                                </div>
+                                <div class="mt-4 pt-3 border-t border-purple-200/60 dark:border-purple-800/60 text-xs">
+                                    <span class="font-bold text-slate-500 dark:text-slate-400 block mb-1">Bahasa Koki Server:</span>
+                                    <div class="flex flex-wrap gap-1">
+                                        ${term('php', 'PHP')}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Card 4: Database (MySQL) -->
+                            <div class="p-5 rounded-2xl bg-gradient-to-b from-emerald-50/90 to-white dark:from-emerald-950/30 dark:to-slate-900 border border-emerald-200 dark:border-emerald-800/70 flex flex-col justify-between">
+                                <div>
+                                    <div class="flex items-center justify-between mb-3">
+                                        <span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-xs font-extrabold">4. Gudang & Kulkas</span>
+                                        <i class="fa-solid fa-boxes-stacked text-2xl text-emerald-500"></i>
+                                    </div>
+                                    <h3 class="font-extrabold text-base text-slate-900 dark:text-white mb-1">Di Dunia Web: ${term('database', 'Database')}</h3>
+                                    <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed mt-2">
+                                        Tempat seluruh bahan makanan, stok barang, dan catatan harga disimpan rapi di dalam rak berlabel. Hanya Koki yang boleh masuk ke gudang!
+                                    </p>
+                                </div>
+                                <div class="mt-4 pt-3 border-t border-emerald-200/60 dark:border-emerald-800/60 text-xs">
+                                    <span class="font-bold text-slate-500 dark:text-slate-400 block mb-1">Mesin Penyimpan:</span>
+                                    <div class="flex flex-wrap gap-1">
+                                        ${term('mysql', 'MySQL')} ${term('phpmyadmin', 'phpMyAdmin')}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bottom Summary Rule -->
+                        <div class="p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 flex items-center gap-3 text-xs sm:text-sm text-slate-700 dark:text-slate-200">
+                            <i class="fa-solid fa-shield-halved text-xl text-indigo-600 dark:text-indigo-400 shrink-0"></i>
+                            <div>
+                                <b>Aturan Penting Keamanan Web:</b> Pelanggan (${term('client', 'Client')}) <u>tidak pernah boleh</u> masuk langsung ke Gudang (${term('database', 'Database')}). Pelanggan harus selalu meminta lewat Pelayan (${term('apache', 'Web Server')}) dan dimasakkan oleh Koki (${term('php', 'PHP')}). Yuk lihat simulasinya di slide berikutnya!
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+
+            // ================= SLIDE 5: SIMULASI ANIMATIF ARSITEKTUR CLIENT-SERVER =================
+            {
+                id: 5,
+                category: "5. Simulasi Interaktif",
+                title: "Simulasi Animatif Arsitektur Client-Server",
+                render: () => {
+                    const scenarios = [
+                        {
+                            name: "Skenario 1: Pengunjung Membuka Katalog UMKM",
+                            steps: [
+                                {
+                                    activeNode: 1,
+                                    packetPos: "left-[12%]",
+                                    packetColor: "bg-blue-600",
+                                    packetLabel: "Ketik URL",
+                                    title: "Tahap 1: Pengunjung Mengetik Alamat Web di Browser (Client)",
+                                    desc: "Pengunjung membuka Chrome lalu mengetik `http://localhost/umkm_kopi`. Browser menyiapkan surat permintaan (HTTP GET Request)."
+                                },
+                                {
+                                    activeNode: 2,
+                                    packetPos: "left-[38%]",
+                                    packetColor: "bg-amber-600",
+                                    packetLabel: "HTTP GET Request →",
+                                    title: "Tahap 2: Apache Web Server Menerima Permintaan",
+                                    desc: "Pelayan (Apache) menerima permintaan file `index.php`. Karena file berakhiran `.php`, Apache memanggil Koki PHP untuk memprosesnya."
+                                },
+                                {
+                                    activeNode: 3,
+                                    packetPos: "left-[64%]",
+                                    packetColor: "bg-purple-600",
+                                    packetLabel: "SQL SELECT →",
+                                    title: "Tahap 3: PHP Meminta Data Produk ke Gudang MySQL",
+                                    desc: "Koki PHP menjalankan perintah `SELECT * FROM produk` ke Database MySQL untuk mengambil daftar nama kopi, harga, dan stok terbaru."
+                                },
+                                {
+                                    activeNode: 4,
+                                    packetPos: "left-[85%]",
+                                    packetColor: "bg-emerald-600",
+                                    packetLabel: "← Data Tabel Produk",
+                                    title: "Tahap 4: Database MySQL Mengirimkan Data ke PHP",
+                                    desc: "MySQL menyerahkan data baris produk kepada PHP. Selanjutnya PHP merangkai data tersebut menjadi kode HTML + CSS yang rapi."
+                                },
+                                {
+                                    activeNode: 1,
+                                    packetPos: "left-[15%]",
+                                    packetColor: "bg-indigo-600",
+                                    packetLabel: "← HTTP Response (HTML)",
+                                    title: "Tahap 5: Browser Menerima HTML & Menampilkan Katalog Cantik!",
+                                    desc: "Apache mengirimkan hasil akhir berupa halaman HTML+CSS+JS kembali ke Browser pengunjung. Pengunjung kini melihat katalog produk UMKM di layar!"
+                                }
+                            ]
+                        },
+                        {
+                            name: "Skenario 2: Admin Menambah Produk Baru (Form POST)",
+                            steps: [
+                                {
+                                    activeNode: 1,
+                                    packetPos: "left-[12%]",
+                                    packetColor: "bg-blue-600",
+                                    packetLabel: "Isi Form & Submit",
+                                    title: "Tahap 1: Admin Mengisi Form Tambah Produk di Browser",
+                                    desc: "Admin mengetik 'Keripik Pisang Coklat - Rp 20.000' pada Form HTML lalu menekan tombol Simpan."
+                                },
+                                {
+                                    activeNode: 2,
+                                    packetPos: "left-[38%]",
+                                    packetColor: "bg-amber-600",
+                                    packetLabel: "HTTP POST Data →",
+                                    title: "Tahap 2: Data Form Dikirim via HTTP POST ke Server Apache",
+                                    desc: "Data formulir dikirim secara tertutup (POST) menuju file `tambah_produk.php` di dalam Web Server Apache."
+                                },
+                                {
+                                    activeNode: 3,
+                                    packetPos: "left-[64%]",
+                                    packetColor: "bg-purple-600",
+                                    packetLabel: "SQL INSERT INTO →",
+                                    title: "Tahap 3: PHP Menjalankan Perintah Simpan ke Database",
+                                    desc: "PHP menangkap kiriman form (`$_POST`) lalu menyuruh MySQL menyimpan data baru lewat perintah `INSERT INTO produk...`."
+                                },
+                                {
+                                    activeNode: 4,
+                                    packetPos: "left-[85%]",
+                                    packetColor: "bg-emerald-600",
+                                    packetLabel: "✓ Tersimpan Permanen",
+                                    title: "Tahap 4: MySQL Menyimpan Baris Baru di Tabel",
+                                    desc: "Gudang MySQL mencatat produk baru secara permanen di dalam harddisk server dan melapor ke PHP bahwa penyimpanan berhasil."
+                                },
+                                {
+                                    activeNode: 1,
+                                    packetPos: "left-[15%]",
+                                    packetColor: "bg-indigo-600",
+                                    packetLabel: "← Notifikasi Sukses",
+                                    title: "Tahap 5: Halaman Katalog Bertambah 1 Produk Baru!",
+                                    desc: "Server mengirimkan halaman katalog terbaru ke Browser. Sekarang seluruh pengunjung web bisa melihat produk Keripik Pisang Coklat!"
+                                }
+                            ]
+                        }
+                    ];
+
+                    const currentScen = scenarios[csScenario];
+                    const currStepObj = currentScen.steps[csStep];
+
+                    return `
+                        <div class="slide-view space-y-5">
+                            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                                <div>
+                                    <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">
+                                        Simulasi Alur Data: <span class="text-indigo-600 dark:text-indigo-400">Client ↔ Server ↔ Database</span>
+                                    </h2>
+                                    <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                                        Tekan tombol <b>"Jalankan Otomatis"</b> atau klik <b>"Langkah Berikutnya"</b> untuk melihat perjalanan paket data!
+                                    </p>
+                                </div>
+
+                                <!-- Scenario Selector -->
+                                <div class="flex flex-wrap gap-2">
+                                    <button onclick="setCsScenario(0)" class="px-3 py-1.5 rounded-xl text-xs font-bold transition ${csScenario === 0 ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">
+                                        1. Buka Katalog (GET)
+                                    </button>
+                                    <button onclick="setCsScenario(1)" class="px-3 py-1.5 rounded-xl text-xs font-bold transition ${csScenario === 1 ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">
+                                        2. Admin Tambah Produk (POST)
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- VISUAL ARCHITECTURE DIAGRAM -->
+                            <div class="p-5 sm:p-6 rounded-3xl bg-slate-100 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 relative overflow-hidden">
+                                
+                                <!-- Animated Packet Track (Desktop) -->
+                                <div class="hidden md:block relative h-10 mb-3 bg-white dark:bg-slate-900 rounded-full border border-slate-200 dark:border-slate-700 px-4">
+                                    <div class="absolute top-1/2 left-8 right-8 h-0.5 bg-dashed bg-slate-300 dark:bg-slate-700 -translate-y-1/2"></div>
+                                    <div class="absolute top-1/2 -translate-y-1/2 transition-all duration-500 ${currStepObj.packetPos}" style="transform: translate(-50%, -50%);">
+                                        <span class="px-3 py-1 rounded-full text-xs font-extrabold text-white shadow-lg ${currStepObj.packetColor} flex items-center gap-1.5 whitespace-nowrap">
+                                            <i class="fa-solid fa-paper-plane text-[10px]"></i>
+                                            ${currStepObj.packetLabel}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- 4 Architecture Nodes -->
+                                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 relative z-10">
+                                    <!-- Node 1: Client Browser -->
+                                    <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border-2 transition-all ${currStepObj.activeNode === 1 ? 'active-node ring-4 ring-indigo-500/20' : 'border-slate-200 dark:border-slate-700 opacity-80'}">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="text-[11px] font-extrabold uppercase px-2 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300">Sisi Client</span>
+                                            <i class="fa-solid fa-laptop text-xl text-blue-600"></i>
+                                        </div>
+                                        <h4 class="font-extrabold text-sm text-slate-900 dark:text-white">1. Web Browser</h4>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Merender HTML, CSS, dan JS menjadi tampilan toko.</p>
+                                    </div>
+
+                                    <!-- Node 2: Apache Web Server -->
+                                    <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border-2 transition-all ${currStepObj.activeNode === 2 ? 'active-node ring-4 ring-indigo-500/20' : 'border-slate-200 dark:border-slate-700 opacity-80'}">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="text-[11px] font-extrabold uppercase px-2 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">Pintu Server</span>
+                                            <i class="fa-solid fa-network-wired text-xl text-amber-600"></i>
+                                        </div>
+                                        <h4 class="font-extrabold text-sm text-slate-900 dark:text-white">2. Apache Server</h4>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Menerima HTTP Request & mengirim HTTP Response.</p>
+                                    </div>
+
+                                    <!-- Node 3: PHP Engine -->
+                                    <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border-2 transition-all ${currStepObj.activeNode === 3 ? 'active-node ring-4 ring-indigo-500/20' : 'border-slate-200 dark:border-slate-700 opacity-80'}">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="text-[11px] font-extrabold uppercase px-2 py-0.5 rounded bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300">Back-End</span>
+                                            <i class="fa-brands fa-php text-2xl text-purple-600"></i>
+                                        </div>
+                                        <h4 class="font-extrabold text-sm text-slate-900 dark:text-white">3. Mesin PHP</h4>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Memproses logika & meracik data menjadi HTML.</p>
+                                    </div>
+
+                                    <!-- Node 4: MySQL Database -->
+                                    <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border-2 transition-all ${currStepObj.activeNode === 4 ? 'active-node ring-4 ring-indigo-500/20' : 'border-slate-200 dark:border-slate-700 opacity-80'}">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="text-[11px] font-extrabold uppercase px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">Basis Data</span>
+                                            <i class="fa-solid fa-database text-xl text-emerald-600"></i>
+                                        </div>
+                                        <h4 class="font-extrabold text-sm text-slate-900 dark:text-white">4. Database MySQL</h4>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Menyimpan tabel produk UMKM secara permanen.</p>
+                                    </div>
+                                </div>
+
+                                <!-- Active Step Explanation Banner -->
+                                <div class="mt-5 p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                    <div class="space-y-1">
+                                        <div class="flex items-center gap-2">
+                                            <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-indigo-600 text-white">Langkah ${csStep + 1} / 5</span>
+                                            <h4 class="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white">${currStepObj.title}</h4>
+                                        </div>
+                                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">${currStepObj.desc}</p>
+                                    </div>
+
+                                    <!-- Controls -->
+                                    <div class="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end">
+                                        <button onclick="stepCsAnimation(-1)" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold">
+                                            <i class="fa-solid fa-backward-step"></i>
+                                        </button>
+                                        <button onclick="toggleCsAutoPlay()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold flex items-center gap-1.5 shadow">
+                                            <i class="fa-solid ${csTimer ? 'fa-pause' : 'fa-play'}"></i>
+                                            <span>${csTimer ? 'Jeda' : 'Jalankan Otomatis'}</span>
+                                        </button>
+                                        <button onclick="stepCsAnimation(1)" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex items-center gap-1">
+                                            <span>Langkah Berikutnya</span>
+                                            <i class="fa-solid fa-forward-step"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            },
+
+            // ================= SLIDE 6: LABORATORIUM FRONT-END (HTML, CSS, JS) =================
+            {
+                id: 6,
+                category: "6. Eksperimen Front-End",
+                title: "Membedah Trio Front-End: HTML, CSS, dan JavaScript",
+                render: () => `
+                    <div class="slide-view space-y-6">
+                        <div>
+                            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">
+                                Eksperimen Langsung: Apa Jadinya Jika Salah Satu Dimatikan? 🧪
+                            </h2>
+                            <p class="text-sm sm:text-base text-slate-600 dark:text-slate-300 mt-1">
+                                Di sisi ${term('frontend', 'Front-End')}, kita menggunakan 3 bahasa yang saling melengkapi: ${term('html', 'HTML')}, ${term('css', 'CSS')}, dan ${term('javascript', 'JavaScript')}. Coba matikan/nyalakan sakelar di bawah ini!
+                            </p>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                            <!-- Left: 3 Toggle Switches -->
+                            <div class="lg:col-span-6 space-y-3.5">
+                                <!-- Toggle HTML -->
+                                <div onclick="toggleFeLayer('html')" class="cursor-pointer p-4 rounded-2xl border-2 transition flex items-center justify-between ${feToggleHTML ? 'border-orange-500 bg-orange-50/60 dark:bg-orange-950/30' : 'border-slate-200 dark:border-slate-800 opacity-60'}">
+                                    <div class="flex items-center gap-3.5">
+                                        <div class="w-11 h-11 rounded-xl bg-orange-500 text-white flex items-center justify-center text-xl font-bold">
+                                            <i class="fa-brands fa-html5"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white">1. HTML (Kerangka & Konten)</h4>
+                                            <p class="text-xs text-slate-600 dark:text-slate-400">Menampilkan teks judul, foto produk, harga, dan tombol.</p>
+                                        </div>
+                                    </div>
+                                    <span class="px-3 py-1 rounded-full text-xs font-extrabold ${feToggleHTML ? 'bg-orange-600 text-white' : 'bg-slate-300 text-slate-700'}">
+                                        ${feToggleHTML ? 'AKTIF (ON)' : 'MATI (OFF)'}
+                                    </span>
+                                </div>
+
+                                <!-- Toggle CSS -->
+                                <div onclick="toggleFeLayer('css')" class="cursor-pointer p-4 rounded-2xl border-2 transition flex items-center justify-between ${feToggleCSS ? 'border-blue-500 bg-blue-50/60 dark:bg-blue-950/30' : 'border-slate-200 dark:border-slate-800 opacity-60'}">
+                                    <div class="flex items-center gap-3.5">
+                                        <div class="w-11 h-11 rounded-xl bg-blue-600 text-white flex items-center justify-center text-xl font-bold">
+                                            <i class="fa-brands fa-css3-alt"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white">2. CSS (Desain, Warna & Estetika)</h4>
+                                            <p class="text-xs text-slate-600 dark:text-slate-400">Memberi warna, sudut melengkung, bayangan, dan tata letak rapi.</p>
+                                        </div>
+                                    </div>
+                                    <span class="px-3 py-1 rounded-full text-xs font-extrabold ${feToggleCSS ? 'bg-blue-600 text-white' : 'bg-slate-300 text-slate-700'}">
+                                        ${feToggleCSS ? 'AKTIF (ON)' : 'MATI (OFF)'}
+                                    </span>
+                                </div>
+
+                                <!-- Toggle JS -->
+                                <div onclick="toggleFeLayer('js')" class="cursor-pointer p-4 rounded-2xl border-2 transition flex items-center justify-between ${feToggleJS ? 'border-amber-500 bg-amber-50/60 dark:bg-amber-950/30' : 'border-slate-200 dark:border-slate-800 opacity-60'}">
+                                    <div class="flex items-center gap-3.5">
+                                        <div class="w-11 h-11 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center text-xl font-bold">
+                                            <i class="fa-brands fa-square-js"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white">3. JavaScript (Otak Interaksi)</h4>
+                                            <p class="text-xs text-slate-600 dark:text-slate-400">Membuat tombol "+ Keranjang" bisa menghitung pesanan saat diklik.</p>
+                                        </div>
+                                    </div>
+                                    <span class="px-3 py-1 rounded-full text-xs font-extrabold ${feToggleJS ? 'bg-amber-500 text-slate-950' : 'bg-slate-300 text-slate-700'}">
+                                        ${feToggleJS ? 'AKTIF (ON)' : 'MATI (OFF)'}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Right: Live Preview Box -->
+                            <div class="lg:col-span-6 p-6 rounded-3xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 min-h-[300px] flex flex-col justify-between">
+                                <div class="flex items-center justify-between text-xs font-bold text-slate-500 dark:text-slate-400 pb-3 border-b border-slate-200 dark:border-slate-700">
+                                    <span>HASIL TAMPILAN DI BROWSER:</span>
+                                    <span>Keranjang: <b class="text-indigo-600 dark:text-indigo-400">${feDemoCartCount} item</b></span>
+                                </div>
+
+                                <div class="my-auto py-4 flex items-center justify-center">
+                                    ${!feToggleHTML ? `
+                                        <div class="text-center p-6 text-slate-400">
+                                            <i class="fa-regular fa-eye-slash text-4xl mb-2"></i>
+                                            <p class="font-bold text-sm">Layar Kosong Melompong!</p>
+                                            <p class="text-xs mt-1">Tanpa <b>HTML</b>, tidak ada teks, gambar, ataupun tombol yang bisa ditampilkan di layar.</p>
+                                        </div>
+                                    ` : feToggleCSS ? `
+                                        <!-- Styled with CSS -->
+                                        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 max-w-sm w-full transition-all">
+                                            <div class="flex items-center gap-4">
+                                                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center text-2xl shrink-0 shadow">
+                                                    <i class="fa-solid fa-bowl-food"></i>
+                                                </div>
+                                                <div>
+                                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Camilan UMKM</span>
+                                                    <h4 class="font-extrabold text-base text-slate-900 dark:text-white mt-0.5">Keripik Singkong Balado</h4>
+                                                    <p class="text-indigo-600 dark:text-indigo-400 font-extrabold text-sm">Rp 18.000</p>
+                                                </div>
+                                            </div>
+                                            <button onclick="testFeButtonClick()" class="mt-4 w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow transition flex items-center justify-center gap-2">
+                                                <i class="fa-solid fa-cart-plus"></i>
+                                                <span>+ Tambah ke Keranjang</span>
+                                            </button>
+                                        </div>
+                                    ` : `
+                                        <!-- Raw Unstyled HTML (No CSS) -->
+                                        <div class="bg-white text-black p-4 w-full font-serif border border-black">
+                                            <p>[Ikon Makanan]</p>
+                                            <p>Camilan UMKM</p>
+                                            <h4 style="font-size: 18px; font-weight: bold; margin: 4px 0;">Keripik Singkong Balado</h4>
+                                            <p>Rp 18.000</p>
+                                            <button onclick="testFeButtonClick()" style="border: 1px solid black; background: #e5e5e5; padding: 2px 6px; margin-top: 8px; cursor: pointer;">
+                                                + Tambah ke Keranjang
+                                            </button>
+                                        </div>
+                                    `}
+                                </div>
+
+                                <div id="feLabFeedback" class="text-xs text-center font-semibold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 py-2 px-3 rounded-xl border border-slate-200 dark:border-slate-700">
+                                    Coba matikan sakelar <b>CSS</b> untuk melihat tampilan web tahun 1995, atau klik tombol <b>+ Tambah ke Keranjang</b>!
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+
+            // ================= SLIDE 7: DAPUR BACK-END (PHP) & DATABASE (MYSQL) =================
+            {
+                id: 7,
+                category: "7. Simulasi Back-End & Database",
+                title: "Bagaimana PHP & MySQL Bekerja Sama?",
+                render: () => `
+                    <div class="slide-view space-y-5">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div>
+                                <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">
+                                    Intip Dapur ${term('backend', 'Back-End')}: Dari Tabel ${term('mysql', 'MySQL')} Menjadi Katalog Web
+                                </h2>
+                                <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-0.5">
+                                    Coba tambahkan 1 baris produk baru ke dalam tabel Database di kiri, dan lihat bagaimana ${term('php', 'PHP')} otomatis menampilkannya di kanan!
+                                </p>
+                            </div>
+                            <button onclick="addSimulatedDbRow()" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-lg shadow-emerald-600/20 flex items-center gap-2 self-start shrink-0">
+                                <i class="fa-solid fa-plus-circle"></i>
+                                <span>+ Tambah Baris ke Database MySQL</span>
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+                            <!-- Left: MySQL Table Representation -->
+                            <div class="lg:col-span-6 p-5 rounded-2xl bg-slate-900 text-slate-100 border border-slate-700 flex flex-col justify-between">
+                                <div>
+                                    <div class="flex items-center justify-between mb-3">
+                                        <span class="text-xs font-mono text-emerald-400 flex items-center gap-1.5">
+                                            <i class="fa-solid fa-database"></i> Tabel MySQL: <b>tb_produk_umkm</b>
+                                        </span>
+                                        <span class="text-[11px] px-2 py-0.5 rounded bg-slate-800 text-slate-300">${dynamicProducts.length} Baris Data</span>
+                                    </div>
+
+                                    <div class="overflow-x-auto">
+                                        <table class="w-full text-left border-collapse text-xs font-mono">
+                                            <thead>
+                                                <tr class="border-b border-slate-700 text-slate-400">
+                                                    <th class="py-2 px-2">id</th>
+                                                    <th class="py-2 px-2">nama_produk</th>
+                                                    <th class="py-2 px-2">harga</th>
+                                                    <th class="py-2 px-2">stok</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-slate-800">
+                                                ${dynamicProducts.map(p => `
+                                                    <tr class="hover:bg-slate-800/60">
+                                                        <td class="py-2 px-2 text-indigo-400">${p.id}</td>
+                                                        <td class="py-2 px-2 font-sans font-semibold text-white">${p.nama}</td>
+                                                        <td class="py-2 px-2 text-emerald-400">${p.harga}</td>
+                                                        <td class="py-2 px-2 text-amber-300">${p.stok}</td>
+                                                    </tr>
+                                                `).join('')}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <!-- Mini PHP Snippet explanation -->
+                                <div class="mt-4 pt-3 border-t border-slate-800 text-[11px] font-mono text-purple-300 bg-slate-950/70 p-3 rounded-xl">
+                                    <div class="text-slate-400 mb-1">// Tugas Koki PHP (Pertemuan 11-13):</div>
+                                    <div>$data = mysqli_query($koneksi, "SELECT * FROM tb_produk_umkm");</div>
+                                    <div>while($row = mysqli_fetch_assoc($data)) { /* Cetak Kartu HTML */ }</div>
+                                </div>
+                            </div>
+
+                            <!-- Right: Rendered Web Catalog by PHP -->
+                            <div class="lg:col-span-6 p-5 rounded-2xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex flex-col justify-between">
+                                <div>
+                                    <div class="flex items-center justify-between mb-3">
+                                        <span class="text-xs font-extrabold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                                            <i class="fa-solid fa-globe mr-1"></i> Hasil Halaman Web (Dirangkai Otomatis oleh PHP)
+                                        </span>
+                                    </div>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[260px] overflow-y-auto pr-1">
+                                        ${dynamicProducts.map(p => `
+                                            <div class="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xs flex flex-col justify-between">
+                                                <div>
+                                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-300">${p.kategori}</span>
+                                                    <h4 class="font-bold text-xs sm:text-sm text-slate-900 dark:text-white mt-1">${p.nama}</h4>
+                                                </div>
+                                                <div class="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
+                                                    <span class="font-extrabold text-emerald-600 dark:text-emerald-400">${p.harga}</span>
+                                                    <span class="text-[11px] text-slate-500">Stok: ${p.stok}</span>
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+
+                                <div class="mt-3 p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-300">
+                                    <b>Poin Kunci (C2):</b> Kita hanya perlu membuat <b>1 desain kartu HTML/CSS</b>. Lalu ${term('php', 'PHP')} akan mengulang (looping) kartu tersebut sebanyak jumlah baris yang ada di dalam ${term('mysql', 'MySQL')}!
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+
+            // ================= SLIDE 8: SIMULATOR XAMPP & LOCALHOST =================
+            {
+                id: 8,
+                category: "8. Simulasi Praktikum",
+                title: "Mengenal Senjata Kita: VS Code & Simulator XAMPP",
+                render: () => `
+                    <div class="slide-view space-y-5">
+                        <div>
+                            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">
+                                Simulasi Menyalakan ${term('xampp', 'XAMPP')} & Mengakses ${term('localhost', 'Localhost')} 💻
+                            </h2>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-1">
+                                Agar laptopmu bisa menjalankan ${term('php', 'PHP')} dan ${term('mysql', 'MySQL')} tanpa perlu menyewa hosting di internet, kita memakai XAMPP. <b>Coba klik tombol Start pada Apache & MySQL di bawah ini!</b>
+                            </p>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+                            <!-- Left: Interactive XAMPP Control Panel -->
+                            <div class="lg:col-span-6 rounded-2xl bg-slate-100 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-700 overflow-hidden shadow-md flex flex-col justify-between">
+                                <div>
+                                    <!-- Fake Window Title Bar -->
+                                    <div class="bg-slate-800 text-white px-4 py-2.5 flex items-center justify-between text-xs font-bold">
+                                        <div class="flex items-center gap-2">
+                                            <i class="fa-solid fa-server text-amber-400"></i>
+                                            <span>XAMPP Control Panel v3.3.0 (Simulator Interaktif)</span>
+                                        </div>
+                                        <span class="text-[10px] px-2 py-0.5 rounded bg-slate-700">Target Praktikum 1</span>
+                                    </div>
+
+                                    <div class="p-4 space-y-3">
+                                        <p class="text-xs text-slate-600 dark:text-slate-300">
+                                            Di dalam XAMPP, kita hanya wajib menyalakan <b>2 modul teratas</b>:
+                                        </p>
+
+                                        <!-- Module Row 1: Apache -->
+                                        <div class="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-2">
+                                            <div class="flex items-center gap-3">
+                                                <span class="w-3 h-3 rounded-full ${xamppApacheRunning ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}"></span>
+                                                <div>
+                                                    <div class="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                                                        <span>Apache</span>
+                                                        <span class="px-2 py-0.5 rounded text-[11px] font-mono ${xamppApacheRunning ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300' : 'bg-slate-100 text-slate-500 dark:bg-slate-800'}">
+                                                            ${xamppApacheRunning ? 'Running (Port 80, 443)' : 'Stopped'}
+                                                        </span>
+                                                    </div>
+                                                    <p class="text-[11px] text-slate-500">Pelayan Web Server & PHP</p>
+                                                </div>
+                                            </div>
+                                            <button onclick="toggleXamppService('apache')" class="px-4 py-2 rounded-lg font-extrabold text-xs transition shadow-xs ${xamppApacheRunning ? 'bg-rose-600 hover:bg-rose-700 text-white' : 'bg-emerald-600 hover:bg-emerald-700 text-white'}">
+                                                ${xamppApacheRunning ? 'Stop' : 'Start'}
+                                            </button>
+                                        </div>
+
+                                        <!-- Module Row 2: MySQL -->
+                                        <div class="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-2">
+                                            <div class="flex items-center gap-3">
+                                                <span class="w-3 h-3 rounded-full ${xamppMysqlRunning ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}"></span>
+                                                <div>
+                                                    <div class="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                                                        <span>MySQL</span>
+                                                        <span class="px-2 py-0.5 rounded text-[11px] font-mono ${xamppMysqlRunning ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300' : 'bg-slate-100 text-slate-500 dark:bg-slate-800'}">
+                                                            ${xamppMysqlRunning ? 'Running (Port 3306)' : 'Stopped'}
+                                                        </span>
+                                                    </div>
+                                                    <p class="text-[11px] text-slate-500">Mesin Gudang Database & phpMyAdmin</p>
+                                                </div>
+                                            </div>
+                                            <button onclick="toggleXamppService('mysql')" class="px-4 py-2 rounded-lg font-extrabold text-xs transition shadow-xs ${xamppMysqlRunning ? 'bg-rose-600 hover:bg-rose-700 text-white' : 'bg-emerald-600 hover:bg-emerald-700 text-white'}">
+                                                ${xamppMysqlRunning ? 'Stop' : 'Start'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Sacred Folder Reminder -->
+                                <div class="p-3.5 bg-amber-50 dark:bg-amber-950/40 border-t border-amber-200 dark:border-amber-800/70 text-xs text-slate-700 dark:text-slate-200">
+                                    <i class="fa-solid fa-folder-open text-amber-600 mr-1"></i>
+                                    <b>Lokasi Simpan File Proyek:</b> Simpan folder proyekmu di dalam ${term('htdocs', 'C:\\xampp\\htdocs\\umkm_kopi')} lalu buka kodenya memakai ${term('vscode', 'VS Code')}.
+                                </div>
+                            </div>
+
+                            <!-- Right: Simulated Browser Testing Localhost -->
+                            <div class="lg:col-span-6 rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 overflow-hidden shadow-md flex flex-col justify-between">
+                                <!-- Browser Bar -->
+                                <div class="bg-slate-100 dark:bg-slate-800 p-3 border-b border-slate-200 dark:border-slate-700 space-y-2">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs font-bold text-slate-500">Uji Alamat di Browser:</span>
+                                        <button onclick="setSimBrowserUrl('http://localhost/umkm_kopi')" class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition ${xamppBrowserUrl === 'http://localhost/umkm_kopi' ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300'}">
+                                            localhost/umkm_kopi
+                                        </button>
+                                        <button onclick="setSimBrowserUrl('http://localhost/phpmyadmin')" class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition ${xamppBrowserUrl === 'http://localhost/phpmyadmin' ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300'}">
+                                            localhost/phpmyadmin
+                                        </button>
+                                    </div>
+                                    <div class="flex items-center gap-2 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-mono">
+                                        <i class="fa-solid fa-globe text-slate-400"></i>
+                                        <span class="text-slate-800 dark:text-slate-200 truncate">${xamppBrowserUrl}</span>
+                                    </div>
+                                </div>
+
+                                <!-- Browser Viewport Result -->
+                                <div class="p-5 flex-1 flex items-center justify-center">
+                                    ${!xamppApacheRunning ? `
+                                        <div class="text-center space-y-2 max-w-xs">
+                                            <div class="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 mx-auto flex items-center justify-center text-2xl">
+                                                <i class="fa-solid fa-triangle-exclamation"></i>
+                                            </div>
+                                            <h4 class="font-extrabold text-sm text-rose-600">This site can’t be reached (ERR_CONNECTION_REFUSED)</h4>
+                                            <p class="text-xs text-slate-500 dark:text-slate-400">
+                                                <b>Kenapa gagal?</b> Karena modul <b>Apache</b> di XAMPP sebelah kiri masih <i>Stopped</i>! Klik tombol <b>Start</b> pada Apache terlebih dahulu.
+                                            </p>
+                                        </div>
+                                    ` : (xamppBrowserUrl === 'http://localhost/phpmyadmin' && !xamppMysqlRunning) ? `
+                                        <div class="text-center space-y-2 max-w-xs">
+                                            <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 mx-auto flex items-center justify-center text-2xl">
+                                                <i class="fa-solid fa-database"></i>
+                                            </div>
+                                            <h4 class="font-extrabold text-sm text-amber-600">phpMyAdmin - Error: Cannot connect to MySQL!</h4>
+                                            <p class="text-xs text-slate-500 dark:text-slate-400">
+                                                Apache sudah menyala, tetapi gudang <b>MySQL</b> belum di-Start! Klik tombol <b>Start</b> pada baris MySQL di sebelah kiri.
+                                            </p>
+                                        </div>
+                                    ` : xamppBrowserUrl === 'http://localhost/phpmyadmin' ? `
+                                        <div class="w-full space-y-2 text-left">
+                                            <div class="flex items-center justify-between bg-emerald-50 dark:bg-emerald-950/50 p-3 rounded-xl border border-emerald-200 dark:border-emerald-800">
+                                                <div class="flex items-center gap-2">
+                                                    <i class="fa-solid fa-circle-check text-emerald-600 text-lg"></i>
+                                                    <span class="font-extrabold text-xs sm:text-sm text-emerald-900 dark:text-emerald-200">phpMyAdmin Berhasil Terbuka!</span>
+                                                </div>
+                                                <span class="text-[10px] font-mono bg-emerald-600 text-white px-2 py-0.5 rounded">MySQL Aktif</span>
+                                            </div>
+                                            <p class="text-xs text-slate-600 dark:text-slate-300">
+                                                Di halaman inilah nanti pada <b>Pertemuan 9</b> kita akan membuat database dan tabel produk UMKM secara visual (GUI).
+                                            </p>
+                                        </div>
+                                    ` : `
+                                        <div class="w-full space-y-3 text-left">
+                                            <div class="flex items-center justify-between bg-emerald-50 dark:bg-emerald-950/50 p-3 rounded-xl border border-emerald-200 dark:border-emerald-800">
+                                                <div class="flex items-center gap-2">
+                                                    <i class="fa-solid fa-circle-check text-emerald-600 text-lg"></i>
+                                                    <span class="font-extrabold text-xs sm:text-sm text-emerald-900 dark:text-emerald-200">Hore! Localhost Aktif & Berjalan!</span>
+                                                </div>
+                                                <span class="text-[10px] font-mono bg-emerald-600 text-white px-2 py-0.5 rounded">HTTP 200 OK</span>
+                                            </div>
+                                            <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                                                <h5 class="font-extrabold text-sm text-slate-900 dark:text-white">Selamat Datang di Website UMKM Kopi Nusantara</h5>
+                                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">File ini dibaca langsung dari <code>C:\\xampp\\htdocs\\umkm_kopi\\index.php</code>.</p>
+                                            </div>
+                                        </div>
+                                    `}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+
+            // ================= SLIDE 9: STUDI KASUS WEBSITE UMKM =================
+            {
+                id: 9,
+                category: "9. Studi Kasus Proyek",
+                title: "Perkenalan Studi Kasus: 'Website Katalog & Manajemen UMKM'",
+                render: () => `
+                    <div class="slide-view space-y-6">
+                        <div>
+                            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">
+                                Studi Kasus Semester Ini: <span class="text-indigo-600 dark:text-indigo-400">Website UMKM Lokal</span> 🏪
+                            </h2>
+                            <p class="text-sm sm:text-base text-slate-600 dark:text-slate-300 mt-1">
+                                Mengapa kita memilih studi kasus UMKM? Karena ribuan usaha kuliner, kerajinan, dan kopi lokal di sekitar kita membutuhkan katalog digital yang rapi. Di akhir semester (Pertemuan 16), kamu akan tampil sebagai <b>Konsultan Digital UMKM</b>!
+                            </p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div class="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 space-y-2">
+                                <span class="text-xs font-extrabold px-2.5 py-1 rounded-lg bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300">Pertemuan 2 – 4</span>
+                                <h4 class="font-extrabold text-base text-slate-900 dark:text-white pt-1">1. Halaman Profil & Katalog Responsif</h4>
+                                <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    Membangun struktur profil toko dengan ${term('html', 'HTML')} dan mempercantik kartu produk dengan ${term('css', 'CSS')} Flexbox/Grid agar rapi di HP maupun Laptop.
+                                </p>
+                            </div>
+
+                            <div class="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 space-y-2">
+                                <span class="text-xs font-extrabold px-2.5 py-1 rounded-lg bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">Pertemuan 5 – 7</span>
+                                <h4 class="font-extrabold text-base text-slate-900 dark:text-white pt-1">2. Form Pemesanan & Validasi Pintar</h4>
+                                <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    Membuat tombol keranjang interaktif dan mengecek kelengkapan form pemesanan pelanggan memakai ${term('javascript', 'JavaScript')} sebelum dikirim ke ${term('php', 'PHP')}.
+                                </p>
+                            </div>
+
+                            <div class="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 space-y-2">
+                                <span class="text-xs font-extrabold px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">Pertemuan 9 – 13</span>
+                                <h4 class="font-extrabold text-base text-slate-900 dark:text-white pt-1">3. Database & Fitur CRUD Produk</h4>
+                                <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    Merancang tabel produk di ${term('phpmyadmin', 'phpMyAdmin')} dan membuat fitur ${term('crud', 'CRUD')} (Tambah, Tampil, Edit, Hapus produk) langsung dari halaman web.
+                                </p>
+                            </div>
+
+                            <div class="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 space-y-2">
+                                <span class="text-xs font-extrabold px-2.5 py-1 rounded-lg bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300">Pertemuan 14 – 16</span>
+                                <h4 class="font-extrabold text-base text-slate-900 dark:text-white pt-1">4. Login Admin & Publikasi Hosting</h4>
+                                <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    Mengunci halaman kelola produk dengan sistem Login Session agar hanya pemilik UMKM yang bisa mengubah data, lalu siap di-online-kan!
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="p-5 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-700 text-white flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <div class="space-y-1">
+                                <span class="text-xs font-bold uppercase tracking-wider text-indigo-200">Tips Memilih Tema UMKM:</span>
+                                <h4 class="text-base sm:text-lg font-extrabold">Mulai Pikirkan 1 Usaha UMKM di Sekitarmu!</h4>
+                                <p class="text-xs sm:text-sm text-indigo-100">Bisa berupa kedai kopi, toko kue rumahan, keripik pedas, barbershop, atau kerajinan tangan milik teman/keluarga.</p>
+                            </div>
+                            <button onclick="changeSlide(1)" class="px-5 py-2.5 rounded-xl bg-white text-indigo-700 font-extrabold text-xs sm:text-sm shrink-0 shadow">
+                                Cek Target & Kuis Pertemuan 1 →
+                            </button>
+                        </div>
+                    </div>
+                `
+            },
+
+            // ================= SLIDE 10: CHECKLIST OUTPUT & KUIS C2 =================
+            {
+                id: 10,
+                category: "10. Evaluasi & Output",
+                title: "Checklist Praktikum & Kuis Pemahaman (Bloom C2)",
+                render: () => {
+                    const checklistItems = [
+                        "Mengunduh & menginstal Visual Studio Code (VS Code) di laptop.",
+                        "Mengunduh & menginstal XAMPP (Apache, PHP, MySQL, phpMyAdmin).",
+                        "Menjalankan XAMPP Control Panel lalu klik Start pada Apache & MySQL hingga berwarna hijau.",
+                        "Membuka browser dan mengetik http://localhost serta http://localhost/phpmyadmin.",
+                        "Membuat folder latihan pertama di dalam C:\\xampp\\htdocs\\belajar_web."
+                    ];
+
+                    const questions = [
+                        {
+                            q: "1. Manakah pasangan teknologi yang bertugas khusus menangani tampilan depan (Front-End) di browser pengunjung?",
+                            opts: ["HTML, CSS, dan JavaScript", "PHP, MySQL, dan Apache", "XAMPP, phpMyAdmin, dan SQL"],
+                            correct: 0,
+                            explain: "Benar! HTML (kerangka), CSS (desain), dan JavaScript (interaksi) adalah trio utama Front-End yang berjalan di Browser."
+                        },
+                        {
+                            q: "2. Jika kita mengetik http://localhost di browser namun muncul pesan error 'This site can’t be reached', apa penyebab utamanya?",
+                            opts: ["Kuota internet habis", "Modul Apache di XAMPP belum di-Start", "VS Code belum dibuka"],
+                            correct: 1,
+                            explain: "Tepat sekali! Localhost tidak membutuhkan kuota internet, tetapi wajib menyalakan modul Apache Web Server di XAMPP."
+                        },
+                        {
+                            q: "3. Di manakah kita wajib menyimpan folder proyek website PHP kita agar bisa diakses melalui alamat http://localhost/namafolder?",
+                            opts: ["Di Desktop atau My Documents", "Di dalam folder C:\\xampp\\htdocs\\", "Di dalam folder C:\\Program Files\\VSCode"],
+                            correct: 1,
+                            explain: "Betul! Folder htdocs adalah ruang etalase resmi (DocumentRoot) milik Apache di dalam XAMPP."
+                        }
+                    ];
+
+                    const doneCount = checklistState.filter(Boolean).length;
+
+                    return `
+                        <div class="slide-view space-y-6">
+                            <div>
+                                <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">
+                                    Penilaian & Output Pertemuan 1 🎯
+                                </h2>
+                                <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-1">
+                                    Sesuai Rencana Pembelajaran Semester (RPS), pastikan kamu menyelesaikan checklist instalasi dan menjawab 3 kuis singkat di bawah ini!
+                                </p>
+                            </div>
+
+                            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                                <!-- Left: Output Checklist -->
+                                <div class="lg:col-span-5 p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex flex-col justify-between">
+                                    <div>
+                                        <div class="flex items-center justify-between mb-3">
+                                            <h3 class="font-extrabold text-base text-slate-900 dark:text-white">Checklist Output Praktikum</h3>
+                                            <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold ${doneCount === 5 ? 'bg-emerald-600 text-white' : 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300'}">${doneCount} / 5 Selesai</span>
+                                        </div>
+
+                                        <div class="space-y-2.5">
+                                            ${checklistItems.map((item, idx) => `
+                                                <label onclick="toggleChecklistItem(${idx})" class="p-3 rounded-xl bg-white dark:bg-slate-900 border ${checklistState[idx] ? 'border-emerald-500 bg-emerald-50/30 dark:bg-emerald-950/20' : 'border-slate-200 dark:border-slate-800'} flex items-start gap-3 cursor-pointer transition">
+                                                    <input type="checkbox" ${checklistState[idx] ? 'checked' : ''} class="mt-1 accent-emerald-600 pointer-events-none">
+                                                    <span class="text-xs sm:text-sm ${checklistState[idx] ? 'line-through text-slate-400' : 'text-slate-700 dark:text-slate-200 font-medium'}">${item}</span>
+                                                </label>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-4 p-3 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800 text-xs text-indigo-900 dark:text-indigo-200 font-semibold">
+                                        <i class="fa-solid fa-award mr-1"></i> Indikator Penilaian Pertemuan 1: <b>XAMPP terinstal & berjalan; localhost aktif</b>.
+                                    </div>
+                                </div>
+
+                                <!-- Right: Interactive Quiz C2 -->
+                                <div class="lg:col-span-7 p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-4">
+                                    <div class="flex items-center justify-between">
+                                        <h3 class="font-extrabold text-base text-slate-900 dark:text-white">Uji Pemahaman Konsep (Kode Bloom: C2)</h3>
+                                        <span class="text-xs text-slate-500">Klik jawaban yang paling tepat</span>
+                                    </div>
+
+                                    <div class="space-y-4">
+                                        ${questions.map((qObj, qIdx) => {
+                                            const selected = quizAnswers[qIdx];
+                                            const isAnswered = selected !== undefined;
+                                            const isCorrect = selected === qObj.correct;
+
+                                            return `
+                                                <div class="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                                                    <p class="font-bold text-xs sm:text-sm text-slate-900 dark:text-white">${qObj.q}</p>
+                                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                                        ${qObj.opts.map((opt, oIdx) => `
+                                                            <button onclick="answerQuiz(${qIdx}, ${oIdx})" class="p-2.5 rounded-lg text-left text-xs font-bold border transition ${
+                                                                selected === oIdx 
+                                                                    ? (isCorrect ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-rose-600 text-white border-rose-600')
+                                                                    : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-indigo-400'
+                                                            }">
+                                                                ${opt}
+                                                            </button>
+                                                        `).join('')}
+                                                    </div>
+                                                    ${isAnswered ? `
+                                                        <div class="text-xs p-2.5 rounded-lg ${isCorrect ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300' : 'bg-rose-50 text-rose-800 dark:bg-rose-950/50 dark:text-rose-300'}">
+                                                            <i class="fa-solid ${isCorrect ? 'fa-circle-check' : 'fa-circle-xmark'} mr-1"></i>
+                                                            ${isCorrect ? qObj.explain : 'Kurang tepat. Coba ingat kembali fungsi dari masing-masing komponen ya!'}
+                                                        </div>
+                                                    ` : ''}
+                                                </div>
+                                            `;
+                                        }).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+        ];
+
+        /********************************************************************
+         * 3. FUNGSI RENDER & NAVIGASI SLIDE
+         ********************************************************************/
+        function renderCurrentSlide() {
+            const slide = SLIDES[currentSlideIndex];
+            const viewport = document.getElementById('slideViewport');
+            viewport.innerHTML = slide.render();
+
+            // Update Header & Progress Bar
+            const pct = ((currentSlideIndex + 1) / TOTAL_SLIDES) * 100;
+            document.getElementById('topProgressBar').style.width = `${pct}%`;
+            document.getElementById('slideCounterBadge').textContent = `${currentSlideIndex + 1} / ${TOTAL_SLIDES}`;
+            document.getElementById('headerSlideTitle').textContent = slide.title;
+            document.getElementById('slideCategoryPill').textContent = slide.category;
+            document.getElementById('mobileFooterCounter').textContent = `Slide ${currentSlideIndex + 1} dari ${TOTAL_SLIDES}`;
+
+            // Update Buttons
+            document.getElementById('prevSlideBtn').disabled = currentSlideIndex === 0;
+            const nextBtnText = document.getElementById('nextBtnText');
+            if (currentSlideIndex === TOTAL_SLIDES - 1) {
+                nextBtnText.textContent = "Ulangi dari Awal";
+            } else {
+                nextBtnText.textContent = "Selanjutnya";
+            }
+
+            renderDotsAndDrawer();
+        }
+
+        function changeSlide(delta) {
+            // Stop autoplay timer if leaving slide 5
+            if (csTimer) {
+                clearInterval(csTimer);
+                csTimer = null;
+            }
+
+            if (currentSlideIndex === TOTAL_SLIDES - 1 && delta > 0) {
+                currentSlideIndex = 0;
+            } else {
+                currentSlideIndex = Math.max(0, Math.min(TOTAL_SLIDES - 1, currentSlideIndex + delta));
+            }
+            renderCurrentSlide();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function jumpToSlide(index) {
+            if (csTimer) {
+                clearInterval(csTimer);
+                csTimer = null;
+            }
+            currentSlideIndex = index;
+            renderCurrentSlide();
+            const drawer = document.getElementById('slideDrawer');
+            if (!drawer.classList.contains('-translate-x-full')) {
+                toggleSlideDrawer();
+            }
+        }
+
+        function renderDotsAndDrawer() {
+            // Dots
+            const dotsContainer = document.getElementById('slideDotsContainer');
+            dotsContainer.innerHTML = SLIDES.map((s, idx) => `
+                <button onclick="jumpToSlide(${idx})" title="Slide ${idx + 1}: ${s.title}" class="h-2.5 rounded-full transition-all ${idx === currentSlideIndex ? 'w-8 bg-indigo-600' : 'w-2.5 bg-slate-300 dark:bg-slate-700 hover:bg-indigo-400'}"></button>
+            `).join('');
+
+            // Drawer List
+            const drawerList = document.getElementById('drawerSlideList');
+            drawerList.innerHTML = SLIDES.map((s, idx) => `
+                <button onclick="jumpToSlide(${idx})" class="w-full text-left p-3 rounded-xl transition flex items-start gap-3 ${idx === currentSlideIndex ? 'bg-indigo-600 text-white font-bold shadow-md' : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'}">
+                    <span class="w-6 h-6 rounded-lg text-xs flex items-center justify-center shrink-0 mt-0.5 ${idx === currentSlideIndex ? 'bg-white/20 text-white font-extrabold' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold'}">${idx + 1}</span>
+                    <div class="overflow-hidden">
+                        <div class="text-[10px] uppercase tracking-wider ${idx === currentSlideIndex ? 'text-indigo-200' : 'text-slate-400'}">${s.category}</div>
+                        <div class="text-xs sm:text-sm truncate">${s.title}</div>
+                    </div>
+                </button>
+            `).join('');
+        }
+
+        function toggleSlideDrawer() {
+            const drawer = document.getElementById('slideDrawer');
+            const backdrop = document.getElementById('slideDrawerBackdrop');
+            const isClosed = drawer.classList.contains('-translate-x-full');
+
+            if (isClosed) {
+                backdrop.classList.remove('hidden');
+                setTimeout(() => backdrop.classList.remove('opacity-0'), 10);
+                drawer.classList.remove('-translate-x-full');
+            } else {
+                backdrop.classList.add('opacity-0');
+                drawer.classList.add('-translate-x-full');
+                setTimeout(() => backdrop.classList.add('hidden'), 300);
+            }
+        }
+
+        /********************************************************************
+         * 4. INTERAKSI DI DALAM SLIDE (SIMULATOR HANDLERS)
+         ********************************************************************/
+        // Slide 2: Roadmap Phase
+        function selectRoadmapPhase(idx) {
+            roadmapSelectedPhase = idx;
+            renderCurrentSlide();
+        }
+
+        // Slide 3: Static vs Dynamic Web
+        function switchWebType(mode) {
+            webTypeMode = mode;
+            renderCurrentSlide();
+        }
+
+        function simulateBuyProduct() {
+            const badge = document.getElementById('simStockBadge');
+            const feedback = document.getElementById('staticDynamicFeedback');
+
+            if (webTypeMode === 'statis') {
+                badge.textContent = "24 (Hanya Berubah Sementara di Layar)";
+                feedback.innerHTML = `
+                    <i class="fa-solid fa-triangle-exclamation text-amber-500 mt-0.5"></i>
+                    <span><b>Mode Statis:</b> Angka stok berkurang menjadi 24 di layar kamu, TETAPI tidak ada Database yang menyimpannya. Coba klik tombol <b>"Refresh Halaman"</b>, pasti angkanya kembali ke 25!</span>
+                `;
+            } else {
+                dynamicStockCount = Math.max(0, dynamicStockCount - 1);
+                badge.textContent = `${dynamicStockCount} (Tersimpan di Tabel MySQL)`;
+                feedback.innerHTML = `
+                    <i class="fa-solid fa-circle-check text-emerald-600 mt-0.5"></i>
+                    <span><b>Mode Dinamis (PHP + MySQL):</b> PHP mengirim perintah <code>UPDATE produk SET stok = ${dynamicStockCount}</code> ke MySQL. Walaupun kamu klik <b>"Refresh Halaman"</b>, stok tetap <b>${dynamicStockCount}</b>!</span>
+                `;
+            }
+        }
+
+        function simulateRefreshBrowser() {
+            const badge = document.getElementById('simStockBadge');
+            const feedback = document.getElementById('staticDynamicFeedback');
+
+            if (webTypeMode === 'statis') {
+                badge.textContent = "25 (Ketikan Manual di HTML)";
+                feedback.innerHTML = `
+                    <i class="fa-solid fa-rotate text-indigo-600 mt-0.5"></i>
+                    <span><b>Halaman Di-refresh:</b> Lihat! Pada <b>Web Statis</b>, stok kembali lagi ke <b>25</b> karena angka 25 diketik mati di dalam kode HTML dan tidak tersimpan di Database.</span>
+                `;
+            } else {
+                badge.textContent = `${dynamicStockCount} (Data Tabel MySQL)`;
+                feedback.innerHTML = `
+                    <i class="fa-solid fa-database text-emerald-600 mt-0.5"></i>
+                    <span><b>Halaman Di-refresh:</b> Pada <b>Web Dinamis</b>, stok tetap bertahan di angka <b>${dynamicStockCount}</b> karena PHP mengambil nilai terbaru dari Database MySQL!</span>
+                `;
+            }
+        }
+
+        // Slide 5: Client-Server Packet Animation
+        function setCsScenario(scenIdx) {
+            if (csTimer) {
+                clearInterval(csTimer);
+                csTimer = null;
+            }
+            csScenario = scenIdx;
+            csStep = 0;
+            renderCurrentSlide();
+        }
+
+        function stepCsAnimation(delta) {
+            csStep = (csStep + delta + 5) % 5;
+            renderCurrentSlide();
+        }
+
+        function toggleCsAutoPlay() {
+            if (csTimer) {
+                clearInterval(csTimer);
+                csTimer = null;
+                renderCurrentSlide();
+            } else {
+                csTimer = setInterval(() => {
+                    csStep = (csStep + 1) % 5;
+                    renderCurrentSlide();
+                }, 2200);
+                renderCurrentSlide();
+            }
+        }
+
+        // Slide 6: Front-End Layer Toggles
+        function toggleFeLayer(layer) {
+            if (layer === 'html') feToggleHTML = !feToggleHTML;
+            if (layer === 'css') feToggleCSS = !feToggleCSS;
+            if (layer === 'js') feToggleJS = !feToggleJS;
+            renderCurrentSlide();
+        }
+
+        function testFeButtonClick() {
+            const feedback = document.getElementById('feLabFeedback');
+            if (!feToggleJS) {
+                feedback.innerHTML = `<span class="text-rose-600 font-bold"><i class="fa-solid fa-circle-xmark mr-1"></i>Tombol diklik, tapi tidak terjadi apa-apa karena sakelar <b>JavaScript (Otak Interaksi)</b> sedang MATI (OFF)!</span>`;
+            } else {
+                feDemoCartCount++;
+                renderCurrentSlide();
+                const updatedFeedback = document.getElementById('feLabFeedback');
+                updatedFeedback.innerHTML = `<span class="text-emerald-600 font-bold"><i class="fa-solid fa-circle-check mr-1"></i>JavaScript Bekerja! Produk berhasil ditambahkan ke keranjang (${feDemoCartCount} item) tanpa reload halaman.</span>`;
+            }
+        }
+
+        // Slide 7: Add Row to Simulated MySQL Table
+        function addSimulatedDbRow() {
+            const sampleNewItems = [
+                { nama: "Rendang Paru Kemasan Vacuum", kategori: "Kuliner", harga: "Rp 55.000", stok: 30 },
+                { nama: "Madu Hutan Sumbawa Murni", kategori: "Kesehatan", harga: "Rp 85.000", stok: 12 },
+                { nama: "Batik Tulis Pekalongan", kategori: "Kerajinan", harga: "Rp 175.000", stok: 8 },
+                { nama: "Teh Hijau Melati Premium", kategori: "Minuman", harga: "Rp 28.000", stok: 40 }
+            ];
+            const pick = sampleNewItems[dynamicProducts.length % sampleNewItems.length];
+            dynamicProducts.push({
+                id: dynamicProducts.length + 1,
+                nama: pick.nama,
+                kategori: pick.kategori,
+                harga: pick.harga,
+                stok: pick.stok
+            });
+            renderCurrentSlide();
+        }
+
+        // Slide 8: XAMPP Simulator
+        function toggleXamppService(service) {
+            if (service === 'apache') xamppApacheRunning = !xamppApacheRunning;
+            if (service === 'mysql') xamppMysqlRunning = !xamppMysqlRunning;
+            renderCurrentSlide();
+        }
+
+        function setSimBrowserUrl(url) {
+            xamppBrowserUrl = url;
+            renderCurrentSlide();
+        }
+
+        // Slide 10: Checklist & Quiz
+        function toggleChecklistItem(idx) {
+            checklistState[idx] = !checklistState[idx];
+            renderCurrentSlide();
+        }
+
+        function answerQuiz(qIdx, oIdx) {
+            quizAnswers[qIdx] = oIdx;
+            renderCurrentSlide();
+        }
+
+        /********************************************************************
+         * 5. MODAL ISTILAH TEKNIS & KAMUS GLOSARIUM
+         ********************************************************************/
+        function showTerm(key) {
+            const item = GLOSSARY_DB[key];
+            if (!item) return;
+
+            document.getElementById('termCategoryBadge').textContent = item.category;
+            document.getElementById('termTitle').textContent = item.title;
+            document.getElementById('termLayman').textContent = item.layman;
+            document.getElementById('termTechnical').textContent = item.technical;
+            document.getElementById('termSourceName').textContent = `Referensi: ${item.source}`;
+            document.getElementById('termSourceUrl').href = item.url;
+
+            const backdrop = document.getElementById('termModalBackdrop');
+            backdrop.classList.remove('hidden');
+            backdrop.classList.add('flex');
+        }
+
+        function closeTermModal() {
+            const backdrop = document.getElementById('termModalBackdrop');
+            backdrop.classList.add('hidden');
+            backdrop.classList.remove('flex');
+        }
+
+        function openGlossaryIndex() {
+            renderGlossaryList('');
+            document.getElementById('glossarySearchInput').value = '';
+            const backdrop = document.getElementById('glossaryModalBackdrop');
+            backdrop.classList.remove('hidden');
+            backdrop.classList.add('flex');
+        }
+
+        function closeGlossaryIndex() {
+            const backdrop = document.getElementById('glossaryModalBackdrop');
+            backdrop.classList.add('hidden');
+            backdrop.classList.remove('flex');
+        }
+
+        function renderGlossaryList(query) {
+            const q = query.toLowerCase().trim();
+            const entries = Object.entries(GLOSSARY_DB).filter(([k, val]) => {
+                return val.title.toLowerCase().includes(q) ||
+                       val.category.toLowerCase().includes(q) ||
+                       val.layman.toLowerCase().includes(q);
+            });
+
+            const container = document.getElementById('glossaryListGrid');
+            if (entries.length === 0) {
+                container.innerHTML = `<div class="col-span-2 text-center py-8 text-slate-400 text-sm">Istilah tidak ditemukan.</div>`;
+                return;
+            }
+
+            container.innerHTML = entries.map(([key, item]) => `
+                <div onclick="closeGlossaryIndex(); showTerm('${key}')" class="p-4 rounded-2xl bg-slate-50 hover:bg-indigo-50/70 dark:bg-slate-800/60 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 cursor-pointer transition flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between gap-2 mb-1">
+                            <span class="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">${item.category}</span>
+                            <span class="text-xs text-indigo-600 dark:text-indigo-400 font-bold">Klik Detail →</span>
+                        </div>
+                        <h4 class="font-extrabold text-sm text-slate-900 dark:text-white">${item.title}</h4>
+                        <p class="text-xs text-slate-600 dark:text-slate-300 mt-1 line-clamp-2">${item.layman}</p>
+                    </div>
+                    <div class="mt-2 pt-2 border-t border-slate-200/70 dark:border-slate-700/70 text-[11px] text-slate-400 flex items-center gap-1">
+                        <i class="fa-solid fa-check-double text-emerald-500"></i>
+                        <span>${item.source}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        /********************************************************************
+         * 6. DARK MODE & KEYBOARD SHORTCUTS
+         ********************************************************************/
+        function toggleTheme() {
+            const html = document.documentElement;
+            const icon = document.getElementById('themeIcon');
+            html.classList.toggle('dark');
+            if (html.classList.contains('dark')) {
+                icon.className = 'fa-solid fa-sun text-amber-400';
+            } else {
+                icon.className = 'fa-solid fa-moon';
+            }
+        }
+
+        window.addEventListener('keydown', (e) => {
+            // Ignore if typing in search input
+            if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
+            if (e.key === 'ArrowRight') changeSlide(1);
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+            if (e.key === 'Escape') {
+                closeTermModal();
+                closeGlossaryIndex();
+            }
+        });
+
+        // Initialize on load
+        window.onload = function () {
+            renderCurrentSlide();
+        };
+    </script>
+</body>
+</html>
