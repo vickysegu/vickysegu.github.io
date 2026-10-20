@@ -1,0 +1,2752 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pertemuan 2: Deklarasi Variabel, I/O & Struktur Sequence (BD1205)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace']
+                    }
+                }
+            }
+        };
+    </script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .tech-term {
+            color: #4f46e5;
+            font-weight: 700;
+            cursor: pointer;
+            transition: color 0.15s ease, opacity 0.15s ease;
+        }
+        .dark .tech-term {
+            color: #818cf8;
+        }
+        .tech-term:hover {
+            color: #3730a3;
+            opacity: 0.85;
+        }
+        .dark .tech-term:hover {
+            color: #a5b4fc;
+        }
+
+        .slide-enter {
+            animation: fadeSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes fadeSlide {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes softPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.3); }
+            50% { box-shadow: 0 0 0 6px rgba(79, 70, 229, 0); }
+        }
+        .node-active {
+            animation: softPulse 1.6s infinite;
+            border-color: #4f46e5 !important;
+        }
+        .dark .node-active {
+            border-color: #818cf8 !important;
+        }
+
+        .fg-canvas {
+            background-color: #ffffff;
+            background-image: radial-gradient(#e2e8f0 1.2px, transparent 1.2px);
+            background-size: 18px 18px;
+        }
+        .dark .fg-canvas {
+            background-color: #0f172a;
+            background-image: radial-gradient(#1e293b 1.2px, transparent 1.2px);
+        }
+
+        .fg-node {
+            transition: transform 0.15s ease, filter 0.15s ease;
+            cursor: pointer;
+        }
+        .fg-node:hover {
+            transform: scale(1.02);
+        }
+
+        .fg-node-active rect,
+        .fg-node-active polygon {
+            fill: #ef4444 !important;
+            stroke: #991b1b !important;
+            stroke-width: 2.6px !important;
+        }
+        .fg-node-active text {
+            fill: #ffffff !important;
+            font-weight: 800 !important;
+        }
+
+        @keyframes waitPulse {
+            0%, 100% { filter: drop-shadow(0 0 0px rgba(79, 70, 229, 0)); }
+            50% { filter: drop-shadow(0 0 9px rgba(79, 70, 229, 0.65)); }
+        }
+        .fg-node-waiting {
+            animation: waitPulse 1.3s infinite;
+        }
+        .fg-node-waiting polygon {
+            fill: #4f46e5 !important;
+            stroke: #312e81 !important;
+            stroke-width: 2.8px !important;
+        }
+        .fg-node-waiting text {
+            fill: #ffffff !important;
+            font-weight: 800 !important;
+        }
+
+        .draggable-step {
+            cursor: grab;
+            user-select: none;
+            transition: all 0.15s ease;
+        }
+        .draggable-step:active {
+            cursor: grabbing;
+        }
+        .draggable-step.dragging {
+            opacity: 0.45;
+        }
+        .draggable-step.drag-over {
+            border-color: #4f46e5 !important;
+            transform: translateY(-2px);
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #334155;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col justify-between transition-colors duration-200">
+
+    <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800">
+        <div class="w-full h-1 bg-slate-100 dark:bg-slate-800">
+            <div id="topProgressBar" class="h-full bg-indigo-600 dark:bg-indigo-500 transition-all duration-300" style="width: 6%;"></div>
+        </div>
+
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+                <button type="button" onclick="toggleSlideDrawer()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition flex items-center gap-2 text-xs sm:text-sm font-bold shrink-0">
+                    <i class="fa-solid fa-list-ul text-indigo-600 dark:text-indigo-400"></i>
+                    <span class="hidden sm:inline">Daftar Slide</span>
+                    <span id="slideCounterBadge" class="px-2 py-0.5 text-xs rounded-lg bg-indigo-600 text-white font-bold">1 / 18</span>
+                </button>
+
+                <div class="hidden md:flex items-center gap-2.5 min-w-0">
+                    <span id="slideCategoryPill" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 shrink-0">
+                        Modul 1
+                    </span>
+                    <h1 id="headerSlideTitle" class="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">
+                        Deklarasi Variabel, I/O, &amp; Struktur Sequence
+                    </h1>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 shrink-0">
+                <button type="button" onclick="openGlossaryIndex()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 text-xs sm:text-sm font-bold flex items-center gap-2 transition">
+                    <i class="fa-solid fa-book-open text-indigo-600 dark:text-indigo-400"></i>
+                    <span>Kamus Istilah</span>
+                </button>
+
+                <button type="button" onclick="toggleTheme()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center transition" title="Ganti Tema Layar">
+                    <i id="themeIcon" class="fa-solid fa-moon text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div id="slideDrawerBackdrop" onclick="toggleSlideDrawer()" class="fixed inset-0 bg-slate-950/50 backdrop-blur-xs z-40 hidden opacity-0 transition-opacity duration-200"></div>
+    <aside id="slideDrawer" class="fixed top-0 left-0 bottom-0 w-80 sm:w-96 bg-white dark:bg-slate-900 z-50 shadow-2xl border-r border-slate-200 dark:border-slate-800 transform -translate-x-full transition-transform duration-200 flex flex-col">
+        <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Dasar Pemrograman 1 (BD1205)</span>
+                <h2 class="text-base font-extrabold text-slate-900 dark:text-white mt-0.5">Daftar Materi Pertemuan 2</h2>
+            </div>
+            <button type="button" onclick="toggleSlideDrawer()" class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div id="drawerSlideList" class="p-3.5 overflow-y-auto space-y-1 flex-1"></div>
+        <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 flex items-center justify-between">
+            <span>Gunakan tombol panah Kiri / Kanan</span>
+            <span class="font-bold">18 Slide</span>
+        </div>
+    </aside>
+
+    <!-- Main Slide Viewport -->
+    <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 flex flex-col justify-center">
+        <div id="slideViewport" class="bg-white dark:bg-slate-900 rounded-3xl shadow-xs border border-slate-200/80 dark:border-slate-800 p-6 sm:p-8 lg:p-10 min-h-[540px] flex flex-col justify-between relative overflow-hidden">
+            <!-- Konten slide dirender secara dinamis -->
+        </div>
+    </main>
+
+    <!-- Sticky Footer Navigation -->
+    <footer class="sticky bottom-0 z-20 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 py-3 px-4 sm:px-6">
+        <div class="max-w-6xl mx-auto flex items-center justify-between gap-4">
+            <button type="button" id="prevSlideBtn" onclick="changeSlide(-1)" class="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                <i class="fa-solid fa-arrow-left text-xs"></i>
+                <span>Sebelumnya</span>
+            </button>
+
+            <div id="slideDotsContainer" class="hidden md:flex items-center gap-1.5"></div>
+
+            <div class="md:hidden text-xs font-bold text-slate-500 dark:text-slate-400" id="mobileFooterCounter">
+                1 / 18
+            </div>
+
+            <button type="button" id="nextSlideBtn" onclick="changeSlide(1)" class="px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-indigo-600 hover:bg-indigo-700 text-white transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                <span id="nextBtnText">Selanjutnya</span>
+                <i class="fa-solid fa-arrow-right text-xs"></i>
+            </button>
+        </div>
+    </footer>
+
+    <div id="termModalBackdrop" onclick="closeTermModal()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl slide-enter">
+            <div class="flex items-start justify-between gap-4 mb-4">
+                <div>
+                    <span id="termCategoryBadge" class="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">Kategori</span>
+                    <h3 id="termTitle" class="text-xl font-extrabold text-slate-900 dark:text-white mt-1.5">Nama Istilah</h3>
+                </div>
+                <button type="button" onclick="closeTermModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <p id="termMainDesc" class="text-sm text-slate-700 dark:text-slate-200 leading-relaxed bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200/70 dark:border-slate-700/70"></p>
+
+                <div class="p-3.5 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-200/70 dark:border-indigo-800/70">
+                    <div class="text-[11px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-1">Contoh di UMKM Warung Digital:</div>
+                    <p id="termDetailDesc" class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed"></p>
+                </div>
+
+                <div class="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800 text-xs px-1">
+                    <span id="termSourceName" class="font-semibold text-slate-400">Referensi</span>
+                    <button type="button" onclick="closeTermModal(); openGlossaryIndex();" class="font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1.5">
+                        <span>Buka Kamus Lengkap</span>
+                        <i class="fa-solid fa-book-open text-[10px]"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Kamus Istilah Lengkap -->
+    <div id="glossaryModalBackdrop" onclick="closeGlossaryIndex()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-4xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden slide-enter">
+            <div class="p-5 sm:p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white">Kamus Istilah Pertemuan 2 (BD1205)</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Penjelasan ramah pemula untuk Deklarasi Variabel, Tipe Data, I/O, dan Struktur Sequence.</p>
+                </div>
+                <button type="button" onclick="closeGlossaryIndex()" class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-sm"></i>
+                    <input id="glossarySearchInput" oninput="renderGlossaryList(this.value)" type="text" placeholder="Cari istilah seperti Variabel, Declare, Identifier, camelCase, Prompt, Ampersand, Sequence..." class="w-full pl-10 pr-4 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+            <div id="glossaryListGrid" class="p-5 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+        </div>
+    </div>
+
+    <script>
+        const GLOSSARY_DB = {
+            variabel: {
+                title: "Variabel (Laci Memori)",
+                category: "Konsep Dasar",
+                main: "Wadah penyimpanan data di dalam memori komputer (RAM) yang memiliki nama unik. Satu variabel hanya dapat menampung satu nilai pada satu waktu.",
+                detail: "Untuk mencatat 1 pesanan pelanggan di Warung Digital, kita menyiapkan 3 variabel terpisah: namaProduk, hargaSatuan, dan jumlahBeli.",
+                source: "Fundamental Pemrograman"
+            },
+            declare: {
+                title: "Declare (Deklarasi Variabel)",
+                category: "Simbol Flowgorithm",
+                main: "Instruksi berbentuk Segi Enam di Flowgorithm untuk mendaftarkan nama variabel beserta tipe datanya ke memori komputer sebelum variabel tersebut digunakan.",
+                detail: "Menulis 'Declare String namaProduk' artinya meminta komputer menyiapkan laci baru bernama namaProduk yang khusus menampung teks.",
+                source: "Flowgorithm Documentation"
+            },
+            undeclared: {
+                title: "Undeclared Variable Error",
+                category: "Pesan Error",
+                main: "Peringatan kesalahan yang muncul di Flowgorithm ketika kita mencoba mengisi (Input/Assign) atau menampilkan (Output) variabel yang belum pernah dibuat dengan blok Declare.",
+                detail: "Jika kasir langsung membuat blok 'Input namaProduk' tanpa membuat blok 'Declare String namaProduk' di atasnya, program akan berhenti karena laci tersebut belum ada.",
+                source: "Flowgorithm Debugger"
+            },
+            tipedata: {
+                title: "Tipe Data (Data Type)",
+                category: "Konsep Memori",
+                main: "Klasifikasi jenis nilai yang boleh disimpan di dalam suatu variabel. Di Flowgorithm terdapat 4 tipe data: String, Integer, Real, dan Boolean.",
+                detail: "Menentukan apakah laci variabel dipakai untuk menyimpan nama menu (String), harga bulat (Integer), berat timbangan desimal (Real), atau status member (Boolean).",
+                source: "Flowgorithm Data Types"
+            },
+            string: {
+                title: "String (Tipe Data Teks)",
+                category: "Tipe Data",
+                main: "Tipe data untuk menyimpan deretan huruf, kata, kalimat, atau kode teks (seperti nomor telepon atau kode voucher). Di dalam ekspresi Output, teks String selalu diapit tanda kutip dua (\"...\").",
+                detail: "Variabel namaProduk dideklarasikan sebagai String untuk menyimpan nilai seperti \"Kopi Susu Gula Aren\" atau \"Nasi Goreng Spesial\".",
+                source: "Flowgorithm Data Types"
+            },
+            integer: {
+                title: "Integer (Angka Bulat)",
+                category: "Tipe Data",
+                main: "Tipe data untuk menyimpan bilangan bulat utuh (negatif, nol, atau positif) tanpa koma/desimal, tanpa titik ribuan, dan tanpa simbol mata uang.",
+                detail: "Variabel hargaSatuan (misal: 15000) dan jumlahBeli (misal: 3) wajib menggunakan Integer agar bisa dihitung di Pertemuan 3.",
+                source: "Flowgorithm Data Types"
+            },
+            real: {
+                title: "Real (Angka Desimal / Pecahan)",
+                category: "Tipe Data",
+                main: "Tipe data untuk menyimpan angka yang memiliki nilai pecahan atau desimal. Di dalam pemrograman dan Flowgorithm, tanda koma desimal ditulis menggunakan tanda titik (.).",
+                detail: "Digunakan ketika mencatat berat bahan baku kopi (misal: 1.5 kg) atau persentase pajak PPN (misal: 0.11).",
+                source: "Flowgorithm Data Types"
+            },
+            boolean: {
+                title: "Boolean (Logika Benar / Salah)",
+                category: "Tipe Data",
+                main: "Tipe data paling sederhana yang hanya memiliki dua kemungkinan nilai: True (Benar) atau False (Salah).",
+                detail: "Digunakan untuk mencatat status biner di kasir, misalnya variabel isMember = True (pelanggan punya kartu member) atau stokTersedia = False.",
+                source: "Flowgorithm Data Types"
+            },
+            identifier: {
+                title: "Identifier (Nama Pengenal Variabel)",
+                category: "Aturan Penulisan",
+                main: "Nama resmi yang kita berikan pada sebuah variabel. Di Flowgorithm, identifier wajib diawali huruf, hanya boleh berisi huruf dan angka, serta TIDAK boleh memakai spasi maupun garis bawah (_).",
+                detail: "Penulisan 'nama produk' (pakai spasi) atau 'nama_produk' (pakai underscore) akan ditolak di Flowgorithm; gunakan 'namaProduk'.",
+                source: "Flowgorithm Identifier Rules"
+            },
+            camelcase: {
+                title: "camelCase (Gaya Punuk Unta)",
+                category: "Aturan Penulisan",
+                main: "Gaya penulisan nama variabel tanpa spasi di mana kata pertama ditulis dengan huruf kecil semua, dan huruf pertama pada kata-kata berikutnya ditulis kapital.",
+                detail: "Contoh standar di proyek Warung Digital: namaProduk, hargaSatuan, jumlahBeli, uangBayar, totalTagihan.",
+                source: "Clean Code Convention"
+            },
+            overwrite: {
+                title: "Overwrite (Menimpa Nilai Lama)",
+                category: "Siklus Memori",
+                main: "Sifat alami variabel di mana ketika sebuah nilai baru dimasukkan ke dalam variabel yang sudah berisi data, maka nilai lama akan terhapus dan digantikan oleh nilai yang baru.",
+                detail: "Jika awalnya jumlahBeli diisi 2, lalu ada blok Input jumlahBeli lagi yang diisi 5, maka angka 2 hilang dan isi jumlahBeli menjadi 5.",
+                source: "Konsep Memori RAM"
+            },
+            uninitialized: {
+                title: "Uninitialized (Belum Diisi Nilai)",
+                category: "Variable Watch",
+                main: "Kondisi ketika sebuah variabel sudah berhasil dibuat melalui blok Declare, tetapi belum pernah diisi nilai apa pun melalui Input maupun Assign.",
+                detail: "Pada jendela Variable Watch di Flowgorithm, variabel yang baru dideklarasikan akan menampilkan tulisan 'uninitialized' sampai kasir mengetik inputnya.",
+                source: "Flowgorithm Debugger"
+            },
+            io: {
+                title: "I/O (Input / Output)",
+                category: "Interaksi Program",
+                main: "Mekanisme komunikasi dua arah antara pengguna (kasir/pembeli) dan program komputer. Input membaca ketikan dari keyboard ke memori, sedangkan Output menampilkan data dari memori ke layar.",
+                detail: "Kasir mengetik pesanan ke jendela Console (Input) dan layar menampilkan ringkasan struk pesanan (Output).",
+                source: "Fundamental Pemrograman"
+            },
+            prompt: {
+                title: "Output Prompt (Pesan Pemandu Input)",
+                category: "Praktik Terbaik I/O",
+                main: "Blok Output berisi kalimat instruksi yang diletakkan tepat sebelum blok Input agar pengguna tahu data apa yang sedang ditunggu oleh komputer.",
+                detail: "Menampilkan Output \"Masukkan nama produk pesanan:\" tepat sebelum blok Input namaProduk agar kasir tidak menatap layar kosong.",
+                source: "User Experience (UX) Kasir"
+            },
+            ampersand: {
+                title: "Operator & (Ampersand / Concatenation)",
+                category: "Perangkai Teks",
+                main: "Simbol penghubung di Flowgorithm untuk menyambungkan teks statis (yang diapit tanda kutip) dengan isi variabel dinamis di dalam satu instruksi Output.",
+                detail: "Output \"Pesanan: \" & namaProduk & \" sebanyak \" & jumlahBeli & \" pcs\" akan menghasilkan kalimat utuh di struk kasir.",
+                source: "Flowgorithm Expressions"
+            },
+            sequence: {
+                title: "Struktur Sequence (Runtunan)",
+                category: "Struktur Kontrol",
+                main: "Struktur dasar algoritma di mana komputer mengeksekusi instruksi secara berurutan baris demi baris dari atas (Main) ke bawah (End) tanpa melompat atau berulang.",
+                detail: "Di dalam struktur Sequence, urutan mutlak harus: (1) Declare variabel -> (2) Output Prompt & Input data -> (3) Output hasil struk.",
+                source: "Sub-CPMK 1.2 BD1205"
+            },
+            typemismatch: {
+                title: "Type Mismatch Error",
+                category: "Pesan Error",
+                main: "Kesalahan yang terjadi ketika pengguna memasukkan jenis data yang tidak cocok dengan tipe data variabelnya (misal memasukkan huruf atau titik ke dalam variabel Integer).",
+                detail: "Mengetik 'Rp 15.000' saat program meminta Input hargaSatuan (yang bertipe Integer) akan memicu Type Mismatch Error.",
+                source: "Flowgorithm Debugger"
+            }
+        };
+
+        function term(key, customLabel) {
+            const item = GLOSSARY_DB[key];
+            if (!item) return customLabel || key;
+            const label = customLabel || item.title.split(' (')[0];
+            return '<span class="tech-term" onclick="showTerm(\'' + key + '\')">' + label + '</span>';
+        }
+
+        function escapeHtml(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        let currentSlideIndex = 0;
+        const TOTAL_SLIDES = 18;
+
+        // State Slide 2: Dampak Bisnis Pencatatan Terstruktur
+        let s2Mode = 'terstruktur'; // 'acak' | 'terstruktur'
+
+        // State Slide 3: Inspektor Form Kasir ke Memori
+        let s3SelectedField = 'namaProduk';
+
+        // State Slide 5: Demo Declare vs Tanpa Declare
+        let s5DeclareMode = 'with_declare'; // 'with_declare' | 'no_declare'
+
+        // State Slide 6: Lab 4 Tipe Data Flowgorithm
+        let s6ActiveType = 'String';
+        let s6TestResult = {
+            ok: true,
+            msg: 'Klik salah satu contoh nilai di bawah untuk menguji apakah diterima oleh laci tipe data yang dipilih.'
+        };
+
+        // State Slide 7: Validator Identifier (Nama Variabel)
+        let s7IdentifierInput = 'namaProduk';
+
+        // State Slide 8: Simulator Siklus Hidup Variabel & Overwrite
+        let s8LifecycleStep = 0;
+
+        // State Slide 10: Perbandingan Tanpa Output Prompt vs Dengan Output Prompt
+        let s10PromptMode = 'with_prompt'; // 'no_prompt' | 'with_prompt'
+
+        // State Slide 12: Bengkel Operator Penggabung Teks (&)
+        let s12CaseIndex = 1;
+        let s12SampleNama = 'Kopi Susu Aren';
+        let s12SampleHarga = 15000;
+        let s12SampleQty = 2;
+
+        // State Slide 14: Detektif Bug Sequence
+        let s14Scenario = 'correct'; // 'bug_undeclared' | 'bug_early_output' | 'correct'
+
+        // State Slide 15: Live IDE Simulator Pencatatan Pesanan (11 Blok)
+        let simStepIndex = -1;
+        let simAutoTimer = null;
+        let simIsAuto = false;
+        let simWaitingVar = null;
+        let simMemory = {
+            namaProduk: null,
+            hargaSatuan: null,
+            jumlahBeli: null
+        };
+        let simChatLog = [];
+        let simBannerText = 'Klik tombol Run Otomatis atau Step di kanan atas untuk memulai simulasi pencatatan pesanan Warung Digital.';
+        let simInputError = '';
+
+        // State Slide 16: Rakit Flowchart di Kanvas (5 Slot)
+        let activeBuilderSlot = 1;
+        let builderSlots = { 1: '', 2: '', 3: '', 4: '', 5: '' };
+        let builderFeedback = { type: '', text: '' };
+
+        // State Slide 17: Drag & Drop 8 Langkah Sequence Pencatatan Pesanan
+        const CORRECT_SEQ_STEPS = [
+            { id: 1, type: "Main", label: "Main", text: "Mulai alur program pencatatan pesanan kasir" },
+            { id: 2, type: "Declare", label: "Declare String", text: "Declare String namaProduk (Siapkan laci teks nama barang)" },
+            { id: 3, type: "Declare", label: "Declare Integer", text: "Declare Integer hargaSatuan, jumlahBeli (Siapkan 2 laci angka bulat)" },
+            { id: 4, type: "Output", label: "Output Prompt", text: "Output \"Masukkan nama produk:\" (Pemandu input pertama)" },
+            { id: 5, type: "Input", label: "Input", text: "Input namaProduk (Baca ketikan nama barang dari kasir)" },
+            { id: 6, type: "Output", label: "Output & Input", text: "Output Prompt & Input hargaSatuan, lalu Input jumlahBeli satu per satu" },
+            { id: 7, type: "Output", label: "Output Struk", text: "Output \"Pesanan: \" & namaProduk & \" (\" & jumlahBeli & \"x @Rp\" & hargaSatuan & \")\"" },
+            { id: 8, type: "End", label: "End", text: "Akhiri sesi pencatatan pesanan (End)" }
+        ];
+        let seqStepsOrder = [...CORRECT_SEQ_STEPS].sort(function () { return Math.random() - 0.5; });
+        let seqShowValidation = false;
+        let seqFeedbackText = '';
+        let draggedSeqIndex = null;
+
+        // State Slide 18: Cek Pemahaman Mandiri
+        let selfCheckFeedback = { 1: null, 2: null, 3: null };
+
+        function renderSlide1() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-8">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center my-auto">
+                        <div class="lg:col-span-7 space-y-5">
+                            <div class="inline-flex flex-wrap items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 text-xs font-bold border border-indigo-200/60 dark:border-indigo-800/60">
+                                <span>Pertemuan 2 • Sub-CPMK 1.2 (Bobot 3%)</span>
+                                <span>•</span>
+                                <span>Kasus: UMKM Warung Digital</span>
+                            </div>
+
+                            <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 dark:text-white leading-tight tracking-tight">
+                                Deklarasi ${term('variabel', 'Variabel')}, ${term('io', 'Input/Output (I/O)')}, &amp; Struktur ${term('sequence', 'Sequence')}
+                            </h2>
+
+                            <p class="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Di Minggu 1 kita telah menelaah SOP Warung Digital secara menyeluruh. Hari ini kita melangkah ke tahap perancangan teknis pertama: merancang flowchart <strong>alur pencatatan pesanan pelanggan</strong> (<span class="font-mono font-bold text-indigo-600 dark:text-indigo-400">namaProduk</span>, <span class="font-mono font-bold text-indigo-600 dark:text-indigo-400">hargaSatuan</span>, dan <span class="font-mono font-bold text-indigo-600 dark:text-indigo-400">jumlahBeli</span>) sebagai latihan ${term('sequence', 'Sequence (Runtunan)')} pertama Anda.
+                            </p>
+
+                            <div class="p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200/70 dark:border-indigo-800/70 flex items-center gap-3 text-xs sm:text-sm text-slate-700 dark:text-slate-200">
+                                <i class="fa-solid fa-circle-info text-indigo-600 dark:text-indigo-400 text-base shrink-0"></i>
+                                <span><strong>Kenapa Minggu 2 Belum Menghitung Perkalian Total?</strong> Sesuai matriks RPS resmi, Minggu 2 fokus mematangkan cara menyiapkan laci memori (${term('declare', 'Declare')}) dan mencatat pesanan masuk/keluar (${term('io', 'I/O')}) secara berurutan. Kalkulasi perkalian total, diskon, dan laba akan dikupas tuntas di <strong>Pertemuan 3</strong>!</span>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-5">
+                            <div class="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 space-y-4">
+                                <div>
+                                    <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Peta 18 Slide Pertemuan 2</span>
+                                    <h3 class="text-lg font-extrabold text-slate-900 dark:text-white mt-1">4 Modul Pembelajaran Mendalam</h3>
+                                </div>
+
+                                <div class="space-y-2.5">
+                                    <button type="button" onclick="goToSlide(1)" class="w-full text-left flex items-start gap-3 p-3.5 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 dark:hover:bg-slate-800/80 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-0.5 font-extrabold text-xs">M1</div>
+                                        <div>
+                                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">Modul 1: Konteks Pencatatan Pesanan UMKM (Slide 1-3)</h4>
+                                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Mengapa data pesanan wajib dipisah &amp; inspektor form kasir.</p>
+                                        </div>
+                                    </button>
+
+                                    <button type="button" onclick="goToSlide(4)" class="w-full text-left flex items-start gap-3 p-3.5 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 dark:hover:bg-slate-800/80 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-0.5 font-extrabold text-xs">M2</div>
+                                        <div>
+                                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">Modul 2: Deklarasi Variabel, 4 Tipe Data &amp; Identifier (Slide 5-8)</h4>
+                                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Aturan Declare, String/Integer/Real/Boolean, camelCase, &amp; Overwrite.</p>
+                                        </div>
+                                    </button>
+
+                                    <button type="button" onclick="goToSlide(9)" class="w-full text-left flex items-start gap-3 p-3.5 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 dark:hover:bg-slate-800/80 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-0.5 font-extrabold text-xs">M3</div>
+                                        <div>
+                                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">Modul 3: Pola I/O Interaktif &amp; Operator &amp; (Slide 10-12)</h4>
+                                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Pola Output Prompt, aturan 1 Input = 1 Variabel, &amp; bengkel struk.</p>
+                                        </div>
+                                    </button>
+
+                                    <button type="button" onclick="goToSlide(13)" class="w-full text-left flex items-start gap-3 p-3.5 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 dark:hover:bg-slate-800/80 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-0.5 font-extrabold text-xs">M4</div>
+                                        <div>
+                                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">Modul 4: Hukum Sequence &amp; 3 Simulator Lab (Slide 14-18)</h4>
+                                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Detektif bug urutan, Live IDE Flowgorithm, rakit simbol, &amp; Drag-Drop.</p>
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide2() {
+            const isStructured = s2Mode === 'terstruktur';
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-6">
+                    <div class="space-y-2">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 1 • Relevansi Bisnis Digital</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Mengapa Pencatatan Pesanan Harus Dipisah ke Variabel Terstruktur?</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Di warung tradisional, kasir sering menulis pesanan dalam satu baris kalimat panjang di kertas. Namun di sistem kasir digital, <strong>nama produk</strong>, <strong>harga satuan</strong>, dan <strong>jumlah beli</strong> wajib dipisah ke dalam ${term('variabel', 'variabel')} tersendiri. Bandingkan dampaknya di bawah ini:
+                        </p>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" onclick="setS2Mode('acak')" class="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm border transition ${!isStructured ? 'bg-rose-600 text-white border-rose-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <i class="fa-solid fa-file-pen mr-1.5"></i>Cara 1: Catatan Teks Digabung (1 Kolom Kalimat)
+                        </button>
+                        <button type="button" onclick="setS2Mode('terstruktur')" class="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm border transition ${isStructured ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <i class="fa-solid fa-table-columns mr-1.5"></i>Cara 2: Pencatatan Variabel Terstruktur (Standar Bisnis Digital)
+                        </button>
+                    </div>
+
+                    <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 my-auto">
+                        ${!isStructured ? `
+                            <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
+                                <div class="lg:col-span-6 p-5 rounded-2xl bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 space-y-3">
+                                    <div class="text-xs font-extrabold text-rose-700 dark:text-rose-300 uppercase tracking-wider">Contoh Jika Digabung dalam 1 Variabel Teks:</div>
+                                    <div class="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-800 font-mono text-xs sm:text-sm text-rose-700 dark:text-rose-300 font-bold">
+                                        pesanan = "Kopi Susu Aren 15rb beli 3 cup"
+                                    </div>
+                                    <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                                        Jika seluruh informasi ditumpuk ke dalam satu kalimat teks seperti di atas, komputer hanya menganggapnya sebagai deretan huruf biasa (${term('string', 'String')}).
+                                    </p>
+                                </div>
+                                <div class="lg:col-span-6 space-y-2.5 text-xs sm:text-sm">
+                                    <div class="font-extrabold text-rose-700 dark:text-rose-400">3 Masalah Fatal bagi Bisnis UMKM:</div>
+                                    <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                        <strong>1. Tidak Bisa Dihitung Otomatis:</strong> Komputer tidak bisa mengalikan tulisan <span class="font-mono">"15rb"</span> dengan <span class="font-mono">"3 cup"</span>.
+                                    </div>
+                                    <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                        <strong>2. Tidak Bisa Mengurangi Stok Gudang:</strong> Sistem gudang tidak tahu berapa angka pasti barang yang keluar.
+                                    </div>
+                                    <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                        <strong>3. Gagal Membuat Laporan Produk Terlaris:</strong> Pemilik toko tidak bisa mengelompokkan penjualan per nama menu.
+                                    </div>
+                                </div>
+                            </div>
+                        ` : `
+                            <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
+                                <div class="lg:col-span-6 p-5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 space-y-3">
+                                    <div class="text-xs font-extrabold text-indigo-700 dark:text-indigo-300 uppercase tracking-wider">Dipisah Menjadi 3 Variabel Spesifik:</div>
+                                    <div class="space-y-2 font-mono text-xs">
+                                        <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex justify-between">
+                                            <span><strong>namaProduk</strong> (${term('string', 'String')})</span>
+                                            <span class="text-rose-600 dark:text-rose-400 font-bold">"Kopi Susu Aren"</span>
+                                        </div>
+                                        <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex justify-between">
+                                            <span><strong>hargaSatuan</strong> (${term('integer', 'Integer')})</span>
+                                            <span class="text-indigo-600 dark:text-indigo-400 font-bold">15000</span>
+                                        </div>
+                                        <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex justify-between">
+                                            <span><strong>jumlahBeli</strong> (${term('integer', 'Integer')})</span>
+                                            <span class="text-sky-600 dark:text-sky-400 font-bold">3</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="lg:col-span-6 space-y-2.5 text-xs sm:text-sm">
+                                    <div class="font-extrabold text-emerald-700 dark:text-emerald-400">3 Keuntungan Langsung bagi Warung Digital:</div>
+                                    <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                        <strong>1. Siap Dikalkulasi (Minggu 3):</strong> Karena <span class="font-mono">hargaSatuan</span> dan <span class="font-mono">jumlahBeli</span> berupa angka bulat murni, komputer siap mengalikannya kapan saja.
+                                    </div>
+                                    <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                        <strong>2. Siap Divalidasi Stoknya (Minggu 4):</strong> Variabel <span class="font-mono">jumlahBeli</span> bisa langsung dibandingkan dengan sisa stok di gudang.
+                                    </div>
+                                    <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                        <strong>3. Format Struk Rapi &amp; Konsisten:</strong> Ketiga variabel dapat dirangkai menjadi struk belanja profesional dengan operator <span class="font-mono font-bold">&amp;</span>.
+                                    </div>
+                                </div>
+                            </div>
+                        `}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide3() {
+            const fields = {
+                namaProduk: {
+                    label: "Kotak Isian 1: Nama Produk Pesanan",
+                    varName: "namaProduk",
+                    dataType: "String (Teks)",
+                    sampleVal: "\"Kopi Susu Gula Aren\"",
+                    declareCmd: "Declare String namaProduk",
+                    inputCmd: "Input namaProduk",
+                    reason: "Karena nama makanan/minuman terdiri dari huruf dan spasi, maka wajib disimpan di dalam laci bertipe String."
+                },
+                hargaSatuan: {
+                    label: "Kotak Isian 2: Harga Satuan Menu",
+                    varName: "hargaSatuan",
+                    dataType: "Integer (Angka Bulat)",
+                    sampleVal: "15000",
+                    declareCmd: "Declare Integer hargaSatuan",
+                    inputCmd: "Input hargaSatuan",
+                    reason: "Harga rupiah di Indonesia berupa angka bulat tanpa sen desimal. Ditulis 15000 murni (tanpa Rp dan tanpa titik) agar bisa dikalikan."
+                },
+                jumlahBeli: {
+                    label: "Kotak Isian 3: Jumlah Porsi / Kuantitas",
+                    varName: "jumlahBeli",
+                    dataType: "Integer (Angka Bulat)",
+                    sampleVal: "2",
+                    declareCmd: "Declare Integer jumlahBeli",
+                    inputCmd: "Input jumlahBeli",
+                    reason: "Jumlah cup atau bungkus yang dibeli pelanggan selalu berupa bilangan bulat utuh (1, 2, 3, dst.), sehingga bertipe Integer."
+                }
+            };
+
+            const active = fields[s3SelectedField];
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 1 • Dari Layar Aplikasi ke Memori Komputer</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Inspektor Form Kasir "Warung Digital" ke Variabel Flowgorithm</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Klik salah satu dari <strong>3 kotak isian pada layar tablet kasir</strong> di sebelah kiri untuk membedah bagaimana tampilan aplikasi kasir terhubung dengan blok ${term('declare', 'Declare')} dan <span class="font-mono font-bold">Input</span> di belakang layar:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <!-- Kiri: Mockup Layar Tablet Kasir -->
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-4">
+                            <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-2.5">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-rose-400"></span>
+                                    <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+                                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                                    <span class="text-xs font-extrabold text-slate-700 dark:text-slate-200 ml-1">Tablet POS Warung Digital • Form Pesanan Baru</span>
+                                </div>
+                                <span class="text-[11px] font-bold text-indigo-600 dark:text-indigo-400">Klik kotak di bawah</span>
+                            </div>
+
+                            <div class="space-y-3 my-auto">
+                                <button type="button" onclick="selectS3Field('namaProduk')" class="w-full text-left p-3.5 rounded-2xl border-2 transition ${s3SelectedField === 'namaProduk' ? 'border-indigo-600 bg-white dark:bg-slate-900 shadow-xs' : 'border-slate-200 dark:border-slate-700 bg-white/70 dark:bg-slate-900/50 hover:border-indigo-300'}">
+                                    <div class="flex items-center justify-between text-xs font-bold text-slate-500 mb-1">
+                                        <span>1. Nama Produk / Menu Pesanan</span>
+                                        <span class="font-mono text-rose-600 dark:text-rose-400">namaProduk (String)</span>
+                                    </div>
+                                    <div class="font-mono text-sm font-extrabold text-slate-900 dark:text-white">Kopi Susu Gula Aren</div>
+                                </button>
+
+                                <button type="button" onclick="selectS3Field('hargaSatuan')" class="w-full text-left p-3.5 rounded-2xl border-2 transition ${s3SelectedField === 'hargaSatuan' ? 'border-indigo-600 bg-white dark:bg-slate-900 shadow-xs' : 'border-slate-200 dark:border-slate-700 bg-white/70 dark:bg-slate-900/50 hover:border-indigo-300'}">
+                                    <div class="flex items-center justify-between text-xs font-bold text-slate-500 mb-1">
+                                        <span>2. Harga Satuan (Rupiah)</span>
+                                        <span class="font-mono text-indigo-600 dark:text-indigo-400">hargaSatuan (Integer)</span>
+                                    </div>
+                                    <div class="font-mono text-sm font-extrabold text-slate-900 dark:text-white">15000</div>
+                                </button>
+
+                                <button type="button" onclick="selectS3Field('jumlahBeli')" class="w-full text-left p-3.5 rounded-2xl border-2 transition ${s3SelectedField === 'jumlahBeli' ? 'border-indigo-600 bg-white dark:bg-slate-900 shadow-xs' : 'border-slate-200 dark:border-slate-700 bg-white/70 dark:bg-slate-900/50 hover:border-indigo-300'}">
+                                    <div class="flex items-center justify-between text-xs font-bold text-slate-500 mb-1">
+                                        <span>3. Jumlah Pesanan (Qty)</span>
+                                        <span class="font-mono text-sky-600 dark:text-sky-400">jumlahBeli (Integer)</span>
+                                    </div>
+                                    <div class="font-mono text-sm font-extrabold text-slate-900 dark:text-white">2</div>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Kanan: Bedah Memori & Simbol Flowgorithm -->
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-2 border-indigo-500/60 flex flex-col justify-between gap-4">
+                            <div class="space-y-2">
+                                <span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">${active.label}</span>
+                                <h3 class="text-lg font-extrabold text-slate-900 dark:text-white mt-1">Variabel: <span class="font-mono text-indigo-600 dark:text-indigo-400">${active.varName}</span></h3>
+                                <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${active.reason}</p>
+                            </div>
+
+                            <div class="fg-canvas rounded-2xl p-4 border border-slate-200 dark:border-slate-700 flex flex-col items-center gap-2">
+                                <svg class="w-full max-w-[270px] h-auto" viewBox="0 0 300 44">
+                                    <polygon points="24,4 276,4 294,22 276,40 24,40 6,22" fill="#fef9c3" stroke="#b45309" stroke-width="2.2"/>
+                                    <text x="150" y="27" text-anchor="middle" fill="#78350f" font-weight="700" font-size="13">${active.declareCmd}</text>
+                                </svg>
+                                <i class="fa-solid fa-arrow-down text-slate-400 text-xs"></i>
+                                <svg class="w-full max-w-[250px] h-auto" viewBox="0 0 280 44">
+                                    <polygon points="28,4 268,4 252,40 12,40" fill="#e0f2fe" stroke="#0284c7" stroke-width="2.2"/>
+                                    <text x="140" y="27" text-anchor="middle" fill="#0c4a6e" font-weight="700" font-size="13">${active.inputCmd}</text>
+                                </svg>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-2.5 text-xs">
+                                <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                    <span class="text-slate-400 block">Tipe Data:</span>
+                                    <span class="font-extrabold text-slate-800 dark:text-slate-200">${active.dataType}</span>
+                                </div>
+                                <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                    <span class="text-slate-400 block">Contoh Nilai di Memori:</span>
+                                    <span class="font-mono font-extrabold text-indigo-600 dark:text-indigo-400">${active.sampleVal}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide4() {
+            return `
+                <div class="slide-enter flex flex-col justify-center h-full my-auto">
+                    <div class="p-8 sm:p-12 rounded-3xl bg-gradient-to-br from-indigo-600 to-slate-900 text-white space-y-6 shadow-lg">
+                        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/15 text-indigo-100 text-xs font-extrabold uppercase tracking-wider">
+                            <i class="fa-solid fa-bridge"></i>
+                            <span>Jembatan Antar Topik • Modul 1 Menuju Modul 2</span>
+                        </div>
+
+                        <h2 class="text-2xl sm:text-4xl font-extrabold leading-tight">
+                            Kita sudah tahu bahwa form pesanan kasir membutuhkan 3 variabel. Namun, mengapa di Flowgorithm kita tidak boleh langsung membuat blok Input tanpa Declare terlebih dahulu?
+                        </h2>
+
+                        <p class="text-indigo-100 text-sm sm:text-base leading-relaxed max-w-3xl">
+                            Di <strong>Modul 2 (Slide 5 s/d 8)</strong>, kita akan membedah cara kerja memori komputer saat melakukan <strong>Deklarasi Variabel</strong>, mengenal <strong>4 Tipe Data resmi Flowgorithm</strong>, menguji aturan penamaan variabel (<strong>Identifier &amp; camelCase</strong>), serta mengamati bagaimana nilai di dalam variabel berubah saat ditimpa (<strong>Overwrite</strong>).
+                        </p>
+
+                        <div class="pt-2">
+                            <button type="button" onclick="changeSlide(1)" class="px-5 py-3 rounded-xl bg-white text-indigo-700 hover:bg-indigo-50 font-extrabold text-xs sm:text-sm transition inline-flex items-center gap-2 shadow-sm">
+                                <span>Masuk ke Modul 2: Deklarasi Variabel &amp; Tipe Data</span>
+                                <i class="fa-solid fa-arrow-right text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide5() {
+            const isWithDeclare = s5DeclareMode === 'with_declare';
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 2 • Konsep Dasar Memori Komputer</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Apa Itu ${term('declare', 'Deklarasi Variabel')} &amp; Mengapa Wajib di Awal?</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Bayangkan memori komputer (RAM) seperti gudang kosong. Sebelum kasir bisa menyimpan nama barang ke dalam laci, kita <strong>wajib memasang kotak laci baru dan menempelkan label namanya terlebih dahulu</strong> menggunakan simbol Segi Enam (${term('declare', 'Declare')}). Klik kedua tombol di bawah untuk melihat perbedaannya:
+                        </p>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" onclick="setS5DeclareMode('with_declare')" class="px-4 py-2 rounded-xl font-bold text-xs sm:text-sm border transition ${isWithDeclare ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <i class="fa-solid fa-circle-check mr-1.5"></i>1. Alur Benar (Declare Dulu Baru Input)
+                        </button>
+                        <button type="button" onclick="setS5DeclareMode('no_declare')" class="px-4 py-2 rounded-xl font-bold text-xs sm:text-sm border transition ${!isWithDeclare ? 'bg-rose-600 text-white border-rose-600' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <i class="fa-solid fa-triangle-exclamation mr-1.5"></i>2. Alur Salah (Langsung Input Tanpa Declare)
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <div class="lg:col-span-5 fg-canvas rounded-3xl border border-slate-200 dark:border-slate-800 p-4 flex flex-col items-center justify-center">
+                            <svg class="w-full max-w-[270px] h-auto" viewBox="0 0 300 200">
+                                <line x1="150" y1="28" x2="150" y2="168" stroke="#64748b" stroke-width="2.2"/>
+                                <rect x="85" y="4" width="130" height="24" rx="12" fill="#f3e8ff" stroke="#7e22ce" stroke-width="2"/>
+                                <text x="150" y="20" text-anchor="middle" fill="#581c87" font-size="11.5" font-weight="700">Main</text>
+
+                                ${isWithDeclare ? `
+                                    <polygon points="34,46 266,46 282,64 266,82 34,82 18,64" fill="#fef9c3" stroke="#b45309" stroke-width="2.2"/>
+                                    <text x="150" y="68" text-anchor="middle" fill="#78350f" font-size="11.5" font-weight="700">Declare String namaProduk</text>
+
+                                    <polygon points="48,104 266,104 252,138 34,138" fill="#e0f2fe" stroke="#0284c7" stroke-width="2.2"/>
+                                    <text x="150" y="125" text-anchor="middle" fill="#0c4a6e" font-size="12" font-weight="700">Input namaProduk</text>
+                                ` : `
+                                    <polygon points="48,74 266,74 252,114 34,114" fill="#fee2e2" stroke="#dc2626" stroke-width="2.8"/>
+                                    <text x="150" y="98" text-anchor="middle" fill="#991b1b" font-size="12" font-weight="800">Input namaProduk (ERROR!)</text>
+                                `}
+
+                                <rect x="85" y="168" width="130" height="24" rx="12" fill="#f3e8ff" stroke="#7e22ce" stroke-width="2"/>
+                                <text x="150" y="184" text-anchor="middle" fill="#581c87" font-size="11.5" font-weight="700">End</text>
+                            </svg>
+                        </div>
+
+                        <div class="lg:col-span-7 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-4">
+                            ${isWithDeclare ? `
+                                <div class="space-y-3">
+                                    <span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">Status Eksekusi: Berhasil &amp; Aman</span>
+                                    <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">2 Hal yang Dilakukan Blok Declare di Memori:</h3>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs sm:text-sm">
+                                        <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                            <div class="font-extrabold text-amber-600 dark:text-amber-400 mb-1">1. Menentukan Nama (${term('identifier', 'Identifier')})</div>
+                                            <p class="text-xs text-slate-600 dark:text-slate-300">Menempelkan label nama <span class="font-mono font-bold">namaProduk</span> pada laci memori agar mudah dipanggil kembali oleh blok Input dan Output.</p>
+                                        </div>
+                                        <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                            <div class="font-extrabold text-indigo-600 dark:text-indigo-400 mb-1">2. Mengunci ${term('tipedata', 'Tipe Data')}</div>
+                                            <p class="text-xs text-slate-600 dark:text-slate-300">Menetapkan aturan bahwa laci <span class="font-mono font-bold">namaProduk</span> hanya menerima data bertipe ${term('string', 'String')} (teks).</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            ` : `
+                                <div class="space-y-3">
+                                    <span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">Flowgorithm Error: ${term('undeclared', 'Variable Not Declared')}</span>
+                                    <h3 class="text-lg font-extrabold text-rose-700 dark:text-rose-400">Mengapa Program Langsung Berhenti (Crash)?</h3>
+                                    <div class="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-xs sm:text-sm text-rose-900 dark:text-rose-200 leading-relaxed">
+                                        Saat komputer membaca instruksi <span class="font-mono font-bold">Input namaProduk</span>, ia mencari laci bernama <span class="font-mono font-bold">namaProduk</span> di dalam memori RAM. Karena belum pernah dideklarasikan dengan simbol Segi Enam (<span class="font-mono font-bold">Declare</span>), Flowgorithm memunculkan pesan: <br><span class="font-mono font-bold block mt-2">"The variable 'namaProduk' was not declared before it was used."</span>
+                                    </div>
+                                </div>
+                            `}
+
+                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-300">
+                                <i class="fa-solid fa-lightbulb text-amber-500 mr-1.5"></i>
+                                <strong>Tips Efisiensi di Flowgorithm:</strong> Jika terdapat beberapa variabel dengan tipe data yang sama (misal <span class="font-mono">hargaSatuan</span> dan <span class="font-mono">jumlahBeli</span> sama-sama Integer), Anda boleh menggabungkannya dalam satu Segi Enam dengan dipisah tanda koma: <span class="font-mono font-bold text-amber-700 dark:text-amber-400">Declare Integer hargaSatuan, jumlahBeli</span>.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide6() {
+            const typesDB = {
+                String: {
+                    badge: "Tipe Data 1 dari 4 • Teks & Karakter",
+                    title: "String (Deretan Huruf, Kata, atau Kalimat)",
+                    desc: "Digunakan untuk menyimpan data tekstual yang tidak akan dihitung secara matematika, seperti nama produk, nama pelanggan, alamat pengiriman, atau kode voucher.",
+                    declareEx: "Declare String namaProduk, catatanPesanan",
+                    warungUse: "Menyimpan nama menu (\"Kopi Susu Aren\"), nama pembeli (\"Rina\"), atau nomor meja (\"Meja 04\").",
+                    tests: [
+                        { label: 'Uji: "Kopi Susu Aren"', ok: true, msg: 'DITERIMA! Teks "Kopi Susu Aren" tersimpan dengan aman di dalam laci bertipe String.' },
+                        { label: 'Uji: "Meja Nomor 5"', ok: true, msg: 'DITERIMA! Gabungan huruf dan angka tetap dianggap teks (String).' }
+                    ]
+                },
+                Integer: {
+                    badge: "Tipe Data 2 dari 4 • Bilangan Bulat Utuh",
+                    title: "Integer (Angka Bulat Tanpa Desimal)",
+                    desc: "Digunakan untuk menyimpan angka bulat murni (positif, nol, maupun negatif) yang nantinya dapat dijumlahkan, dikurangi, atau dikalikan. Wajib ditulis tanpa huruf Rp dan tanpa titik pemisah ribuan.",
+                    declareEx: "Declare Integer hargaSatuan, jumlahBeli, nomorAntrean",
+                    warungUse: "Menyimpan harga satuan rupiah (15000), kuantitas porsi beli (3), atau sisa stok barang di rak (45).",
+                    tests: [
+                        { label: 'Uji Angka Murni: 15000', ok: true, msg: 'DITERIMA! 15000 adalah bilangan bulat murni dan siap dikalikan oleh komputer.' },
+                        { label: 'Uji Pakai Titik: 15.000', ok: false, msg: 'DITOLAK (Type Mismatch)! Tanda titik dianggap pemisah desimal di bahasa Inggris, bukan pemisah ribuan.' },
+                        { label: 'Uji Pakai Huruf: Rp 15000', ok: false, msg: 'DITOLAK (Type Mismatch)! Huruf "Rp" membuat input ditolak oleh variabel Integer.' }
+                    ]
+                },
+                Real: {
+                    badge: "Tipe Data 3 dari 4 • Bilangan Pecahan / Desimal",
+                    title: "Real (Angka Desimal / Koma)",
+                    desc: "Digunakan untuk menyimpan angka yang memiliki bagian pecahan/desimal. Penting: di Flowgorithm dan bahasa pemrograman, tanda koma desimal ditulis menggunakan tanda TITIK (.), bukan koma (,).",
+                    declareEx: "Declare Real beratKopiKg, persentaseDiskon",
+                    warungUse: "Menyimpan takaran berat biji kopi (1.25 kg), suhu penyeduhan (92.5 derajat), atau rasio diskon (0.15).",
+                    tests: [
+                        { label: 'Uji Desimal Titik: 1.5', ok: true, msg: 'DITERIMA! Angka 1.5 (satu setengah) valid sebagai tipe data Real di Flowgorithm.' },
+                        { label: 'Uji Desimal Koma: 1,5', ok: false, msg: 'DITOLAK! Jangan gunakan tanda koma (,) untuk angka desimal di Flowgorithm; gunakan titik (1.5).' }
+                    ]
+                },
+                Boolean: {
+                    badge: "Tipe Data 4 dari 4 • Status Logika Biner",
+                    title: "Boolean (Hanya Bernilai True atau False)",
+                    desc: "Tipe data khusus yang hanya menerima satu dari dua nilai kebenaran logika: True (Benar / Ya) atau False (Salah / Tidak). Sangat penting saat masuk ke materi Percabangan di Pertemuan 4.",
+                    declareEx: "Declare Boolean isMember, stokTersedia",
+                    warungUse: "Mencatat apakah pembeli memiliki kartu member diskon (True) atau belum menjadi member (False).",
+                    tests: [
+                        { label: 'Uji Nilai: true', ok: true, msg: 'DITERIMA! Variabel Boolean menyimpan status logika True (Benar).' },
+                        { label: 'Uji Nilai: false', ok: true, msg: 'DITERIMA! Variabel Boolean menyimpan status logika False (Salah).' },
+                        { label: 'Uji Kata: "Ya, Member"', ok: false, msg: 'DITOLAK (Type Mismatch)! Boolean hanya mengenal nilai True atau False, bukan kalimat "Ya, Member".' }
+                    ]
+                }
+            };
+
+            const keys = ['String', 'Integer', 'Real', 'Boolean'];
+            let tabsHtml = '';
+            for (let i = 0; i < keys.length; i++) {
+                const k = keys[i];
+                const active = s6ActiveType === k;
+                tabsHtml += `
+                    <button type="button" onclick="selectS6Type('${k}')" class="p-3.5 rounded-2xl border text-left transition ${active ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:bg-slate-100'}">
+                        <div class="text-[11px] font-bold ${active ? 'text-indigo-200' : 'text-indigo-600 dark:text-indigo-400'}">Tipe Data #${i + 1}</div>
+                        <div class="text-sm font-extrabold mt-0.5">${k}</div>
+                    </button>
+                `;
+            }
+
+            const cur = typesDB[s6ActiveType];
+            const testButtonsHtml = cur.tests.map(function (t, idx) {
+                return `
+                    <button type="button" onclick="runS6TypeTest(${idx})" class="px-3.5 py-2 rounded-xl font-bold text-xs border transition ${t.ok ? 'bg-white dark:bg-slate-900 border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50' : 'bg-white dark:bg-slate-900 border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-300 hover:bg-rose-50'}">
+                        ${escapeHtml(t.label)}
+                    </button>
+                `;
+            }).join('');
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 2 • Klasifikasi Jenis Data Memori</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Mengenal 4 ${term('tipedata', 'Tipe Data')} Resmi di Flowgorithm</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Saat membuat simbol Segi Enam (${term('declare', 'Declare')}), Flowgorithm meminta Anda memilih satu dari 4 tipe data berikut (${term('string', 'String')}, ${term('integer', 'Integer')}, ${term('real', 'Real')}, atau ${term('boolean', 'Boolean')}). Klik masing-masing tab untuk mencoba simulatornya:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+                        ${tabsHtml}
+                    </div>
+
+                    <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-4 my-auto">
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
+                            <div class="lg:col-span-7 space-y-2.5">
+                                <span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">${cur.badge}</span>
+                                <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">${cur.title}</h3>
+                                <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${cur.desc}</p>
+                                <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs">
+                                    <strong class="text-indigo-600 dark:text-indigo-400">Contoh Penggunaan di Warung Digital:</strong> ${escapeHtml(cur.warungUse)}
+                                </div>
+                            </div>
+
+                            <div class="lg:col-span-5 fg-canvas rounded-2xl p-4 border border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center gap-2">
+                                <span class="text-[11px] font-bold text-slate-400 uppercase">Bentuk Blok Declare di Flowgorithm</span>
+                                <svg class="w-full max-w-[290px] h-auto" viewBox="0 0 320 52">
+                                    <polygon points="26,5 294,5 314,26 294,47 26,47 6,26" fill="#fef9c3" stroke="#b45309" stroke-width="2.4"/>
+                                    <text x="160" y="31" text-anchor="middle" fill="#78350f" font-weight="700" font-size="12.5">${cur.declareEx}</text>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <div class="pt-3 border-t border-slate-200 dark:border-slate-700 space-y-2.5">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="text-xs font-extrabold text-slate-700 dark:text-slate-200">Uji Masukkan Nilai ke Laci ${s6ActiveType}:</span>
+                                ${testButtonsHtml}
+                            </div>
+                            <div class="p-3 rounded-xl border text-xs font-bold ${s6TestResult.ok ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200' : 'bg-rose-50 dark:bg-rose-950/40 border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-200'}">
+                                ${escapeHtml(s6TestResult.msg)}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function evaluateFlowgorithmIdentifier(rawName) {
+            const name = String(rawName || '').trim();
+            const reservedWords = ['integer', 'real', 'string', 'boolean', 'declare', 'input', 'output', 'assign', 'if', 'then', 'else', 'while', 'for', 'do', 'function', 'main', 'end', 'true', 'false', 'and', 'or', 'not', 'mod'];
+
+            if (!name) {
+                return { valid: false, reason: 'Nama variabel tidak boleh kosong. Ketik sebuah nama variabel untuk diuji.' };
+            }
+            if (/\s/.test(name)) {
+                const suggested = name.split(/\s+/).map(function (w, i) {
+                    const clean = w.replace(/[^a-zA-Z0-9]/g, '');
+                    if (!clean) return '';
+                    return i === 0 ? clean.toLowerCase() : clean.charAt(0).toUpperCase() + clean.slice(1).toLowerCase();
+                }).join('');
+                return {
+                    valid: false,
+                    reason: 'DITOLAK FLOWGORITHM: Nama variabel tidak boleh mengandung SPASI! Gunakan gaya camelCase tanpa spasi, misalnya: ' + (suggested || 'namaProduk') + '.'
+                };
+            }
+            if (/^[0-9]/.test(name)) {
+                return {
+                    valid: false,
+                    reason: 'DITOLAK FLOWGORITHM: Nama variabel TIDAK BOLEH diawali dengan angka (' + name.charAt(0) + ')! Karakter pertama wajib berupa huruf (a-z atau A-Z).'
+                };
+            }
+            if (name.indexOf('_') !== -1) {
+                const camel = name.split('_').filter(Boolean).map(function (w, i) {
+                    return i === 0 ? w.toLowerCase() : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+                }).join('');
+                return {
+                    valid: false,
+                    reason: 'DITOLAK DI FLOWGORITHM: Meskipun bahasa lain mengizinkan garis bawah (_), aplikasi Flowgorithm secara ketat MENOLAK simbol underscore (_)! Ganti menjadi camelCase: ' + (camel || 'hargaSatuan') + '.'
+                };
+            }
+            if (!/^[a-zA-Z][a-zA-Z0-9]*$/.test(name)) {
+                return {
+                    valid: false,
+                    reason: 'DITOLAK FLOWGORITHM: Mengandung simbol khusus atau tanda baca yang dilarang. Hanya gunakan huruf dan angka tanpa simbol!'
+                };
+            }
+            if (reservedWords.indexOf(name.toLowerCase()) !== -1) {
+                return {
+                    valid: false,
+                    reason: 'DITOLAK FLOWGORITHM: "' + name + '" adalah kata kunci resmi (Reserved Keyword) milik sistem Flowgorithm sehingga tidak boleh dipakai sebagai nama variabel.'
+                };
+            }
+            return {
+                valid: true,
+                reason: 'VALID & DITERIMA FLOWGORITHM! Nama "' + name + '" mematuhi seluruh aturan Identifier (diawali huruf, tanpa spasi, tanpa simbol, dan rapi).'
+            };
+        }
+
+        function renderSlide7() {
+            const check = evaluateFlowgorithmIdentifier(s7IdentifierInput);
+            const presets = [
+                { val: 'namaProduk', label: 'namaProduk (camelCase)' },
+                { val: 'nama produk', label: 'nama produk (Pakai Spasi)' },
+                { val: 'harga_satuan', label: 'harga_satuan (Pakai _)' },
+                { val: '2jumlahBeli', label: '2jumlahBeli (Awalan Angka)' },
+                { val: 'hargaRp$', label: 'hargaRp$ (Pakai Simbol)' },
+                { val: 'Integer', label: 'Integer (Kata Kunci)' },
+                { val: 'jumlahBeli1', label: 'jumlahBeli1 (Angka di Akhir)' }
+            ];
+
+            const presetBtns = presets.map(function (p) {
+                return `
+                    <button type="button" onclick="setS7Identifier('${p.val}')" class="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-indigo-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold text-slate-700 dark:text-slate-200 transition">
+                        ${escapeHtml(p.label)}
+                    </button>
+                `;
+            }).join('');
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 2 • Aturan Penamaan Laci Memori</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Aturan Penamaan Variabel (${term('identifier', 'Identifier')}) &amp; Gaya ${term('camelcase', 'camelCase')}</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Flowgorithm memiliki aturan ketat saat memberi nama variabel: <strong>wajib diawali huruf</strong>, <strong>tidak boleh ada spasi</strong>, <strong>tidak boleh ada simbol termasuk garis bawah (<span class="font-mono">_</span>)</strong>, dan <strong>bukan kata perintah Flowgorithm</strong>. Uji nama variabel Anda di bawah ini:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <!-- Kiri: Live Identifier Tester -->
+                        <div class="lg:col-span-7 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-4 flex flex-col justify-between">
+                            <div class="space-y-3">
+                                <label class="text-xs font-extrabold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 block">
+                                    Laboratorium Uji Nama Variabel (Ketik Sendiri atau Klik Contoh):
+                                </label>
+                                <input id="s7InputBox" type="text" value="${escapeHtml(s7IdentifierInput)}" oninput="updateS7IdentifierLive(this.value)" placeholder="Ketik calon nama variabel..." class="w-full px-4 py-3 rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 font-mono text-base font-extrabold focus:outline-none focus:border-indigo-600">
+
+                                <div class="flex flex-wrap gap-1.5 pt-1">
+                                    ${presetBtns}
+                                </div>
+                            </div>
+
+                            <div id="s7ResultBanner" class="p-4 rounded-2xl border-2 text-xs sm:text-sm font-bold leading-relaxed ${check.valid ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-400 dark:border-emerald-700 text-emerald-900 dark:text-emerald-200' : 'bg-rose-50 dark:bg-rose-950/40 border-rose-400 dark:border-rose-700 text-rose-900 dark:text-rose-200'}">
+                                ${escapeHtml(check.reason)}
+                            </div>
+                        </div>
+
+                        <!-- Kanan: 4 Aturan Emas & Rekomendasi camelCase -->
+                        <div class="lg:col-span-5 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-3">
+                            <div class="space-y-2.5">
+                                <h3 class="text-base font-extrabold text-slate-900 dark:text-white">4 Hukum Identifier di Flowgorithm</h3>
+                                <div class="space-y-2 text-xs">
+                                    <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                        <span class="font-extrabold text-indigo-600 dark:text-indigo-400">1. Wajib Diawali Huruf:</span> Boleh memakai angka di belakang (misal <span class="font-mono font-bold">menu1</span>), tapi dilarang di depan (<span class="font-mono line-through text-rose-500">1menu</span>).
+                                    </div>
+                                    <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                        <span class="font-extrabold text-indigo-600 dark:text-indigo-400">2. Bebas Spasi &amp; Underscore:</span> Flowgorithm menolak spasi maupun garis bawah (<span class="font-mono">_</span>).
+                                    </div>
+                                    <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                        <span class="font-extrabold text-indigo-600 dark:text-indigo-400">3. Gunakan ${term('camelcase', 'camelCase')}:</span> Gabungkan kata tanpa spasi dan beri huruf besar di awal kata kedua: <span class="font-mono font-bold text-emerald-600">namaProduk</span>, <span class="font-mono font-bold text-emerald-600">hargaSatuan</span>, <span class="font-mono font-bold text-emerald-600">jumlahBeli</span>.
+                                    </div>
+                                    <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                        <span class="font-extrabold text-indigo-600 dark:text-indigo-400">4. Bermakna Jelas:</span> Hindari menamai variabel dengan huruf singkatan membingungkan seperti <span class="font-mono">x</span>, <span class="font-mono">y</span>, <span class="font-mono">z</span>.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide8() {
+            const stages = [
+                {
+                    title: "Tahap 1: Baru Dideklarasikan (Uninitialized)",
+                    cmd: "Declare Integer jumlahBeli",
+                    memVal: "uninitialized",
+                    memBadge: "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
+                    desc: "Saat blok Segi Enam Declare dijalankan, laci variabel jumlahBeli sudah siap di memori RAM, tetapi di dalamnya masih kosong (" + term('uninitialized', 'uninitialized') + ")."
+                },
+                {
+                    title: "Tahap 2: Diisi Nilai Pertama (Initialized)",
+                    cmd: "Input jumlahBeli (Kasir mengetik: 2)",
+                    memVal: "2",
+                    memBadge: "bg-indigo-600 text-white",
+                    desc: "Kasir mengetik angka 2 untuk pesanan Kopi Susu. Kini laci jumlahBeli resmi menyimpan nilai angka 2."
+                },
+                {
+                    title: "Tahap 3: Pembeli Berubah Pikiran (Efek Overwrite!)",
+                    cmd: "Input jumlahBeli (Kasir mengetik ulang: 5)",
+                    memVal: "5 (Nilai lama 2 terhapus!)",
+                    memBadge: "bg-amber-500 text-white",
+                    desc: "Pembeli berkata: 'Eh Kak, enggak jadi 2 gelas, ganti jadi 5 gelas ya!'. Saat variabel jumlahBeli diisi nilai baru (5), nilai lama (2) langsung tertimpa dan hilang selamanya (" + term('overwrite', 'Overwrite') + ")."
+                }
+            ];
+
+            const cur = stages[s8LifecycleStep];
+
+            let stepButtons = '';
+            for (let i = 0; i < stages.length; i++) {
+                const active = s8LifecycleStep === i;
+                stepButtons += `
+                    <button type="button" onclick="setS8Lifecycle(${i})" class="p-3.5 rounded-2xl border text-left transition ${active ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700'}">
+                        <div class="text-[11px] font-bold ${active ? 'text-indigo-200' : 'text-indigo-600 dark:text-indigo-400'}">Kondisi Memori #${i + 1}</div>
+                        <div class="text-xs sm:text-sm font-extrabold mt-0.5">${stages[i].title.split(': ')[1]}</div>
+                    </button>
+                `;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 2 • Perilaku Memori Variabel</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Siklus Hidup Variabel &amp; Hukum ${term('overwrite', 'Overwrite (Tertimpa)')}</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Satu laci variabel <strong>hanya mampu menampung 1 nilai pada satu waktu</strong>. Klik ke-3 kondisi di bawah ini untuk melihat apa yang terjadi di jendela <em>Variable Watch</em> ketika variabel diisi ulang:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        ${stepButtons}
+                    </div>
+
+                    <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center my-auto">
+                        <div class="lg:col-span-6 space-y-3">
+                            <span class="text-xs font-bold px-3 py-1 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">Instruksi yang Dieksekusi: <span class="font-mono">${cur.cmd}</span></span>
+                            <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">${cur.title}</h3>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${cur.desc}</p>
+                        </div>
+
+                        <div class="lg:col-span-6 p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-indigo-500/50 space-y-3">
+                            <div class="flex items-center justify-between text-xs font-bold text-slate-400 uppercase">
+                                <span>Simulasi Variable Watch Window</span>
+                                <span>RAM Memory Slot</span>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                                <div>
+                                    <div class="text-xs text-slate-400">Nama Variabel (Integer)</div>
+                                    <div class="font-mono text-base font-extrabold text-slate-900 dark:text-white">jumlahBeli</div>
+                                </div>
+                                <div class="px-4 py-2 rounded-xl font-mono text-sm font-extrabold ${cur.memBadge}">
+                                    ${cur.memVal}
+                                </div>
+                            </div>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400">
+                                <strong>Pelajaran Penting:</strong> Jika kasir ingin mencatat pesanan Barang ke-1 dan Barang ke-2 secara bersamaan tanpa saling menimpa, maka harus dideklarasikan variabel terpisah (misal <span class="font-mono">jumlahBeli1</span> dan <span class="font-mono">jumlahBeli2</span>).
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide9() {
+            return `
+                <div class="slide-enter flex flex-col justify-center h-full my-auto">
+                    <div class="p-8 sm:p-12 rounded-3xl bg-gradient-to-br from-indigo-600 to-slate-900 text-white space-y-6 shadow-lg">
+                        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/15 text-indigo-100 text-xs font-extrabold uppercase tracking-wider">
+                            <i class="fa-solid fa-bridge"></i>
+                            <span>Jembatan Antar Topik • Modul 2 Menuju Modul 3</span>
+                        </div>
+
+                        <h2 class="text-2xl sm:text-4xl font-extrabold leading-tight">
+                            Ke-3 laci variabel kita (namaProduk, hargaSatuan, jumlahBeli) sudah siap di memori. Sekarang, bagaimana cara agar kasir bisa mengetik pesanan dengan nyaman dan melihat struknya?
+                        </h2>
+
+                        <p class="text-indigo-100 text-sm sm:text-base leading-relaxed max-w-3xl">
+                            Di <strong>Modul 3 (Slide 10 s/d 12)</strong>, kita akan mempelajari standar emas merancang antarmuka <strong>Input/Output (I/O)</strong> di Flowgorithm: mengapa setiap blok <span class="font-mono">Input</span> wajib didahului oleh <strong>Output Prompt</strong>, aturan <strong>1 Simbol Input = 1 Variabel</strong>, serta cara merangkai kalimat struk dengan <strong>Operator <span class="font-mono">&amp;</span> (Ampersand)</strong>.
+                        </p>
+
+                        <div class="pt-2">
+                            <button type="button" onclick="changeSlide(1)" class="px-5 py-3 rounded-xl bg-white text-indigo-700 hover:bg-indigo-50 font-extrabold text-xs sm:text-sm transition inline-flex items-center gap-2 shadow-sm">
+                                <span>Masuk ke Modul 3: Instruksi I/O &amp; Operator &amp;</span>
+                                <i class="fa-solid fa-arrow-right text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide10() {
+            const hasPrompt = s10PromptMode === 'with_prompt';
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 3 • Ergonomi Antarmuka Kasir (UX)</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Pola Emas I/O: Mengapa Sebelum <span class="font-mono">Input</span> Wajib Ada ${term('prompt', 'Output Prompt')}?</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Di Flowgorithm, simbol <strong>Input (Jajar Genjang Biru)</strong> hanya bertugas menghentikan program dan membuka kotak ketik, tetapi <strong>tidak memunculkan tulisan petunjuk apa pun di layar</strong>. Bandingkan pengalaman kasir pada kedua mode di bawah ini:
+                        </p>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" onclick="setS10PromptMode('no_prompt')" class="px-4 py-2 rounded-xl font-bold text-xs sm:text-sm border transition ${!hasPrompt ? 'bg-rose-600 text-white border-rose-600' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <i class="fa-solid fa-eye-slash mr-1.5"></i>1. Tanpa Output Prompt (Layar Bisu Membingungkan)
+                        </button>
+                        <button type="button" onclick="setS10PromptMode('with_prompt')" class="px-4 py-2 rounded-xl font-bold text-xs sm:text-sm border transition ${hasPrompt ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <i class="fa-solid fa-comments mr-1.5"></i>2. Dengan Output Prompt (Standar Terbaik Kasir)
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <!-- Kiri: Potongan Flowchart -->
+                        <div class="lg:col-span-5 fg-canvas rounded-3xl border border-slate-200 dark:border-slate-800 p-4 flex flex-col items-center justify-center gap-2">
+                            <span class="text-[11px] font-bold text-slate-400 uppercase">Potongan Flowchart di Kanvas</span>
+                            ${!hasPrompt ? `
+                                <svg class="w-full max-w-[260px] h-auto" viewBox="0 0 280 120">
+                                    <line x1="140" y1="10" x2="140" y2="110" stroke="#64748b" stroke-width="2.2"/>
+                                    <polygon points="36,16 256,16 242,52 22,52" fill="#e0f2fe" stroke="#0284c7" stroke-width="2.2"/>
+                                    <text x="140" y="39" text-anchor="middle" fill="#0c4a6e" font-weight="700" font-size="13">Input namaProduk</text>
+                                    <polygon points="36,68 256,68 242,104 22,104" fill="#e0f2fe" stroke="#0284c7" stroke-width="2.2"/>
+                                    <text x="140" y="91" text-anchor="middle" fill="#0c4a6e" font-weight="700" font-size="13">Input hargaSatuan</text>
+                                </svg>
+                            ` : `
+                                <svg class="w-full max-w-[275px] h-auto" viewBox="0 0 300 190">
+                                    <line x1="150" y1="6" x2="150" y2="184" stroke="#64748b" stroke-width="2.2"/>
+                                    <polygon points="28,10 286,10 272,44 14,44" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+                                    <text x="150" y="31" text-anchor="middle" fill="#14532d" font-weight="700" font-size="11.5">Output "Masukkan nama produk:"</text>
+
+                                    <polygon points="42,54 272,54 258,88 28,88" fill="#e0f2fe" stroke="#0284c7" stroke-width="2"/>
+                                    <text x="150" y="75" text-anchor="middle" fill="#0c4a6e" font-weight="700" font-size="12">Input namaProduk</text>
+
+                                    <polygon points="28,100 286,100 272,134 14,134" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+                                    <text x="150" y="121" text-anchor="middle" fill="#14532d" font-weight="700" font-size="11.5">Output "Masukkan harga satuan:"</text>
+
+                                    <polygon points="42,144 272,144 258,178 28,178" fill="#e0f2fe" stroke="#0284c7" stroke-width="2"/>
+                                    <text x="150" y="165" text-anchor="middle" fill="#0c4a6e" font-weight="700" font-size="12">Input hargaSatuan</text>
+                                </svg>
+                            `}
+                        </div>
+
+                        <!-- Kanan: Tampilan di Jendela Console -->
+                        <div class="lg:col-span-7 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-4">
+                            <div>
+                                <span class="text-xs font-bold uppercase tracking-wider ${hasPrompt ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">
+                                    Apa yang Dilihat Kasir di Layar Console Window:
+                                </span>
+                                <h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white mt-1">
+                                    ${hasPrompt ? 'Kasir Dipandu Langkah demi Langkah dengan Jelas' : 'Layar Kosong Melompong! Kasir Bingung Harus Mengetik Apa'}
+                                </h3>
+                            </div>
+
+                            <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono text-xs space-y-2.5">
+                                ${!hasPrompt ? `
+                                    <div class="py-6 text-center text-slate-400 italic">
+                                        (Layar Console kosong... tiba-tiba kursor berkedip menunggu ketikan. Kasir bingung: "Ini komputer minta saya ketik nama barang dulu, harga dulu, atau jumlah beli dulu ya?")
+                                    </div>
+                                ` : `
+                                    <div class="bg-emerald-100 dark:bg-emerald-950 text-emerald-900 dark:text-emerald-200 px-3 py-1.5 rounded-xl w-fit font-bold">
+                                        Masukkan nama produk:
+                                    </div>
+                                    <div class="bg-sky-100 dark:bg-sky-950 text-sky-900 dark:text-sky-200 px-3 py-1.5 rounded-xl w-fit ml-auto font-bold">
+                                        Kopi Susu Aren
+                                    </div>
+                                    <div class="bg-emerald-100 dark:bg-emerald-950 text-emerald-900 dark:text-emerald-200 px-3 py-1.5 rounded-xl w-fit font-bold">
+                                        Masukkan harga satuan:
+                                    </div>
+                                    <div class="bg-sky-100 dark:bg-sky-950 text-sky-900 dark:text-sky-200 px-3 py-1.5 rounded-xl w-fit ml-auto font-bold">
+                                        15000
+                                    </div>
+                                `}
+                            </div>
+
+                            <div class="p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-xs text-slate-700 dark:text-slate-200">
+                                <strong>Rumus Praktik Terbaik:</strong> Biasakan selalu memasangkan <strong>1 blok Output Prompt</strong> tepat di atas <strong>1 blok Input</strong> agar aplikasi kasir Anda ramah pengguna.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide11() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 3 • Perbedaan Aturan Simbol Declare vs Input</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Ingat Perbedaannya: <span class="font-mono">Declare</span> Boleh Digabung Koma, <span class="font-mono">Input</span> Wajib Satu per Satu!</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Salah satu kesalahan paling sering saat praktikum Minggu 2 adalah mencoba mengetik 3 nama variabel sekaligus di dalam satu simbol <strong>Input</strong>. Perhatikan aturan resmi Flowgorithm berikut ini:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 my-auto">
+                        <!-- Kartu Kiri: Yang Dilarang di Blok Input -->
+                        <div class="p-5 rounded-3xl bg-rose-50/60 dark:bg-rose-950/25 border-2 border-rose-300 dark:border-rose-800 flex flex-col justify-between gap-4">
+                            <div class="space-y-2">
+                                <span class="text-xs font-extrabold px-2.5 py-1 rounded-lg bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">
+                                    <i class="fa-solid fa-xmark mr-1"></i>SALAH (Ditolak oleh Dialog Input Flowgorithm)
+                                </span>
+                                <h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">Menumpuk Banyak Variabel di 1 Simbol Input</h3>
+                                <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    Ketika Anda mengklik dua kali simbol <strong>Input</strong> di Flowgorithm dan mengetik beberapa variabel dipisah koma, Flowgorithm akan langsung menolak:
+                                </p>
+                            </div>
+
+                            <div class="fg-canvas rounded-2xl p-4 border border-rose-200 dark:border-rose-800 flex flex-col items-center justify-center gap-2">
+                                <svg class="w-full max-w-[290px] h-auto" viewBox="0 0 320 54">
+                                    <polygon points="28,5 308,5 290,49 10,49" fill="#fee2e2" stroke="#dc2626" stroke-width="2.6"/>
+                                    <text x="160" y="32" text-anchor="middle" fill="#991b1b" font-weight="800" font-size="12">Input namaProduk, hargaSatuan, jumlahBeli</text>
+                                </svg>
+                                <span class="text-[11px] font-mono font-bold text-rose-600 dark:text-rose-400">Error: Please enter a single valid variable name!</span>
+                            </div>
+
+                            <p class="text-xs text-rose-800 dark:text-rose-300 font-semibold">
+                                Berbeda dengan simbol Segi Enam (<span class="font-mono">Declare</span>) yang mengizinkan koma untuk tipe data sejenis, simbol Jajar Genjang Biru (<span class="font-mono">Input</span>) hanya boleh berisi <strong>1 nama variabel tunggal</strong>.
+                            </p>
+                        </div>
+
+                        <!-- Kartu Kanan: Yang Benar -->
+                        <div class="p-5 rounded-3xl bg-emerald-50/60 dark:bg-emerald-950/25 border-2 border-emerald-400 dark:border-emerald-800 flex flex-col justify-between gap-4">
+                            <div class="space-y-2">
+                                <span class="text-xs font-extrabold px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                                    <i class="fa-solid fa-check mr-1"></i>BENAR (Sesuai Standar Flowgorithm)
+                                </span>
+                                <h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">3 Simbol Input Berurutan Satu per Satu</h3>
+                                <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    Untuk mencatat 3 data pesanan pelanggan, buatlah 3 simbol <strong>Input</strong> terpisah yang mengalir dari atas ke bawah:
+                                </p>
+                            </div>
+
+                            <div class="fg-canvas rounded-2xl p-4 border border-emerald-200 dark:border-emerald-800 flex flex-col items-center justify-center">
+                                <svg class="w-full max-w-[270px] h-auto" viewBox="0 0 280 148">
+                                    <line x1="140" y1="8" x2="140" y2="140" stroke="#64748b" stroke-width="2.2"/>
+                                    <polygon points="36,8 258,8 244,42 22,42" fill="#e0f2fe" stroke="#0284c7" stroke-width="2"/>
+                                    <text x="140" y="29" text-anchor="middle" fill="#0c4a6e" font-weight="700" font-size="12">Input namaProduk</text>
+
+                                    <polygon points="36,56 258,56 244,90 22,90" fill="#e0f2fe" stroke="#0284c7" stroke-width="2"/>
+                                    <text x="140" y="77" text-anchor="middle" fill="#0c4a6e" font-weight="700" font-size="12">Input hargaSatuan</text>
+
+                                    <polygon points="36,104 258,104 244,138 22,138" fill="#e0f2fe" stroke="#0284c7" stroke-width="2"/>
+                                    <text x="140" y="125" text-anchor="middle" fill="#0c4a6e" font-weight="700" font-size="12">Input jumlahBeli</text>
+                                </svg>
+                            </div>
+
+                            <p class="text-xs text-emerald-900 dark:text-emerald-200 font-semibold">
+                                Dengan dipisah satu per satu, program akan berhenti 3 kali secara rapi sehingga kasir bisa mengetik <span class="font-mono">namaProduk</span>, lalu <span class="font-mono">hargaSatuan</span>, lalu <span class="font-mono">jumlahBeli</span>.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide12() {
+            const cases = {
+                1: {
+                    label: "1. Format Benar (Pakai & & Spasi)",
+                    expr: 'Output "Pesanan: " & namaProduk & " (" & jumlahBeli & " pcs @Rp" & hargaSatuan & ")"',
+                    result: 'Pesanan: ' + s12SampleNama + ' (' + s12SampleQty + ' pcs @Rp' + s12SampleHarga + ')',
+                    isOk: true,
+                    note: 'SEMPURNA! Teks label diapit tanda kutip ("..."), sedangkan nama variabel ditulis di luar tanda kutip dan disambung dengan simbol & (Ampersand).'
+                },
+                2: {
+                    label: "2. Jebakan Kutip pada Variabel",
+                    expr: 'Output "Pesanan: namaProduk sebanyak jumlahBeli pcs"',
+                    result: 'Pesanan: namaProduk sebanyak jumlahBeli pcs',
+                    isOk: false,
+                    note: 'JEBAKAN PEMULA! Karena namaProduk dan jumlahBeli ikut dimasukkan ke dalam tanda kutip ("..."), komputer menganggapnya sebagai kata biasa dan TIDAK membuka isi lacinya!'
+                },
+                3: {
+                    label: "3. Jebakan Lupa Spasi di Kutip",
+                    expr: 'Output "Pesanan:" & namaProduk & "sebanyak" & jumlahBeli & "pcs"',
+                    result: 'Pesanan:' + s12SampleNama + 'sebanyak' + s12SampleQty + 'pcs',
+                    isOk: false,
+                    note: 'KATA MENEMPEL! Operator & tidak otomatis memberi jarak spasi. Anda wajib menambahkan spasi di dalam tanda kutip seperti "Pesanan: " dan " sebanyak ".'
+                }
+            };
+
+            const cur = cases[s12CaseIndex];
+
+            let caseBtns = '';
+            for (let i = 1; i <= 3; i++) {
+                const active = s12CaseIndex === i;
+                caseBtns += `
+                    <button type="button" onclick="setS12Case(${i})" class="px-3.5 py-2 rounded-xl font-bold text-xs border transition ${active ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                        ${cases[i].label}
+                    </button>
+                `;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 3 • Merangkai Kalimat Struk Kasir</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Bengkel Operator ${term('ampersand', '& (Ampersand)')} pada Blok <span class="font-mono">Output</span></h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Agar struk kasir terlihat informatif, kita perlu menggabungkan <strong>teks statis</strong> (diapit tanda kutip <span class="font-mono">"..."</span>) dengan <strong>isi laci variabel</strong> (tanpa tanda kutip) menggunakan operator penyambung <strong><span class="font-mono">&amp;</span></strong>:
+                        </p>
+                    </div>
+
+                    <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-4 my-auto">
+                        <!-- Input Ubah Isi Laci Secara Real-Time -->
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <label class="text-[11px] font-bold text-slate-400 block mb-1">Isi Variabel namaProduk (String):</label>
+                                <input type="text" value="${escapeHtml(s12SampleNama)}" oninput="updateS12Vars('nama', this.value)" class="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-xs font-bold text-rose-600 dark:text-rose-400">
+                            </div>
+                            <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <label class="text-[11px] font-bold text-slate-400 block mb-1">Isi Variabel hargaSatuan (Integer):</label>
+                                <input type="number" value="${s12SampleHarga}" oninput="updateS12Vars('harga', this.value)" class="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                            </div>
+                            <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <label class="text-[11px] font-bold text-slate-400 block mb-1">Isi Variabel jumlahBeli (Integer):</label>
+                                <input type="number" value="${s12SampleQty}" oninput="updateS12Vars('qty', this.value)" class="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-xs font-bold text-sky-600 dark:text-sky-400">
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap gap-2">
+                            ${caseBtns}
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+                            <div class="lg:col-span-7 p-4 rounded-2xl bg-slate-900 text-slate-100 font-mono text-xs space-y-1.5">
+                                <div class="text-slate-400">// Ekspresi yang ditulis di dalam blok Output:</div>
+                                <div id="s12ExprBox" class="text-emerald-300 font-bold break-all">${escapeHtml(cur.expr)}</div>
+                            </div>
+                            <div class="lg:col-span-5 p-4 rounded-2xl bg-white dark:bg-slate-900 border-2 ${cur.isOk ? 'border-emerald-500' : 'border-amber-500'} space-y-1">
+                                <div class="text-[11px] font-bold uppercase text-slate-400">Tampilan Hasil di Console Kasir:</div>
+                                <div id="s12ResultBox" class="font-mono text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white break-all">
+                                    ${escapeHtml(cur.result)}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-3.5 rounded-2xl border text-xs font-semibold ${cur.isOk ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200' : 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200'}">
+                            ${escapeHtml(cur.note)}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide13() {
+            return `
+                <div class="slide-enter flex flex-col justify-center h-full my-auto">
+                    <div class="p-8 sm:p-12 rounded-3xl bg-gradient-to-br from-indigo-600 to-slate-900 text-white space-y-6 shadow-lg">
+                        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/15 text-indigo-100 text-xs font-extrabold uppercase tracking-wider">
+                            <i class="fa-solid fa-bridge"></i>
+                            <span>Jembatan Antar Topik • Modul 3 Menuju Modul 4 (Struktur Sequence &amp; Praktikum)</span>
+                        </div>
+
+                        <h2 class="text-2xl sm:text-4xl font-extrabold leading-tight">
+                            Kita sudah menguasai blok Declare, Output Prompt, Input, dan Operator &amp;. Sekarang bagaimana aturan merangkai semuanya menjadi satu alur utuh?
+                        </h2>
+
+                        <p class="text-indigo-100 text-sm sm:text-base leading-relaxed max-w-3xl">
+                            Di <strong>Modul 4 (Slide 14 s/d 18)</strong>, kita akan menguji hukum <strong>Struktur Runtunan (Sequence)</strong> di mana komputer membaca perintah dari atas ke bawah secara mutlak, lalu mempraktikkannya langsung melalui <strong>3 Simulator Interaktif Flowgorithm</strong>.
+                        </p>
+
+                        <div class="pt-2">
+                            <button type="button" onclick="changeSlide(1)" class="px-5 py-3 rounded-xl bg-white text-indigo-700 hover:bg-indigo-50 font-extrabold text-xs sm:text-sm transition inline-flex items-center gap-2 shadow-sm">
+                                <span>Masuk ke Modul 4: Hukum Sequence &amp; Simulator</span>
+                                <i class="fa-solid fa-arrow-right text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide14() {
+            const scenarios = {
+                correct: {
+                    btn: "1. Urutan Sequence Benar (Standar)",
+                    badge: "Urutan Runtunan Valid (Top-to-Bottom)",
+                    title: "Declare -> Output Prompt & Input -> Output Struk",
+                    isOk: true,
+                    desc: "Komputer mengeksekusi dari atas ke bawah tanpa kendala: (1) menyiapkan laci di memori, (2) meminta dan menyimpan ketikan kasir ke dalam laci, lalu (3) menampilkan isi laci ke layar struk.",
+                    steps: [
+                        { type: "Declare", text: "1. Declare String namaProduk", status: "OK: Laci dibuat di memori" },
+                        { type: "Output", text: "2. Output \"Masukkan nama produk:\"", status: "OK: Pesan pemandu tampil" },
+                        { type: "Input", text: "3. Input namaProduk", status: "OK: Laci diisi \"Kopi Susu\"" },
+                        { type: "Output", text: "4. Output \"Pesanan: \" & namaProduk", status: "OK: Tampil \"Pesanan: Kopi Susu\"" }
+                    ]
+                },
+                bug_undeclared: {
+                    btn: "2. Bug Urutan #1: Input Sebelum Declare",
+                    badge: "Pelanggaran Hukum Sequence #1",
+                    title: "Meminta Input Sebelum Laci Variabel Dideklarasikan",
+                    isOk: false,
+                    desc: "Karena komputer membaca dari atas ke bawah, saat komputer tiba di baris pertama (Input namaProduk), laci namaProduk belum ada di memori (baru dideklarasikan di baris bawahnya). Program langsung berhenti (Error)!",
+                    steps: [
+                        { type: "Input", text: "1. Input namaProduk", status: "CRASH! Laci namaProduk belum ada!" },
+                        { type: "Declare", text: "2. Declare String namaProduk", status: "Terlambat! Diletakkan di bawah Input" },
+                        { type: "Output", text: "3. Output \"Pesanan: \" & namaProduk", status: "Tidak pernah dieksekusi" }
+                    ]
+                },
+                bug_early_output: {
+                    btn: "3. Bug Urutan #2: Output Struk Sebelum Input",
+                    badge: "Pelanggaran Hukum Sequence #2",
+                    title: "Mencetak Struk Pesanan Padahal Kasir Belum Diminta Input",
+                    isOk: false,
+                    desc: "Laci namaProduk memang sudah dibuat (Declare), tetapi langsung dicetak ke struk (Output) sebelum blok Input dijalankan. Akibatnya komputer menolak karena laci masih berstatus uninitialized (kosong)!",
+                    steps: [
+                        { type: "Declare", text: "1. Declare String namaProduk", status: "OK: Laci dibuat (masih kosong)" },
+                        { type: "Output", text: "2. Output \"Pesanan: \" & namaProduk", status: "CRASH! Variabel namaProduk masih uninitialized!" },
+                        { type: "Input", text: "3. Input namaProduk", status: "Terlambat! Input diletakkan setelah cetak struk" }
+                    ]
+                }
+            };
+
+            const cur = scenarios[s14Scenario];
+            const keys = ['correct', 'bug_undeclared', 'bug_early_output'];
+            let tabsHtml = '';
+            for (let i = 0; i < keys.length; i++) {
+                const k = keys[i];
+                const active = s14Scenario === k;
+                tabsHtml += `
+                    <button type="button" onclick="setS14Scenario('${k}')" class="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm border transition ${active ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                        ${scenarios[k].btn}
+                    </button>
+                `;
+            }
+
+            const stepsHtml = cur.steps.map(function (st) {
+                const isErr = st.status.indexOf('CRASH') !== -1;
+                return `
+                    <div class="p-3 rounded-2xl border flex items-center justify-between gap-3 ${isErr ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-400 text-rose-900 dark:text-rose-200' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800'}">
+                        <span class="font-mono text-xs font-extrabold">${escapeHtml(st.text)}</span>
+                        <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-md shrink-0 ${isErr ? 'bg-rose-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'}">${escapeHtml(st.status)}</span>
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 4 • Hukum Struktur Runtunan (Sequence)</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Laboratorium Detektif Bug ${term('sequence', 'Sequence (Urutan Eksekusi)')}</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Dalam struktur <strong>Sequence</strong>, komputer mengeksekusi blok secara kaku dari atas ke bawah. Jika urutan blok terbalik sedikit saja, program akan gagal. Uji ke-3 skenario urutan di bawah ini:
+                        </p>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2">
+                        ${tabsHtml}
+                    </div>
+
+                    <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 grid grid-cols-1 lg:grid-cols-12 gap-5 items-center my-auto">
+                        <div class="lg:col-span-6 space-y-2">
+                            ${stepsHtml}
+                        </div>
+                        <div class="lg:col-span-6 p-5 rounded-2xl border-2 ${cur.isOk ? 'bg-emerald-50/60 dark:bg-emerald-950/30 border-emerald-400' : 'bg-rose-50/60 dark:bg-rose-950/30 border-rose-400'} space-y-2.5">
+                            <span class="text-xs font-extrabold uppercase tracking-wider ${cur.isOk ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'}">${cur.badge}</span>
+                            <h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">${cur.title}</h3>
+                            <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed">${cur.desc}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide15() {
+            const getNodeClass = function (idx) {
+                if (simStepIndex !== idx) return 'fg-node';
+                if (simWaitingVar) return 'fg-node fg-node-waiting';
+                return 'fg-node fg-node-active';
+            };
+
+            let chatHtml = '';
+            if (simChatLog.length === 0) {
+                chatHtml = `<div class="text-slate-400 text-center my-auto font-sans text-xs py-6">Tekan tombol <strong>Run Otomatis</strong> atau <strong>Step</strong> di atas. Perhatikan bagaimana setiap blok <strong>Output Prompt</strong> memandu Anda sebelum blok <strong>Input</strong> meminta ketikan!</div>`;
+            } else {
+                chatHtml = simChatLog.map(function (msg) {
+                    if (msg.type === 'out') {
+                        return `<div class="self-start bg-emerald-100 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-800 text-emerald-950 dark:text-emerald-200 px-3 py-1.5 rounded-xl rounded-bl-xs font-semibold">${msg.html}</div>`;
+                    } else if (msg.type === 'in') {
+                        return `<div class="self-end bg-indigo-100 dark:bg-indigo-950/80 border border-indigo-300 dark:border-indigo-800 text-indigo-950 dark:text-indigo-200 px-3 py-1.5 rounded-xl rounded-br-xs font-semibold">${escapeHtml(msg.text)}</div>`;
+                    } else {
+                        return `<div class="text-xs text-indigo-600 dark:text-indigo-400 font-bold">${escapeHtml(msg.text)}</div>`;
+                    }
+                }).join('');
+            }
+
+            let chips = [];
+            let placeholder = 'Menunggu giliran blok Input...';
+            let promptLabel = 'Kotak Input Console (Aktif saat eksekusi tiba di simbol Input):';
+            if (simWaitingVar === 'namaProduk') {
+                chips = ['Kopi Susu Gula Aren', 'Roti Bakar Cokelat', 'Mie Goreng Spesial'];
+                placeholder = 'Ketik nama produk pesanan...';
+                promptLabel = 'Input namaProduk (String - teks nama menu):';
+            } else if (simWaitingVar === 'hargaSatuan') {
+                chips = ['15000', '12000', '15.000 (Coba Error)'];
+                placeholder = 'Ketik harga satuan (angka bulat murni)...';
+                promptLabel = 'Input hargaSatuan (Integer - angka bulat tanpa titik/Rp):';
+            } else if (simWaitingVar === 'jumlahBeli') {
+                chips = ['2', '3', '5'];
+                placeholder = 'Ketik jumlah porsi pesanan...';
+                promptLabel = 'Input jumlahBeli (Integer - angka bulat):';
+            }
+
+            const chipsHtml = chips.map(function (c) {
+                return `<button type="button" onclick="fillSimQuickChip('${c}')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-indigo-100 dark:bg-slate-800 dark:hover:bg-indigo-950 text-slate-700 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700 transition">${c}</button>`;
+            }).join('');
+
+            const valNama = simMemory.namaProduk === null ? '<em>uninitialized</em>' : (simMemory.namaProduk === '' ? '"" (siap)' : '"' + escapeHtml(simMemory.namaProduk) + '"');
+            const valHarga = simMemory.hargaSatuan === null ? '<em>uninitialized</em>' : (simMemory.hargaSatuan === 0 ? '0 (siap)' : simMemory.hargaSatuan);
+            const valQty = simMemory.jumlahBeli === null ? '<em>uninitialized</em>' : (simMemory.jumlahBeli === 0 ? '0 (siap)' : simMemory.jumlahBeli);
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-3.5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 4 • Simulasi Praktik 1 dari 3 (Sub-CPMK 1.2)</span>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Live Simulator Flowgorithm: Alur Pencatatan Pesanan Warung Digital</h2>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2 shrink-0">
+                            <button type="button" onclick="runFullFgSim()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-xs">
+                                <i class="fa-solid fa-play"></i>
+                                <span>Run Otomatis</span>
+                            </button>
+                            <button type="button" onclick="stepFgSim()" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-xs">
+                                <i class="fa-solid fa-forward-step"></i>
+                                <span>Step (Per Blok)</span>
+                            </button>
+                            <button type="button" onclick="resetFgSim()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs transition">
+                                <i class="fa-solid fa-rotate-left mr-1"></i>Reset
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200">
+                        ${simBannerText}
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch my-auto">
+                        <!-- Kiri: Flowchart Canvas (11 Blok Sequence Murni) -->
+                        <div class="lg:col-span-5 fg-canvas rounded-2xl border border-slate-200 dark:border-slate-800 p-3 flex flex-col items-center justify-center">
+                            <div class="text-[11px] font-bold text-slate-400 uppercase mb-1">Flowchart Sequence Pencatatan Pesanan</div>
+                            <svg class="w-full max-w-[285px] h-auto" viewBox="0 0 320 445">
+                                <line x1="160" y1="26" x2="160" y2="414" stroke="#64748b" stroke-width="2.2"/>
+
+                                <g class="${getNodeClass(0)}" onclick="stepToOrFocusNode()">
+                                    <rect x="95" y="4" width="130" height="24" rx="12" fill="#f3e8ff" stroke="#7e22ce" stroke-width="2"/>
+                                    <text x="160" y="20" text-anchor="middle" fill="#581c87" font-size="11" font-weight="700">Main</text>
+                                </g>
+
+                                <g class="${getNodeClass(1)}" onclick="stepToOrFocusNode()">
+                                    <polygon points="42,36 278,36 292,50 278,64 42,64 28,50" fill="#fef9c3" stroke="#b45309" stroke-width="2"/>
+                                    <text x="160" y="54" text-anchor="middle" fill="#78350f" font-size="10.5" font-weight="700">Declare String namaProduk</text>
+                                </g>
+
+                                <g class="${getNodeClass(2)}" onclick="stepToOrFocusNode()">
+                                    <polygon points="28,72 292,72 306,86 292,100 28,100 14,86" fill="#fef9c3" stroke="#b45309" stroke-width="2"/>
+                                    <text x="160" y="90" text-anchor="middle" fill="#78350f" font-size="10" font-weight="700">Declare Integer hargaSatuan, jumlahBeli</text>
+                                </g>
+
+                                <g class="${getNodeClass(3)}" onclick="stepToOrFocusNode()">
+                                    <polygon points="38,108 292,108 278,134 24,134" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+                                    <text x="160" y="125" text-anchor="middle" fill="#14532d" font-size="10" font-weight="700">Output "Masukkan nama produk:"</text>
+                                </g>
+
+                                <g class="${getNodeClass(4)}" onclick="stepToOrFocusNode()">
+                                    <polygon points="52,142 280,142 266,168 38,168" fill="#e0f2fe" stroke="#0284c7" stroke-width="2"/>
+                                    <text x="160" y="159" text-anchor="middle" fill="#0c4a6e" font-size="10.5" font-weight="700">Input namaProduk</text>
+                                </g>
+
+                                <g class="${getNodeClass(5)}" onclick="stepToOrFocusNode()">
+                                    <polygon points="38,176 292,176 278,202 24,202" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+                                    <text x="160" y="193" text-anchor="middle" fill="#14532d" font-size="10" font-weight="700">Output "Masukkan harga satuan:"</text>
+                                </g>
+
+                                <g class="${getNodeClass(6)}" onclick="stepToOrFocusNode()">
+                                    <polygon points="52,210 280,210 266,236 38,236" fill="#e0f2fe" stroke="#0284c7" stroke-width="2"/>
+                                    <text x="160" y="227" text-anchor="middle" fill="#0c4a6e" font-size="10.5" font-weight="700">Input hargaSatuan</text>
+                                </g>
+
+                                <g class="${getNodeClass(7)}" onclick="stepToOrFocusNode()">
+                                    <polygon points="38,244 292,244 278,270 24,270" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+                                    <text x="160" y="261" text-anchor="middle" fill="#14532d" font-size="10" font-weight="700">Output "Masukkan jumlah beli:"</text>
+                                </g>
+
+                                <g class="${getNodeClass(8)}" onclick="stepToOrFocusNode()">
+                                    <polygon points="52,278 280,278 266,304 38,304" fill="#e0f2fe" stroke="#0284c7" stroke-width="2"/>
+                                    <text x="160" y="295" text-anchor="middle" fill="#0c4a6e" font-size="10.5" font-weight="700">Input jumlahBeli</text>
+                                </g>
+
+                                <g class="${getNodeClass(9)}" onclick="stepToOrFocusNode()">
+                                    <polygon points="28,314 302,314 288,344 14,344" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+                                    <text x="160" y="333" text-anchor="middle" fill="#14532d" font-size="9.8" font-weight="700">Output "Pesanan: " &amp; namaProduk &amp; ...</text>
+                                </g>
+
+                                <g class="${getNodeClass(10)}" onclick="stepToOrFocusNode()">
+                                    <rect x="95" y="414" width="130" height="24" rx="12" fill="#f3e8ff" stroke="#7e22ce" stroke-width="2"/>
+                                    <text x="160" y="430" text-anchor="middle" fill="#581c87" font-size="11" font-weight="700">End</text>
+                                </g>
+                            </svg>
+                        </div>
+
+                        <!-- Kanan: Console & Variable Watch -->
+                        <div class="lg:col-span-7 flex flex-col justify-between gap-3.5">
+                            <!-- Console Window -->
+                            <div class="rounded-2xl border-2 ${simWaitingVar ? 'border-indigo-600 shadow-sm' : 'border-slate-200 dark:border-slate-800'} overflow-hidden bg-white dark:bg-slate-900">
+                                <div class="bg-slate-100 dark:bg-slate-800 px-3.5 py-2 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                                    <span class="text-xs font-extrabold text-slate-700 dark:text-slate-200">Console Window (Interaksi Output Prompt &amp; Input)</span>
+                                    ${simWaitingVar ? '<span class="px-2 py-0.5 rounded bg-indigo-600 text-white text-[10px] font-extrabold animate-pulse">MENUNGGU INPUT KASIR</span>' : ''}
+                                </div>
+
+                                <div id="fgConsoleChat" class="p-3 bg-slate-50 dark:bg-slate-950/60 min-h-[115px] max-h-[150px] overflow-y-auto flex flex-col gap-2 font-mono text-xs">
+                                    ${chatHtml}
+                                </div>
+
+                                <form onsubmit="submitManualConsoleInput(event)" class="p-3 border-t border-slate-200 dark:border-slate-800">
+                                    <div class="text-xs font-bold ${simWaitingVar ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'} mb-1.5">
+                                        ${promptLabel}
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <input id="fgConsoleInputBox" type="text" ${simWaitingVar ? '' : 'disabled'} placeholder="${placeholder}" class="flex-1 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50">
+                                        <button type="submit" ${simWaitingVar ? '' : 'disabled'} class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white font-bold text-xs transition shrink-0">
+                                            Enter ↵
+                                        </button>
+                                    </div>
+
+                                    ${chips.length > 0 ? `<div class="mt-2 flex flex-wrap items-center gap-1.5"><span class="text-[11px] font-semibold text-slate-400">Ketik cepat:</span>${chipsHtml}</div>` : ''}
+                                    ${simInputError ? `<div class="mt-2 p-2 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs font-bold">${escapeHtml(simInputError)}</div>` : ''}
+                                </form>
+                            </div>
+
+                            <!-- Variable Watch Window -->
+                            <div class="rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden bg-white dark:bg-slate-900">
+                                <div class="bg-slate-100 dark:bg-slate-800 px-3.5 py-2 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between text-xs">
+                                    <span class="font-extrabold text-slate-700 dark:text-slate-200">Variable Watch Window (3 Variabel Pesanan)</span>
+                                    <span>Status awal: ${term('uninitialized', 'uninitialized')}</span>
+                                </div>
+                                <table class="w-full text-left font-mono text-xs">
+                                    <thead class="bg-slate-50 dark:bg-slate-800/60 text-slate-500 border-b border-slate-200 dark:border-slate-800">
+                                        <tr>
+                                            <th class="p-2">Nama Variabel (camelCase)</th>
+                                            <th class="p-2">Tipe Data</th>
+                                            <th class="p-2">Isi Memori Saat Ini</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                                        <tr>
+                                            <td class="p-2 font-bold">namaProduk</td>
+                                            <td class="p-2 text-rose-600 dark:text-rose-400">String</td>
+                                            <td class="p-2 text-rose-600 dark:text-rose-400 font-bold">${valNama}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="p-2 font-bold">hargaSatuan</td>
+                                            <td class="p-2 text-indigo-600 dark:text-indigo-400">Integer</td>
+                                            <td class="p-2 text-indigo-600 dark:text-indigo-400 font-bold">${valHarga}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="p-2 font-bold">jumlahBeli</td>
+                                            <td class="p-2 text-sky-600 dark:text-sky-400">Integer</td>
+                                            <td class="p-2 text-sky-600 dark:text-sky-400 font-bold">${valQty}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderCanvasSlotSvgP2(slotNum, type, textContent, placeholderLabel) {
+            const isSelected = activeBuilderSlot === slotNum;
+            const strokeColor = isSelected ? '#4f46e5' : '#94a3b8';
+            const bgFill = isSelected ? '#eef2ff' : '#f8fafc';
+
+            if (!type) {
+                return `
+                    <rect x="30" y="0" width="260" height="36" rx="8" fill="${bgFill}" stroke="${strokeColor}" stroke-width="2" stroke-dasharray="6,4"/>
+                    <text x="160" y="23" text-anchor="middle" fill="${strokeColor}" font-size="11" font-weight="700">+ ${placeholderLabel}</text>
+                `;
+            }
+            if (type === 'Declare') {
+                return `
+                    <polygon points="40,0 280,0 296,18 280,36 40,36 24,18" fill="#fef9c3" stroke="#b45309" stroke-width="2"/>
+                    <text x="160" y="23" text-anchor="middle" fill="#78350f" font-size="11" font-weight="700">Declare: ${textContent}</text>
+                `;
+            }
+            if (type === 'Input') {
+                return `
+                    <polygon points="44,0 290,0 276,36 30,36" fill="#e0f2fe" stroke="#0284c7" stroke-width="2"/>
+                    <text x="160" y="23" text-anchor="middle" fill="#0c4a6e" font-size="11" font-weight="700">Input: ${textContent}</text>
+                `;
+            }
+            if (type === 'Output') {
+                return `
+                    <polygon points="44,0 290,0 276,36 30,36" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+                    <text x="160" y="23" text-anchor="middle" fill="#14532d" font-size="11" font-weight="700">Output: ${textContent}</text>
+                `;
+            }
+            return '';
+        }
+
+        function renderSlide16() {
+            const slotMeta = {
+                1: "Tugas Slot 1: Deklarasikan variabel String namaProduk",
+                2: "Tugas Slot 2: Deklarasikan variabel Integer hargaSatuan, jumlahBeli",
+                3: "Tugas Slot 3: Tampilkan Output Prompt \"Masukkan nama produk:\"",
+                4: "Tugas Slot 4: Baca ketikan kasir ke variabel namaProduk",
+                5: "Tugas Slot 5: Tampilkan ringkasan struk pesanan ke layar"
+            };
+
+            let slotTabsHtml = '';
+            for (let i = 1; i <= 5; i++) {
+                const active = activeBuilderSlot === i;
+                slotTabsHtml += `
+                    <button type="button" onclick="selectBuilderSlot(${i})" class="px-3 py-1.5 rounded-xl font-bold text-xs transition ${active ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">
+                        Slot ${i}
+                    </button>
+                `;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 4 • Simulasi Praktik 2 dari 3</span>
+                            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Rakit Flowchart Pencatatan Pesanan di Kanvas</h2>
+                        </div>
+                        <button type="button" onclick="resetBuilderCanvas()" class="self-start sm:self-center px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-rose-600 dark:text-rose-400 font-bold text-xs transition">
+                            <i class="fa-solid fa-trash-can mr-1"></i>Kosongkan Kanvas
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <!-- Kanvas Kiri -->
+                        <div class="lg:col-span-5 fg-canvas rounded-3xl border border-slate-200 dark:border-slate-800 p-4 flex flex-col items-center justify-center">
+                            <svg class="w-full max-w-[280px] h-auto" viewBox="0 0 320 350">
+                                <line x1="160" y1="28" x2="160" y2="316" stroke="#64748b" stroke-width="2.2"/>
+
+                                <rect x="95" y="4" width="130" height="24" rx="12" fill="#f3e8ff" stroke="#7e22ce" stroke-width="2"/>
+                                <text x="160" y="20" text-anchor="middle" fill="#581c87" font-size="11.5" font-weight="700">Main</text>
+
+                                <g transform="translate(0, 36)" class="cursor-pointer" onclick="selectBuilderSlot(1)">
+                                    ${renderCanvasSlotSvgP2(1, builderSlots[1], 'String namaProduk', 'Slot 1: Declare String')}
+                                </g>
+                                <g transform="translate(0, 80)" class="cursor-pointer" onclick="selectBuilderSlot(2)">
+                                    ${renderCanvasSlotSvgP2(2, builderSlots[2], 'Integer hargaSatuan, jumlahBeli', 'Slot 2: Declare Integer')}
+                                </g>
+                                <g transform="translate(0, 124)" class="cursor-pointer" onclick="selectBuilderSlot(3)">
+                                    ${renderCanvasSlotSvgP2(3, builderSlots[3], '"Masukkan produk:"', 'Slot 3: Output Prompt')}
+                                </g>
+                                <g transform="translate(0, 168)" class="cursor-pointer" onclick="selectBuilderSlot(4)">
+                                    ${renderCanvasSlotSvgP2(4, builderSlots[4], 'namaProduk', 'Slot 4: Input Produk')}
+                                </g>
+
+                                <g transform="translate(0, 212)">
+                                    <polygon points="52,0 282,0 270,26 40,26" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.8"/>
+                                    <text x="160" y="17" text-anchor="middle" fill="#0c4a6e" font-size="10.5" font-weight="700">Input hargaSatuan &amp; jumlahBeli (1 per 1)</text>
+                                </g>
+
+                                <g transform="translate(0, 248)" class="cursor-pointer" onclick="selectBuilderSlot(5)">
+                                    ${renderCanvasSlotSvgP2(5, builderSlots[5], '"Pesanan: " & namaProduk', 'Slot 5: Output Struk')}
+                                </g>
+
+                                <rect x="95" y="316" width="130" height="24" rx="12" fill="#f3e8ff" stroke="#7e22ce" stroke-width="2"/>
+                                <text x="160" y="332" text-anchor="middle" fill="#581c87" font-size="11.5" font-weight="700">End</text>
+                            </svg>
+                        </div>
+
+                        <!-- Pemilih Simbol Kanan -->
+                        <div class="lg:col-span-7 p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-4">
+                            <div class="space-y-4">
+                                <div class="flex flex-wrap gap-2">
+                                    ${slotTabsHtml}
+                                </div>
+
+                                <div class="p-4 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800">
+                                    <div class="font-extrabold text-indigo-900 dark:text-indigo-200 text-sm">${escapeHtml(slotMeta[activeBuilderSlot])}</div>
+                                    <p class="text-xs text-indigo-700 dark:text-indigo-300 mt-0.5">Klik simbol Flowgorithm yang tepat untuk dipasang ke Slot ${activeBuilderSlot}:</p>
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                    <button type="button" onclick="assignSymbolToSlot('Declare')" class="p-3.5 rounded-2xl border-2 border-amber-300 bg-white dark:bg-slate-900 hover:bg-amber-50 flex flex-col items-center gap-2 transition">
+                                        <svg width="110" height="32" viewBox="0 0 110 32"><polygon points="14,3 96,3 107,16 96,29 14,29 3,16" fill="#fef9c3" stroke="#b45309" stroke-width="2"/><text x="55" y="20" text-anchor="middle" fill="#78350f" font-weight="700" font-size="11">Declare</text></svg>
+                                        <span class="text-xs font-bold text-slate-800 dark:text-slate-200">Declare (Segi Enam)</span>
+                                    </button>
+
+                                    <button type="button" onclick="assignSymbolToSlot('Output')" class="p-3.5 rounded-2xl border-2 border-emerald-300 bg-white dark:bg-slate-900 hover:bg-emerald-50 flex flex-col items-center gap-2 transition">
+                                        <svg width="110" height="32" viewBox="0 0 110 32"><polygon points="16,3 106,3 94,29 4,29" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/><text x="55" y="20" text-anchor="middle" fill="#14532d" font-weight="700" font-size="11">Output</text></svg>
+                                        <span class="text-xs font-bold text-slate-800 dark:text-slate-200">Output (Jajar Genjang Hijau)</span>
+                                    </button>
+
+                                    <button type="button" onclick="assignSymbolToSlot('Input')" class="p-3.5 rounded-2xl border-2 border-sky-300 bg-white dark:bg-slate-900 hover:bg-sky-50 flex flex-col items-center gap-2 transition">
+                                        <svg width="110" height="32" viewBox="0 0 110 32"><polygon points="16,3 106,3 94,29 4,29" fill="#e0f2fe" stroke="#0284c7" stroke-width="2"/><text x="55" y="20" text-anchor="middle" fill="#0c4a6e" font-weight="700" font-size="11">Input</text></svg>
+                                        <span class="text-xs font-bold text-slate-800 dark:text-slate-200">Input (Jajar Genjang Biru)</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="space-y-2">
+                                <button type="button" onclick="checkBuilderAnswer()" class="w-full py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm transition shadow-xs">
+                                    Periksa Rangkaian Flowchart Pertemuan 2
+                                </button>
+                                ${builderFeedback.text ? `<div class="p-3 rounded-xl text-xs font-bold text-center ${builderFeedback.type === 'success' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'}">${escapeHtml(builderFeedback.text)}</div>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function getMiniSymbolSvg(type, label) {
+            if (type === 'Main' || type === 'End') {
+                return `<svg width="106" height="26" viewBox="0 0 106 26" class="shrink-0"><rect x="4" y="2" width="98" height="22" rx="11" fill="#f3e8ff" stroke="#7e22ce" stroke-width="1.8"/><text x="53" y="17" text-anchor="middle" font-size="9.5" font-weight="700" fill="#581c87">${label}</text></svg>`;
+            }
+            if (type === 'Declare') {
+                return `<svg width="106" height="26" viewBox="0 0 106 26" class="shrink-0"><polygon points="12,2 94,2 103,13 94,24 12,24 3,13" fill="#fef9c3" stroke="#b45309" stroke-width="1.8"/><text x="53" y="17" text-anchor="middle" font-size="9.5" font-weight="700" fill="#78350f">${label}</text></svg>`;
+            }
+            if (type === 'Input') {
+                return `<svg width="106" height="26" viewBox="0 0 106 26" class="shrink-0"><polygon points="12,2 102,2 94,24 4,24" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.8"/><text x="53" y="17" text-anchor="middle" font-size="9.5" font-weight="700" fill="#0c4a6e">${label}</text></svg>`;
+            }
+            if (type === 'Output') {
+                return `<svg width="106" height="26" viewBox="0 0 106 26" class="shrink-0"><polygon points="12,2 102,2 94,24 4,24" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/><text x="53" y="17" text-anchor="middle" font-size="9.5" font-weight="700" fill="#14532d">${label}</text></svg>`;
+            }
+            return '';
+        }
+
+        function renderSlide17() {
+            let rowsHtml = '';
+            for (let index = 0; index < seqStepsOrder.length; index++) {
+                const item = seqStepsOrder[index];
+                const isPosCorrect = item.id === index + 1;
+                let borderClass = 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900';
+                let statusBadge = '';
+
+                if (seqShowValidation) {
+                    if (isPosCorrect) {
+                        borderClass = 'border-emerald-500 bg-emerald-50/40 dark:bg-emerald-950/30';
+                        statusBadge = '<span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 text-[11px] font-bold">✓ Tepat</span>';
+                    } else {
+                        borderClass = 'border-rose-400 bg-rose-50/40 dark:bg-rose-950/30';
+                        statusBadge = '<span class="px-2 py-0.5 rounded bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 text-[11px] font-bold">✗ Geser</span>';
+                    }
+                }
+
+                rowsHtml += `
+                    <div draggable="true" ondragstart="onSeqDragStart(event, ${index})" ondragover="onSeqDragOver(event, ${index})" ondragleave="onSeqDragLeave(event)" ondrop="onSeqDrop(event, ${index})" ondragend="onSeqDragEnd()" class="draggable-step border-2 ${borderClass} rounded-2xl p-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                            <span class="text-slate-400 font-extrabold text-sm px-1 cursor-grab select-none">⋮⋮</span>
+                            <span class="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center shrink-0">${index + 1}</span>
+                            ${getMiniSymbolSvg(item.type, item.label)}
+                            <span class="text-xs font-semibold text-slate-800 dark:text-slate-200 leading-snug">${escapeHtml(item.text)}</span>
+                        </div>
+                        <div class="flex items-center justify-end gap-1.5 shrink-0">
+                            ${statusBadge}
+                            <button type="button" onclick="moveSeqStep(${index}, -1)" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-indigo-600 hover:text-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs transition" title="Geser Naik">▲</button>
+                            <button type="button" onclick="moveSeqStep(${index}, 1)" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-indigo-600 hover:text-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs transition" title="Geser Turun">▼</button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-3.5">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 4 • Simulasi Praktik 3 dari 3</span>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Susun 8 Langkah Sequence Pencatatan Pesanan "Warung Digital"</h2>
+                        </div>
+                        <span class="text-xs font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200 dark:border-indigo-800 px-3 py-1 rounded-xl">
+                            Tarik kartu (Drag &amp; Drop) atau klik ▲ / ▼
+                        </span>
+                    </div>
+
+                    <div class="space-y-1.5 my-auto">
+                        ${rowsHtml}
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-3">
+                        <button type="button" onclick="checkSeqOrder()" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm transition shadow-xs">
+                            Periksa Urutan Sequence
+                        </button>
+                        <button type="button" onclick="shuffleSeqSteps()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs sm:text-sm transition">
+                            Acak Ulang
+                        </button>
+                        ${seqFeedbackText ? `<span class="text-xs sm:text-sm font-bold text-indigo-600 dark:text-indigo-400">${escapeHtml(seqFeedbackText)}</span>` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide18() {
+            const renderFb = function (qNum) {
+                const fb = selfCheckFeedback[qNum];
+                if (!fb) return '';
+                const cls = fb.ok
+                    ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200'
+                    : 'bg-rose-50 dark:bg-rose-950/50 border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-200';
+                return `<div class="mt-2 p-2.5 rounded-xl border text-xs font-bold ${cls}">${escapeHtml(fb.msg)}</div>`;
+            };
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Penutup &amp; Evaluasi Mandiri Pertemuan 2</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Uji Pemahaman Sub-CPMK 1.2 &amp; Persiapan Pertemuan 3</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Uji penguasaan konsep Deklarasi Variabel, I/O, dan Sequence Anda melalui 3 soal kasus di bawah ini:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <div class="lg:col-span-7 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-3.5">
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Cek Pengetahuan Mandiri (Klik Jawaban yang Tepat)</h3>
+
+                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <div class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white mb-2">1. Manakah penulisan nama variabel (${term('identifier', 'Identifier')}) di bawah ini yang DITERIMA oleh aplikasi Flowgorithm?</div>
+                                <div class="flex flex-wrap gap-2">
+                                    <button type="button" onclick="answerSelfCheck(1, false, 'Salah! Flowgorithm menolak penggunaan garis bawah (underscore _) maupun spasi pada nama variabel.')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 font-mono font-semibold text-xs">harga_satuan</button>
+                                    <button type="button" onclick="answerSelfCheck(1, true, 'Tepat! hargaSatuan menggunakan gaya camelCase (diawali huruf, tanpa spasi, dan tanpa simbol underscore).')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 font-mono font-semibold text-xs">hargaSatuan</button>
+                                </div>
+                                ${renderFb(1)}
+                            </div>
+
+                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <div class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white mb-2">2. Jika variabel <span class="font-mono">jumlahBeli</span> awalnya diisi <span class="font-mono">2</span>, lalu di baris bawahnya dijalankan lagi <span class="font-mono">Input jumlahBeli</span> dengan ketikan <span class="font-mono">5</span>, berapa isi <span class="font-mono">jumlahBeli</span> sekarang?</div>
+                                <div class="flex flex-wrap gap-2">
+                                    <button type="button" onclick="answerSelfCheck(2, true, 'Benar! Sesuai sifat Overwrite, nilai baru (5) langsung menimpa dan menghapus nilai lama (2).')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 font-semibold text-xs">5 (Nilai lama tertimpa / Overwrite)</button>
+                                    <button type="button" onclick="answerSelfCheck(2, false, 'Kurang tepat. Input baru tidak menjumlahkan nilai lama, melainkan menimpanya (Overwrite) menjadi 5.')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 font-semibold text-xs">7 (Dijumlahkan otomatis)</button>
+                                </div>
+                                ${renderFb(2)}
+                            </div>
+
+                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <div class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white mb-2">3. Mengapa ekspresi <span class="font-mono">Output "Pesanan: namaProduk"</span> tidak memunculkan tulisan "Kopi Susu" yang diketik kasir?</div>
+                                <div class="flex flex-wrap gap-2">
+                                    <button type="button" onclick="answerSelfCheck(3, true, 'Tepat sekali! Karena namaProduk berada di dalam tanda kutip, komputer menganggapnya teks biasa. Seharusnya ditulis: Output \"Pesanan: \" & namaProduk')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 font-semibold text-xs">Karena namaProduk ikut terkurung di dalam tanda kutip ("...")</button>
+                                    <button type="button" onclick="answerSelfCheck(3, false, 'Bukan karena tipe datanya, melainkan karena nama variabel tidak boleh diletakkan di dalam tanda kutip.')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 font-semibold text-xs">Karena variabel bertipe String tidak bisa di-Output</button>
+                                </div>
+                                ${renderFb(3)}
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-5 flex flex-col justify-between gap-4">
+                            <div class="p-6 rounded-3xl bg-slate-900 text-white space-y-3">
+                                <span class="inline-block px-2.5 py-0.5 rounded-md bg-indigo-500/30 text-indigo-300 font-bold text-[11px] uppercase tracking-wider">
+                                    Tugas Praktikum Mandiri Minggu 2
+                                </span>
+                                <h3 class="text-base sm:text-lg font-extrabold leading-snug">
+                                    Bangun File <span class="font-mono text-indigo-300">PencatatanPesanan_WarungDigital.fprg</span>
+                                </h3>
+                                <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                                    Buka aplikasi <strong>Flowgorithm</strong> di laptop Anda, lalu rancang flowchart pencatatan pesanan yang meminta input <span class="font-mono text-amber-300">namaPembeli</span>, <span class="font-mono text-amber-300">namaProduk</span>, <span class="font-mono text-amber-300">hargaSatuan</span>, dan <span class="font-mono text-amber-300">jumlahBeli</span> lengkap dengan <em>Output Prompt</em> dan struk ringkasannya!
+                                </p>
+                            </div>
+
+                            <div class="p-5 rounded-3xl bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 space-y-2">
+                                <span class="inline-block px-2.5 py-0.5 rounded-md bg-indigo-600 text-white font-bold text-[11px]">MINGGU DEPAN • PERTEMUAN 3 (Sub-CPMK 1.2 • 3%)</span>
+                                <h3 class="font-extrabold text-slate-900 dark:text-white text-sm sm:text-base">Operasi Aritmatika &amp; Logika Relasional</h3>
+                                <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    Minggu depan kita akan menghidupkan kalkulator kasir Warung Digital: menghitung <strong>total harga</strong>, <strong>potongan diskon</strong>, serta <strong>kalkulator modal kulakan dan laba bersih transaksi</strong> menggunakan blok <span class="font-mono font-bold">Assign</span>!
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        const SLIDES = [
+            { id: 1, category: "Modul 1 • Orientasi", title: "Deklarasi Variabel, I/O, & Struktur Sequence (Sub-CPMK 1.2)", render: renderSlide1 },
+            { id: 2, category: "Modul 1 • Konteks Bisnis", title: "Mengapa Pencatatan Pesanan Wajib Dipisah ke Variabel?", render: renderSlide2 },
+            { id: 3, category: "Modul 1 • Bedah Form", title: "Inspektor Form Kasir Warung Digital ke Memori", render: renderSlide3 },
+            { id: 4, category: "Jembatan Topik 1 ke 2", title: "Dari Form Kasir Menuju Deklarasi Memori Komputer", render: renderSlide4 },
+            { id: 5, category: "Modul 2 • Konsep Memori", title: "Apa Itu Deklarasi Variabel & Mengapa Wajib di Awal?", render: renderSlide5 },
+            { id: 6, category: "Modul 2 • Tipe Data", title: "Laboratorium 4 Tipe Data Resmi di Flowgorithm", render: renderSlide6 },
+            { id: 7, category: "Modul 2 • Identifier", title: "Validator Penamaan Variabel (Identifier) & camelCase", render: renderSlide7 },
+            { id: 8, category: "Modul 2 • Siklus Memori", title: "Siklus Hidup Variabel & Hukum Overwrite (Tertimpa)", render: renderSlide8 },
+            { id: 9, category: "Jembatan Topik 2 ke 3", title: "Dari Laci Memori Menuju Komunikasi Input/Output (I/O)", render: renderSlide9 },
+            { id: 10, category: "Modul 3 • Pola I/O", title: "Pola Emas I/O: Mengapa Wajib Ada Output Prompt?", render: renderSlide10 },
+            { id: 11, category: "Modul 3 • Aturan Input", title: "Aturan Flowgorithm: 1 Simbol Input = 1 Variabel", render: renderSlide11 },
+            { id: 12, category: "Modul 3 • Operator &", title: "Bengkel Operator & (Ampersand) Perangkai Struk Kasir", render: renderSlide12 },
+            { id: 13, category: "Jembatan Topik 3 ke 4", title: "Menuju Hukum Struktur Sequence & Praktikum Simulator", render: renderSlide13 },
+            { id: 14, category: "Modul 4 • Hukum Sequence", title: "Detektif Bug Sequence (Urutan Eksekusi Top-to-Bottom)", render: renderSlide14 },
+            { id: 15, category: "Modul 4 • Simulasi 1", title: "Live Simulator Flowgorithm: Pencatatan Pesanan", render: renderSlide15 },
+            { id: 16, category: "Modul 4 • Simulasi 2", title: "Rakit Flowchart Pencatatan Pesanan di Kanvas", render: renderSlide16 },
+            { id: 17, category: "Modul 4 • Simulasi 3", title: "Drag & Drop 8 Langkah Sequence Warung Digital", render: renderSlide17 },
+            { id: 18, category: "Evaluasi & Penutup", title: "Uji Pemahaman Sub-CPMK 1.2 & Persiapan Minggu 3", render: renderSlide18 }
+        ];
+
+        function renderCurrentSlide() {
+            const slide = SLIDES[currentSlideIndex];
+            const viewport = document.getElementById('slideViewport');
+            viewport.innerHTML = slide.render();
+
+            const pct = Math.round(((currentSlideIndex + 1) / TOTAL_SLIDES) * 100);
+            document.getElementById('topProgressBar').style.width = pct + '%';
+            document.getElementById('slideCounterBadge').textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES;
+            document.getElementById('mobileFooterCounter').textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES;
+            document.getElementById('slideCategoryPill').textContent = slide.category;
+            document.getElementById('headerSlideTitle').textContent = slide.title;
+
+            const prevBtn = document.getElementById('prevSlideBtn');
+            const nextBtn = document.getElementById('nextSlideBtn');
+            const nextBtnText = document.getElementById('nextBtnText');
+
+            prevBtn.disabled = currentSlideIndex === 0;
+            if (currentSlideIndex === TOTAL_SLIDES - 1) {
+                nextBtnText.textContent = "Selesai";
+                nextBtn.disabled = true;
+            } else {
+                nextBtnText.textContent = "Selanjutnya";
+                nextBtn.disabled = false;
+            }
+
+            renderDotsAndDrawer();
+
+            if (currentSlideIndex === 14 && simWaitingVar) {
+                const inputEl = document.getElementById('fgConsoleInputBox');
+                if (inputEl) inputEl.focus();
+            }
+        }
+
+        function renderDotsAndDrawer() {
+            const dotsContainer = document.getElementById('slideDotsContainer');
+            let dotsHtml = '';
+            let drawerHtml = '';
+
+            for (let idx = 0; idx < SLIDES.length; idx++) {
+                const s = SLIDES[idx];
+                const isActive = idx === currentSlideIndex;
+                const dotClass = isActive
+                    ? 'w-6 bg-indigo-600 dark:bg-indigo-400'
+                    : 'w-2 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400';
+
+                dotsHtml += `<button type="button" onclick="goToSlide(${idx})" title="${escapeHtml(s.title)}" class="h-2 rounded-full transition-all ${dotClass}"></button>`;
+
+                const itemClass = isActive
+                    ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 font-bold'
+                    : 'hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-300';
+                const badgeClass = isActive
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500';
+
+                drawerHtml += `
+                    <button type="button" onclick="selectSlideFromDrawer(${idx})" class="w-full text-left p-3 rounded-xl transition flex items-start gap-3 ${itemClass}">
+                        <span class="w-6 h-6 rounded-lg text-xs font-extrabold flex items-center justify-center shrink-0 ${badgeClass}">${s.id}</span>
+                        <div class="min-w-0">
+                            <div class="text-[10px] uppercase tracking-wider opacity-75">${escapeHtml(s.category)}</div>
+                            <div class="text-xs sm:text-sm truncate">${escapeHtml(s.title)}</div>
+                        </div>
+                    </button>
+                `;
+            }
+
+            dotsContainer.innerHTML = dotsHtml;
+            document.getElementById('drawerSlideList').innerHTML = drawerHtml;
+        }
+
+        function selectSlideFromDrawer(index) {
+            goToSlide(index);
+            toggleSlideDrawer();
+        }
+
+        function changeSlide(direction) {
+            const nextIdx = currentSlideIndex + direction;
+            if (nextIdx >= 0 && nextIdx < TOTAL_SLIDES) {
+                if (simAutoTimer) clearTimeout(simAutoTimer);
+                currentSlideIndex = nextIdx;
+                renderCurrentSlide();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function goToSlide(index) {
+            if (index >= 0 && index < TOTAL_SLIDES) {
+                if (simAutoTimer) clearTimeout(simAutoTimer);
+                currentSlideIndex = index;
+                renderCurrentSlide();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function toggleSlideDrawer() {
+            const drawer = document.getElementById('slideDrawer');
+            const backdrop = document.getElementById('slideDrawerBackdrop');
+            const isClosed = drawer.classList.contains('-translate-x-full');
+
+            if (isClosed) {
+                backdrop.classList.remove('hidden');
+                setTimeout(function () {
+                    backdrop.classList.remove('opacity-0');
+                }, 10);
+                drawer.classList.remove('-translate-x-full');
+            } else {
+                backdrop.classList.add('opacity-0');
+                drawer.classList.add('-translate-x-full');
+                setTimeout(function () {
+                    backdrop.classList.add('hidden');
+                }, 200);
+            }
+        }
+
+        function setS2Mode(mode) {
+            s2Mode = mode;
+            renderCurrentSlide();
+        }
+
+        function selectS3Field(fieldKey) {
+            s3SelectedField = fieldKey;
+            renderCurrentSlide();
+        }
+
+        function setS5DeclareMode(mode) {
+            s5DeclareMode = mode;
+            renderCurrentSlide();
+        }
+
+        function selectS6Type(typeKey) {
+            s6ActiveType = typeKey;
+            s6TestResult = {
+                ok: true,
+                msg: 'Klik salah satu contoh nilai di atas untuk menguji apakah diterima oleh laci bertipe ' + typeKey + '.'
+            };
+            renderCurrentSlide();
+        }
+
+        function runS6TypeTest(testIdx) {
+            const testsMap = {
+                String: [
+                    { ok: true, msg: 'DITERIMA! Teks "Kopi Susu Aren" tersimpan dengan aman di dalam laci bertipe String.' },
+                    { ok: true, msg: 'DITERIMA! Gabungan huruf dan angka tetap dianggap teks (String).' }
+                ],
+                Integer: [
+                    { ok: true, msg: 'DITERIMA! 15000 adalah bilangan bulat murni dan siap dikalikan oleh komputer.' },
+                    { ok: false, msg: 'DITOLAK (Type Mismatch)! Tanda titik dianggap pemisah desimal di bahasa Inggris, bukan pemisah ribuan.' },
+                    { ok: false, msg: 'DITOLAK (Type Mismatch)! Huruf "Rp" membuat input ditolak oleh variabel Integer.' }
+                ],
+                Real: [
+                    { ok: true, msg: 'DITERIMA! Angka 1.5 (satu setengah) valid sebagai tipe data Real di Flowgorithm.' },
+                    { ok: false, msg: 'DITOLAK! Jangan gunakan tanda koma (,) untuk angka desimal di Flowgorithm; gunakan titik (1.5).' }
+                ],
+                Boolean: [
+                    { ok: true, msg: 'DITERIMA! Variabel Boolean menyimpan status logika True (Benar).' },
+                    { ok: true, msg: 'DITERIMA! Variabel Boolean menyimpan status logika False (Salah).' },
+                    { ok: false, msg: 'DITOLAK (Type Mismatch)! Boolean hanya mengenal nilai True atau False, bukan kalimat "Ya, Member".' }
+                ]
+            };
+            const list = testsMap[s6ActiveType] || [];
+            if (list[testIdx]) {
+                s6TestResult = list[testIdx];
+                renderCurrentSlide();
+            }
+        }
+
+        function setS7Identifier(val) {
+            s7IdentifierInput = val;
+            renderCurrentSlide();
+        }
+
+        function updateS7IdentifierLive(val) {
+            s7IdentifierInput = val;
+            const check = evaluateFlowgorithmIdentifier(val);
+            const banner = document.getElementById('s7ResultBanner');
+            if (banner) {
+                banner.textContent = check.reason;
+                banner.className = 'p-4 rounded-2xl border-2 text-xs sm:text-sm font-bold leading-relaxed ' + (
+                    check.valid
+                        ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-400 dark:border-emerald-700 text-emerald-900 dark:text-emerald-200'
+                        : 'bg-rose-50 dark:bg-rose-950/40 border-rose-400 dark:border-rose-700 text-rose-900 dark:text-rose-200'
+                );
+            }
+        }
+
+        function setS8Lifecycle(idx) {
+            s8LifecycleStep = idx;
+            renderCurrentSlide();
+        }
+
+        function setS10PromptMode(mode) {
+            s10PromptMode = mode;
+            renderCurrentSlide();
+        }
+
+        function setS12Case(idx) {
+            s12CaseIndex = idx;
+            renderCurrentSlide();
+        }
+
+        function updateS12Vars(field, val) {
+            if (field === 'nama') s12SampleNama = val || 'Kopi Susu';
+            if (field === 'harga') s12SampleHarga = parseInt(val, 10) || 0;
+            if (field === 'qty') s12SampleQty = parseInt(val, 10) || 0;
+
+            const resBox = document.getElementById('s12ResultBox');
+            if (resBox) {
+                if (s12CaseIndex === 1) {
+                    resBox.textContent = 'Pesanan: ' + s12SampleNama + ' (' + s12SampleQty + ' pcs @Rp' + s12SampleHarga + ')';
+                } else if (s12CaseIndex === 2) {
+                    resBox.textContent = 'Pesanan: namaProduk sebanyak jumlahBeli pcs';
+                } else {
+                    resBox.textContent = 'Pesanan:' + s12SampleNama + 'sebanyak' + s12SampleQty + 'pcs';
+                }
+            }
+        }
+
+        function setS14Scenario(key) {
+            s14Scenario = key;
+            renderCurrentSlide();
+        }
+
+        // Handlers Slide 15: Live Simulator Pencatatan Pesanan (11 Blok)
+        function resetFgSim() {
+            if (simAutoTimer) clearTimeout(simAutoTimer);
+            simIsAuto = false;
+            simStepIndex = -1;
+            simWaitingVar = null;
+            simMemory = { namaProduk: null, hargaSatuan: null, jumlahBeli: null };
+            simChatLog = [];
+            simInputError = '';
+            simBannerText = 'Klik tombol Run Otomatis atau Step di kanan atas untuk memulai simulasi pencatatan pesanan Warung Digital.';
+            renderCurrentSlide();
+        }
+
+        function stepToOrFocusNode() {
+            if (simWaitingVar) {
+                const inputBox = document.getElementById('fgConsoleInputBox');
+                if (inputBox) inputBox.focus();
+                return;
+            }
+            stepFgSim();
+        }
+
+        function fillSimQuickChip(val) {
+            const inputBox = document.getElementById('fgConsoleInputBox');
+            if (inputBox) {
+                inputBox.value = val;
+                inputBox.focus();
+            }
+        }
+
+        function stepFgSim() {
+            if (simWaitingVar) {
+                simInputError = 'Ketik dulu nilai untuk "' + simWaitingVar + '" pada kotak di atas lalu tekan Enter!';
+                renderCurrentSlide();
+                return;
+            }
+            if (simStepIndex >= 10) {
+                resetFgSim();
+            }
+            simStepIndex++;
+            executeFgStep(simStepIndex);
+        }
+
+        function executeFgStep(step) {
+            simInputError = '';
+            if (step === 0) {
+                simChatLog = [];
+                simBannerText = 'Blok 1 [Main]: Memulai eksekusi runtunan (Sequence) dari kapsul Main di bagian atas.';
+            } else if (step === 1) {
+                simMemory.namaProduk = '';
+                simBannerText = 'Blok 2 [Declare String]: Menyiapkan laci variabel namaProduk bertipe String di memori.';
+            } else if (step === 2) {
+                simMemory.hargaSatuan = 0;
+                simMemory.jumlahBeli = 0;
+                simBannerText = 'Blok 3 [Declare Integer]: Menyiapkan 2 laci angka bulat: hargaSatuan dan jumlahBeli.';
+            } else if (step === 3) {
+                simChatLog.push({ type: 'out', html: 'Masukkan nama produk pesanan:' });
+                simBannerText = 'Blok 4 [Output Prompt #1]: Menampilkan kalimat pemandu ke layar kasir sebelum meminta Input.';
+            } else if (step === 4) {
+                simWaitingVar = 'namaProduk';
+                simChatLog.push({ id: 'wait_nama', type: 'wait', text: '⏳ Menunggu kasir mengetik namaProduk (String)...' });
+                simBannerText = 'Blok 5 [Input namaProduk]: Ketik nama barang di kotak Console kanan, lalu tekan Enter ↵.';
+            } else if (step === 5) {
+                simChatLog.push({ type: 'out', html: 'Masukkan harga satuan (Rp):' });
+                simBannerText = 'Blok 6 [Output Prompt #2]: Menampilkan kalimat pemandu untuk meminta harga satuan.';
+            } else if (step === 6) {
+                simWaitingVar = 'hargaSatuan';
+                simChatLog.push({ id: 'wait_harga', type: 'wait', text: '⏳ Menunggu kasir mengetik hargaSatuan (Integer murni)...' });
+                simBannerText = 'Blok 7 [Input hargaSatuan]: Ketik angka bulat murni (tanpa titik/Rp) lalu tekan Enter ↵.';
+            } else if (step === 7) {
+                simChatLog.push({ type: 'out', html: 'Masukkan jumlah beli (pcs):' });
+                simBannerText = 'Blok 8 [Output Prompt #3]: Menampilkan kalimat pemandu untuk meminta kuantitas beli.';
+            } else if (step === 8) {
+                simWaitingVar = 'jumlahBeli';
+                simChatLog.push({ id: 'wait_qty', type: 'wait', text: '⏳ Menunggu kasir mengetik jumlahBeli (Integer)...' });
+                simBannerText = 'Blok 9 [Input jumlahBeli]: Ketik jumlah porsi pesanan lalu tekan Enter ↵.';
+            } else if (step === 9) {
+                simChatLog.push({
+                    type: 'out',
+                    html: '=== RINGKASAN PESANAN TERCATAT ===<br>Produk: ' + escapeHtml(simMemory.namaProduk) + '<br>Harga Satuan: Rp ' + simMemory.hargaSatuan + '<br>Jumlah Beli: ' + simMemory.jumlahBeli + ' pcs'
+                });
+                simBannerText = 'Blok 10 [Output Struk]: Merangkai isi ke-3 variabel dengan operator & dan menampilkannya ke layar.';
+            } else if (step === 10) {
+                simIsAuto = false;
+                simBannerText = 'Blok 11 [End]: Runtunan (Sequence) pencatatan pesanan selesai dengan sempurna!';
+            }
+
+            renderCurrentSlide();
+            const chatBox = document.getElementById('fgConsoleChat');
+            if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+
+            if (simIsAuto && !simWaitingVar && step < 10) {
+                simAutoTimer = setTimeout(function () {
+                    stepFgSim();
+                }, 600);
+            }
+        }
+
+        function submitManualConsoleInput(e) {
+            e.preventDefault();
+            if (!simWaitingVar) return;
+            const inputBox = document.getElementById('fgConsoleInputBox');
+            const rawVal = inputBox ? inputBox.value.trim() : '';
+
+            if (!rawVal) {
+                simInputError = 'Nilai "' + simWaitingVar + '" tidak boleh kosong!';
+                renderCurrentSlide();
+                return;
+            }
+
+            if (simWaitingVar === 'namaProduk') {
+                simMemory.namaProduk = rawVal;
+                simChatLog = simChatLog.filter(function (m) { return m.id !== 'wait_nama'; });
+                simChatLog.push({ type: 'in', text: 'namaProduk = "' + rawVal + '"' });
+                simBannerText = 'Laci namaProduk terisi "' + rawVal + '". Tekan Step untuk lanjut.';
+            } else if (simWaitingVar === 'hargaSatuan') {
+                if (!/^\d+$/.test(rawVal)) {
+                    simInputError = 'Flowgorithm Type Mismatch Error: Variabel "hargaSatuan" bertipe Integer! Input "' + rawVal + '" ditolak karena mengandung titik/huruf. Ketik angka bulat murni (contoh: 15000).';
+                    renderCurrentSlide();
+                    return;
+                }
+                const parsedHarga = parseInt(rawVal, 10);
+                simMemory.hargaSatuan = parsedHarga;
+                simChatLog = simChatLog.filter(function (m) { return m.id !== 'wait_harga'; });
+                simChatLog.push({ type: 'in', text: 'hargaSatuan = ' + parsedHarga });
+                simBannerText = 'Laci hargaSatuan terisi ' + parsedHarga + '. Tekan Step untuk lanjut.';
+            } else if (simWaitingVar === 'jumlahBeli') {
+                if (!/^\d+$/.test(rawVal)) {
+                    simInputError = 'Flowgorithm Type Mismatch Error: Variabel "jumlahBeli" bertipe Integer! Ketik angka bulat murni (contoh: 2).';
+                    renderCurrentSlide();
+                    return;
+                }
+                const parsedQty = parseInt(rawVal, 10);
+                simMemory.jumlahBeli = parsedQty;
+                simChatLog = simChatLog.filter(function (m) { return m.id !== 'wait_qty'; });
+                simChatLog.push({ type: 'in', text: 'jumlahBeli = ' + parsedQty });
+                simBannerText = 'Laci jumlahBeli terisi ' + parsedQty + '. Tekan Step untuk mencetak struk Output.';
+            }
+
+            simWaitingVar = null;
+            simInputError = '';
+            renderCurrentSlide();
+
+            if (simIsAuto) {
+                simAutoTimer = setTimeout(function () {
+                    stepFgSim();
+                }, 450);
+            }
+        }
+
+        function runFullFgSim() {
+            if (simAutoTimer) clearTimeout(simAutoTimer);
+            simStepIndex = -1;
+            simWaitingVar = null;
+            simMemory = { namaProduk: null, hargaSatuan: null, jumlahBeli: null };
+            simChatLog = [];
+            simInputError = '';
+            simIsAuto = true;
+            stepFgSim();
+        }
+
+        // Handlers Slide 16: Rakit Flowchart di Kanvas
+        function selectBuilderSlot(slotNum) {
+            activeBuilderSlot = slotNum;
+            renderCurrentSlide();
+        }
+
+        function assignSymbolToSlot(symType) {
+            builderSlots[activeBuilderSlot] = symType;
+            builderFeedback = { type: '', text: '' };
+            if (activeBuilderSlot < 5) {
+                activeBuilderSlot++;
+            }
+            renderCurrentSlide();
+        }
+
+        function checkBuilderAnswer() {
+            if (
+                builderSlots[1] === 'Declare' &&
+                builderSlots[2] === 'Declare' &&
+                builderSlots[3] === 'Output' &&
+                builderSlots[4] === 'Input' &&
+                builderSlots[5] === 'Output'
+            ) {
+                builderFeedback = {
+                    type: 'success',
+                    text: 'Sempurna (5/5 Tepat)! Urutan simbol Declare -> Declare -> Output Prompt -> Input -> Output Struk sudah 100% akurat!'
+                };
+            } else {
+                builderFeedback = {
+                    type: 'error',
+                    text: 'Masih ada slot yang belum tepat. Ingat: Slot 1 & 2 (Declare Segi Enam) -> Slot 3 (Output Prompt Hijau) -> Slot 4 (Input Biru) -> Slot 5 (Output Struk Hijau).'
+                };
+            }
+            renderCurrentSlide();
+        }
+
+        function resetBuilderCanvas() {
+            builderSlots = { 1: '', 2: '', 3: '', 4: '', 5: '' };
+            activeBuilderSlot = 1;
+            builderFeedback = { type: '', text: '' };
+            renderCurrentSlide();
+        }
+
+        // Handlers Slide 17: Drag & Drop 8 Langkah Sequence
+        function shuffleSeqSteps() {
+            seqStepsOrder = [...CORRECT_SEQ_STEPS].sort(function () { return Math.random() - 0.5; });
+            seqShowValidation = false;
+            seqFeedbackText = '';
+            renderCurrentSlide();
+        }
+
+        function moveSeqStep(index, direction) {
+            const target = index + direction;
+            if (target < 0 || target >= seqStepsOrder.length) return;
+            const moved = seqStepsOrder.splice(index, 1)[0];
+            seqStepsOrder.splice(target, 0, moved);
+            seqShowValidation = false;
+            seqFeedbackText = '';
+            renderCurrentSlide();
+        }
+
+        function onSeqDragStart(e, index) {
+            draggedSeqIndex = index;
+            if (e.currentTarget) e.currentTarget.classList.add('dragging');
+            if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function onSeqDragOver(e, index) {
+            e.preventDefault();
+            if (index !== draggedSeqIndex && e.currentTarget) {
+                e.currentTarget.classList.add('drag-over');
+            }
+        }
+
+        function onSeqDragLeave(e) {
+            if (e.currentTarget) e.currentTarget.classList.remove('drag-over');
+        }
+
+        function onSeqDrop(e, targetIndex) {
+            e.preventDefault();
+            if (draggedSeqIndex !== null && draggedSeqIndex !== targetIndex) {
+                const moved = seqStepsOrder.splice(draggedSeqIndex, 1)[0];
+                seqStepsOrder.splice(targetIndex, 0, moved);
+                seqShowValidation = false;
+                seqFeedbackText = '';
+                renderCurrentSlide();
+            }
+            draggedSeqIndex = null;
+        }
+
+        function onSeqDragEnd() {
+            draggedSeqIndex = null;
+            document.querySelectorAll('.draggable-step').forEach(function (el) {
+                el.classList.remove('dragging', 'drag-over');
+            });
+        }
+
+        function checkSeqOrder() {
+            seqShowValidation = true;
+            let correctCount = 0;
+            for (let i = 0; i < seqStepsOrder.length; i++) {
+                if (seqStepsOrder[i].id === i + 1) correctCount++;
+            }
+            if (correctCount === seqStepsOrder.length) {
+                seqFeedbackText = 'Luar Biasa (8/8 Tepat)! Runtunan Sequence pencatatan pesanan Warung Digital sudah 100% sistematis!';
+            } else {
+                seqFeedbackText = 'Baru ' + correctCount + '/8 langkah yang tepat. Geser baris bertanda "✗ Geser".';
+            }
+            renderCurrentSlide();
+        }
+
+        function answerSelfCheck(qNum, isOk, msg) {
+            selfCheckFeedback[qNum] = { ok: isOk, msg: msg };
+            renderCurrentSlide();
+        }
+
+        // Modal Istilah & Kamus Lengkap
+        function showTerm(key) {
+            const item = GLOSSARY_DB[key];
+            if (!item) return;
+
+            document.getElementById('termCategoryBadge').textContent = item.category;
+            document.getElementById('termTitle').textContent = item.title;
+            document.getElementById('termMainDesc').textContent = item.main;
+            document.getElementById('termDetailDesc').textContent = item.detail;
+            document.getElementById('termSourceName').textContent = "Sumber: " + item.source;
+
+            const modal = document.getElementById('termModalBackdrop');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeTermModal() {
+            const modal = document.getElementById('termModalBackdrop');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function openGlossaryIndex() {
+            document.getElementById('glossarySearchInput').value = '';
+            renderGlossaryList('');
+            const modal = document.getElementById('glossaryModalBackdrop');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeGlossaryIndex() {
+            const modal = document.getElementById('glossaryModalBackdrop');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function selectGlossaryTerm(key) {
+            closeGlossaryIndex();
+            showTerm(key);
+        }
+
+        function renderGlossaryList(query) {
+            const q = String(query || '').trim().toLowerCase();
+            const allKeys = Object.keys(GLOSSARY_DB);
+            const matchedKeys = [];
+
+            for (let i = 0; i < allKeys.length; i++) {
+                const k = allKeys[i];
+                const item = GLOSSARY_DB[k];
+                if (
+                    item.title.toLowerCase().indexOf(q) !== -1 ||
+                    item.category.toLowerCase().indexOf(q) !== -1 ||
+                    item.main.toLowerCase().indexOf(q) !== -1
+                ) {
+                    matchedKeys.push(k);
+                }
+            }
+
+            const container = document.getElementById('glossaryListGrid');
+            if (matchedKeys.length === 0) {
+                container.innerHTML = '<div class="col-span-2 text-center py-8 text-xs text-slate-500">Istilah tidak ditemukan.</div>';
+                return;
+            }
+
+            let html = '';
+            for (let i = 0; i < matchedKeys.length; i++) {
+                const k = matchedKeys[i];
+                const item = GLOSSARY_DB[k];
+                html += `
+                    <button type="button" onclick="selectGlossaryTerm('${k}')" class="text-left p-4 rounded-2xl bg-slate-50 hover:bg-indigo-50/60 dark:bg-slate-800/50 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800 transition space-y-1">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">${escapeHtml(item.category)}</span>
+                            <span class="text-[10px] text-slate-400">${escapeHtml(item.source)}</span>
+                        </div>
+                        <div class="text-sm font-extrabold text-slate-900 dark:text-white">${escapeHtml(item.title)}</div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">${escapeHtml(item.main)}</p>
+                    </button>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function toggleTheme() {
+            const htmlEl = document.documentElement;
+            const icon = document.getElementById('themeIcon');
+            htmlEl.classList.toggle('dark');
+            const isDark = htmlEl.classList.contains('dark');
+            icon.className = isDark ? 'fa-solid fa-sun text-amber-400 text-sm' : 'fa-solid fa-moon text-sm';
+        }
+
+        document.addEventListener('keydown', function (e) {
+            const activeTag = document.activeElement && document.activeElement.tagName
+                ? document.activeElement.tagName.toLowerCase()
+                : '';
+            if (activeTag === 'input' || activeTag === 'textarea') return;
+
+            if (e.key === 'ArrowRight') changeSlide(1);
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+            if (e.key === 'Escape') {
+                closeTermModal();
+                closeGlossaryIndex();
+            }
+        });
+
+        window.onload = function () {
+            renderCurrentSlide();
+        };
+    </script>
+</body>
+</html>
