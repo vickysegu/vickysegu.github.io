@@ -1,0 +1,2303 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pertemuan 2: HTML Dasar & Struktur Semantik Halaman Web</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace']
+                    }
+                }
+            }
+        };
+    </script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Istilah teknis hanya dibedakan dengan warna teks bersih tanpa garis bawah atau ikon */
+        .tech-term {
+            color: #4f46e5;
+            font-weight: 700;
+            cursor: pointer;
+            transition: color 0.15s ease, opacity 0.15s ease;
+        }
+        .dark .tech-term {
+            color: #818cf8;
+        }
+        .tech-term:hover {
+            color: #3730a3;
+            opacity: 0.85;
+        }
+        .dark .tech-term:hover {
+            color: #a5b4fc;
+        }
+
+        /* Animasi perpindahan slide */
+        .slide-enter {
+            animation: fadeSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes fadeSlide {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #334155;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col justify-between transition-colors duration-200">
+
+    <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800">
+        <div class="w-full h-1 bg-slate-100 dark:bg-slate-800">
+            <div id="topProgressBar" class="h-full bg-indigo-600 dark:bg-indigo-500 transition-all duration-300" style="width: 7%;"></div>
+        </div>
+
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+                <button type="button" onclick="toggleSlideDrawer()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition flex items-center gap-2 text-xs sm:text-sm font-bold shrink-0">
+                    <i class="fa-solid fa-list-ul text-indigo-600 dark:text-indigo-400"></i>
+                    <span class="hidden sm:inline">Daftar Slide</span>
+                    <span id="slideCounterBadge" class="px-2 py-0.5 text-xs rounded-lg bg-indigo-600 text-white font-bold">1 / 15</span>
+                </button>
+
+                <div class="hidden md:flex items-center gap-2.5 min-w-0">
+                    <span id="slideCategoryPill" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 shrink-0">
+                        Pengantar HTML
+                    </span>
+                    <h1 id="headerSlideTitle" class="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">
+                        Orientasi Pertemuan 2: Membangun Kerangka HTML
+                    </h1>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 shrink-0">
+                <button type="button" onclick="openGlossaryIndex()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 text-xs sm:text-sm font-bold flex items-center gap-2 transition">
+                    <i class="fa-solid fa-book-open text-indigo-600 dark:text-indigo-400"></i>
+                    <span>Kamus Istilah</span>
+                </button>
+
+                <button type="button" onclick="toggleTheme()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center transition" title="Ganti Tema Layar">
+                    <i id="themeIcon" class="fa-solid fa-moon text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div id="slideDrawerBackdrop" onclick="toggleSlideDrawer()" class="fixed inset-0 bg-slate-950/50 backdrop-blur-xs z-40 hidden opacity-0 transition-opacity duration-200"></div>
+    <aside id="slideDrawer" class="fixed top-0 left-0 bottom-0 w-80 sm:w-96 bg-white dark:bg-slate-900 z-50 shadow-2xl border-r border-slate-200 dark:border-slate-800 transform -translate-x-full transition-transform duration-200 flex flex-col">
+        <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Pertemuan 2</span>
+                <h2 class="text-base font-extrabold text-slate-900 dark:text-white mt-0.5">Daftar Materi HTML Dasar</h2>
+            </div>
+            <button type="button" onclick="toggleSlideDrawer()" class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div id="drawerSlideList" class="p-3.5 overflow-y-auto space-y-1 flex-1"></div>
+        <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 flex items-center justify-between">
+            <span>Gunakan tombol panah Kiri / Kanan</span>
+            <span class="font-bold">15 Slide</span>
+        </div>
+    </aside>
+
+    <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 flex flex-col justify-center">
+        <div id="slideViewport" class="bg-white dark:bg-slate-900 rounded-3xl shadow-xs border border-slate-200/80 dark:border-slate-800 p-6 sm:p-8 lg:p-10 min-h-[560px] flex flex-col justify-between relative overflow-hidden">
+            <!-- Konten slide dirender secara dinamis -->
+        </div>
+    </main>
+
+    <footer class="sticky bottom-0 z-20 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 py-3 px-4 sm:px-6">
+        <div class="max-w-6xl mx-auto flex items-center justify-between gap-4">
+            <button type="button" id="prevSlideBtn" onclick="changeSlide(-1)" class="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                <i class="fa-solid fa-arrow-left text-xs"></i>
+                <span>Sebelumnya</span>
+            </button>
+
+            <div id="slideDotsContainer" class="hidden md:flex items-center gap-1.5"></div>
+
+            <div class="md:hidden text-xs font-bold text-slate-500 dark:text-slate-400" id="mobileFooterCounter">
+                1 / 15
+            </div>
+
+            <button type="button" id="nextSlideBtn" onclick="changeSlide(1)" class="px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-indigo-600 hover:bg-indigo-700 text-white transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                <span id="nextBtnText">Selanjutnya</span>
+                <i class="fa-solid fa-arrow-right text-xs"></i>
+            </button>
+        </div>
+    </footer>
+
+    <!-- Modal Penjelasan Istilah -->
+    <div id="termModalBackdrop" onclick="closeTermModal()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl slide-enter">
+            <div class="flex items-start justify-between gap-4 mb-4">
+                <div>
+                    <span id="termCategoryBadge" class="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">Kategori</span>
+                    <h3 id="termTitle" class="text-xl font-extrabold text-slate-900 dark:text-white mt-1.5">Nama Istilah</h3>
+                </div>
+                <button type="button" onclick="closeTermModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <p id="termMainDesc" class="text-sm text-slate-700 dark:text-slate-200 leading-relaxed bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200/70 dark:border-slate-700/70"></p>
+
+                <p id="termDetailDesc" class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed px-1"></p>
+
+                <div class="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800 text-xs px-1">
+                    <span id="termSourceName" class="font-semibold text-slate-400">Referensi</span>
+                    <a id="termSourceUrl" href="#" target="_blank" rel="noopener noreferrer" class="font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1.5">
+                        <span>Baca di W3Schools</span>
+                        <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Kamus Istilah Lengkap -->
+    <div id="glossaryModalBackdrop" onclick="closeGlossaryIndex()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-4xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden slide-enter">
+            <div class="p-5 sm:p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white">Kamus Istilah HTML Dasar (Rujukan W3Schools)</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Daftar lengkap elemen, atribut, dan konsep struktur HTML pada Pertemuan 2.</p>
+                </div>
+                <button type="button" onclick="closeGlossaryIndex()" class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-sm"></i>
+                    <input id="glossarySearchInput" oninput="renderGlossaryList(this.value)" type="text" placeholder="Cari istilah seperti Element, Attribute, Heading, Table, Form, Semantic..." class="w-full pl-10 pr-4 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+            <div id="glossaryListGrid" class="p-5 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+        </div>
+    </div>
+
+    <script>
+        const GLOSSARY_DB = {
+            html: {
+                title: "HTML (HyperText Markup Language)",
+                category: "Konsep Inti",
+                main: "Bahasa penanda standar untuk membuat halaman web. HTML mendeskripsikan struktur sebuah halaman web menggunakan rangkaian elemen (elements).",
+                detail: "Elemen HTML memberi tahu browser cara menampilkan konten, seperti memberi label bagian mana yang merupakan judul, paragraf, tautan, tabel, maupun formulir.",
+                source: "W3Schools HTML Introduction",
+                url: "https://www.w3schools.com/html/html_intro.asp"
+            },
+            element: {
+                title: "HTML Element (Elemen HTML)",
+                category: "Sintaks Dasar",
+                main: "Satu kesatuan utuh komponen HTML yang dimulai dari tag pembuka, diikuti isi konten di tengahnya, dan diakhiri dengan tag penutup.",
+                detail: "Contoh elemen utuh adalah <h1>Kedai Kopi Nusantara</h1>. Beberapa elemen tidak memiliki isi maupun tag penutup dan disebut Empty Elements.",
+                source: "W3Schools HTML Elements",
+                url: "https://www.w3schools.com/html/html_elements.asp"
+            },
+            tag: {
+                title: "HTML Tag (Penanda Kurung Siku)",
+                category: "Sintaks Dasar",
+                main: "Kata kunci penanda yang dikelilingi oleh tanda kurung siku seperti <p> untuk tag pembuka dan </p> untuk tag penutup.",
+                detail: "Tag penutup selalu memiliki karakter garis miring (slash /) tepat sebelum nama tagnya. HTML tidak membedakan huruf besar/kecil pada nama tag, namun W3Schools merekomendasikan penulisan huruf kecil.",
+                source: "W3Schools HTML Basic",
+                url: "https://www.w3schools.com/html/html_basic.asp"
+            },
+            void_element: {
+                title: "Empty / Void Element (Elemen Kosong)",
+                category: "Sintaks Dasar",
+                main: "Elemen HTML yang tidak memiliki konten teks di dalamnya dan tidak memerlukan tag penutup.",
+                detail: "Contoh yang paling sering digunakan adalah <br> untuk pindah baris, <hr> untuk garis pemisah, <img> untuk menampilkan gambar, dan <input> untuk kotak isian form.",
+                source: "W3Schools HTML Elements",
+                url: "https://www.w3schools.com/html/html_elements.asp"
+            },
+            nested: {
+                title: "Nested HTML Elements (Elemen Bersarang)",
+                category: "Sintaks Dasar",
+                main: "Kondisi ketika sebuah elemen HTML ditulis di dalam elemen HTML lainnya.",
+                detail: "Aturan terpenting pada elemen bersarang adalah tag yang dibuka paling akhir harus ditutup paling awal (First In, Last Out) agar struktur halaman tidak rusak.",
+                source: "W3Schools Nested HTML Elements",
+                url: "https://www.w3schools.com/html/html_elements.asp"
+            },
+            doctype: {
+                title: "Deklarasi <!DOCTYPE html>",
+                category: "Struktur Dokumen",
+                main: "Baris deklarasi paling atas pada file HTML yang memberi tahu web browser bahwa dokumen tersebut menggunakan standar HTML5.",
+                detail: "Deklarasi ini wajib ditulis hanya satu kali pada baris pertama halaman sebelum tag <html> dibuka.",
+                source: "W3Schools HTML Doctype",
+                url: "https://www.w3schools.com/tags/tag_doctype.asp"
+            },
+            head_tag: {
+                title: "Elemen <head> (Metadata Dokumen)",
+                category: "Struktur Dokumen",
+                main: "Wadah untuk informasi metadata dokumen HTML yang tidak ditampilkan langsung di dalam kanvas halaman, melainkan dibaca oleh browser dan mesin pencari.",
+                detail: "Di dalam <head> biasanya terdapat <meta charset='UTF-8'>, <meta name='viewport'>, <title> untuk judul tab browser, serta pemanggilan file CSS.",
+                source: "W3Schools HTML Head",
+                url: "https://www.w3schools.com/html/html_head.asp"
+            },
+            body_tag: {
+                title: "Elemen <body> (Isi Halaman Web)",
+                category: "Struktur Dokumen",
+                main: "Wadah utama bagi seluruh konten visual halaman web yang dapat dilihat dan diklik oleh pengunjung di layar browser.",
+                detail: "Semua elemen seperti heading, paragraf, gambar, tabel katalog, dan formulir pemesanan ditulis di dalam elemen <body>.",
+                source: "W3Schools HTML Body",
+                url: "https://www.w3schools.com/tags/tag_body.asp"
+            },
+            attribute: {
+                title: "HTML Attributes (Atribut HTML)",
+                category: "Sintaks Dasar",
+                main: "Informasi atau pengaturan tambahan yang disisipkan pada tag pembuka sebuah elemen HTML dengan format nama='nilai'.",
+                detail: "Contoh atribut populer meliputi href pada tautan <a>, src dan alt pada gambar <img>, serta type, name, dan placeholder pada elemen <input>.",
+                source: "W3Schools HTML Attributes",
+                url: "https://www.w3schools.com/html/html_attributes.asp"
+            },
+            heading: {
+                title: "HTML Headings (<h1> sampai <h6>)",
+                category: "Tipografi & Teks",
+                main: "Enam tingkatan judul atau subjudul bagian halaman. <h1> mendefinisikan judul utama yang paling penting, sedangkan <h6> yang paling kecil.",
+                detail: "Mesin pencari dan pembaca layar menggunakan hierarki heading untuk mengindeks struktur isi halaman web Anda. Jangan gunakan heading hanya untuk memperbesar teks biasa.",
+                source: "W3Schools HTML Headings",
+                url: "https://www.w3schools.com/html/html_headings.asp"
+            },
+            paragraph: {
+                title: "HTML Paragraphs (<p>, <br>, <hr>)",
+                category: "Tipografi & Teks",
+                main: "Elemen <p> mendefinisikan blok paragraf teks. Browser otomatis memberi jarak kosong sebelum dan sesudah elemen paragraf.",
+                detail: "Di dalam HTML, menekan spasi atau Enter berkali-kali di editor kode akan diabaikan oleh browser. Gunakan <br> jika ingin berpindah baris di dalam paragraf yang sama.",
+                source: "W3Schools HTML Paragraphs",
+                url: "https://www.w3schools.com/html/html_paragraphs.asp"
+            },
+            formatting: {
+                title: "HTML Text Formatting",
+                category: "Tipografi & Teks",
+                main: "Kumpulan elemen untuk memberi penekanan atau arti khusus pada potongan teks, seperti <strong> (penting/tebal), <em> (ditekankan/miring), dan <del> (teks dicoret).",
+                detail: "Sangat berguna pada katalog UMKM, misalnya menampilkan harga coret <del>Rp 25.000</del> sebelum harga promo.",
+                source: "W3Schools HTML Formatting",
+                url: "https://www.w3schools.com/html/html_formatting.asp"
+            },
+            links: {
+                title: "HTML Links / Hyperlinks (<a>)",
+                category: "Navigasi & Media",
+                main: "Elemen jangkar (anchor) yang memungkinkan pengguna berpindah ke halaman lain, bagian halaman tertentu, atau aplikasi eksternal saat diklik.",
+                detail: "Atribut terpenting pada elemen <a> adalah href yang berisi alamat tujuan, serta target='_blank' jika ingin membuka halaman di tab baru.",
+                source: "W3Schools HTML Links",
+                url: "https://www.w3schools.com/html/html_links.asp"
+            },
+            images: {
+                title: "HTML Images (<img>, src, alt)",
+                category: "Navigasi & Media",
+                main: "Elemen kosong untuk menyematkan gambar ke dalam halaman web menggunakan atribut src (lokasi file gambar) dan alt (teks alternatif).",
+                detail: "Atribut alt wajib diisi agar pengguna tetap mengetahui isi gambar apabila koneksi lambat atau nama file gambar salah ketik.",
+                source: "W3Schools HTML Images",
+                url: "https://www.w3schools.com/html/html_images.asp"
+            },
+            filepath: {
+                title: "HTML File Paths (Jalur Lokasi File)",
+                category: "Navigasi & Media",
+                main: "Alamat penunjuk lokasi sebuah file (seperti foto produk atau halaman HTML lain) di dalam struktur folder website.",
+                detail: "Relative file path seperti 'img/kopi.jpg' menunjuk ke file kopi.jpg yang berada di dalam folder img relatif terhadap posisi halaman saat ini.",
+                source: "W3Schools HTML File Paths",
+                url: "https://www.w3schools.com/html/html_filepaths.asp"
+            },
+            lists: {
+                title: "HTML Lists (<ul>, <ol>, <li>)",
+                category: "Struktur Data",
+                main: "Elemen untuk mengelompokkan rincian item secara berurutan (<ol> / Ordered List dengan nomor) maupun tidak berurutan (<ul> / Unordered List dengan poin).",
+                detail: "Setiap butir item di dalam daftar wajib dibungkus menggunakan tag <li> (List Item).",
+                source: "W3Schools HTML Lists",
+                url: "https://www.w3schools.com/html/html_lists.asp"
+            },
+            tables: {
+                title: "HTML Tables (<table>, <tr>, <th>, <td>)",
+                category: "Struktur Data",
+                main: "Elemen untuk menyusun data ke dalam baris dan kolom, seperti daftar perbandingan harga paket atau rincian spesifikasi produk UMKM.",
+                detail: "<tr> membuat baris tabel (Table Row), <th> membuat sel judul kolom (Table Header), dan <td> membuat sel data biasa (Table Data).",
+                source: "W3Schools HTML Tables",
+                url: "https://www.w3schools.com/html/html_tables.asp"
+            },
+            colspan: {
+                title: "Atribut colspan & rowspan",
+                category: "Struktur Data",
+                main: "Atribut pada sel tabel (<th> atau <td>) untuk menggabungkan beberapa kolom ke samping (colspan) atau beberapa baris ke bawah (rowspan).",
+                detail: "Contohnya colspan='3' pada baris total harga untuk menggabungkan 3 kolom pertama menjadi satu sel lebar.",
+                source: "W3Schools Table Colspan & Rowspan",
+                url: "https://www.w3schools.com/html/html_table_colspan_rowspan.asp"
+            },
+            forms: {
+                title: "HTML Forms (<form>)",
+                category: "Formulir Interaktif",
+                main: "Wadah untuk mengumpulkan isian data dari pengunjung website, seperti nama pemesan, pilihan produk, jumlah beli, dan alamat pengiriman.",
+                detail: "Pada paruh pertama semester (Pra-UTS), isi form ini akan dihitung dan divalidasi oleh JavaScript. Setelah UTS, form akan dikirim ke server PHP menggunakan atribut action dan method.",
+                source: "W3Schools HTML Forms",
+                url: "https://www.w3schools.com/html/html_forms.asp"
+            },
+            input_types: {
+                title: "HTML Input Types (<input type='...'>)",
+                category: "Formulir Interaktif",
+                main: "Variasi bentuk kolom isian di dalam form sesuai jenis data yang diminta, seperti text, number, tel, email, date, radio, dan checkbox.",
+                detail: "Memilih tipe input yang tepat membantu pengguna (misalnya type='number' otomatis memunculkan papan ketik angka di layar smartphone).",
+                source: "W3Schools HTML Input Types",
+                url: "https://www.w3schools.com/html/html_form_input_types.asp"
+            },
+            label_tag: {
+                title: "Elemen <label> & Atribut for",
+                category: "Formulir Interaktif",
+                main: "Keterangan teks resmi untuk sebuah elemen input form. Jika atribut for pada <label> disamakan dengan atribut id pada <input>, keduanya akan terhubung.",
+                detail: "Keuntungannya: ketika pengguna mengeklik teks label (terutama pada tombol radio atau checkbox yang kecil), kolom inputnya ikut terpilih secara otomatis.",
+                source: "W3Schools HTML Form Elements",
+                url: "https://www.w3schools.com/html/html_form_elements.asp"
+            },
+            input_attr: {
+                title: "Atribut Validasi Input (required, placeholder, min)",
+                category: "Formulir Interaktif",
+                main: "Atribut bawaan HTML5 untuk memandu dan membatasi isian pengguna sebelum formulir dikirim.",
+                detail: "Atribut placeholder menampilkan teks petunjuk bayangan, required mewajibkan kolom diisi, dan min/max membatasi nilai angka minimal atau maksimal.",
+                source: "W3Schools HTML Input Attributes",
+                url: "https://www.w3schools.com/html/html_form_attributes.asp"
+            },
+            semantic: {
+                title: "HTML5 Semantic Elements",
+                category: "Arsitektur Layout",
+                main: "Elemen HTML yang namanya menjelaskan arti dan perannya dengan jelas baik bagi browser maupun bagi programmer.",
+                detail: "Contoh elemen semantik adalah <header>, <nav>, <main>, <section>, <article>, <aside>, dan <footer>, yang jauh lebih terstruktur dibandingkan penggunaan <div> semata.",
+                source: "W3Schools HTML Semantic Elements",
+                url: "https://www.w3schools.com/html/html_layout.asp"
+            },
+            block_inline: {
+                title: "Block-level vs Inline Elements",
+                category: "Arsitektur Layout",
+                main: "Dua perilaku tampilan default elemen HTML. Elemen Block selalu dimulai pada baris baru dan mengambil lebar penuh, sedangkan elemen Inline hanya mengambil lebar secukupnya sesuai isinya.",
+                detail: "Contoh elemen Block: <div>, <p>, <h1>-<h6>, <section>. Contoh elemen Inline: <span>, <a>, <strong>, <img>.",
+                source: "W3Schools HTML Block and Inline",
+                url: "https://www.w3schools.com/html/html_blocks.asp"
+            },
+            id_class: {
+                title: "Atribut id dan class",
+                category: "Arsitektur Layout",
+                main: "Atribut penanda identitas elemen. Atribut id bersifat unik (hanya boleh dipakai oleh 1 elemen di dalam satu halaman), sedangkan class boleh dipakai bersama-sama oleh banyak elemen.",
+                detail: "Atribut class nantinya sangat sering digunakan oleh CSS untuk memberi warna seragam, sedangkan id sering dipanggil oleh JavaScript (getElementById) dan tautan bookmark.",
+                source: "W3Schools HTML Id & Classes",
+                url: "https://www.w3schools.com/html/html_id.asp"
+            }
+        };
+
+        function term(key, customLabel) {
+            const item = GLOSSARY_DB[key];
+            if (!item) return customLabel || key;
+            const label = customLabel || item.title.split(' (')[0];
+            return '<span class="tech-term" onclick="showTerm(\'' + key + '\')">' + label + '</span>';
+        }
+
+        function escapeHtml(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        let currentSlideIndex = 0;
+        const TOTAL_SLIDES = 15;
+
+        // Slide 1: Ekspektasi Visual HTML Murni vs +CSS
+        let s1PreviewMode = 'html_only'; // 'html_only' | 'with_css'
+
+        // Slide 2: Bedah Anatomi Tag & Nested Elements
+        let s2SelectedPart = 'open'; // 'open' | 'content' | 'close' | 'void'
+        let s2BrokenCloseTag = false;
+
+        // Slide 3: Struktur Dokumen (<head> vs <body>)
+        let s3DocZone = 'head'; // 'doctype' | 'html' | 'head' | 'body'
+        let s3TabTitle = 'Katalog Kopi Nusantara - Resmi';
+        let s3BodyHeading = 'Selamat Datang di Kedai Kopi Nusantara';
+
+        // Slide 4: Atribut HTML Playground
+        let s4AttrTitle = 'Klik untuk memesan varian kopi ini';
+        let s4AttrAlign = 'left';
+        let s4AttrHidden = false;
+
+        // Slide 5: Heading Hierarchy
+        let s5SelectedLevel = 1;
+        let s5OutlineMode = 'benar'; // 'benar' | 'salah'
+
+        // Slide 6: Paragraf, <br>, <hr> & Whitespace Collapse
+        let s6WhitespaceMode = 'raw'; // 'raw' | 'br' | 'p_hr'
+
+        // Slide 7: Text Formatting Studio
+        let s7ActiveTag = 'strong'; // 'strong' | 'em' | 'mark' | 'del_ins' | 'sub_sup'
+
+        // Slide 8: Hyperlinks (<a>)
+        let s8LinkType = 'internal'; // 'internal' | 'blank' | 'anchor' | 'wa'
+        let s8ClickFeedback = 'Klik salah satu contoh tautan di bawah untuk melihat bagaimana browser merespons atribut href dan target.';
+
+        // Slide 9: Images (<img>, src, alt)
+        let s9ImgPathMode = 'correct'; // 'correct' | 'wrong_name' | 'wrong_folder'
+        let s9CustomAlt = 'Foto Kemasan Kopi Arabika Gayo 250 Gram';
+        let s9ImgWidth = 180;
+
+        // Slide 10: Lists (<ul>, <ol>, <li>)
+        let s10ListTag = 'ul'; // 'ul' | 'ol'
+        let s10OlType = '1'; // '1' | 'A' | 'i'
+        let s10Items = ['Kopi Susu Gula Aren', 'Teh Tarik Rempah', 'Roti Bakar Srikaya'];
+        let s10NewItemInput = '';
+
+        // Slide 11: Tables (<table>, <tr>, <th>, <td>, colspan)
+        let s11HighlightPart = 'all'; // 'all' | 'th' | 'tr' | 'td' | 'colspan'
+        let s11UseColspan = true;
+        let s11Rows = [
+            { code: 'MN-01', name: 'Kopi Arabika Gayo', price: 'Rp 65.000' },
+            { code: 'MN-02', name: 'Kopi Robusta Temanggung', price: 'Rp 45.000' }
+        ];
+        let s11DraftName = 'Cascara Tea Organik';
+        let s11DraftPrice = 'Rp 35.000';
+
+        // Slide 12: Form Bagian 1 (<input> types & <label>)
+        let s12InputType = 'text'; // 'text' | 'number' | 'date' | 'radio' | 'checkbox'
+
+        // Slide 13: Form Bagian 2 (<select>, <textarea>, Atribut Validasi)
+        let s13UseRequired = true;
+        let s13CustomerName = '';
+        let s13SelectedMenu = 'Kopi Susu Gula Aren';
+        let s13OrderQty = 2;
+        let s13Notes = 'Kurangi es batu, gula normal.';
+        let s13SubmitResult = null;
+
+        // Slide 14: Semantic HTML5 vs <div> Soup
+        let s14LayoutMode = 'semantic'; // 'semantic' | 'div_soup'
+        let s14ActiveRegion = 'header'; // 'header' | 'nav' | 'main' | 'section' | 'aside' | 'footer'
+
+        // Slide 15: Kunci Konsep Refleksi
+        let s15OpenKeys = { 1: false, 2: false, 3: false };
+
+        function renderSlide1() {
+            let previewCardHtml = '';
+            if (s1PreviewMode === 'html_only') {
+                previewCardHtml = `
+                    <div class="p-4 rounded-xl bg-white text-black font-serif border border-slate-300 space-y-2">
+                        <h3 class="text-xl font-bold">Kedai Kopi Lereng Gunung</h3>
+                        <p class="text-sm">Menyediakan biji kopi lokal pilihan yang disangrai segar setiap minggu.</p>
+                        <hr class="border-gray-400">
+                        <h4 class="text-base font-bold">Daftar Produk Unggulan:</h4>
+                        <ul class="list-disc pl-5 text-sm">
+                            <li>Arabika Gayo 250g - Rp 65.000</li>
+                            <li>Robusta Temanggung 250g - Rp 45.000</li>
+                        </ul>
+                        <p class="text-xs text-gray-600 pt-1">(Inilah wujud asli HTML murni: fokus 100% pada kelengkapan struktur informasi)</p>
+                    </div>
+                `;
+            } else {
+                previewCardHtml = `
+                    <div class="p-4 rounded-2xl bg-slate-900 text-white border border-indigo-500/40 space-y-3 shadow-md font-sans">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-indigo-600 text-white">UMKM Kopi Lokal</span>
+                            <span class="text-xs text-emerald-400 font-bold">Buka Setiap Hari</span>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-extrabold">Kedai Kopi Lereng Gunung</h3>
+                            <p class="text-xs text-slate-300 mt-0.5">Menyediakan biji kopi lokal pilihan yang disangrai segar setiap minggu.</p>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 pt-1">
+                            <div class="p-2.5 rounded-xl bg-slate-800 border border-slate-700">
+                                <div class="text-xs font-bold">Arabika Gayo 250g</div>
+                                <div class="text-xs text-indigo-400 font-mono font-bold mt-0.5">Rp 65.000</div>
+                            </div>
+                            <div class="p-2.5 rounded-xl bg-slate-800 border border-slate-700">
+                                <div class="text-xs font-bold">Robusta Temanggung</div>
+                                <div class="text-xs text-indigo-400 font-mono font-bold mt-0.5">Rp 45.000</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center my-auto">
+                        <div class="lg:col-span-7 space-y-4">
+                            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 text-xs font-bold border border-indigo-200/60 dark:border-indigo-800/60">
+                                <span>Pertemuan 2 dari 16 • Fokus Front-End Tahap 1</span>
+                            </div>
+
+                            <h2 class="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white leading-tight tracking-tight">
+                                Menyusun Pondasi & Kerangka Halaman dengan <span class="text-indigo-600 dark:text-indigo-400">HTML5</span>
+                            </h2>
+
+                            <p class="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Pada pertemuan pertama kita telah mempelajari bagaimana browser meminta halaman ke server. Hari ini kita mulai menulis kode pertama kita menggunakan ${term('html', 'HTML (HyperText Markup Language)')} untuk membangun kerangka halaman profil dan katalog UMKM.
+                            </p>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80">
+                                    <div class="text-xs font-extrabold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">Target Praktik Hari Ini</div>
+                                    <p class="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
+                                        Membuat file <span class="font-mono font-bold">index.html</span> yang memuat judul usaha, deskripsi paragraf, foto produk, tabel daftar harga, formulir pemesanan, dan struktur ${term('semantic', 'semantik HTML5')}.
+                                    </p>
+                                </div>
+                                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80">
+                                    <div class="text-xs font-extrabold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Prinsip Penting Pemula</div>
+                                    <p class="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
+                                        Jangan khawatir jika hasil kode HTML Anda hari ini masih berupa teks hitam-putih polos. Tugas HTML memang menyusun struktur isi, sedangkan pewarnaan adalah tugas CSS di Pertemuan 3.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-5">
+                            <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 space-y-4">
+                                <div class="flex items-center justify-between gap-2">
+                                    <div>
+                                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Simulasi Ekspektasi Hasil</span>
+                                        <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Wujud Halaman di Pertemuan 2 vs Pertemuan 3</h3>
+                                    </div>
+                                </div>
+
+                                <div class="flex gap-1.5 bg-slate-200/80 dark:bg-slate-900 p-1 rounded-xl">
+                                    <button type="button" onclick="setS1Preview('html_only')" class="flex-1 py-2 px-3 rounded-lg text-xs font-bold transition ${s1PreviewMode === 'html_only' ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-2xs' : 'text-slate-600 dark:text-slate-400'}">
+                                        Target Hari Ini (HTML Murni)
+                                    </button>
+                                    <button type="button" onclick="setS1Preview('with_css')" class="flex-1 py-2 px-3 rounded-lg text-xs font-bold transition ${s1PreviewMode === 'with_css' ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-2xs' : 'text-slate-600 dark:text-slate-400'}">
+                                        Minggu Depan (+ CSS)
+                                    </button>
+                                </div>
+
+                                ${previewCardHtml}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide2() {
+            const parts = {
+                open: {
+                    label: "Tag Pembuka: <h1>",
+                    desc: "Menandai dimulainya sebuah elemen. Ditulis dengan kurung siku buka dan tutup tanpa garis miring."
+                },
+                content: {
+                    label: "Isi Konten: Kopi Arabika Gayo",
+                    desc: "Teks atau elemen lain yang berada di antara tag pembuka dan tag penutup yang akan tampil di layar pengguna."
+                },
+                close: {
+                    label: "Tag Penutup: </h1>",
+                    desc: "Menandai berakhirnya elemen tersebut. Wajib menyertakan karakter garis miring ( / ) sebelum nama tag."
+                },
+                void: {
+                    label: "Empty / Void Element: <br> & <hr>",
+                    desc: "Beberapa elemen seperti <br> (baris baru), <hr> (garis mendatar), dan <img> (gambar) tidak membungkus teks sehingga tidak memiliki tag penutup."
+                }
+            };
+
+            const cur = parts[s2SelectedPart];
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Sintaks Dasar W3Schools</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Anatomi Elemen HTML & Aturan Tag Bersarang</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Sebuah ${term('element', 'elemen HTML')} umumnya tersusun atas ${term('tag', 'tag pembuka')}, isi konten, dan tag penutup, kecuali untuk ${term('void_element', 'Empty Elements')}.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <!-- Bedah Anatomi Interaktif -->
+                        <div class="lg:col-span-7 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-4">
+                            <div>
+                                <div class="text-xs font-bold text-slate-500 dark:text-slate-400 mb-3">Klik bagian kode di bawah ini untuk membedah fungsinya:</div>
+                                <div class="p-4 rounded-2xl bg-slate-900 text-white font-mono text-sm sm:text-lg flex flex-wrap items-center justify-center gap-2">
+                                    <button type="button" onclick="setS2Part('open')" class="px-3 py-1.5 rounded-xl font-bold transition ${s2SelectedPart === 'open' ? 'bg-indigo-600 text-white ring-2 ring-indigo-400' : 'bg-slate-800 text-emerald-300 hover:bg-slate-700'}">&lt;h1&gt;</button>
+                                    <button type="button" onclick="setS2Part('content')" class="px-3 py-1.5 rounded-xl font-bold transition ${s2SelectedPart === 'content' ? 'bg-indigo-600 text-white ring-2 ring-indigo-400' : 'bg-slate-800 text-slate-100 hover:bg-slate-700'}">Kopi Arabika Gayo</button>
+                                    <button type="button" onclick="setS2Part('close')" class="px-3 py-1.5 rounded-xl font-bold transition ${s2SelectedPart === 'close' ? 'bg-indigo-600 text-white ring-2 ring-indigo-400' : 'bg-slate-800 text-emerald-300 hover:bg-slate-700'}">&lt;/h1&gt;</button>
+                                    <button type="button" onclick="setS2Part('void')" class="px-3 py-1.5 rounded-xl font-bold transition ${s2SelectedPart === 'void' ? 'bg-amber-500 text-slate-950 ring-2 ring-amber-300' : 'bg-slate-800 text-amber-300 hover:bg-slate-700'}">&lt;hr&gt;</button>
+                                </div>
+                            </div>
+
+                            <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <div class="text-xs font-extrabold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">${cur.label}</div>
+                                <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">${cur.desc}</p>
+                            </div>
+
+                            <div class="p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-800/60 text-xs text-slate-700 dark:text-slate-300">
+                                <strong>Aturan ${term('nested', 'Nested Elements')}:</strong> Jika Anda membuka <code class="font-mono font-bold">&lt;p&gt;</code> lalu di dalamnya membuka <code class="font-mono font-bold">&lt;strong&gt;</code>, maka tutup <code class="font-mono font-bold">&lt;/strong&gt;</code> terlebih dahulu sebelum menutup <code class="font-mono font-bold">&lt;/p&gt;</code>.
+                            </div>
+                        </div>
+
+                        <!-- Simulator Lupa Tutup Tag -->
+                        <div class="lg:col-span-5 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-4">
+                            <div class="space-y-1.5">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-bold text-rose-600 dark:text-rose-400">Eksperimen Kesalahan Pemula</span>
+                                    <button type="button" onclick="toggleS2BrokenTag()" class="px-3 py-1 rounded-lg text-xs font-bold transition ${s2BrokenCloseTag ? 'bg-rose-600 text-white' : 'bg-emerald-600 text-white'}">
+                                        ${s2BrokenCloseTag ? 'Kondisi: Lupa </h1>' : 'Kondisi: Tag Lengkap'}
+                                    </button>
+                                </div>
+                                <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Apa Jadinya Jika Lupa Menulis Tag Penutup?</h3>
+                            </div>
+
+                            <div class="p-3.5 rounded-2xl bg-slate-900 text-slate-100 font-mono text-xs space-y-1">
+                                <div>&lt;h1&gt;Judul Toko Kopi${s2BrokenCloseTag ? ' <span class="text-rose-400">// Lupa &lt;/h1&gt;</span>' : '&lt;/h1&gt;'}</div>
+                                <div>&lt;p&gt;Paragraf deskripsi singkat toko.&lt;/p&gt;</div>
+                            </div>
+
+                            <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1">
+                                <div class="text-[10px] font-bold uppercase text-slate-400">Hasil di Layar Browser:</div>
+                                <div class="text-lg font-extrabold text-slate-900 dark:text-white">Judul Toko Kopi</div>
+                                <div class="${s2BrokenCloseTag ? 'text-lg font-extrabold text-rose-600 dark:text-rose-400' : 'text-xs text-slate-600 dark:text-slate-300'}">
+                                    Paragraf deskripsi singkat toko.
+                                </div>
+                                ${s2BrokenCloseTag ? '<p class="text-[11px] text-rose-600 dark:text-rose-400 pt-1">Karena &lt;h1&gt; belum ditutup, browser menganggap paragraf di bawahnya masih bagian dari judul besar!</p>' : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide3() {
+            const zones = {
+                doctype: {
+                    title: "<!DOCTYPE html>",
+                    desc: "Deklarasi wajib di baris pertama agar browser merender halaman menggunakan standar HTML5 modern."
+                },
+                html: {
+                    title: "<html lang='id'> ... </html>",
+                    desc: "Elemen akar (root element) yang membungkus seluruh isi dokumen. Atribut lang='id' membantu mesin pencari mengenali bahasa Indonesia."
+                },
+                head: {
+                    title: "<head> ... </head>",
+                    desc: "Berisi informasi di balik layar: pengaturan karakter UTF-8, viewport responsif, dan <title> yang tampil di tab atas browser."
+                },
+                body: {
+                    title: "<body> ... </body>",
+                    desc: "Wadah untuk semua konten yang tampil di kanvas layar pengunjung (judul, teks, gambar, tabel, dan form)."
+                }
+            };
+
+            const activeZone = zones[s3DocZone];
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Wajib di Setiap File .html</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Struktur Dasar Dokumen HTML5: <span class="font-mono">&lt;head&gt;</span> vs <span class="font-mono">&lt;body&gt;</span></h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Setiap dokumen HTML selalu dimulai dengan deklarasi ${term('doctype', '<!DOCTYPE html>')} dan terbagi menjadi area metadata ${term('head_tag', '<head>')} serta area tampilan visual ${term('body_tag', '<body>')}.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <!-- Kiri: Kode Struktur & Input Eksperimen -->
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-4">
+                            <div class="flex flex-wrap gap-1.5">
+                                <button type="button" onclick="setS3Zone('doctype')" class="px-2.5 py-1 rounded-lg font-mono text-xs font-bold ${s3DocZone === 'doctype' ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700'}">&lt;!DOCTYPE&gt;</button>
+                                <button type="button" onclick="setS3Zone('html')" class="px-2.5 py-1 rounded-lg font-mono text-xs font-bold ${s3DocZone === 'html' ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700'}">&lt;html&gt;</button>
+                                <button type="button" onclick="setS3Zone('head')" class="px-2.5 py-1 rounded-lg font-mono text-xs font-bold ${s3DocZone === 'head' ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700'}">&lt;head&gt;</button>
+                                <button type="button" onclick="setS3Zone('body')" class="px-2.5 py-1 rounded-lg font-mono text-xs font-bold ${s3DocZone === 'body' ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700'}">&lt;body&gt;</button>
+                            </div>
+
+                            <div class="p-4 rounded-2xl bg-slate-900 text-slate-100 font-mono text-xs space-y-1.5 overflow-x-auto">
+                                <div class="${s3DocZone === 'doctype' ? 'text-amber-300 font-bold' : 'text-slate-400'}">&lt;!DOCTYPE html&gt;</div>
+                                <div class="${s3DocZone === 'html' ? 'text-amber-300 font-bold' : 'text-slate-300'}">&lt;html lang="id"&gt;</div>
+                                <div class="pl-4 py-1 rounded ${s3DocZone === 'head' ? 'bg-indigo-950/90 border border-indigo-500/50' : ''}">
+                                    <div class="text-sky-300">&lt;head&gt;</div>
+                                    <div class="pl-4 text-slate-400">&lt;meta charset="UTF-8"&gt;</div>
+                                    <div class="pl-4 text-emerald-300">&lt;title&gt;${escapeHtml(s3TabTitle)}&lt;/title&gt;</div>
+                                    <div class="text-sky-300">&lt;/head&gt;</div>
+                                </div>
+                                <div class="pl-4 py-1 rounded ${s3DocZone === 'body' ? 'bg-indigo-950/90 border border-indigo-500/50' : ''}">
+                                    <div class="text-amber-300">&lt;body&gt;</div>
+                                    <div class="pl-4 text-white">&lt;h1&gt;${escapeHtml(s3BodyHeading)}&lt;/h1&gt;</div>
+                                    <div class="text-amber-300">&lt;/body&gt;</div>
+                                </div>
+                                <div class="${s3DocZone === 'html' ? 'text-amber-300 font-bold' : 'text-slate-300'}">&lt;/html&gt;</div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                <div>
+                                    <label class="text-[11px] font-bold text-slate-500 block mb-1">Ubah Isi &lt;title&gt; (di dalam &lt;head&gt;):</label>
+                                    <input type="text" value="${escapeHtml(s3TabTitle)}" oninput="updateS3HeadTitle(this.value)" class="w-full px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                </div>
+                                <div>
+                                    <label class="text-[11px] font-bold text-slate-500 block mb-1">Ubah Isi &lt;h1&gt; (di dalam &lt;body&gt;):</label>
+                                    <input type="text" value="${escapeHtml(s3BodyHeading)}" oninput="updateS3BodyHeading(this.value)" class="w-full px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Kanan: Simulasi Jendela Browser -->
+                        <div class="lg:col-span-6 flex flex-col justify-between gap-4">
+                            <div class="rounded-3xl bg-slate-100 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 overflow-hidden flex-1 flex flex-col">
+                                <!-- Browser Tab Bar (<head> <title>) -->
+                                <div class="px-3 pt-2.5 bg-slate-200/80 dark:bg-slate-800 flex items-center gap-2">
+                                    <div class="flex gap-1.5 px-2">
+                                        <span class="w-2.5 h-2.5 rounded-full bg-rose-400"></span>
+                                        <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+                                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                                    </div>
+                                    <div class="px-3.5 py-1.5 rounded-t-xl bg-white dark:bg-slate-900 text-xs font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-2 border-t border-x border-slate-200 dark:border-slate-700 max-w-xs truncate">
+                                        <i class="fa-solid fa-earth-asia text-[11px]"></i>
+                                        <span id="s3BrowserTabText" class="truncate">${escapeHtml(s3TabTitle)}</span>
+                                    </div>
+                                    <span class="text-[10px] font-bold text-slate-500">&larr; Dari &lt;head&gt;</span>
+                                </div>
+
+                                <!-- Address Bar -->
+                                <div class="px-3 py-2 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-[11px] font-mono text-slate-400">
+                                    file:///D:/proyek-umkm/index.html
+                                </div>
+
+                                <!-- Browser Viewport (<body>) -->
+                                <div class="p-5 bg-white dark:bg-slate-900 flex-1 flex flex-col justify-center">
+                                    <span class="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 mb-1">Area Kanvas &lt;body&gt;</span>
+                                    <h3 id="s3BrowserBodyText" class="text-xl font-extrabold text-slate-900 dark:text-white">${escapeHtml(s3BodyHeading)}</h3>
+                                    <p class="text-xs text-slate-500 mt-2">Seluruh elemen yang ditulis di dalam &lt;body&gt; akan dirender di area putih ini.</p>
+                                </div>
+                            </div>
+
+                            <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800">
+                                <div class="font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400">${escapeHtml(activeZone.title)}</div>
+                                <p class="text-xs text-slate-600 dark:text-slate-300 mt-1">${escapeHtml(activeZone.desc)}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide4() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Pengaturan Tambahan Elemen</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Cara Kerja ${term('attribute', 'Atribut HTML')} (<span class="font-mono">nama="nilai"</span>)</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Semua elemen HTML dapat memiliki atribut. Atribut memberikan informasi tambahan pada elemen dan <strong>selalu ditulis di dalam tag pembuka</strong>.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-4">
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Ubah Nilai Atribut Secara Langsung:</h3>
+
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1">1. Atribut <span class="font-mono text-indigo-600 dark:text-indigo-400">title="..."</span> (Muncul saat kursor diarahkan):</label>
+                                    <input type="text" value="${escapeHtml(s4AttrTitle)}" oninput="updateS4Title(this.value)" class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                </div>
+
+                                <div>
+                                    <label class="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1">2. Atribut <span class="font-mono text-indigo-600 dark:text-indigo-400">align="..."</span> / Perataan Teks:</label>
+                                    <div class="flex gap-2">
+                                        <button type="button" onclick="setS4Align('left')" class="flex-1 py-1.5 rounded-xl text-xs font-bold border ${s4AttrAlign === 'left' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700'}">left (Kiri)</button>
+                                        <button type="button" onclick="setS4Align('center')" class="flex-1 py-1.5 rounded-xl text-xs font-bold border ${s4AttrAlign === 'center' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700'}">center (Tengah)</button>
+                                        <button type="button" onclick="setS4Align('right')" class="flex-1 py-1.5 rounded-xl text-xs font-bold border ${s4AttrAlign === 'right' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700'}">right (Kanan)</button>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-700">
+                                    <span class="text-xs font-bold text-slate-600 dark:text-slate-300">3. Atribut Boolean <span class="font-mono text-indigo-600 dark:text-indigo-400">hidden</span> (Sembunyikan Elemen):</span>
+                                    <button type="button" onclick="toggleS4Hidden()" class="px-3 py-1.5 rounded-xl text-xs font-bold ${s4AttrHidden ? 'bg-rose-600 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200'}">
+                                        ${s4AttrHidden ? 'hidden Aktif' : 'Tidak Aktif'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-6 flex flex-col justify-between gap-4">
+                            <div class="p-4 rounded-2xl bg-slate-900 text-slate-100 font-mono text-xs space-y-1.5 overflow-x-auto">
+                                <div class="text-slate-400">// Perhatikan atribut selalu berada di dalam tag pembuka:</div>
+                                <div class="leading-relaxed">
+                                    &lt;<span class="text-emerald-300">p</span>
+                                    <span class="text-amber-300">id</span>=<span class="text-sky-300">"info-produk"</span>
+                                    <span class="text-amber-300">title</span>=<span id="s4CodeTitleText" class="text-sky-300">"${escapeHtml(s4AttrTitle)}"</span>
+                                    <span class="text-amber-300">align</span>=<span class="text-sky-300">"${s4AttrAlign}"</span>${s4AttrHidden ? ' <span class="text-rose-400">hidden</span>' : ''}&gt;
+                                    <div class="pl-4 text-white">Kopi Arabika Gayo Asli Kemasan 250gr</div>
+                                    &lt;/<span class="text-emerald-300">p</span>&gt;
+                                </div>
+                            </div>
+
+                            <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex-1 flex flex-col justify-between">
+                                <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Hasil Render Browser (Arahkan kursor ke kotak teks):</div>
+                                ${s4AttrHidden ? `
+                                    <div class="p-4 rounded-2xl border border-dashed border-rose-300 dark:border-rose-800 text-center text-xs text-rose-600 dark:text-rose-400 my-auto">
+                                        Elemen disembunyikan dari layar karena memiliki atribut <span class="font-mono font-bold">hidden</span>.
+                                    </div>
+                                ` : `
+                                    <p id="s4PreviewParagraph" title="${escapeHtml(s4AttrTitle)}" style="text-align: ${s4AttrAlign};" class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-800/70 text-sm font-extrabold text-slate-900 dark:text-white cursor-help my-auto">
+                                        Kopi Arabika Gayo Asli Kemasan 250gr
+                                    </p>
+                                `}
+                                <div class="text-[11px] text-slate-500 dark:text-slate-400">
+                                    Atribut ${term('id_class', 'id dan class')} juga ditulis dengan cara yang sama untuk mengenali elemen secara spesifik.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide5() {
+            const headingSizes = {
+                1: { sizeClass: "text-2xl sm:text-3xl font-extrabold", usage: "Judul Utama Halaman (Hanya 1 kali per halaman, contoh: Nama UMKM)" },
+                2: { sizeClass: "text-xl sm:text-2xl font-bold", usage: "Judul Bagian / Section Utama (Contoh: Katalog Produk, Tentang Kami, Kontak)" },
+                3: { sizeClass: "text-lg sm:text-xl font-bold", usage: "Sub-bagian atau Nama Kategori / Nama Produk di dalam Katalog" },
+                4: { sizeClass: "text-base font-bold", usage: "Sub-judul rincian spesifikasi produk" },
+                5: { sizeClass: "text-sm font-bold", usage: "Judul catatan tambahan berskala kecil" },
+                6: { sizeClass: "text-xs font-bold uppercase tracking-wider", usage: "Tingkatan judul paling kecil (jarang digunakan)" }
+            };
+
+            let levelButtons = '';
+            for (let i = 1; i <= 6; i++) {
+                levelButtons += `
+                    <button type="button" onclick="setS5Level(${i})" class="px-3.5 py-2 rounded-xl font-mono text-xs font-bold transition ${s5SelectedLevel === i ? 'bg-indigo-600 text-white shadow-xs' : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'}">
+                        &lt;h${i}&gt;
+                    </button>
+                `;
+            }
+
+            const cur = headingSizes[s5SelectedLevel];
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Hierarki Judul Halaman</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Tingkatan ${term('heading', 'Heading HTML')} (<span class="font-mono">&lt;h1&gt;</span> sampai <span class="font-mono">&lt;h6&gt;</span>)</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Gunakan heading untuk membangun kerangka urutan bab halaman, <strong>bukan sekadar untuk membuat tulisan tebal atau besar</strong>.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-4">
+                            <div class="space-y-2">
+                                <div class="text-xs font-bold text-slate-500 dark:text-slate-400">Pilih tingkat Heading untuk melihat ukuran & perannya:</div>
+                                <div class="flex flex-wrap gap-2">
+                                    ${levelButtons}
+                                </div>
+                            </div>
+
+                            <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 min-h-[110px] flex flex-col justify-center">
+                                <div class="text-[10px] font-mono text-indigo-600 dark:text-indigo-400 mb-1">&lt;h${s5SelectedLevel}&gt;Kedai Kopi Nusantara&lt;/h${s5SelectedLevel}&gt;</div>
+                                <div class="${cur.sizeClass} text-slate-900 dark:text-white">Kedai Kopi Nusantara</div>
+                            </div>
+
+                            <div class="p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-800/60 text-xs text-slate-700 dark:text-slate-200">
+                                <strong>Kapan memakai &lt;h${s5SelectedLevel}&gt;?</strong> ${cur.usage}
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-4">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Contoh Susunan Heading Profil UMKM</h3>
+                                <div class="flex gap-1 bg-slate-200/80 dark:bg-slate-900 p-1 rounded-xl">
+                                    <button type="button" onclick="setS5Outline('benar')" class="px-2.5 py-1 rounded-lg text-xs font-bold ${s5OutlineMode === 'benar' ? 'bg-emerald-600 text-white' : 'text-slate-600 dark:text-slate-400'}">Hierarki Rapi</button>
+                                    <button type="button" onclick="setS5Outline('salah')" class="px-2.5 py-1 rounded-lg text-xs font-bold ${s5OutlineMode === 'salah' ? 'bg-rose-600 text-white' : 'text-slate-600 dark:text-slate-400'}">Hierarki Salah</button>
+                                </div>
+                            </div>
+
+                            ${s5OutlineMode === 'benar' ? `
+                                <div class="p-4 rounded-2xl bg-slate-900 text-slate-100 font-mono text-xs space-y-1.5">
+                                    <div class="text-emerald-300">&lt;h1&gt;Kopi Lereng Gunung&lt;/h1&gt; <span class="text-slate-400">// Judul Utama Toko</span></div>
+                                    <div class="pl-4 text-sky-300">&lt;h2&gt;Menu Minuman Kopi&lt;/h2&gt; <span class="text-slate-400">// Kategori</span></div>
+                                    <div class="pl-8 text-amber-300">&lt;h3&gt;Kopi Susu Gula Aren&lt;/h3&gt; <span class="text-slate-400">// Produk 1</span></div>
+                                    <div class="pl-8 text-amber-300">&lt;h3&gt;Americano Dingin&lt;/h3&gt; <span class="text-slate-400">// Produk 2</span></div>
+                                    <div class="pl-4 text-sky-300">&lt;h2&gt;Lokasi &amp; Jam Buka&lt;/h2&gt; <span class="text-slate-400">// Bagian Baru</span></div>
+                                </div>
+                                <p class="text-xs text-emerald-700 dark:text-emerald-300">
+                                    Susunan berjenjang dari &lt;h1&gt; &rarr; &lt;h2&gt; &rarr; &lt;h3&gt; memudahkan pengunjung dan mesin pencari Google memahami struktur katalog Anda.
+                                </p>
+                            ` : `
+                                <div class="p-4 rounded-2xl bg-slate-900 text-slate-100 font-mono text-xs space-y-1.5">
+                                    <div class="text-rose-400">&lt;h4&gt;Kopi Lereng Gunung&lt;/h4&gt; <span class="text-slate-400">// Lompat ke h4</span></div>
+                                    <div class="text-rose-400">&lt;h1&gt;Kopi Susu Rp 15.000&lt;/h1&gt; <span class="text-slate-400">// Pakai h1 hanya agar besar</span></div>
+                                    <div class="text-rose-400">&lt;h1&gt;Pesan Sekarang!&lt;/h1&gt; <span class="text-slate-400">// Banyak h1 di satu halaman</span></div>
+                                </div>
+                                <p class="text-xs text-rose-600 dark:text-rose-400">
+                                    Hindari melompati urutan heading atau memakai banyak &lt;h1&gt; hanya karena ingin tulisannya tampak besar.
+                                </p>
+                            `}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide6() {
+            let codeView = '';
+            let browserView = '';
+
+            if (s6WhitespaceMode === 'raw') {
+                codeView = `&lt;p&gt;
+  Kopi Arabika Gayo.
+  Jam Buka: 08.00 - 22.00 WIB.
+  Alamat: Jl. Merdeka No. 10.
+&lt;/p&gt;`;
+                browserView = `
+                    <p class="text-sm text-slate-800 dark:text-slate-200">
+                        Kopi Arabika Gayo. Jam Buka: 08.00 - 22.00 WIB. Alamat: Jl. Merdeka No. 10.
+                    </p>
+                    <div class="mt-3 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-xs text-amber-800 dark:text-amber-300">
+                        <strong>Perhatikan:</strong> Walaupun di editor kode kita menekan tombol Enter 3 kali, browser menggabungkannya menjadi 1 baris lurus! Ini disebut sifat <em>Whitespace Collapse</em> pada HTML.
+                    </div>
+                `;
+            } else if (s6WhitespaceMode === 'br') {
+                codeView = `&lt;p&gt;
+  Kopi Arabika Gayo.&lt;br&gt;
+  Jam Buka: 08.00 - 22.00 WIB.&lt;br&gt;
+  Alamat: Jl. Merdeka No. 10.
+&lt;/p&gt;`;
+                browserView = `
+                    <p class="text-sm text-slate-800 dark:text-slate-200 leading-relaxed">
+                        Kopi Arabika Gayo.<br>
+                        Jam Buka: 08.00 - 22.00 WIB.<br>
+                        Alamat: Jl. Merdeka No. 10.
+                    </p>
+                    <div class="mt-3 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-800 dark:text-emerald-300">
+                        Dengan menyisipkan tag kosong <code class="font-mono font-bold">&lt;br&gt;</code> (Line Break), teks berhasil turun ke baris baru di dalam paragraf yang sama.
+                    </div>
+                `;
+            } else {
+                codeView = `&lt;p&gt;Kopi Arabika Gayo pilihan terbaik.&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;Jam Buka: 08.00 - 22.00 WIB.&lt;/p&gt;`;
+                browserView = `
+                    <div class="space-y-2.5 text-sm text-slate-800 dark:text-slate-200">
+                        <p>Kopi Arabika Gayo pilihan terbaik.</p>
+                        <hr class="border-slate-300 dark:border-slate-700">
+                        <p>Jam Buka: 08.00 - 22.00 WIB.</p>
+                    </div>
+                    <div class="mt-3 p-3 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-xs text-indigo-800 dark:text-indigo-300">
+                        Memisahkan dengan <code class="font-mono font-bold">&lt;p&gt;</code> baru memberi jarak antar-paragraf, sedangkan <code class="font-mono font-bold">&lt;hr&gt;</code> menggambar garis batas horizontal.
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Paragraf & Baris Baru</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Mengapa Tombol Enter di Kode HTML Diabaikan Browser?</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Menurut dokumentasi ${term('paragraph', 'W3Schools HTML Paragraphs')}, browser otomatis menghapus spasi berlebih dan baris baru di dalam kode sumber. Kita harus menggunakan tag <span class="font-mono font-bold">&lt;p&gt;</span>, <span class="font-mono font-bold">&lt;br&gt;</span>, atau <span class="font-mono font-bold">&lt;hr&gt;</span>.
+                        </p>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" onclick="setS6Whitespace('raw')" class="px-3.5 py-2 rounded-xl text-xs font-bold transition ${s6WhitespaceMode === 'raw' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">
+                            1. Hanya Tekan Enter di VS Code (Tanpa &lt;br&gt;)
+                        </button>
+                        <button type="button" onclick="setS6Whitespace('br')" class="px-3.5 py-2 rounded-xl text-xs font-bold transition ${s6WhitespaceMode === 'br' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">
+                            2. Gunakan Tag &lt;br&gt; (Pindah Baris)
+                        </button>
+                        <button type="button" onclick="setS6Whitespace('p_hr')" class="px-3.5 py-2 rounded-xl text-xs font-bold transition ${s6WhitespaceMode === 'p_hr' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">
+                            3. Pisah Paragraf &lt;p&gt; + Garis &lt;hr&gt;
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch my-auto">
+                        <div class="p-5 rounded-3xl bg-slate-900 text-slate-100 font-mono text-xs flex flex-col justify-between">
+                            <div class="text-indigo-400 font-bold mb-2">// Kode yang Ditulis di Editor (index.html)</div>
+                            <pre class="text-emerald-300 leading-relaxed whitespace-pre-wrap my-auto">${codeView}</pre>
+                            <div class="text-[11px] text-slate-400 pt-3 border-t border-slate-800">
+                                &lt;br&gt; dan &lt;hr&gt; adalah Empty Elements (tidak punya tag penutup).
+                            </div>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between">
+                            <div class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Hasil Tampilan di Web Browser:</div>
+                            <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 my-auto">
+                                ${browserView}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide7() {
+            const formats = {
+                strong: {
+                    tag: "<strong> vs <b>",
+                    title: "Teks Penting & Tebal (<strong>)",
+                    code: `<p>Status Stok: <strong>Tersedia (Siap Kirim)</strong></p>`,
+                    rendered: `<p class="text-base">Status Stok: <strong class="font-extrabold text-slate-900 dark:text-white">Tersedia (Siap Kirim)</strong></p>`,
+                    note: "Gunakan <strong> untuk teks yang memiliki tingkat kepentingan tinggi. Tag <b> hanya menebalkan huruf secara visual tanpa memberi makna semantik."
+                },
+                em: {
+                    tag: "<em> vs <i>",
+                    title: "Penekanan & Cetak Miring (<em>)",
+                    code: `<p>Disangrai dengan metode <em>Medium Roast</em> untuk menjaga aroma.</p>`,
+                    rendered: `<p class="text-base">Disangrai dengan metode <em class="italic font-semibold text-indigo-600 dark:text-indigo-400">Medium Roast</em> untuk menjaga aroma.</p>`,
+                    note: "Gunakan <em> (emphasized) untuk memberi penekanan intonasi kalimat, atau <i> untuk istilah asing/nama ilmiah."
+                },
+                del_ins: {
+                    tag: "<del> & <ins>",
+                    title: "Harga Coret Diskon (<del>) & Harga Baru (<ins>)",
+                    code: `<p>Harga Promo: <del>Rp 65.000</del> <ins>Rp 52.000</ins></p>`,
+                    rendered: `<p class="text-base">Harga Promo: <del class="text-rose-500 mr-1.5">Rp 65.000</del> <ins class="font-extrabold text-emerald-600 dark:text-emerald-400 underline">Rp 52.000</ins></p>`,
+                    note: "Sangat berguna saat membuat halaman katalog UMKM yang sedang mengadakan potongan harga."
+                },
+                mark: {
+                    tag: "<mark> & <small>",
+                    title: "Stabilo Sorotan (<mark>) & Keterangan Kecil (<small>)",
+                    code: `<p><mark>Gratis Ongkir</mark> <small>*Syarat & ketentuan berlaku</small></p>`,
+                    rendered: `<p class="text-base"><mark class="px-1.5 py-0.5 rounded bg-amber-200 text-slate-900 font-bold">Gratis Ongkir</mark> <small class="text-xs text-slate-500 ml-1">*Syarat & ketentuan berlaku</small></p>`,
+                    note: "Tag <mark> menyorot kata kunci penting seperti stabilo kuning, sedangkan <small> mengecilkan teks catatan kaki."
+                },
+                sub_sup: {
+                    tag: "<sub> & <sup>",
+                    title: "Teks Bawah (Subscript) & Teks Atas (Superscript)",
+                    code: `<p>Kadar Air H<sub>2</sub>O terjaga di suhu 24<sup>o</sup>C</p>`,
+                    rendered: `<p class="text-base">Kadar Air H<sub>2</sub>O terjaga di suhu 24<sup>o</sup>C</p>`,
+                    note: "<sub> menurunkan posisi huruf ke bawah (rumus kimia), sedangkan <sup> menaikkan huruf ke atas (pangkat/derajat)."
+                }
+            };
+
+            const cur = formats[s7ActiveTag];
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Penekanan Makna Teks</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Elemen ${term('formatting', 'Pemformatan Teks HTML')} untuk Katalog Produk</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            HTML menyediakan tag khusus untuk menandai harga coret, teks penting, sorotan promo, hingga catatan kecil di dalam paragraf.
+                        </p>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" onclick="setS7Format('strong')" class="px-3.5 py-2 rounded-xl font-mono text-xs font-bold transition ${s7ActiveTag === 'strong' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">&lt;strong&gt;</button>
+                        <button type="button" onclick="setS7Format('em')" class="px-3.5 py-2 rounded-xl font-mono text-xs font-bold transition ${s7ActiveTag === 'em' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">&lt;em&gt; &amp; &lt;i&gt;</button>
+                        <button type="button" onclick="setS7Format('del_ins')" class="px-3.5 py-2 rounded-xl font-mono text-xs font-bold transition ${s7ActiveTag === 'del_ins' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">&lt;del&gt; Harga Coret</button>
+                        <button type="button" onclick="setS7Format('mark')" class="px-3.5 py-2 rounded-xl font-mono text-xs font-bold transition ${s7ActiveTag === 'mark' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">&lt;mark&gt; &amp; &lt;small&gt;</button>
+                        <button type="button" onclick="setS7Format('sub_sup')" class="px-3.5 py-2 rounded-xl font-mono text-xs font-bold transition ${s7ActiveTag === 'sub_sup' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">&lt;sub&gt; &amp; &lt;sup&gt;</button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-slate-900 text-slate-100 font-mono text-xs flex flex-col justify-between gap-4">
+                            <div class="flex items-center justify-between text-indigo-400">
+                                <span>// Contoh Penulisan Tag</span>
+                                <span class="px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300">${escapeHtml(cur.tag)}</span>
+                            </div>
+                            <pre class="text-emerald-300 text-xs sm:text-sm whitespace-pre-wrap my-auto">${escapeHtml(cur.code)}</pre>
+                            <div class="text-[11px] text-slate-400 border-t border-slate-800 pt-2.5 font-sans">
+                                ${escapeHtml(cur.note)}
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-4">
+                            <div>
+                                <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">${escapeHtml(cur.title)}</span>
+                                <h3 class="text-sm font-bold text-slate-500 dark:text-slate-400 mt-0.5">Pratinjau Hasil di Browser:</h3>
+                            </div>
+                            <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 my-auto">
+                                ${cur.rendered}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide8() {
+            const links = {
+                internal: {
+                    title: "1. Tautan Antar-Halaman di Folder yang Sama (Relative URL)",
+                    code: `<a href="katalog.html">Lihat Katalog Produk</a>`,
+                    behavior: "Membuka file katalog.html di dalam tab browser yang sama (perilaku default tanpa atribut target)."
+                },
+                blank: {
+                    title: "2. Membuka Halaman di Tab Baru (target='_blank')",
+                    code: `<a href="https://maps.google.com" target="_blank">Buka Lokasi Toko di Google Maps</a>`,
+                    behavior: "Membuka tautan eksternal di tab browser baru sehingga pengunjung tidak meninggalkan halaman website UMKM Anda."
+                },
+                anchor: {
+                    title: "3. Tautan Melompat ke Bagian Halaman / Bookmark (#id)",
+                    code: `<a href="#form-pesan">Langsung ke Formulir Pemesanan</a>\n...\n<section id="form-pesan">...</section>`,
+                    behavior: "Menggulir (scroll) layar secara otomatis menuju elemen di halaman yang sama yang memiliki atribut id='form-pesan'."
+                },
+                wa: {
+                    title: "4. Tautan Kontak Cepat WhatsApp / Email UMKM",
+                    code: `<a href="https://wa.me/6281234567890" target="_blank">Hubungi Admin via WhatsApp</a>`,
+                    behavior: "Mengarahkan pengunjung langsung ke ruang obrolan WhatsApp atau aplikasi email milik pemilik UMKM."
+                }
+            };
+
+            const cur = links[s8LinkType];
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Navigasi Halaman</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Membuat Tautan dengan ${term('links', 'Elemen <a> (Hyperlink)')}</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Elemen <span class="font-mono font-bold">&lt;a&gt;</span> menghubungkan satu halaman ke halaman lain menggunakan atribut <span class="font-mono font-bold">href</span> (Hypertext Reference).
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+                        <button type="button" onclick="setS8Link('internal')" class="p-3 rounded-2xl border text-left text-xs font-bold transition ${s8LinkType === 'internal' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800'}">1. File Satu Folder</button>
+                        <button type="button" onclick="setS8Link('blank')" class="p-3 rounded-2xl border text-left text-xs font-bold transition ${s8LinkType === 'blank' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800'}">2. Tab Baru (_blank)</button>
+                        <button type="button" onclick="setS8Link('anchor')" class="p-3 rounded-2xl border text-left text-xs font-bold transition ${s8LinkType === 'anchor' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800'}">3. Bookmark (#id)</button>
+                        <button type="button" onclick="setS8Link('wa')" class="p-3 rounded-2xl border text-left text-xs font-bold transition ${s8LinkType === 'wa' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800'}">4. Link WhatsApp</button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-slate-900 text-slate-100 font-mono text-xs flex flex-col justify-between gap-3">
+                            <div class="text-indigo-400 font-bold">// ${escapeHtml(cur.title)}</div>
+                            <pre class="text-emerald-300 whitespace-pre-wrap leading-relaxed my-auto">${escapeHtml(cur.code)}</pre>
+                            <div class="text-[11px] text-slate-400 font-sans pt-2 border-t border-slate-800">
+                                ${escapeHtml(cur.behavior)}
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-4">
+                            <div>
+                                <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Uji Klik Tautan Simulasi:</h3>
+                                <p class="text-xs text-slate-500 mt-0.5">Klik tombol tautan di bawah ini untuk melihat simulasi respons browser:</p>
+                            </div>
+
+                            <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-center">
+                                <button type="button" onclick="triggerS8Click()" class="text-sm font-bold text-indigo-600 dark:text-indigo-400 underline hover:text-indigo-800 flex items-center gap-2">
+                                    <span>Klik Tautan Ini (${s8LinkType})</span>
+                                    <i class="fa-solid fa-arrow-pointer text-xs"></i>
+                                </button>
+                            </div>
+
+                            <div class="p-3.5 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-xs text-slate-700 dark:text-slate-200 leading-relaxed">
+                                <i class="fa-solid fa-circle-info text-indigo-600 dark:text-indigo-400 mr-1.5"></i>${escapeHtml(s8ClickFeedback)}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide9() {
+            const isBroken = s9ImgPathMode !== 'correct';
+            const srcCodeValue = s9ImgPathMode === 'correct'
+                ? 'img/kopi-gayo.jpg'
+                : s9ImgPathMode === 'wrong_name'
+                ? 'img/kopi_salah_ketik.jpg'
+                : 'kopi-gayo.jpg';
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Visual Katalog UMKM</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Menampilkan Gambar (<span class="font-mono">&lt;img&gt;</span>), ${term('filepath', 'Jalur Folder')} &amp; Fungsi <span class="font-mono">alt</span></h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Elemen ${term('images', '<img>')} memiliki dua atribut wajib: <span class="font-mono font-bold">src</span> untuk menunjuk lokasi file gambar dan <span class="font-mono font-bold">alt</span> sebagai teks pengganti saat gambar gagal dimuat.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-3.5">
+                            <div class="text-xs font-extrabold text-slate-900 dark:text-white">1. Pilih Skenario Jalur File (<span class="font-mono">src</span>):</div>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                <button type="button" onclick="setS9Path('correct')" class="p-2.5 rounded-xl border text-xs font-bold transition ${s9ImgPathMode === 'correct' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700'}">
+                                    Jalur Benar (img/kopi-gayo.jpg)
+                                </button>
+                                <button type="button" onclick="setS9Path('wrong_name')" class="p-2.5 rounded-xl border text-xs font-bold transition ${s9ImgPathMode === 'wrong_name' ? 'bg-rose-600 text-white border-rose-600' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700'}">
+                                    Salah Nama File
+                                </button>
+                                <button type="button" onclick="setS9Path('wrong_folder')" class="p-2.5 rounded-xl border text-xs font-bold transition ${s9ImgPathMode === 'wrong_folder' ? 'bg-rose-600 text-white border-rose-600' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700'}">
+                                    Lupa Nama Folder img/
+                                </button>
+                            </div>
+
+                            <div>
+                                <label class="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1">2. Ketik Sendiri Teks Alternatif (<span class="font-mono text-indigo-600 dark:text-indigo-400">alt="..."</span>):</label>
+                                <input type="text" value="${escapeHtml(s9CustomAlt)}" oninput="updateS9Alt(this.value)" class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+
+                            <div class="p-3.5 rounded-2xl bg-slate-900 text-slate-100 font-mono text-xs overflow-x-auto">
+                                &lt;<span class="text-emerald-300">img</span> <span class="text-amber-300">src</span>=<span class="${isBroken ? 'text-rose-400' : 'text-sky-300'}">"${srcCodeValue}"</span> <span class="text-amber-300">alt</span>=<span id="s9CodeAlt" class="text-sky-300">"${escapeHtml(s9CustomAlt)}"</span> <span class="text-amber-300">width</span>=<span class="text-sky-300">"${s9ImgWidth}"</span>&gt;
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-4">
+                            <div class="text-xs font-bold uppercase tracking-wider text-slate-400">Hasil Tampilan di Browser:</div>
+
+                            <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center min-h-[175px] text-center">
+                                ${!isBroken ? `
+                                    <div class="w-44 h-28 rounded-2xl bg-gradient-to-br from-amber-700 to-amber-900 text-white flex flex-col items-center justify-center p-3 shadow-sm">
+                                        <i class="fa-solid fa-mug-hot text-2xl mb-1 text-amber-200"></i>
+                                        <span class="text-xs font-extrabold">Kopi Arabika Gayo</span>
+                                        <span class="text-[10px] text-amber-200">img/kopi-gayo.jpg</span>
+                                    </div>
+                                    <p class="text-xs text-emerald-600 dark:text-emerald-400 font-bold mt-2.5">Gambar berhasil ditemukan di dalam folder img/ dan ditampilkan!</p>
+                                ` : `
+                                    <div class="p-4 rounded-xl border-2 border-dashed border-rose-300 dark:border-rose-800 bg-rose-50/50 dark:bg-rose-950/20 flex items-center gap-3 max-w-md">
+                                        <i class="fa-regular fa-file-image text-2xl text-rose-500 shrink-0"></i>
+                                        <div class="text-left">
+                                            <div class="text-[10px] font-mono uppercase text-rose-500 font-bold">Broken Image (File Tidak Ditemukan)</div>
+                                            <div id="s9BrokenAltPreview" class="text-xs font-bold text-slate-800 dark:text-slate-200 mt-0.5">${escapeHtml(s9CustomAlt)}</div>
+                                        </div>
+                                    </div>
+                                    <p class="text-xs text-rose-600 dark:text-rose-400 mt-2.5">
+                                        Karena jalur <span class="font-mono">${srcCodeValue}</span> salah, gambar gagal dimuat dan browser otomatis menampilkan teks <span class="font-mono font-bold">alt</span> sebagai penyelamat informasi!
+                                    </p>
+                                `}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide10() {
+            const listItemsCode = s10Items.map(function(item) {
+                return '  &lt;li&gt;' + escapeHtml(item) + '&lt;/li&gt;';
+            }).join('\n');
+
+            const listItemsRender = s10Items.map(function(item) {
+                return '<li class="py-0.5">' + escapeHtml(item) + '</li>';
+            }).join('');
+
+            const openListTag = s10ListTag === 'ul'
+                ? '&lt;ul&gt;'
+                : '&lt;ol type="' + s10OlType + '"&gt;';
+            const closeListTag = s10ListTag === 'ul' ? '&lt;/ul&gt;' : '&lt;/ol&gt;';
+
+            let listClass = 'list-disc pl-5';
+            if (s10ListTag === 'ol') {
+                if (s10OlType === '1') listClass = 'list-decimal pl-5';
+                if (s10OlType === 'A') listClass = 'list-[upper-alpha] pl-5';
+                if (s10OlType === 'i') listClass = 'list-[lower-roman] pl-5';
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Rincian Item & Tahapan</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Menyusun Daftar dengan ${term('lists', '<ul>, <ol>, dan <li>')}</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Gunakan <span class="font-mono font-bold">&lt;ul&gt;</span> (Unordered List) untuk daftar poin yang urutannya bebas, dan <span class="font-mono font-bold">&lt;ol&gt;</span> (Ordered List) untuk prosedur bertahap seperti langkah cara pemesanan.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-4">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <span class="text-xs font-extrabold text-slate-900 dark:text-white">Pilih Jenis List:</span>
+                                <div class="flex gap-1.5">
+                                    <button type="button" onclick="setS10Tag('ul')" class="px-3 py-1.5 rounded-xl text-xs font-bold ${s10ListTag === 'ul' ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700'}">&lt;ul&gt; (Bullets)</button>
+                                    <button type="button" onclick="setS10Tag('ol')" class="px-3 py-1.5 rounded-xl text-xs font-bold ${s10ListTag === 'ol' ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700'}">&lt;ol&gt; (Nomor)</button>
+                                </div>
+                            </div>
+
+                            ${s10ListTag === 'ol' ? `
+                                <div class="flex items-center justify-between gap-2 pt-1">
+                                    <span class="text-xs font-bold text-slate-500">Atribut Nomor (<span class="font-mono">type</span>):</span>
+                                    <div class="flex gap-1.5">
+                                        <button type="button" onclick="setS10OlType('1')" class="px-2.5 py-1 rounded-lg font-mono text-xs font-bold ${s10OlType === '1' ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-slate-900'}">type="1"</button>
+                                        <button type="button" onclick="setS10OlType('A')" class="px-2.5 py-1 rounded-lg font-mono text-xs font-bold ${s10OlType === 'A' ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-slate-900'}">type="A"</button>
+                                        <button type="button" onclick="setS10OlType('i')" class="px-2.5 py-1 rounded-lg font-mono text-xs font-bold ${s10OlType === 'i' ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-slate-900'}">type="i"</button>
+                                    </div>
+                                </div>
+                            ` : ''}
+
+                            <div class="pt-2 border-t border-slate-200 dark:border-slate-700 space-y-2">
+                                <label class="text-xs font-bold text-slate-600 dark:text-slate-300 block">Tambah Elemen <span class="font-mono">&lt;li&gt;</span> Baru ke Daftar:</label>
+                                <div class="flex gap-2">
+                                    <input id="s10ItemInput" type="text" value="${escapeHtml(s10NewItemInput)}" oninput="s10NewItemInput = this.value" placeholder="Ketik item baru..." class="flex-1 px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <button type="button" onclick="addS10Item()" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shrink-0">+ Tambah &lt;li&gt;</button>
+                                    <button type="button" onclick="resetS10Items()" class="px-3 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 text-xs font-bold">Reset</button>
+                                </div>
+                            </div>
+
+                            <div class="p-3.5 rounded-2xl bg-slate-900 text-slate-100 font-mono text-xs overflow-x-auto">
+                                <div class="text-amber-300">${openListTag}</div>
+                                <pre class="text-emerald-300">${listItemsCode}</pre>
+                                <div class="text-amber-300">${closeListTag}</div>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between">
+                            <div>
+                                <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Hasil Render di Browser</span>
+                                <h3 class="text-base font-extrabold text-slate-900 dark:text-white mt-0.5">Daftar Menu / Langkah Pemesanan</h3>
+                            </div>
+
+                            <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 my-auto">
+                                <ul class="${listClass} text-sm font-semibold text-slate-800 dark:text-slate-200 space-y-1">
+                                    ${listItemsRender}
+                                </ul>
+                            </div>
+
+                            <p class="text-xs text-slate-500 dark:text-slate-400">
+                                Jangan pernah menulis teks langsung di dalam <code class="font-mono">&lt;ul&gt;</code> atau <code class="font-mono">&lt;ol&gt;</code> tanpa membungkusnya dengan <code class="font-mono">&lt;li&gt;</code>.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide11() {
+            const rowsHtml = s11Rows.map(function(r) {
+                const trHighlight = s11HighlightPart === 'tr' ? 'ring-2 ring-amber-400 bg-amber-50/60 dark:bg-amber-950/30' : '';
+                const tdHighlight = s11HighlightPart === 'td' ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold' : '';
+                return `
+                    <tr class="border-b border-slate-200 dark:border-slate-700 ${trHighlight}">
+                        <td class="p-2.5 font-mono text-xs ${tdHighlight}">${escapeHtml(r.code)}</td>
+                        <td class="p-2.5 text-xs font-bold ${tdHighlight}">${escapeHtml(r.name)}</td>
+                        <td class="p-2.5 font-mono text-xs ${tdHighlight}">${escapeHtml(r.price)}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            const thHighlight = s11HighlightPart === 'th' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200';
+            const colspanHighlight = s11HighlightPart === 'colspan' ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 font-extrabold' : 'bg-slate-50 dark:bg-slate-800/40 text-slate-600 dark:text-slate-300';
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Tabel Katalog Harga</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Menyusun ${term('tables', 'Tabel HTML')} (<span class="font-mono">&lt;table&gt;</span>, <span class="font-mono">&lt;tr&gt;</span>, <span class="font-mono">&lt;th&gt;</span>, <span class="font-mono">&lt;td&gt;</span>)</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Tabel disusun baris demi baris menggunakan <span class="font-mono font-bold">&lt;tr&gt;</span>, diisi judul kolom <span class="font-mono font-bold">&lt;th&gt;</span>, sel data <span class="font-mono font-bold">&lt;td&gt;</span>, serta penggabungan sel dengan ${term('colspan', 'colspan')}.
+                        </p>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="text-xs font-bold text-slate-500">Sorot Bagian Tabel:</span>
+                        <button type="button" onclick="setS11Highlight('all')" class="px-3 py-1.5 rounded-xl text-xs font-bold ${s11HighlightPart === 'all' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800'}">Semua</button>
+                        <button type="button" onclick="setS11Highlight('th')" class="px-3 py-1.5 rounded-xl font-mono text-xs font-bold ${s11HighlightPart === 'th' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800'}">&lt;th&gt; (Header Kolom)</button>
+                        <button type="button" onclick="setS11Highlight('tr')" class="px-3 py-1.5 rounded-xl font-mono text-xs font-bold ${s11HighlightPart === 'tr' ? 'bg-amber-500 text-white' : 'bg-slate-100 dark:bg-slate-800'}">&lt;tr&gt; (Baris)</button>
+                        <button type="button" onclick="setS11Highlight('td')" class="px-3 py-1.5 rounded-xl font-mono text-xs font-bold ${s11HighlightPart === 'td' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800'}">&lt;td&gt; (Sel Data)</button>
+                        <button type="button" onclick="setS11Highlight('colspan')" class="px-3 py-1.5 rounded-xl font-mono text-xs font-bold ${s11HighlightPart === 'colspan' ? 'bg-emerald-600 text-white' : 'bg-slate-100 dark:bg-slate-800'}">colspan="2"</button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-4">
+                            <div class="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+                                <table class="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr class="border-b border-slate-200 dark:border-slate-700">
+                                            <th class="p-2.5 text-xs font-extrabold ${thHighlight}">Kode</th>
+                                            <th class="p-2.5 text-xs font-extrabold ${thHighlight}">Nama Produk UMKM</th>
+                                            <th class="p-2.5 text-xs font-extrabold ${thHighlight}">Harga</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${rowsHtml}
+                                        <tr>
+                                            <td colspan="2" class="p-2.5 text-xs font-bold ${colspanHighlight}">Total Produk Aktif (Digabung dengan colspan="2")</td>
+                                            <td class="p-2.5 font-mono text-xs font-extrabold ${colspanHighlight}">${s11Rows.length} Menu</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
+                                <div class="text-xs font-bold text-slate-700 dark:text-slate-200">Tambah Baris <span class="font-mono">&lt;tr&gt;</span> Produk Baru:</div>
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                    <input type="text" value="${escapeHtml(s11DraftName)}" oninput="s11DraftName = this.value" placeholder="Nama produk" class="px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold">
+                                    <input type="text" value="${escapeHtml(s11DraftPrice)}" oninput="s11DraftPrice = this.value" placeholder="Rp ..." class="px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold">
+                                    <button type="button" onclick="addS11Row()" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold">+ Baris &lt;tr&gt;</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-slate-900 text-slate-100 font-mono text-xs flex flex-col justify-between overflow-x-auto">
+                            <div class="text-indigo-400 font-bold mb-1">// Struktur Kode HTML Tabel Katalog</div>
+                            <pre class="text-slate-300 leading-relaxed">&lt;<span class="text-emerald-300">table</span> border="1"&gt;
+  &lt;<span class="text-sky-300">thead</span>&gt;
+    &lt;<span class="text-amber-300">tr</span>&gt;
+      &lt;<span class="text-indigo-300">th</span>&gt;Kode&lt;/<span class="text-indigo-300">th</span>&gt;
+      &lt;<span class="text-indigo-300">th</span>&gt;Nama Produk UMKM&lt;/<span class="text-indigo-300">th</span>&gt;
+      &lt;<span class="text-indigo-300">th</span>&gt;Harga&lt;/<span class="text-indigo-300">th</span>&gt;
+    &lt;/<span class="text-amber-300">tr</span>&gt;
+  &lt;/<span class="text-sky-300">thead</span>&gt;
+  &lt;<span class="text-sky-300">tbody</span>&gt;
+    &lt;<span class="text-amber-300">tr</span>&gt;
+      &lt;<span class="text-emerald-300">td</span>&gt;MN-01&lt;/<span class="text-emerald-300">td</span>&gt;
+      &lt;<span class="text-emerald-300">td</span>&gt;Kopi Arabika Gayo&lt;/<span class="text-emerald-300">td</span>&gt;
+      &lt;<span class="text-emerald-300">td</span>&gt;Rp 65.000&lt;/<span class="text-emerald-300">td</span>&gt;
+    &lt;/<span class="text-amber-300">tr</span>&gt;
+    &lt;<span class="text-amber-300">tr</span>&gt;
+      &lt;<span class="text-emerald-300">td</span> <span class="text-amber-300">colspan="2"</span>&gt;Total Produk Aktif&lt;/<span class="text-emerald-300">td</span>&gt;
+      &lt;<span class="text-emerald-300">td</span>&gt;${s11Rows.length} Menu&lt;/<span class="text-emerald-300">td</span>&gt;
+    &lt;/<span class="text-amber-300">tr</span>&gt;
+  &lt;/<span class="text-sky-300">tbody</span>&gt;
+&lt;/<span class="text-emerald-300">table</span>&gt;</pre>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide12() {
+            const inputDemos = {
+                text: {
+                    title: "type='text' (Isian Teks Singkat)",
+                    desc: "Digunakan untuk menerima input teks satu baris seperti nama lengkap pembeli atau kode kupon.",
+                    code: `<label for="nama">Nama Pemesan:</label>\n<input type="text" id="nama" name="nama" placeholder="Masukkan nama lengkap">`,
+                    widget: `
+                        <div class="space-y-1.5">
+                            <label for="demoInputText" class="text-xs font-bold text-slate-700 dark:text-slate-200 cursor-pointer block">Klik Label Ini &rarr; Nama Pemesan:</label>
+                            <input id="demoInputText" type="text" placeholder="Masukkan nama lengkap" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                    `
+                },
+                number: {
+                    title: "type='number' (Khusus Angka & Kuantitas)",
+                    desc: "Membatasi input hanya untuk angka serta menyediakan tombol panah atas/bawah untuk mengubah jumlah pesanan.",
+                    code: `<label for="qty">Jumlah Beli (Pcs):</label>\n<input type="number" id="qty" name="qty" min="1" max="50" value="1">`,
+                    widget: `
+                        <div class="space-y-1.5">
+                            <label for="demoInputNum" class="text-xs font-bold text-slate-700 dark:text-slate-200 cursor-pointer block">Jumlah Beli (Coba ketik huruf, pasti ditolak):</label>
+                            <input id="demoInputNum" type="number" min="1" max="50" value="2" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                    `
+                },
+                date: {
+                    title: "type='date' (Pemilih Tanggal Kalender)",
+                    desc: "Menampilkan kalender interaktif bawaan browser, sangat cocok untuk memilih tanggal pengambilan pesanan pre-order UMKM.",
+                    code: `<label for="tgl">Tanggal Ambil Pesanan:</label>\n<input type="date" id="tgl" name="tanggal_ambil">`,
+                    widget: `
+                        <div class="space-y-1.5">
+                            <label for="demoInputDate" class="text-xs font-bold text-slate-700 dark:text-slate-200 cursor-pointer block">Tanggal Ambil Pesanan:</label>
+                            <input id="demoInputDate" type="date" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                    `
+                },
+                radio: {
+                    title: "type='radio' (Pilihan Tunggal / Hanya Boleh Pilih Satu)",
+                    desc: "Agar pengguna hanya bisa memilih 1 opsi dari beberapa pilihan, atribut name pada seluruh radio grup tersebut WAJIB disamakan.",
+                    code: `<input type="radio" id="dingin" name="suhu" value="Es">\n<label for="dingin">Es (Dingin)</label>\n<input type="radio" id="panas" name="suhu" value="Panas">\n<label for="panas">Panas (Hot)</label>`,
+                    widget: `
+                        <div class="space-y-2">
+                            <div class="text-xs font-bold text-slate-700 dark:text-slate-200">Pilih Penyajian (Atribut name="suhu" sama):</div>
+                            <div class="flex items-center gap-4 text-xs font-bold">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="radio" name="demo_suhu" checked class="accent-indigo-600">
+                                    <span>Es (Dingin)</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="radio" name="demo_suhu" class="accent-indigo-600">
+                                    <span>Panas (Hot)</span>
+                                </label>
+                            </div>
+                        </div>
+                    `
+                },
+                checkbox: {
+                    title: "type='checkbox' (Pilihan Jamak / Boleh Centang Banyak)",
+                    desc: "Memungkinkan pembeli memilih lebih dari satu tambahan (topping) sekaligus, atau tidak memilih sama sekali.",
+                    code: `<input type="checkbox" id="top1" name="topping" value="Boba">\n<label for="top1">Tambah Boba (+Rp 5.000)</label>\n<input type="checkbox" id="top2" name="topping" value="Ekstra Espresso">\n<label for="top2">Ekstra Espresso (+Rp 4.000)</label>`,
+                    widget: `
+                        <div class="space-y-2">
+                            <div class="text-xs font-bold text-slate-700 dark:text-slate-200">Pilih Topping Tambahan (Bisa pilih lebih dari satu):</div>
+                            <div class="flex flex-col sm:flex-row gap-3 text-xs font-bold">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" checked class="accent-indigo-600">
+                                    <span>Tambah Boba (+Rp 5.000)</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" class="accent-indigo-600">
+                                    <span>Ekstra Espresso (+Rp 4.000)</span>
+                                </label>
+                            </div>
+                        </div>
+                    `
+                }
+            };
+
+            const cur = inputDemos[s12InputType];
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Formulir Interaktif (Bagian 1)</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Elemen ${term('forms', '<form>')}, ${term('label_tag', '<label>')}, dan Variasi ${term('input_types', '<input>')}</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Elemen <span class="font-mono font-bold">&lt;input&gt;</span> dapat berubah wujud menjadi kotak teks, angka, kalender, radio, hingga kotak centang hanya dengan mengubah atribut <span class="font-mono font-bold">type</span>.
+                        </p>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" onclick="setS12Input('text')" class="px-3.5 py-2 rounded-xl font-mono text-xs font-bold transition ${s12InputType === 'text' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800'}">type="text"</button>
+                        <button type="button" onclick="setS12Input('number')" class="px-3.5 py-2 rounded-xl font-mono text-xs font-bold transition ${s12InputType === 'number' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800'}">type="number"</button>
+                        <button type="button" onclick="setS12Input('date')" class="px-3.5 py-2 rounded-xl font-mono text-xs font-bold transition ${s12InputType === 'date' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800'}">type="date"</button>
+                        <button type="button" onclick="setS12Input('radio')" class="px-3.5 py-2 rounded-xl font-mono text-xs font-bold transition ${s12InputType === 'radio' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800'}">type="radio"</button>
+                        <button type="button" onclick="setS12Input('checkbox')" class="px-3.5 py-2 rounded-xl font-mono text-xs font-bold transition ${s12InputType === 'checkbox' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800'}">type="checkbox"</button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-slate-900 text-slate-100 font-mono text-xs flex flex-col justify-between gap-4">
+                            <div class="text-indigo-400 font-bold">// ${escapeHtml(cur.title)}</div>
+                            <pre class="text-emerald-300 whitespace-pre-wrap leading-relaxed my-auto">${escapeHtml(cur.code)}</pre>
+                            <div class="text-[11px] text-slate-400 font-sans border-t border-slate-800 pt-2.5">
+                                Hubungkan atribut <code class="text-amber-300">for</code> pada &lt;label&gt; dengan atribut <code class="text-amber-300">id</code> pada &lt;input&gt; agar label mudah diklik.
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-4">
+                            <div>
+                                <h3 class="text-base font-extrabold text-slate-900 dark:text-white">${escapeHtml(cur.title)}</h3>
+                                <p class="text-xs text-slate-600 dark:text-slate-300 mt-1">${escapeHtml(cur.desc)}</p>
+                            </div>
+
+                            <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 my-auto">
+                                ${cur.widget}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide13() {
+            let resultBanner = '';
+            if (s13SubmitResult) {
+                const isErr = s13SubmitResult.type === 'error';
+                resultBanner = `
+                    <div class="p-3.5 rounded-2xl border text-xs leading-relaxed ${isErr ? 'bg-rose-50 dark:bg-rose-950/50 border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-300' : 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300'}">
+                        <strong>${escapeHtml(s13SubmitResult.title)}</strong><br>
+                        ${escapeHtml(s13SubmitResult.message)}
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Formulir Interaktif (Bagian 2)</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Dropdown <span class="font-mono">&lt;select&gt;</span>, <span class="font-mono">&lt;textarea&gt;</span> &amp; ${term('input_attr', 'Atribut Validasi HTML5')}</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Selain <span class="font-mono">&lt;input&gt;</span>, formulir memiliki <span class="font-mono font-bold">&lt;select&gt;</span> untuk menu pilihan dropdown, <span class="font-mono font-bold">&lt;textarea&gt;</span> untuk alamat/catatan panjang, serta atribut <span class="font-mono font-bold">required</span>.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <!-- Form Interaktif -->
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-extrabold text-slate-900 dark:text-white">Simulasi Form Pemesanan UMKM</span>
+                                <button type="button" onclick="toggleS13Required()" class="px-2.5 py-1 rounded-lg text-xs font-bold ${s13UseRequired ? 'bg-indigo-600 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'}">
+                                    Atribut required: ${s13UseRequired ? 'AKTIF' : 'MATI'}
+                                </button>
+                            </div>
+
+                            <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3">
+                                <div>
+                                    <label class="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1">1. Nama Pembeli (<span class="font-mono">&lt;input type="text" ${s13UseRequired ? 'required' : ''}&gt;</span>):</label>
+                                    <input type="text" value="${escapeHtml(s13CustomerName)}" oninput="s13CustomerName = this.value" placeholder="Coba kosongkan lalu klik Kirim..." class="w-full px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold">
+                                </div>
+
+                                <div>
+                                    <label class="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1">2. Pilih Produk (<span class="font-mono">&lt;select&gt;</span> &amp; <span class="font-mono">&lt;option&gt;</span>):</label>
+                                    <select onchange="s13SelectedMenu = this.value; renderCurrentSlide();" class="w-full px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold">
+                                        <option value="Kopi Susu Gula Aren" ${s13SelectedMenu === 'Kopi Susu Gula Aren' ? 'selected' : ''}>Kopi Susu Gula Aren (Rp 18.000)</option>
+                                        <option value="Arabika Gayo 250g" ${s13SelectedMenu === 'Arabika Gayo 250g' ? 'selected' : ''}>Arabika Gayo 250g (Rp 65.000)</option>
+                                        <option value="Roti Bakar Srikaya" ${s13SelectedMenu === 'Roti Bakar Srikaya' ? 'selected' : ''}>Roti Bakar Srikaya (Rp 15.000)</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1">3. Catatan / Alamat (<span class="font-mono">&lt;textarea rows="2"&gt;</span>):</label>
+                                    <textarea rows="2" oninput="s13Notes = this.value" class="w-full px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold resize-none">${escapeHtml(s13Notes)}</textarea>
+                                </div>
+
+                                <button type="button" onclick="submitS13Form()" class="w-full py-2 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold transition">
+                                    Uji Klik &lt;button type="submit"&gt;Kirim Pesanan&lt;/button&gt;
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Kode & Hasil Tangkapan Data -->
+                        <div class="lg:col-span-6 flex flex-col justify-between gap-3.5">
+                            <div class="p-4 rounded-3xl bg-slate-900 text-slate-100 font-mono text-xs overflow-x-auto space-y-1">
+                                <div class="text-indigo-400 font-bold">// Struktur Kode Form HTML</div>
+                                <pre class="text-slate-300 leading-relaxed">&lt;<span class="text-emerald-300">form</span>&gt;
+  &lt;<span class="text-emerald-300">input</span> type="text" name="pemesan" ${s13UseRequired ? '<span class="text-amber-300">required</span>' : ''}&gt;
+  &lt;<span class="text-emerald-300">select</span> name="produk"&gt;
+    &lt;<span class="text-sky-300">option</span> value="${escapeHtml(s13SelectedMenu)}"&gt;${escapeHtml(s13SelectedMenu)}&lt;/<span class="text-sky-300">option</span>&gt;
+  &lt;/<span class="text-emerald-300">select</span>&gt;
+  &lt;<span class="text-emerald-300">textarea</span> name="catatan" rows="2"&gt;...&lt;/<span class="text-emerald-300">textarea</span>&gt;
+  &lt;<span class="text-emerald-300">button</span> type="submit"&gt;Kirim Pesanan&lt;/<span class="text-emerald-300">button</span>&gt;
+&lt;/<span class="text-emerald-300">form</span>&gt;</pre>
+                            </div>
+
+                            ${resultBanner || `
+                                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    Coba klik tombol <strong>Kirim Pesanan</strong> dalam keadaan Nama Pembeli masih kosong untuk menguji cara kerja atribut <code class="font-mono font-bold">required</code> bawaan HTML5!
+                                </div>
+                            `}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide14() {
+            const regions = {
+                header: {
+                    semanticTag: "<header>",
+                    divTag: "<div id='header'>",
+                    title: "Bagian Kepala Halaman (<header>)",
+                    desc: "Berisi identitas utama di bagian paling atas halaman, seperti logo UMKM, nama toko, dan slogan singkat."
+                },
+                nav: {
+                    semanticTag: "<nav>",
+                    divTag: "<div class='nav'>",
+                    title: "Bilah Tautan Navigasi (<nav>)",
+                    desc: "Membungkus kumpulan tautan menu utama halaman (Beranda, Katalog Produk, Cara Pesan, Kontak)."
+                },
+                main: {
+                    semanticTag: "<main>",
+                    divTag: "<div id='main'>",
+                    title: "Konten Inti Halaman (<main>)",
+                    desc: "Membungkus isi utama yang unik pada halaman tersebut. Di dalamnya terdapat satu atau beberapa <section>."
+                },
+                section: {
+                    semanticTag: "<section> & <article>",
+                    divTag: "<div class='box'>",
+                    title: "Kelompok Bab & Kartu Produk (<section> / <article>)",
+                    desc: "<section> mengelompokkan tema konten (misal: Bagian Katalog dan Bagian Form Pemesanan), sedangkan <article> membungkus unit mandiri seperti kartu produk."
+                },
+                aside: {
+                    semanticTag: "<aside>",
+                    divTag: "<div class='sidebar'>",
+                    title: "Informasi Pendamping (<aside>)",
+                    desc: "Menampilkan informasi tambahan di samping konten utama, seperti banner jam operasional atau info promo pengiriman."
+                },
+                footer: {
+                    semanticTag: "<footer>",
+                    divTag: "<div id='footer'>",
+                    title: "Bagian Kaki Halaman (<footer>)",
+                    desc: "Berada di bagian paling bawah halaman, memuat informasi hak cipta (copyright), alamat lengkap UMKM, dan tautan media sosial."
+                }
+            };
+
+            const cur = regions[s14ActiveRegion];
+            const isSem = s14LayoutMode === 'semantic';
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="space-y-1">
+                            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Standar Arsitektur HTML5</span>
+                            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">${term('semantic', 'Elemen Semantik HTML5')} vs <span class="font-mono">&lt;div&gt;</span> Biasa</h2>
+                        </div>
+                        <div class="flex gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl shrink-0 self-start">
+                            <button type="button" onclick="setS14Mode('semantic')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${isSem ? 'bg-indigo-600 text-white' : 'text-slate-600 dark:text-slate-300'}">Standar Semantik HTML5</button>
+                            <button type="button" onclick="setS14Mode('div_soup')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${!isSem ? 'bg-rose-600 text-white' : 'text-slate-600 dark:text-slate-300'}">Cara Lama (&lt;div&gt; Soup)</button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <!-- Visual Blueprint Layout (Klik per bagian) -->
+                        <div class="lg:col-span-7 p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2.5 font-mono text-xs">
+                            <div class="text-[11px] font-sans font-bold text-slate-500">Klik setiap blok tata letak halaman UMKM di bawah ini:</div>
+
+                            <button type="button" onclick="setS14Region('header')" class="w-full p-3 rounded-xl border-2 text-left transition flex items-center justify-between ${s14ActiveRegion === 'header' ? 'border-indigo-600 bg-indigo-50/80 dark:bg-indigo-950/60' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900'}">
+                                <span class="font-bold text-indigo-600 dark:text-indigo-400">${isSem ? '&lt;header&gt;' : '&lt;div id="header"&gt;'}</span>
+                                <span class="font-sans text-slate-600 dark:text-slate-300">Judul &amp; Slogan UMKM</span>
+                            </button>
+
+                            <button type="button" onclick="setS14Region('nav')" class="w-full p-2.5 rounded-xl border-2 text-left transition flex items-center justify-between ${s14ActiveRegion === 'nav' ? 'border-indigo-600 bg-indigo-50/80 dark:bg-indigo-950/60' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900'}">
+                                <span class="font-bold text-indigo-600 dark:text-indigo-400">${isSem ? '&lt;nav&gt;' : '&lt;div class="menu"&gt;'}</span>
+                                <span class="font-sans text-slate-600 dark:text-slate-300">Menu: Beranda | Katalog | Form Pesan</span>
+                            </button>
+
+                            <div class="grid grid-cols-12 gap-2.5">
+                                <div class="col-span-8 p-3 rounded-xl border-2 space-y-2 ${s14ActiveRegion === 'main' || s14ActiveRegion === 'section' ? 'border-indigo-600 bg-indigo-50/40 dark:bg-indigo-950/30' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900'}">
+                                    <div onclick="setS14Region('main')" class="cursor-pointer flex items-center justify-between">
+                                        <span class="font-bold text-emerald-600 dark:text-emerald-400">${isSem ? '&lt;main&gt;' : '&lt;div id="content"&gt;'}</span>
+                                        <span class="font-sans text-[11px] text-slate-400">Konten Utama</span>
+                                    </div>
+                                    <button type="button" onclick="setS14Region('section')" class="w-full p-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-left flex items-center justify-between">
+                                        <span class="font-bold text-amber-600 dark:text-amber-400">${isSem ? '&lt;section&gt; &amp; &lt;article&gt;' : '&lt;div class="box"&gt;'}</span>
+                                        <span class="font-sans text-[11px]">Katalog &amp; Form</span>
+                                    </button>
+                                </div>
+
+                                <button type="button" onclick="setS14Region('aside')" class="col-span-4 p-3 rounded-xl border-2 text-left flex flex-col justify-between ${s14ActiveRegion === 'aside' ? 'border-indigo-600 bg-indigo-50/80 dark:bg-indigo-950/60' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900'}">
+                                    <span class="font-bold text-indigo-600 dark:text-indigo-400">${isSem ? '&lt;aside&gt;' : '&lt;div&gt;'}</span>
+                                    <span class="font-sans text-[11px] text-slate-500">Info Jam Buka &amp; Promo</span>
+                                </button>
+                            </div>
+
+                            <button type="button" onclick="setS14Region('footer')" class="w-full p-3 rounded-xl border-2 text-left transition flex items-center justify-between ${s14ActiveRegion === 'footer' ? 'border-indigo-600 bg-indigo-50/80 dark:bg-indigo-950/60' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900'}">
+                                <span class="font-bold text-indigo-600 dark:text-indigo-400">${isSem ? '&lt;footer&gt;' : '&lt;div id="footer"&gt;'}</span>
+                                <span class="font-sans text-slate-600 dark:text-slate-300">Alamat UMKM &amp; Hak Cipta</span>
+                            </button>
+                        </div>
+
+                        <!-- Penjelasan Blok Aktif -->
+                        <div class="lg:col-span-5 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-4">
+                            <div class="space-y-2">
+                                <span class="px-2.5 py-1 rounded-lg font-mono text-xs font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+                                    ${escapeHtml(isSem ? cur.semanticTag : cur.divTag)}
+                                </span>
+                                <h3 class="text-base font-extrabold text-slate-900 dark:text-white pt-1">${escapeHtml(cur.title)}</h3>
+                                <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${escapeHtml(cur.desc)}</p>
+                            </div>
+
+                            <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                                <strong>Mengapa Semantik Lebih Baik dari &lt;div&gt; Biasa?</strong><br>
+                                Seluruh elemen semantik di atas bersifat ${term('block_inline', 'Block-level')} sama seperti <code class="font-mono">&lt;div&gt;</code>, tetapi namanya langsung menjelaskan arti bagian tersebut sehingga kode jauh lebih rapi dan mudah dipelihara.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide15() {
+            const questions = [
+                {
+                    id: 1,
+                    title: "1. Mengapa atribut alt pada gambar <img> tidak boleh diabaikan?",
+                    question: "Saat menambahkan foto produk UMKM dengan tag <img>, mengapa kita tetap wajib menuliskan atribut alt meskipun gambar sudah tampil normal di komputer kita?",
+                    answer: "Karena jika suatu saat koneksi internet pengunjung lambat, nama file gambar salah ketik, atau halaman diakses menggunakan pembaca layar (screen reader), teks di dalam atribut alt akan tampil menggantikan gambar sehingga informasi produk tidak hilang."
+                },
+                {
+                    id: 2,
+                    title: "2. Kapan kita memilih <input type='radio'> vs <input type='checkbox'>?",
+                    question: "Dalam merancang formulir pemesanan UMKM, bagaimana cara menentukan kapan harus memakai radio button dan kapan harus memakai checkbox?",
+                    answer: "Gunakan type='radio' (dengan atribut name yang sama) jika pembeli hanya boleh memilih tepat satu opsi (misalnya: Ukuran Cup Regular atau Large). Gunakan type='checkbox' jika pembeli bebas memilih banyak opsi sekaligus (misalnya: pilihan beberapa topping tambahan)."
+                },
+                {
+                    id: 3,
+                    title: "3. Persiapan Menuju Pertemuan 3 (CSS Dasar)",
+                    question: "Setelah kerangka halaman profil UMKM selesai ditulis menggunakan elemen semantik HTML5 (<header>, <nav>, <main>, <section>, <footer>), apa langkah kita pada pertemuan minggu depan?",
+                    answer: "Minggu depan pada Pertemuan 3 (CSS Dasar), file HTML yang sudah Anda bangun hari ini akan kita hubungkan dengan file style.css untuk diatur skema warnanya, jenis huruf (font), jarak margin/padding, serta desain kartu produknya."
+                }
+            ];
+
+            let cardsHtml = '';
+            for (let i = 0; i < questions.length; i++) {
+                const q = questions[i];
+                const isOpen = s15OpenKeys[q.id];
+                cardsHtml += `
+                    <div class="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-3">
+                        <div class="space-y-1.5">
+                            <div class="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">${q.title}</div>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">${q.question}</p>
+                        </div>
+                        <div class="pt-2 border-t border-slate-200/70 dark:border-slate-700/70">
+                            <button type="button" onclick="toggleS15Reflection(${q.id})" class="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1.5">
+                                <i class="fa-regular ${isOpen ? 'fa-eye-slash' : 'fa-lightbulb'}"></i>
+                                <span>${isOpen ? 'Sembunyikan Kunci Konsep' : 'Lihat Kunci Konsep'}</span>
+                            </button>
+                            ${isOpen ? `<div class="mt-2.5 p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">${q.answer}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Penutup Pertemuan 2</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Kesimpulan Inti &amp; Refleksi Pemahaman HTML Dasar</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Ringkasan konsep utama penyusunan struktur halaman HTML5 beserta bahan diskusi sebelum melangkah ke materi desain CSS.
+                        </p>
+                    </div>
+
+                    <div class="p-4 sm:p-5 rounded-3xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-800/60">
+                        <div class="text-xs font-extrabold uppercase tracking-wider text-indigo-700 dark:text-indigo-300 mb-3">
+                            <i class="fa-solid fa-bookmark mr-1.5"></i>3 Kesimpulan Utama Pertemuan 2
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-indigo-100 dark:border-slate-800">
+                                <div class="text-xs font-extrabold text-slate-900 dark:text-white">1. Anatomi Dokumen &amp; Elemen</div>
+                                <p class="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
+                                    Dokumen HTML5 selalu diawali <code class="font-mono">&lt;!DOCTYPE html&gt;</code>, memisahkan metadata di dalam <code class="font-mono">&lt;head&gt;</code> dan konten visual di dalam <code class="font-mono">&lt;body&gt;</code>.
+                                </p>
+                            </div>
+                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-indigo-100 dark:border-slate-800">
+                                <div class="text-xs font-extrabold text-slate-900 dark:text-white">2. Kelengkapan Elemen Konten</div>
+                                <p class="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
+                                    Informasi disajikan sesuai perannya menggunakan heading <code class="font-mono">&lt;h1&gt;-&lt;h6&gt;</code>, paragraf <code class="font-mono">&lt;p&gt;</code>, tautan <code class="font-mono">&lt;a&gt;</code>, gambar <code class="font-mono">&lt;img&gt;</code>, daftar <code class="font-mono">&lt;ul&gt;/&lt;ol&gt;</code>, serta tabel <code class="font-mono">&lt;table&gt;</code>.
+                                </p>
+                            </div>
+                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-indigo-100 dark:border-slate-800">
+                                <div class="text-xs font-extrabold text-slate-900 dark:text-white">3. Formulir &amp; Struktur Semantik</div>
+                                <p class="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
+                                    Elemen <code class="font-mono">&lt;form&gt;</code> menyiapkan wadah input pesanan, sementara tag semantik (<code class="font-mono">&lt;header&gt;</code>, <code class="font-mono">&lt;main&gt;</code>, <code class="font-mono">&lt;footer&gt;</code>) menata arsitektur halaman dengan rapi.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2 my-auto">
+                        <div class="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                            Pertanyaan Refleksi Diri &amp; Diskusi Kelas
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            ${cardsHtml}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        const SLIDES = [
+            { id: 1, category: "Orientasi", title: "Orientasi Pertemuan 2: Menyusun Kerangka HTML5", render: renderSlide1 },
+            { id: 2, category: "Sintaks Dasar", title: "Anatomi Elemen HTML, Tag Penutup & Nested Elements", render: renderSlide2 },
+            { id: 3, category: "Struktur Dokumen", title: "Struktur Dasar Dokumen HTML5: <head> vs <body>", render: renderSlide3 },
+            { id: 4, category: "Sintaks Dasar", title: "Cara Kerja Atribut HTML (nama='nilai')", render: renderSlide4 },
+            { id: 5, category: "Tipografi & Teks", title: "Hierarki Heading HTML (<h1> sampai <h6>)", render: renderSlide5 },
+            { id: 6, category: "Tipografi & Teks", title: "Paragraf (<p>), Baris Baru (<br>, <hr>) & Aturan Spasi", render: renderSlide6 },
+            { id: 7, category: "Tipografi & Teks", title: "Pemformatan Teks untuk Katalog (<strong>, <em>, <del>)", render: renderSlide7 },
+            { id: 8, category: "Tautan & Media", title: "Membuat Hyperlink (<a>), Atribut href, target & Bookmark", render: renderSlide8 },
+            { id: 9, category: "Tautan & Media", title: "Menampilkan Gambar (<img>), Jalur Folder & Atribut alt", render: renderSlide9 },
+            { id: 10, category: "Daftar & Tabel", title: "Menyusun Daftar (<ul>, <ol>, dan <li>)", render: renderSlide10 },
+            { id: 11, category: "Daftar & Tabel", title: "Tabel HTML (<table>, <tr>, <th>, <td> & colspan)", render: renderSlide11 },
+            { id: 12, category: "Formulir HTML", title: "Formulir Bagian 1: <form>, <label>, dan Variasi <input>", render: renderSlide12 },
+            { id: 13, category: "Formulir HTML", title: "Formulir Bagian 2: <select>, <textarea> & Validasi required", render: renderSlide13 },
+            { id: 14, category: "Arsitektur Layout", title: "Elemen Semantik HTML5 vs <div> Biasa", render: renderSlide14 },
+            { id: 15, category: "Refleksi", title: "Kesimpulan Inti & Refleksi Pemahaman Pertemuan 2", render: renderSlide15 }
+        ];
+
+        function renderCurrentSlide() {
+            const slide = SLIDES[currentSlideIndex];
+            const viewport = document.getElementById('slideViewport');
+            viewport.innerHTML = slide.render();
+
+            const pct = Math.round(((currentSlideIndex + 1) / TOTAL_SLIDES) * 100);
+            document.getElementById('topProgressBar').style.width = pct + '%';
+            document.getElementById('slideCounterBadge').textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES;
+            document.getElementById('mobileFooterCounter').textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES;
+            document.getElementById('slideCategoryPill').textContent = slide.category;
+            document.getElementById('headerSlideTitle').textContent = slide.title;
+
+            const prevBtn = document.getElementById('prevSlideBtn');
+            const nextBtn = document.getElementById('nextSlideBtn');
+            const nextBtnText = document.getElementById('nextBtnText');
+
+            prevBtn.disabled = currentSlideIndex === 0;
+            if (currentSlideIndex === TOTAL_SLIDES - 1) {
+                nextBtnText.textContent = "Selesai";
+                nextBtn.disabled = true;
+            } else {
+                nextBtnText.textContent = "Selanjutnya";
+                nextBtn.disabled = false;
+            }
+
+            renderDotsAndDrawer();
+        }
+
+        function renderDotsAndDrawer() {
+            const dotsContainer = document.getElementById('slideDotsContainer');
+            let dotsHtml = '';
+            let drawerHtml = '';
+
+            for (let idx = 0; idx < SLIDES.length; idx++) {
+                const s = SLIDES[idx];
+                const isActive = idx === currentSlideIndex;
+                const dotClass = isActive
+                    ? 'w-7 bg-indigo-600 dark:bg-indigo-400'
+                    : 'w-2 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400';
+
+                dotsHtml += `<button type="button" onclick="goToSlide(${idx})" title="${escapeHtml(s.title)}" class="h-2 rounded-full transition-all ${dotClass}"></button>`;
+
+                const itemClass = isActive
+                    ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 font-bold'
+                    : 'hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-300';
+                const badgeClass = isActive
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500';
+
+                drawerHtml += `
+                    <button type="button" onclick="selectSlideFromDrawer(${idx})" class="w-full text-left p-3 rounded-xl transition flex items-start gap-3 ${itemClass}">
+                        <span class="w-6 h-6 rounded-lg text-xs font-extrabold flex items-center justify-center shrink-0 ${badgeClass}">${s.id}</span>
+                        <div class="min-w-0">
+                            <div class="text-[10px] uppercase tracking-wider opacity-75">${escapeHtml(s.category)}</div>
+                            <div class="text-xs sm:text-sm truncate">${escapeHtml(s.title)}</div>
+                        </div>
+                    </button>
+                `;
+            }
+
+            dotsContainer.innerHTML = dotsHtml;
+            document.getElementById('drawerSlideList').innerHTML = drawerHtml;
+        }
+
+        function selectSlideFromDrawer(index) {
+            goToSlide(index);
+            toggleSlideDrawer();
+        }
+
+        function changeSlide(direction) {
+            const nextIdx = currentSlideIndex + direction;
+            if (nextIdx >= 0 && nextIdx < TOTAL_SLIDES) {
+                currentSlideIndex = nextIdx;
+                renderCurrentSlide();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function goToSlide(index) {
+            if (index >= 0 && index < TOTAL_SLIDES) {
+                currentSlideIndex = index;
+                renderCurrentSlide();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function toggleSlideDrawer() {
+            const drawer = document.getElementById('slideDrawer');
+            const backdrop = document.getElementById('slideDrawerBackdrop');
+            const isClosed = drawer.classList.contains('-translate-x-full');
+
+            if (isClosed) {
+                backdrop.classList.remove('hidden');
+                setTimeout(function () {
+                    backdrop.classList.remove('opacity-0');
+                }, 10);
+                drawer.classList.remove('-translate-x-full');
+            } else {
+                backdrop.classList.add('opacity-0');
+                drawer.classList.add('-translate-x-full');
+                setTimeout(function () {
+                    backdrop.classList.add('hidden');
+                }, 200);
+            }
+        }
+
+        // Handler Slide 1
+        function setS1Preview(mode) {
+            s1PreviewMode = mode;
+            renderCurrentSlide();
+        }
+
+        // Handler Slide 2
+        function setS2Part(part) {
+            s2SelectedPart = part;
+            renderCurrentSlide();
+        }
+        function toggleS2BrokenTag() {
+            s2BrokenCloseTag = !s2BrokenCloseTag;
+            renderCurrentSlide();
+        }
+
+        // Handler Slide 3
+        function setS3Zone(zone) {
+            s3DocZone = zone;
+            renderCurrentSlide();
+        }
+        function updateS3HeadTitle(val) {
+            s3TabTitle = val;
+            const tabEl = document.getElementById('s3BrowserTabText');
+            if (tabEl) tabEl.textContent = val || 'Untitled';
+        }
+        function updateS3BodyHeading(val) {
+            s3BodyHeading = val;
+            const bodyEl = document.getElementById('s3BrowserBodyText');
+            if (bodyEl) bodyEl.textContent = val;
+        }
+
+        // Handler Slide 4
+        function updateS4Title(val) {
+            s4AttrTitle = val;
+            const codeEl = document.getElementById('s4CodeTitleText');
+            const pEl = document.getElementById('s4PreviewParagraph');
+            if (codeEl) codeEl.textContent = '"' + val + '"';
+            if (pEl) pEl.setAttribute('title', val);
+        }
+        function setS4Align(alignVal) {
+            s4AttrAlign = alignVal;
+            renderCurrentSlide();
+        }
+        function toggleS4Hidden() {
+            s4AttrHidden = !s4AttrHidden;
+            renderCurrentSlide();
+        }
+
+        // Handler Slide 5
+        function setS5Level(lvl) {
+            s5SelectedLevel = lvl;
+            renderCurrentSlide();
+        }
+        function setS5Outline(mode) {
+            s5OutlineMode = mode;
+            renderCurrentSlide();
+        }
+
+        // Handler Slide 6
+        function setS6Whitespace(mode) {
+            s6WhitespaceMode = mode;
+            renderCurrentSlide();
+        }
+
+        // Handler Slide 7
+        function setS7Format(tagKey) {
+            s7ActiveTag = tagKey;
+            renderCurrentSlide();
+        }
+
+        // Handler Slide 8
+        function setS8Link(linkKey) {
+            s8LinkType = linkKey;
+            s8ClickFeedback = 'Klik tombol tautan di atas untuk menguji perilaku atribut href dan target.';
+            renderCurrentSlide();
+        }
+        function triggerS8Click() {
+            if (s8LinkType === 'internal') {
+                s8ClickFeedback = 'Respons Browser: Berpindah membuka file katalog.html di dalam tab yang sedang aktif saat ini.';
+            } else if (s8LinkType === 'blank') {
+                s8ClickFeedback = 'Respons Browser: Karena terdapat atribut target="_blank", browser membuka Google Maps di Tab Baru tanpa menutup halaman UMKM.';
+            } else if (s8LinkType === 'anchor') {
+                s8ClickFeedback = 'Respons Browser: Karena diawali tanda pagar (#form-pesan), halaman otomatis menggulir turun menuju elemen ber-ID "form-pesan".';
+            } else {
+                s8ClickFeedback = 'Respons Browser: Membuka aplikasi WhatsApp menuju nomor admin UMKM di tab baru.';
+            }
+            renderCurrentSlide();
+        }
+
+        // Handler Slide 9
+        function setS9Path(mode) {
+            s9ImgPathMode = mode;
+            renderCurrentSlide();
+        }
+        function updateS9Alt(val) {
+            s9CustomAlt = val;
+            const codeAlt = document.getElementById('s9CodeAlt');
+            const brokenPreview = document.getElementById('s9BrokenAltPreview');
+            if (codeAlt) codeAlt.textContent = '"' + val + '"';
+            if (brokenPreview) brokenPreview.textContent = val;
+        }
+
+        // Handler Slide 10
+        function setS10Tag(tag) {
+            s10ListTag = tag;
+            renderCurrentSlide();
+        }
+        function setS10OlType(typeVal) {
+            s10OlType = typeVal;
+            renderCurrentSlide();
+        }
+        function addS10Item() {
+            const clean = (s10NewItemInput || '').trim();
+            if (!clean) return;
+            s10Items.push(clean);
+            s10NewItemInput = '';
+            renderCurrentSlide();
+        }
+        function resetS10Items() {
+            s10Items = ['Kopi Susu Gula Aren', 'Teh Tarik Rempah', 'Roti Bakar Srikaya'];
+            s10NewItemInput = '';
+            renderCurrentSlide();
+        }
+
+        // Handler Slide 11
+        function setS11Highlight(part) {
+            s11HighlightPart = part;
+            renderCurrentSlide();
+        }
+        function addS11Row() {
+            const nameClean = (s11DraftName || '').trim() || 'Menu Baru';
+            const priceClean = (s11DraftPrice || '').trim() || 'Rp 25.000';
+            const nextNum = s11Rows.length + 1;
+            s11Rows.push({
+                code: 'MN-0' + nextNum,
+                name: nameClean,
+                price: priceClean
+            });
+            if (s11Rows.length > 4) s11Rows.shift();
+            renderCurrentSlide();
+        }
+
+        // Handler Slide 12
+        function setS12Input(typeVal) {
+            s12InputType = typeVal;
+            renderCurrentSlide();
+        }
+
+        // Handler Slide 13
+        function toggleS13Required() {
+            s13UseRequired = !s13UseRequired;
+            s13SubmitResult = null;
+            renderCurrentSlide();
+        }
+        function submitS13Form() {
+            const cleanName = (s13CustomerName || '').trim();
+            if (s13UseRequired && !cleanName) {
+                s13SubmitResult = {
+                    type: 'error',
+                    title: 'Validasi HTML5 Mencegah Pengiriman (Atribut required Aktif!)',
+                    message: 'Browser menampilkan peringatan: "Please fill out this field" pada kolom Nama Pembeli karena masih kosong.'
+                };
+            } else {
+                s13SubmitResult = {
+                    type: 'success',
+                    title: 'Data Formulir Siap Diproses!',
+                    message: 'Pasangan name="value" terkumpul: pemesan="' + (cleanName || 'Tanpa Nama') + '", produk="' + s13SelectedMenu + '", catatan="' + s13Notes + '".'
+                };
+            }
+            renderCurrentSlide();
+        }
+
+        // Handler Slide 14
+        function setS14Mode(mode) {
+            s14LayoutMode = mode;
+            renderCurrentSlide();
+        }
+        function setS14Region(reg) {
+            s14ActiveRegion = reg;
+            renderCurrentSlide();
+        }
+
+        // Handler Slide 15
+        function toggleS15Reflection(id) {
+            s15OpenKeys[id] = !s15OpenKeys[id];
+            renderCurrentSlide();
+        }
+
+        function showTerm(key) {
+            const item = GLOSSARY_DB[key];
+            if (!item) return;
+
+            document.getElementById('termCategoryBadge').textContent = item.category;
+            document.getElementById('termTitle').textContent = item.title;
+            document.getElementById('termMainDesc').textContent = item.main;
+            document.getElementById('termDetailDesc').textContent = item.detail;
+            document.getElementById('termSourceName').textContent = "Sumber: " + item.source;
+            document.getElementById('termSourceUrl').href = item.url;
+
+            const modal = document.getElementById('termModalBackdrop');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeTermModal() {
+            const modal = document.getElementById('termModalBackdrop');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function openGlossaryIndex() {
+            document.getElementById('glossarySearchInput').value = '';
+            renderGlossaryList('');
+            const modal = document.getElementById('glossaryModalBackdrop');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeGlossaryIndex() {
+            const modal = document.getElementById('glossaryModalBackdrop');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function selectGlossaryTerm(key) {
+            closeGlossaryIndex();
+            showTerm(key);
+        }
+
+        function renderGlossaryList(query) {
+            const q = String(query || '').trim().toLowerCase();
+            const allKeys = Object.keys(GLOSSARY_DB);
+            const matchedKeys = [];
+
+            for (let i = 0; i < allKeys.length; i++) {
+                const k = allKeys[i];
+                const item = GLOSSARY_DB[k];
+                if (
+                    item.title.toLowerCase().indexOf(q) !== -1 ||
+                    item.category.toLowerCase().indexOf(q) !== -1 ||
+                    item.main.toLowerCase().indexOf(q) !== -1
+                ) {
+                    matchedKeys.push(k);
+                }
+            }
+
+            const container = document.getElementById('glossaryListGrid');
+            if (matchedKeys.length === 0) {
+                container.innerHTML = '<div class="col-span-2 text-center py-8 text-xs text-slate-500">Istilah tidak ditemukan.</div>';
+                return;
+            }
+
+            let html = '';
+            for (let i = 0; i < matchedKeys.length; i++) {
+                const k = matchedKeys[i];
+                const item = GLOSSARY_DB[k];
+                html += `
+                    <button type="button" onclick="selectGlossaryTerm('${k}')" class="text-left p-4 rounded-2xl bg-slate-50 hover:bg-indigo-50/60 dark:bg-slate-800/50 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800 transition space-y-1">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">${escapeHtml(item.category)}</span>
+                            <span class="text-[10px] text-slate-400">${escapeHtml(item.source)}</span>
+                        </div>
+                        <div class="text-sm font-extrabold text-slate-900 dark:text-white">${escapeHtml(item.title)}</div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">${escapeHtml(item.main)}</p>
+                    </button>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function toggleTheme() {
+            const htmlEl = document.documentElement;
+            const icon = document.getElementById('themeIcon');
+            htmlEl.classList.toggle('dark');
+            const isDark = htmlEl.classList.contains('dark');
+            icon.className = isDark ? 'fa-solid fa-sun text-amber-400 text-sm' : 'fa-solid fa-moon text-sm';
+        }
+
+        document.addEventListener('keydown', function (e) {
+            const activeTag = document.activeElement && document.activeElement.tagName
+                ? document.activeElement.tagName.toLowerCase()
+                : '';
+            if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') return;
+
+            if (e.key === 'ArrowRight') changeSlide(1);
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+            if (e.key === 'Escape') {
+                closeTermModal();
+                closeGlossaryIndex();
+            }
+        });
+
+        window.onload = function () {
+            renderCurrentSlide();
+        };
+    </script>
+</body>
+</html>
