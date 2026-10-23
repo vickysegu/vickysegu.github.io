@@ -1,0 +1,2213 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Praktikum 1: Panduan & Lembar Kerja Mahasiswa (LKM 01) UI/UX</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" defer></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <script>
+        if (typeof tailwind !== 'undefined') {
+            tailwind.config = {
+                darkMode: 'class',
+                theme: {
+                    extend: {
+                        fontFamily: {
+                            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                            mono: ['"JetBrains Mono"', 'monospace']
+                        }
+                    }
+                }
+            };
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .tech-term {
+            color: #4f46e5;
+            font-weight: 700;
+            cursor: pointer;
+            transition: color 0.15s ease, opacity 0.15s ease;
+        }
+        .dark .tech-term {
+            color: #818cf8;
+        }
+        .tech-term:hover {
+            color: #3730a3;
+            opacity: 0.85;
+        }
+        .dark .tech-term:hover {
+            color: #a5b4fc;
+        }
+
+        .slide-enter {
+            animation: fadeSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes fadeSlide {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        textarea.auto-expand {
+            resize: vertical;
+            min-height: 115px;
+            line-height: 1.65;
+        }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+        .dark ::-webkit-scrollbar-thumb { background: #334155; }
+
+        /* Gaya Kertas Cetak / PDF A4 */
+        #pdfPrintArea {
+            background: #ffffff;
+            color: #0f172a;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .pdf-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .pdf-table th, .pdf-table td {
+            border: 1px solid #cbd5e1;
+            padding: 8px 10px;
+            vertical-align: top;
+            font-size: 11px;
+            line-height: 1.5;
+            white-space: pre-line;
+        }
+        .pdf-table th {
+            background-color: #f1f5f9;
+            font-weight: 700;
+            color: #1e293b;
+            text-align: left;
+        }
+
+        @media print {
+            body * { visibility: hidden; }
+            #pdfWrapper, #pdfWrapper * { visibility: visible; }
+            #pdfWrapper {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
+            }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col justify-between transition-colors duration-200">
+
+    <!-- Header Navigasi Atas -->
+    <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 no-print">
+        <div class="w-full h-1 bg-slate-100 dark:bg-slate-800">
+            <div id="topProgressBar" class="h-full bg-indigo-600 dark:bg-indigo-500 transition-all duration-300" style="width: 8%;"></div>
+        </div>
+
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+                <button type="button" onclick="toggleSlideDrawer()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition flex items-center gap-2 text-xs sm:text-sm font-bold shrink-0">
+                    <i class="fa-solid fa-list-ul text-indigo-600 dark:text-indigo-400"></i>
+                    <span class="hidden sm:inline">Daftar Slide</span>
+                    <span id="slideCounterBadge" class="px-2 py-0.5 text-xs rounded-lg bg-indigo-600 text-white font-bold">1 / 12</span>
+                </button>
+
+                <div class="hidden md:flex items-center gap-2.5 min-w-0">
+                    <span id="slideCategoryPill" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 shrink-0">
+                        Pengantar
+                    </span>
+                    <h1 id="headerSlideTitle" class="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">
+                        Panduan & Lembar Kerja Praktikum 1
+                    </h1>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 shrink-0">
+                <span id="saveBadge" class="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 text-xs font-bold">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Tersimpan Otomatis
+                </span>
+
+                <button type="button" onclick="openGlossaryIndex()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 text-xs sm:text-sm font-bold flex items-center gap-2 transition">
+                    <i class="fa-solid fa-book-open text-indigo-600 dark:text-indigo-400"></i>
+                    <span>Kamus Istilah</span>
+                </button>
+
+                <button type="button" onclick="goToSlide(11)" class="hidden sm:flex px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-extrabold items-center gap-2 transition shadow-xs">
+                    <i class="fa-solid fa-file-pdf"></i>
+                    <span>Unduh PDF</span>
+                </button>
+
+                <button type="button" onclick="toggleTheme()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center transition" title="Ganti Tema Layar">
+                    <i id="themeIcon" class="fa-solid fa-moon text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Drawer Daftar Slide -->
+    <div id="slideDrawerBackdrop" onclick="toggleSlideDrawer()" class="fixed inset-0 bg-slate-950/50 backdrop-blur-xs z-40 hidden opacity-0 transition-opacity duration-200 no-print"></div>
+    <aside id="slideDrawer" class="fixed top-0 left-0 bottom-0 w-80 sm:w-96 bg-white dark:bg-slate-900 z-50 shadow-2xl border-r border-slate-200 dark:border-slate-800 transform -translate-x-full transition-transform duration-200 flex flex-col no-print">
+        <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Praktikum 1 • LKM 01</span>
+                <h2 class="text-base font-extrabold text-slate-900 dark:text-white mt-0.5">Daftar Slide Praktikum</h2>
+            </div>
+            <button type="button" onclick="toggleSlideDrawer()" class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div id="drawerSlideList" class="p-3.5 overflow-y-auto space-y-1 flex-1"></div>
+        <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 flex items-center justify-between">
+            <span>Gunakan panah Kiri / Kanan</span>
+            <span class="font-bold">12 Slide</span>
+        </div>
+    </aside>
+
+    <!-- Area Utama Slide -->
+    <main class="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-6 flex flex-col justify-center">
+        <div id="slideViewport" class="bg-white dark:bg-slate-900 rounded-3xl shadow-xs border border-slate-200/80 dark:border-slate-800 p-5 sm:p-8 lg:p-10 min-h-[520px] flex flex-col justify-between relative overflow-hidden">
+            <div class="py-12 text-center text-sm text-slate-500">Memuat tampilan slide praktikum...</div>
+        </div>
+    </main>
+
+    <!-- Footer Navigasi Bawah -->
+    <footer class="sticky bottom-0 z-20 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 py-3 px-4 sm:px-6 no-print">
+        <div class="max-w-5xl mx-auto flex items-center justify-between gap-4">
+            <button type="button" id="prevSlideBtn" onclick="changeSlide(-1)" class="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                <i class="fa-solid fa-arrow-left text-xs"></i>
+                <span>Sebelumnya</span>
+            </button>
+
+            <div id="slideDotsContainer" class="hidden md:flex items-center gap-1.5"></div>
+
+            <div class="md:hidden text-xs font-bold text-slate-500 dark:text-slate-400" id="mobileFooterCounter">
+                1 / 12
+            </div>
+
+            <button type="button" id="nextSlideBtn" onclick="changeSlide(1)" class="px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-indigo-600 hover:bg-indigo-700 text-white transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                <span id="nextBtnText">Selanjutnya</span>
+                <i class="fa-solid fa-arrow-right text-xs"></i>
+            </button>
+        </div>
+    </footer>
+
+    <!-- Modal Penjelasan Istilah (Clickable Terms) -->
+    <div id="termModalBackdrop" onclick="closeTermModal()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4 no-print">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl slide-enter">
+            <div class="flex items-start justify-between gap-4 mb-4">
+                <div>
+                    <span id="termCategoryBadge" class="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">Kategori</span>
+                    <h3 id="termTitle" class="text-xl font-extrabold text-slate-900 dark:text-white mt-1.5">Nama Istilah</h3>
+                </div>
+                <button type="button" onclick="closeTermModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <p id="termMainDesc" class="text-sm text-slate-700 dark:text-slate-200 leading-relaxed bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200/70 dark:border-slate-700/70"></p>
+                <p id="termDetailDesc" class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed px-1"></p>
+                <div class="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800 text-xs px-1">
+                    <span id="termSourceName" class="font-semibold text-slate-400">Referensi</span>
+                    <a id="termSourceUrl" href="#" target="_blank" rel="noopener noreferrer" class="font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1.5">
+                        <span>Pelajari lebih lanjut</span>
+                        <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Kamus Istilah Lengkap -->
+    <div id="glossaryModalBackdrop" onclick="closeGlossaryIndex()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4 no-print">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-4xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden slide-enter">
+            <div class="p-5 sm:p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white">Kamus Istilah Praktikum & Materi UI/UX</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Klik pada istilah mana pun untuk membaca arti dan contoh penerapannya.</p>
+                </div>
+                <button type="button" onclick="closeGlossaryIndex()" class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-sm"></i>
+                    <input id="glossarySearchInput" oninput="renderGlossaryList(this.value)" type="text" placeholder="Cari istilah seperti UI, UX, Frame vs Group, Titik Friksi, Asumsi, Pertanyaan Terbuka..." class="w-full pl-10 pr-4 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+            <div id="glossaryListGrid" class="p-5 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+        </div>
+    </div>
+
+    <script>
+        // =========================================================================
+        // KAMUS ISTILAH (CLICKABLE TERMS)
+        // =========================================================================
+        const GLOSSARY_DB = {
+            ui: {
+                title: "User Interface (UI)",
+                category: "Konsep Inti",
+                main: "Tampilan visual dari sebuah aplikasi atau situs web yang dilihat, disentuh, dan diklik langsung oleh pengguna di layar.",
+                detail: "Mencakup susunan tata letak, warna merek, keterbacaan huruf, bentuk tombol, dan elemen visual lainnya.",
+                source: "Interaction Design Foundation",
+                url: "https://www.interaction-design.org/literature/topics/ui-design"
+            },
+            ux: {
+                title: "User Experience (UX)",
+                category: "Konsep Inti",
+                main: "Keseluruhan pengalaman dan perasaan seseorang saat berinteraksi dengan suatu produk atau layanan (baik digital maupun layanan fisik), mulai dari kemudahan prosesnya hingga kepuasan akhirnya.",
+                detail: "Jika UI adalah tampilan permukaan, maka UX adalah seberapa mudah, cepat, dan nyaman pengguna menyelesaikan kebutuhannya tanpa bingung.",
+                source: "Nielsen Norman Group",
+                url: "https://www.nngroup.com/articles/definition-user-experience/"
+            },
+            notuser: {
+                title: "Prinsip 'You Are Not The User'",
+                category: "Pola Pikir UX",
+                main: "Aturan utama dalam UX yang mengingatkan bahwa perancang aplikasi tidak boleh menebak kebutuhan pengguna hanya berdasarkan selera atau kebiasaannya sendiri.",
+                detail: "Apa yang tampak mudah bagi pembuat aplikasi belum tentu mudah bagi pengguna sasaran. Karena itulah diperlukan pengamatan dan wawancara.",
+                source: "Nielsen Norman Group",
+                url: "https://www.nngroup.com/articles/false-consensus/"
+            },
+            figma: {
+                title: "Figma",
+                category: "Alat Kerja Desain",
+                main: "Aplikasi desain antarmuka (UI) dan pembuatan prototipe interaktif berbasis web/cloud yang dapat digunakan langsung dari browser.",
+                detail: "Digunakan untuk merancang kerangka layar (Wireframe) hingga tampilan aplikasi utuh (High-Fidelity Prototype).",
+                source: "Figma Help Center",
+                url: "https://help.figma.com/"
+            },
+            figjam: {
+                title: "FigJam",
+                category: "Alat Kerja Kolaborasi",
+                main: "Papan tulis digital di dalam akun Figma tempat menempel kartu catatan (Sticky Notes) hasil wawancara, membuat Persona, dan menggambar alur User Flow.",
+                detail: "Digunakan pada tahap awal riset sebelum mulai menggambar layar aplikasi.",
+                source: "Figma Help Center",
+                url: "https://help.figma.com/hc/en-us/categories/4403935897879-FigJam"
+            },
+            framevsgroup: {
+                title: "Perbedaan Frame (F) vs Group (Ctrl+G)",
+                category: "Alat Dasar Figma",
+                main: "Frame adalah wadah layar perangkat (seperti ukuran layar HP) yang wajib dipakai agar desain bisa dihubungkan menjadi prototipe klik. Sedangkan Group hanya mengikat beberapa elemen menjadi satu.",
+                detail: "Selalu mulai mendesain halaman aplikasi dengan membuat Frame (tekan F), bukan sekadar membuat kotak Rectangle atau Group.",
+                source: "Figma Help Center",
+                url: "https://help.figma.com/hc/en-us/articles/360039832054-The-difference-between-frames-and-groups"
+            },
+            empathize: {
+                title: "Tahap Empathize (Empati)",
+                category: "Design Thinking",
+                main: "Langkah pertama dalam Design Thinking di mana perancang memahami kondisi nyata pengguna tanpa membawa prasangka pribadi.",
+                detail: "Dilakukan melalui pengamatan langsung (observasi) dan wawancara terbuka di lapangan.",
+                source: "Stanford d.school",
+                url: "https://www.interaction-design.org/literature/article/stage-1-in-the-design-thinking-process-empathise-with-your-users"
+            },
+            friksi: {
+                title: "Titik Friksi (Hambatan Pengguna)",
+                category: "Evaluasi UX",
+                main: "Setiap kesulitan, kebingungan, atau langkah berbelit yang menghambat pengguna saat ingin menyelesaikan tujuannya.",
+                detail: "Dapat ditemukan pada interaksi melalui media digital maupun pada proses pelayanan tatap muka di lokasi fisik.",
+                source: "Interaction Design Foundation",
+                url: "https://www.interaction-design.org/literature/topics/user-experience"
+            },
+            walkthrough: {
+                title: "Task-Based Walkthrough",
+                category: "Metode Pengamatan",
+                main: "Cara mengamati kualitas layanan dengan menelusuri langsung tahapan suatu tugas dari sudut pandang pengguna.",
+                detail: "Membantu menemukan kesulitan fungsional pada alur layanan secara nyata.",
+                source: "Nielsen Norman Group",
+                url: "https://www.nngroup.com/articles/cognitive-walkthroughs/"
+            },
+            asumsi: {
+                title: "Dugaan Awal (Asumsi / Hipotesis)",
+                category: "Riset Pengguna",
+                main: "Perkiraan sementara mengenai masalah yang dialami pengguna berdasarkan pengamatan awal perancang.",
+                detail: "Disebut dugaan sementara karena kebenarannya baru akan diuji melalui wawancara langsung dengan narasumber pada Pertemuan 2.",
+                source: "Nielsen Norman Group",
+                url: "https://www.nngroup.com/articles/user-research-basics/"
+            },
+            openquestion: {
+                title: "Pertanyaan Terbuka (Open-Ended Question)",
+                category: "Teknik Wawancara",
+                main: "Pertanyaan wawancara yang mengajak narasumber menceritakan pengalamannya secara leluasa (diawali kata Bagaimana, Ceritakan, atau Apa), bukan pertanyaan tertutup yang hanya dijawab Ya atau Tidak.",
+                detail: "Pertanyaan terbuka harus bersifat netral dan tidak menggiring narasumber pada jawaban tertentu.",
+                source: "Nielsen Norman Group",
+                url: "https://www.nngroup.com/articles/open-ended-questions/"
+            },
+            informedconsent: {
+                title: "Informed Consent (Lembar Persetujuan)",
+                category: "Etika Riset",
+                main: "Persetujuan dari narasumber setelah peneliti menjelaskan tujuan wawancara, meminta izin perekaman, dan menjamin kerahasiaan data pribadi.",
+                detail: "Merupakan standar etika wajib sebelum melakukan wawancara lapangan pada Pertemuan 2.",
+                source: "Nielsen Norman Group",
+                url: "https://www.nngroup.com/articles/informed-consent-for-user-research/"
+            }
+        };
+
+        function escapeHtml(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function term(key, label) {
+            const item = GLOSSARY_DB[key];
+            if (!item) return label || key;
+            const text = label || item.title.split(' (')[0];
+            return '<span class="tech-term" data-term="' + escapeHtml(key) + '" onclick="showTerm(this.dataset.term)">' + escapeHtml(text) + '</span>';
+        }
+
+        function autoResizeTextarea(el) {
+            if (!el) return;
+            el.style.height = 'auto';
+            el.style.height = Math.max(115, el.scrollHeight) + 'px';
+        }
+
+        // =========================================================================
+        // STATE DATA FORMULIR & STATUS WIZARD IN-FORM (READ / EDIT / MINIMIZE)
+        // =========================================================================
+        const STORAGE_KEY = 'upertis_lkm01_neutral_v5';
+        let currentSlideIndex = 0;
+        const TOTAL_SLIDES = 12;
+        let activeFigmaTool = 'frame';
+
+        let formState = {
+            nama: '',
+            nim: '',
+            kelas: '',
+            tgl: new Date().toISOString().split('T')[0],
+            link: '',
+            r1: '',
+            r2: '',
+            r3: '',
+            un: '',
+            ub: '',
+            up: '',
+            ul: '',
+            uk: '',
+            upel: '',
+            ud: '',
+            skenario: '',
+            aud: [
+                { k: '', m: '', d: '' },
+                { k: '', m: '', d: '' },
+                { k: '', m: '', d: '' },
+                { k: '', m: '', d: '' },
+                { k: '', m: '', d: '' }
+            ],
+            a1: '', t1: '',
+            a2: '', t2: '',
+            a3: '', t3: '',
+            rt: '', rn: '', rj: ''
+        };
+
+        let uiWizard = {
+            identitasEditing: true,
+            identitasMinimized: false,
+
+            refleksiActive: 1,
+            refleksiSaved: { 1: false, 2: false, 3: false },
+            refleksiMinimized: { 1: false, 2: false, 3: false },
+
+            profilActive: 1,
+            profilSaved: { 1: false, 2: false },
+            profilMinimized: { 1: false, 2: false },
+
+            skenarioEditing: true,
+            auditActive: 0,
+            auditSaved: { 0: false, 1: false, 2: false, 3: false, 4: false },
+            auditMinimized: { 0: false, 1: false, 2: false, 3: false, 4: false },
+
+            risetActive: 1,
+            risetSaved: { 1: false, 2: false, 3: false, 4: false },
+            risetMinimized: { 1: false, 2: false, 3: false, 4: false }
+        };
+
+        function syncSavedStatesFromData() {
+            const hasIdentitas = !!(formState.nama.trim() || formState.nim.trim() || formState.link.trim());
+            if (hasIdentitas) uiWizard.identitasEditing = false;
+
+            if (formState.r1.trim()) uiWizard.refleksiSaved[1] = true;
+            if (formState.r2.trim()) uiWizard.refleksiSaved[2] = true;
+            if (formState.r3.trim()) uiWizard.refleksiSaved[3] = true;
+
+            if (formState.un.trim() || formState.ub.trim()) uiWizard.profilSaved[1] = true;
+            if (formState.upel.trim() || formState.ud.trim()) uiWizard.profilSaved[2] = true;
+
+            if (formState.skenario.trim()) uiWizard.skenarioEditing = false;
+            for (let i = 0; i < 5; i++) {
+                const a = formState.aud[i];
+                if (a && (a.k.trim() || a.m.trim() || a.d.trim())) {
+                    uiWizard.auditSaved[i] = true;
+                }
+            }
+
+            if (formState.a1.trim() || formState.t1.trim()) uiWizard.risetSaved[1] = true;
+            if (formState.a2.trim() || formState.t2.trim()) uiWizard.risetSaved[2] = true;
+            if (formState.a3.trim() || formState.t3.trim()) uiWizard.risetSaved[3] = true;
+            if (formState.rt.trim() || formState.rn.trim()) uiWizard.risetSaved[4] = true;
+        }
+
+        function updateField(fieldKey, val) {
+            formState[fieldKey] = val;
+            triggerAutoSave();
+        }
+
+        function updateAuditField(idx, subKey, val) {
+            if (!formState.aud[idx]) formState.aud[idx] = { k: '', m: '', d: '' };
+            formState.aud[idx][subKey] = val;
+            triggerAutoSave();
+        }
+
+        let saveTimer = null;
+        function triggerAutoSave() {
+            clearTimeout(saveTimer);
+            const badge = document.getElementById('saveBadge');
+            if (badge) badge.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
+            saveTimer = setTimeout(function () {
+                try {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify({ form: formState, ui: uiWizard }));
+                } catch (e) {}
+                if (badge) badge.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Tersimpan Otomatis';
+            }, 350);
+        }
+
+        function loadSavedState() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (parsed.form) {
+                        formState = Object.assign(formState, parsed.form);
+                        if (!Array.isArray(formState.aud) || formState.aud.length !== 5) {
+                            formState.aud = [
+                                { k: '', m: '', d: '' },
+                                { k: '', m: '', d: '' },
+                                { k: '', m: '', d: '' },
+                                { k: '', m: '', d: '' },
+                                { k: '', m: '', d: '' }
+                            ];
+                        }
+                    }
+                    if (parsed.ui) {
+                        uiWizard = Object.assign(uiWizard, parsed.ui);
+                    } else {
+                        syncSavedStatesFromData();
+                    }
+                }
+            } catch (e) {}
+        }
+
+        // =========================================================================
+        // DATA SIMULATOR 6 ALAT DASAR FIGMA (NETRAL)
+        // =========================================================================
+        const FIGMA_TOOLS = [
+            {
+                key: 'frame',
+                label: '1. Frame (F)',
+                icon: 'fa-mobile-screen',
+                shortcut: 'Tombol F',
+                title: 'Frame: Kanvas Layar Perangkat',
+                desc: 'Tekan huruf F di keyboard, lalu pilih ukuran layar perangkat di panel kanan (misalnya Phone atau Desktop). Seluruh komponen halaman wajib ditempatkan di dalam Frame ini.',
+                canvasHtml: `
+                    <div class="p-4 rounded-2xl bg-slate-900 text-slate-100 border border-slate-800 flex items-center justify-between gap-4">
+                        <div class="w-36 h-44 mx-auto bg-white text-slate-800 rounded-xl border-2 border-indigo-500 p-2.5 flex flex-col justify-between shadow-lg relative">
+                            <span class="absolute -top-4 left-0 text-[9px] font-mono font-bold text-indigo-400">Frame: 01_Halaman</span>
+                            <div class="h-4 bg-slate-100 rounded flex items-center px-1.5 text-[9px] font-bold text-slate-500">Area Header</div>
+                            <div class="flex-1 my-1.5 border border-dashed border-slate-300 rounded flex items-center justify-center text-[9px] text-slate-400 text-center p-1">Area Konten di Dalam Frame</div>
+                            <div class="h-5 bg-indigo-600 rounded flex items-center justify-center text-[9px] font-bold text-white">Tombol Aksi</div>
+                        </div>
+                        <div class="hidden sm:block w-44 p-3 rounded-xl bg-slate-800 text-[11px] font-mono space-y-1 border border-slate-700">
+                            <div class="text-indigo-400 font-bold">Panel Kanan Figma</div>
+                            <div>Preset: <span class="text-white">Phone</span></div>
+                            <div>Lebar (W): <span class="text-emerald-400">393 px</span></div>
+                            <div>Tinggi (H): <span class="text-emerald-400">852 px</span></div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                key: 'framevsgroup',
+                label: '2. Frame vs Group',
+                icon: 'fa-object-group',
+                shortcut: 'F vs Ctrl+G',
+                title: 'Perbedaan Frame (F) dengan Group (Ctrl+G)',
+                desc: 'Hindari memakai Group atau kotak Rectangle biasa sebagai layar utama. Hanya Frame yang memiliki batas layar mandiri, mendukung Auto Layout, dan dapat dihubungkan menjadi simulasi klik (Prototype).',
+                canvasHtml: `
+                    <div class="grid grid-cols-2 gap-3 text-xs">
+                        <div class="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 space-y-1">
+                            <div class="font-extrabold text-emerald-700 dark:text-emerald-300"><i class="fa-solid fa-hashtag mr-1"></i>Frame (Wadah Layar)</div>
+                            <p class="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">Memiliki latar sendiri, memotong elemen yang melewati batas layar, dan dapat dihubungkan saat uji prototipe.</p>
+                        </div>
+                        <div class="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 space-y-1">
+                            <div class="font-extrabold text-amber-800 dark:text-amber-300"><i class="fa-regular fa-object-group mr-1"></i>Group (Pengikat Biasa)</div>
+                            <p class="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">Hanya menggabungkan beberapa objek agar mudah digeser bersama, bukan wadah layar aplikasi.</p>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                key: 'text',
+                label: '3. Teks (T)',
+                icon: 'fa-font',
+                shortcut: 'Tombol T',
+                title: 'Text Tool: Mengatur Hierarki Bacaan',
+                desc: 'Tekan huruf T lalu klik di dalam Frame untuk mengetik teks. Bedakan ukuran serta ketebalan huruf antara Judul Utama (Bold) dan teks keterangan (Regular) agar informasi mudah dipindai mata.',
+                canvasHtml: `
+                    <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 space-y-2.5">
+                        <div class="p-2.5 rounded-xl border-2 border-indigo-500 bg-indigo-50/30 dark:bg-indigo-950/20 flex items-center justify-between">
+                            <span class="text-sm font-extrabold text-slate-900 dark:text-white">Judul Bagian Utama (18px Bold)</span>
+                            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-600 text-white">Heading</span>
+                        </div>
+                        <div class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-between text-xs">
+                            <span class="text-slate-500">Teks penjelasan pendukung dengan ukuran 14px Regular</span>
+                            <span class="font-mono font-extrabold text-emerald-600 dark:text-emerald-400">Body Text</span>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                key: 'shape',
+                label: '4. Bentuk (R)',
+                icon: 'fa-shapes',
+                shortcut: 'Tombol R / O',
+                title: 'Rectangle & Shape: Menyusun Komponen Dasar',
+                desc: 'Tekan huruf R untuk menggambar persegi (Rectangle) atau huruf O untuk lingkaran. Sudut kotak dapat dilengkungkan melalui pengaturan Corner Radius di panel kanan.',
+                canvasHtml: `
+                    <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 grid grid-cols-2 gap-3 text-xs">
+                        <div class="p-3 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 flex flex-col items-center justify-center h-24">
+                            <i class="fa-regular fa-image text-lg text-slate-400 mb-1"></i>
+                            <span class="text-[10px] text-slate-500">Placeholder Gambar</span>
+                        </div>
+                        <div class="flex flex-col justify-between h-24">
+                            <div class="p-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-[11px] text-slate-400">Kotak Kolom Input...</div>
+                            <div class="p-2 rounded-xl bg-indigo-600 text-white font-bold text-center">Kotak Tombol Utama</div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                key: 'layer',
+                label: '5. Panel Layer',
+                icon: 'fa-layer-group',
+                shortcut: 'Panel Kiri',
+                title: 'Layers & Pages: Menjaga Kerapian Struktur File',
+                desc: 'Di sisi kiri layar Figma terdapat daftar seluruh elemen (Layers). Biasakan mengganti nama Frame dan elemen sesuai fungsinya agar struktur file mudah ditelusuri.',
+                canvasHtml: `
+                    <div class="p-3.5 rounded-2xl bg-slate-900 text-slate-100 font-mono text-xs space-y-1 border border-slate-800">
+                        <div class="text-indigo-400 font-bold pb-1 border-b border-slate-800">Panel Layers (Sebelah Kiri)</div>
+                        <div class="text-white font-bold"><i class="fa-solid fa-hashtag text-indigo-400 mr-1.5"></i>01_Halaman_Utama</div>
+                        <div class="pl-5 text-emerald-300"><i class="fa-solid fa-hashtag mr-1.5"></i>Kartu_Item_1</div>
+                        <div class="pl-10 text-slate-300"><i class="fa-solid fa-font text-sky-400 mr-1.5"></i>Label_Judul</div>
+                    </div>
+                `
+            },
+            {
+                key: 'sticky',
+                label: '6. FigJam (S & C)',
+                icon: 'fa-note-sticky',
+                shortcut: 'Tombol S / C',
+                title: 'Sticky Notes (S) di FigJam & Komentar (C)',
+                desc: 'Di papan FigJam, tekan S untuk membuat kartu catatan tempel (Sticky Note) saat menyusun temuan riset. Ingat aturan dasar sintesis: satu kartu hanya memuat satu poin informasi.',
+                canvasHtml: `
+                    <div class="p-3.5 rounded-2xl bg-slate-100 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 grid grid-cols-2 gap-3 text-xs">
+                        <div class="p-3 rounded-xl bg-amber-200 text-slate-900 shadow-xs space-y-1">
+                            <span class="text-[9px] font-extrabold uppercase text-amber-900">Sticky Note #1</span>
+                            <p class="font-semibold leading-snug">Satu kartu digunakan untuk mencatat satu poin pengamatan.</p>
+                        </div>
+                        <div class="p-3 rounded-xl bg-sky-200 text-slate-900 shadow-xs space-y-1">
+                            <span class="text-[9px] font-extrabold uppercase text-sky-900">Sticky Note #2</span>
+                            <p class="font-semibold leading-snug">Mudah dikelompokkan berdasarkan tema pada tahap sintesis.</p>
+                        </div>
+                    </div>
+                `
+            }
+        ];
+
+        // =========================================================================
+        // HELPER PEMBUAT KARTU WIZARD (EDIT MODE vs READ MODE vs MINIMIZED)
+        // =========================================================================
+        function renderWizardCardHeader(stepBadge, title, isSaved, isEditing, isMinimized, onEditClick, onToggleMinClick) {
+            let statusHtml = '';
+            if (isSaved && !isEditing) {
+                statusHtml = `
+                    <div class="flex items-center gap-2 shrink-0">
+                        <span class="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 text-xs font-extrabold flex items-center gap-1">
+                            <i class="fa-solid fa-circle-check"></i> Tersimpan
+                        </span>
+                        <button type="button" onclick="${onToggleMinClick}" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center gap-1.5">
+                            <i class="fa-solid ${isMinimized ? 'fa-expand' : 'fa-compress'}"></i>
+                            <span>${isMinimized ? 'Baca Lengkap' : 'Minimize'}</span>
+                        </button>
+                        <button type="button" onclick="${onEditClick}" class="px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/80 dark:hover:bg-indigo-900 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-xs font-extrabold transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-pen"></i>
+                            <span>Edit</span>
+                        </button>
+                    </div>
+                `;
+            } else if (isEditing) {
+                statusHtml = `
+                    <span class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-xs font-extrabold shrink-0">
+                        <i class="fa-solid fa-pen-nib mr-1"></i>Mode Menulis
+                    </span>
+                `;
+            } else {
+                statusHtml = `
+                    <button type="button" onclick="${onEditClick}" class="px-3.5 py-1.5 rounded-xl bg-slate-200/80 hover:bg-indigo-600 hover:text-white dark:bg-slate-800 dark:hover:bg-indigo-600 text-slate-700 dark:text-slate-300 text-xs font-extrabold transition shrink-0">
+                        Buka & Isi Bagian Ini
+                    </button>
+                `;
+            }
+
+            return `
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <span class="px-2.5 py-1 rounded-lg bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-extrabold shrink-0">${escapeHtml(stepBadge)}</span>
+                        <h3 class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white truncate">${escapeHtml(title)}</h3>
+                    </div>
+                    ${statusHtml}
+                </div>
+            `;
+        }
+
+        // =========================================================================
+        // RENDER 12 SLIDE PRAKTIKUM (NETRAL & IN-FORM WIZARD)
+        // =========================================================================
+
+        function renderSlide1() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center my-auto">
+                        <div class="lg:col-span-7 space-y-4">
+                            <div class="inline-flex flex-wrap items-center gap-2">
+                                <span class="px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 text-xs font-bold border border-indigo-200/60 dark:border-indigo-800/60">Praktikum Pertemuan 1 • Alokasi 2 x 170 Menit</span>
+                                <span class="px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 text-xs font-bold border border-emerald-200/60 dark:border-emerald-800/60">Sub-CPMK 1.1 & 4.1 (Bobot 2%)</span>
+                            </div>
+
+                            <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white leading-tight">
+                                Persiapan Alat, Refleksi Diri, & Pengamatan Awal UMKM Mitra
+                            </h2>
+
+                            <p class="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Selamat datang di modul kerja <strong>Lembar Kerja Mahasiswa (LKM 01)</strong>. Setiap tahapan diawali dengan <strong>Slide Penjelasan Konsep</strong>, diikuti dengan <strong>Slide Form Bertahap (In-Form Wizard)</strong>. Ketika sebuah isian telah Anda simpan, kotak input akan berubah menjadi <strong>Kartu Bacaan</strong> yang nyaman dibaca di layar desktop maupun ponsel, dapat dilipat (<em>minimize</em>), atau diedit kembali kapan saja.
+                            </p>
+
+                            <div class="flex flex-wrap items-center gap-3 pt-2">
+                                <button type="button" onclick="changeSlide(1)" class="px-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-extrabold transition flex items-center gap-2 shadow-sm">
+                                    <span>Mulai Praktikum Sekarang</span>
+                                    <i class="fa-solid fa-arrow-right"></i>
+                                </button>
+                                <button type="button" onclick="clearAllData()" class="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 text-xs sm:text-sm font-bold transition flex items-center gap-2">
+                                    <i class="fa-solid fa-rotate-left"></i>
+                                    <span>Reset Semua Isian</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-5">
+                            <div class="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 space-y-4">
+                                <div>
+                                    <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Alur Pengerjaan</span>
+                                    <h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white mt-0.5">5 Tahap Praktikum Hari Ini</h3>
+                                </div>
+                                <div class="space-y-2.5 text-xs">
+                                    <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 flex items-center gap-3">
+                                        <span class="w-7 h-7 rounded-lg bg-indigo-600 text-white font-extrabold flex items-center justify-center shrink-0">1</span>
+                                        <div><strong class="text-slate-900 dark:text-white block">Orientasi Alat & Identitas (Slide 2 - 3)</strong><span class="text-slate-500">Mengenal 6 konsep dasar Figma/FigJam & mengisi link file kerja.</span></div>
+                                    </div>
+                                    <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 flex items-center gap-3">
+                                        <span class="w-7 h-7 rounded-lg bg-indigo-600 text-white font-extrabold flex items-center justify-center shrink-0">2</span>
+                                        <div><strong class="text-slate-900 dark:text-white block">Refleksi Pengalaman Pribadi (Slide 4 - 5)</strong><span class="text-slate-500">Menuliskan pengalaman sendiri secara netral dan jujur.</span></div>
+                                    </div>
+                                    <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 flex items-center gap-3">
+                                        <span class="w-7 h-7 rounded-lg bg-indigo-600 text-white font-extrabold flex items-center justify-center shrink-0">3</span>
+                                        <div><strong class="text-slate-900 dark:text-white block">Profil Usaha UMKM Mitra (Slide 6 - 7)</strong><span class="text-slate-500">Menentukan 1 UMKM (baik yang sudah online maupun 100% offline).</span></div>
+                                    </div>
+                                    <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 flex items-center gap-3">
+                                        <span class="w-7 h-7 rounded-lg bg-indigo-600 text-white font-extrabold flex items-center justify-center shrink-0">4</span>
+                                        <div><strong class="text-slate-900 dark:text-white block">Deteksi 5 Hambatan (Slide 8 - 9)</strong><span class="text-slate-500">Mencatat 5 kesulitan nyata melalui wizard bertahap.</span></div>
+                                    </div>
+                                    <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 flex items-center gap-3">
+                                        <span class="w-7 h-7 rounded-lg bg-emerald-600 text-white font-extrabold flex items-center justify-center shrink-0">5</span>
+                                        <div><strong class="text-slate-900 dark:text-white block">Dugaan, Rencana Riset & PDF (Slide 10 - 12)</strong><span class="text-slate-500">Menyusun pertanyaan wawancara & mengunduh laporan PDF.</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide2() {
+            let btnsHtml = '';
+            let currentToolObj = FIGMA_TOOLS[0];
+            for (let i = 0; i < FIGMA_TOOLS.length; i++) {
+                const t = FIGMA_TOOLS[i];
+                if (t.key === activeFigmaTool) currentToolObj = t;
+                const isActive = t.key === activeFigmaTool;
+                const cls = isActive
+                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                    : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100';
+                btnsHtml += `
+                    <button type="button" onclick="selectFigmaTool('${t.key}')" class="p-2.5 rounded-xl border text-xs font-extrabold transition flex items-center justify-center gap-1.5 ${cls}">
+                        <i class="fa-solid ${t.icon}"></i>
+                        <span class="truncate">${t.label}</span>
+                    </button>
+                `;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Tahap 1 • Penjelasan Alat Kerja</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Orientasi 6 Konsep Dasar ${term('figma', 'Figma')} & ${term('figjam', 'FigJam')}</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Pelajari keenam konsep dasar di bawah ini (termasuk perbedaan penting antara ${term('framevsgroup', 'Frame vs Group')}) dan coba langsung pada akun Figma Anda sebelum mengisi tautan file kerja di slide berikutnya:
+                        </p>
+                    </div>
+
+                    <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-5 my-auto">
+                        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+                            ${btnsHtml}
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center pt-2">
+                            <div class="lg:col-span-5 space-y-2">
+                                <span class="px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 text-xs font-extrabold">
+                                    Pintasan Keyboard: ${currentToolObj.shortcut}
+                                </span>
+                                <h3 class="text-lg font-extrabold text-slate-900 dark:text-white pt-1">${currentToolObj.title}</h3>
+                                <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${currentToolObj.desc}</p>
+                            </div>
+                            <div class="lg:col-span-7">
+                                ${currentToolObj.canvasHtml}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-800/60 text-xs">
+                        <i class="fa-solid fa-circle-info text-indigo-600 dark:text-indigo-400 mr-1.5"></i>Setelah membuat file kerja di akun Figma Anda, klik tombol <strong>Selanjutnya</strong> untuk mengisi identitas mahasiswa.
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide3() {
+            const isEditing = uiWizard.identitasEditing;
+            const isMinimized = uiWizard.identitasMinimized;
+            const isSaved = !!(formState.nama.trim() || formState.nim.trim() || formState.link.trim());
+
+            let bodyHtml = '';
+            if (isEditing) {
+                bodyHtml = `
+                    <div class="p-5 sm:p-7 rounded-3xl bg-white dark:bg-slate-900 border-2 border-indigo-600 dark:border-indigo-400 shadow-md space-y-5">
+                        ${renderWizardCardHeader('Bagian 1', 'Data Diri & Tautan Proyek Figma', isSaved, true, false, '', '')}
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100 dark:border-slate-800">
+                            <div>
+                                <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Nama Lengkap Mahasiswa *</label>
+                                <input type="text" value="${escapeHtml(formState.nama)}" oninput="updateField('nama', this.value)" placeholder="Ketik nama lengkap Anda..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Nomor Induk Mahasiswa (NIM) *</label>
+                                <input type="text" value="${escapeHtml(formState.nim)}" oninput="updateField('nim', this.value)" placeholder="Ketik NIM Anda..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base font-mono font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Kelas / Semester *</label>
+                                <input type="text" value="${escapeHtml(formState.kelas)}" oninput="updateField('kelas', this.value)" placeholder="Ketik kelas dan semester..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Tanggal Praktikum *</label>
+                                <input type="date" value="${escapeHtml(formState.tgl)}" oninput="updateField('tgl', this.value)" class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Tautan (Link) File Figma / FigJam Anda *</label>
+                            <input type="url" value="${escapeHtml(formState.link)}" oninput="updateField('link', this.value)" placeholder="Tempel tautan file Figma Anda di sini..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+
+                        <div class="flex justify-end pt-2">
+                            <button type="button" onclick="saveIdentitasCard()" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-extrabold transition flex items-center gap-2 shadow-sm">
+                                <i class="fa-solid fa-check"></i>
+                                <span>Simpan Identitas</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                bodyHtml = `
+                    <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-emerald-300 dark:border-emerald-800/80 space-y-4">
+                        ${renderWizardCardHeader('Bagian 1', formState.nama ? formState.nama + ' (' + (formState.nim || 'Tanpa NIM') + ')' : 'Identitas Mahasiswa', true, false, isMinimized, 'editIdentitasCard()', 'toggleMinIdentitasCard()')}
+
+                        ${!isMinimized ? `
+                            <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm sm:text-base">
+                                <div>
+                                    <span class="text-xs font-bold uppercase text-slate-400 block">Nama Mahasiswa</span>
+                                    <span class="font-extrabold text-slate-900 dark:text-white">${escapeHtml(formState.nama) || '-'}</span>
+                                </div>
+                                <div>
+                                    <span class="text-xs font-bold uppercase text-slate-400 block">NIM</span>
+                                    <span class="font-mono font-bold text-slate-900 dark:text-white">${escapeHtml(formState.nim) || '-'}</span>
+                                </div>
+                                <div>
+                                    <span class="text-xs font-bold uppercase text-slate-400 block">Kelas & Tanggal</span>
+                                    <span class="text-slate-700 dark:text-slate-200">${escapeHtml(formState.kelas) || '-'} • ${escapeHtml(formState.tgl) || '-'}</span>
+                                </div>
+                                <div>
+                                    <span class="text-xs font-bold uppercase text-slate-400 block">Tautan File Figma</span>
+                                    <span class="font-mono text-xs sm:text-sm text-indigo-600 dark:text-indigo-400 break-all">${escapeHtml(formState.link) || '-'}</span>
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-6">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-pen-to-square mr-1"></i>Tahap 1 • Form Isian Identitas</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Identitas Mahasiswa & Tautan Ruang Kerja</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Setelah mengisi dan menekan tombol <strong>Simpan Identitas</strong>, kotak isian akan berubah menjadi kartu ringkasan yang rapi dan dapat Anda edit kembali kapan saja.
+                        </p>
+                    </div>
+
+                    <div class="my-auto">
+                        ${bodyHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide4() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-6">
+                    <div class="space-y-2">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Tahap 2 • Penjelasan Refleksi Diri</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Menyadari Sudut Pandang Diri Sendiri Sebelum Meneliti Pengguna</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Dalam perancangan ${term('ui', 'UI')} dan ${term('ux', 'UX')}, berlaku prinsip ${term('notuser', '"You Are Not The User"')}. Apa yang tampak jelas bagi kita sebagai perancang belum tentu dipahami dengan cara yang sama oleh orang lain yang memiliki latar belakang dan kebiasaan berbeda.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-auto">
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                            <div class="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-bold"><i class="fa-solid fa-mobile-screen-button"></i></div>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">1. Refleksi Penggunaan Aplikasi</h3>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Mengamati bagaimana pengalaman Anda sendiri saat berinteraksi dengan aplikasi sehari-hari, serta alasan mengapa suatu alur terasa membantu atau justru menyulitkan.
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                            <div class="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-bold"><i class="fa-solid fa-store"></i></div>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">2. Pengamatan Proses Jual-Beli</h3>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Menelaah urutan proses ketika seseorang berbelanja atau memesan jasa pada suatu usaha lokal, baik dari sisi pembeli maupun dari sisi pengelola usaha.
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                            <div class="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center font-bold"><i class="fa-solid fa-scale-balanced"></i></div>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">3. Pandangan Kritis Pribadi</h3>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Mengemukakan pendapat Anda sendiri secara bebas dan netral mengenai hubungan antara tampilan visual dan kemudahan fungsi sebuah produk.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-800/60 text-xs">
+                        <i class="fa-solid fa-arrow-right text-indigo-600 dark:text-indigo-400 mr-1.5"></i>Pada slide berikutnya, jawablah 3 pertanyaan refleksi satu per satu dalam ruang tulis yang luas.
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide5() {
+            const items = [
+                {
+                    num: 1,
+                    key: 'r1',
+                    title: 'Pengalaman Menggunakan Aplikasi atau Layanan Digital',
+                    prompt: 'Pilih satu aplikasi atau situs web yang sering Anda gunakan. Ceritakan apa tujuan Anda saat membukanya, bagaimana pengalaman Anda saat mengoperasikan alurnya, serta alasan mengapa Anda merasakan hal tersebut.'
+                },
+                {
+                    num: 2,
+                    key: 'r2',
+                    title: 'Pengamatan Alur Transaksi pada Usaha di Sekitar Anda',
+                    prompt: 'Amati satu usaha kecil atau UMKM yang pernah Anda kunjungi atau gunakan layanannya. Bagaimana urutan proses pelanggan saat mencari informasi hingga bertransaksi di tempat tersebut, dan bagaimana pandangan Anda terhadap alur itu?'
+                },
+                {
+                    num: 3,
+                    key: 'r3',
+                    title: 'Pandangan tentang Hubungan Pembuat Produk dan Penggunanya',
+                    prompt: 'Menurut pendapat Anda pribadi, sejauh mana sudut pandang pembuat aplikasi dapat mewakili cara berpikir penggunanya, dan mengapa keselarasan antara tampilan visual serta kemudahan alur itu penting?'
+                }
+            ];
+
+            let cardsHtml = '';
+            for (let i = 0; i < items.length; i++) {
+                const it = items[i];
+                const val = formState[it.key] || '';
+                const isEditing = uiWizard.refleksiActive === it.num;
+                const isSaved = uiWizard.refleksiSaved[it.num] || val.trim() !== '';
+                const isMin = !!uiWizard.refleksiMinimized[it.num];
+
+                if (isEditing) {
+                    cardsHtml += `
+                        <div class="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border-2 border-indigo-600 dark:border-indigo-400 shadow-md space-y-4">
+                            ${renderWizardCardHeader('Refleksi ' + it.num + ' / 3', it.title, isSaved, true, false, '', '')}
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed pt-1 border-t border-slate-100 dark:border-slate-800">
+                                ${it.prompt}
+                            </p>
+                            <textarea rows="5" oninput="autoResizeTextarea(this); updateField('${it.key}', this.value)" placeholder="Tuliskan uraian pendapat dan pengalaman Anda secara lengkap di sini..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(val)}</textarea>
+                            <div class="flex items-center justify-between gap-3 pt-1">
+                                <span class="text-xs text-slate-400">Kotak teks otomatis memanjang mengikuti panjang tulisan Anda</span>
+                                <button type="button" onclick="saveRefleksiItem(${it.num})" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-extrabold transition flex items-center gap-2 shadow-sm shrink-0">
+                                    <i class="fa-solid fa-check"></i>
+                                    <span>${it.num < 3 ? 'Simpan & Lanjut ke Nomor ' + (it.num + 1) : 'Simpan Jawaban'}</span>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                } else if (isSaved) {
+                    cardsHtml += `
+                        <div class="p-4 sm:p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-emerald-300 dark:border-emerald-800/70 space-y-3 transition">
+                            ${renderWizardCardHeader('Refleksi ' + it.num + ' / 3', it.title, true, false, isMin, 'openRefleksiItem(' + it.num + ')', 'toggleMinRefleksiItem(' + it.num + ')')}
+                            ${isMin ? `
+                                <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 truncate px-1">${escapeHtml(val)}</p>
+                            ` : `
+                                <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-sm sm:text-base text-slate-800 dark:text-slate-100 leading-relaxed whitespace-pre-line">${escapeHtml(val)}</div>
+                            `}
+                        </div>
+                    `;
+                } else {
+                    cardsHtml += `
+                        <div class="p-4 sm:p-5 rounded-2xl bg-slate-50/70 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-800">
+                            ${renderWizardCardHeader('Refleksi ' + it.num + ' / 3', it.title, false, false, true, 'openRefleksiItem(' + it.num + ')', '')}
+                        </div>
+                    `;
+                }
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div class="space-y-1">
+                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-pen-to-square mr-1"></i>Tahap 2 • Wizard Refleksi Diri</span>
+                            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Refleksi Pengalaman & Pendapat Pribadi</h2>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <button type="button" onclick="setAllRefleksiMin(false)" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300">Buka Baca Semua</button>
+                            <button type="button" onclick="setAllRefleksiMin(true)" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300">Lipat Semua</button>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3.5 my-auto">
+                        ${cardsHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide6() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-6">
+                    <div class="space-y-2">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Tahap 3 • Penjelasan Konteks UMKM Mitra</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Menentukan UMKM Mitra (Sudah Online maupun Masih 100% Offline)</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Pada tahap ${term('empathize', 'Empathize')}, pilihlah <strong>1 UMKM nyata</strong> yang bersedia Anda amati dan wawancarai. Usaha yang Anda pilih tidak harus sudah menggunakan aplikasi atau media sosial:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 my-auto">
+                        <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-2 border-indigo-400/70 dark:border-indigo-700 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-xs font-extrabold">Kondisi A: Sudah Memakai Media Online</span>
+                                <i class="fa-solid fa-comments text-xl text-indigo-600 dark:text-indigo-400"></i>
+                            </div>
+                            <h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">Melayani via Chat atau Media Sosial</h3>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                UMKM yang sudah memanfaatkan aplikasi pesan singkat atau media sosial untuk berkomunikasi dengan pelanggan, namun proses pencarian informasi, pemesanan, atau rekap datanya masih dilakukan secara manual.
+                            </p>
+                        </div>
+
+                        <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-2 border-emerald-400/70 dark:border-emerald-700 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-xs font-extrabold">Kondisi B: Masih 100% Offline (Tatap Muka)</span>
+                                <i class="fa-solid fa-store text-xl text-emerald-600 dark:text-emerald-400"></i>
+                            </div>
+                            <h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">Melayani Secara Langsung di Tempat Usaha</h3>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                UMKM yang belum menggunakan perangkat digital sama sekali, di mana seluruh interaksi pelayanan, antrean, hingga pencatatan transaksi masih berlangsung secara tatap muka dan tertulis di buku atau nota kertas.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-800/60 text-xs">
+                        <i class="fa-solid fa-check-circle text-indigo-600 dark:text-indigo-400 mr-1.5"></i>Klik <strong>Selanjutnya</strong> untuk menuliskan profil dasar UMKM mitra serta uraian alur pelayanan mereka saat ini.
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide7() {
+            const p1Saved = uiWizard.profilSaved[1] || !!(formState.un.trim() || formState.ub.trim());
+            const p2Saved = uiWizard.profilSaved[2] || !!(formState.upel.trim() || formState.ud.trim());
+            const p1Editing = uiWizard.profilActive === 1;
+            const p2Editing = uiWizard.profilActive === 2;
+            const p1Min = !!uiWizard.profilMinimized[1];
+            const p2Min = !!uiWizard.profilMinimized[2];
+
+            let card1Html = '';
+            if (p1Editing) {
+                card1Html = `
+                    <div class="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border-2 border-indigo-600 dark:border-indigo-400 shadow-md space-y-4">
+                        ${renderWizardCardHeader('Bagian 3A', 'Data Dasar & Cara Pelayanan UMKM Mitra', p1Saved, true, false, '', '')}
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100 dark:border-slate-800">
+                            <div>
+                                <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Nama Usaha UMKM Mitra *</label>
+                                <input type="text" value="${escapeHtml(formState.un)}" oninput="updateField('un', this.value)" placeholder="Ketik nama usaha mitra..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Bidang / Kategori Usaha *</label>
+                                <input type="text" value="${escapeHtml(formState.ub)}" oninput="updateField('ub', this.value)" placeholder="Ketik bidang usaha..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Nama Pemilik / Pengelola Usaha</label>
+                                <input type="text" value="${escapeHtml(formState.up)}" oninput="updateField('up', this.value)" placeholder="Ketik nama pemilik atau pengelola..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Lokasi / Alamat Usaha *</label>
+                                <input type="text" value="${escapeHtml(formState.ul)}" oninput="updateField('ul', this.value)" placeholder="Ketik lokasi atau alamat usaha..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Media Komunikasi / Cara Melayani Pelanggan Saat Ini (Online maupun Offline) *</label>
+                            <input type="text" value="${escapeHtml(formState.uk)}" oninput="updateField('uk', this.value)" placeholder="Jelaskan apakah melayani tatap muka di toko fisik, menggunakan chat, media sosial, dll..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                        <div class="flex justify-end pt-1">
+                            <button type="button" onclick="saveProfilPart(1)" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-extrabold transition flex items-center gap-2 shadow-sm">
+                                <i class="fa-solid fa-check"></i>
+                                <span>Simpan & Lanjut ke Bagian 3B</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else if (p1Saved) {
+                card1Html = `
+                    <div class="p-4 sm:p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-emerald-300 dark:border-emerald-800/70 space-y-3">
+                        ${renderWizardCardHeader('Bagian 3A', (formState.un || 'Data Dasar UMKM') + (formState.ub ? ' • ' + formState.ub : ''), true, false, p1Min, 'openProfilPart(1)', 'toggleMinProfilPart(1)')}
+                        ${!p1Min ? `
+                            <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm sm:text-base">
+                                <div><span class="text-xs font-bold uppercase text-slate-400 block">Nama & Bidang Usaha</span><span class="font-extrabold text-slate-900 dark:text-white">${escapeHtml(formState.un) || '-'} (${escapeHtml(formState.ub) || '-'})</span></div>
+                                <div><span class="text-xs font-bold uppercase text-slate-400 block">Pemilik & Lokasi</span><span class="text-slate-700 dark:text-slate-200">${escapeHtml(formState.up) || '-'} • ${escapeHtml(formState.ul) || '-'}</span></div>
+                                <div class="sm:col-span-2"><span class="text-xs font-bold uppercase text-slate-400 block">Cara Melayani Pelanggan Saat Ini</span><span class="text-slate-800 dark:text-slate-100">${escapeHtml(formState.uk) || '-'}</span></div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            } else {
+                card1Html = `<div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-800">${renderWizardCardHeader('Bagian 3A', 'Data Dasar & Cara Pelayanan UMKM Mitra', false, false, true, 'openProfilPart(1)', '')}</div>`;
+            }
+
+            let card2Html = '';
+            if (p2Editing) {
+                card2Html = `
+                    <div class="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border-2 border-indigo-600 dark:border-indigo-400 shadow-md space-y-4">
+                        ${renderWizardCardHeader('Bagian 3B', 'Karakteristik Pelanggan & Urutan Proses Transaksi Saat Ini', p2Saved, true, false, '', '')}
+                        <div class="space-y-4 pt-2 border-t border-slate-100 dark:border-slate-800">
+                            <div>
+                                <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Siapa Target Pelanggan Utama Usaha Ini dan Kapan Mereka Biasanya Bertransaksi? *</label>
+                                <textarea rows="4" oninput="autoResizeTextarea(this); updateField('upel', this.value)" placeholder="Uraikan profil pelanggan utama yang dilayani oleh UMKM ini..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(formState.upel)}</textarea>
+                            </div>
+                            <div>
+                                <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Bagaimana Urutan Langkah Saat Pelanggan Mencari Informasi, Memesan, hingga Membayar Saat Ini? *</label>
+                                <textarea rows="4" oninput="autoResizeTextarea(this); updateField('ud', this.value)" placeholder="Ceritakan alur proses pelayanan dari awal hingga transaksi selesai..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(formState.ud)}</textarea>
+                            </div>
+                        </div>
+                        <div class="flex justify-end pt-1">
+                            <button type="button" onclick="saveProfilPart(2)" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-extrabold transition flex items-center gap-2 shadow-sm">
+                                <i class="fa-solid fa-check"></i>
+                                <span>Simpan Profil UMKM</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else if (p2Saved) {
+                card2Html = `
+                    <div class="p-4 sm:p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-emerald-300 dark:border-emerald-800/70 space-y-3">
+                        ${renderWizardCardHeader('Bagian 3B', 'Karakteristik Pelanggan & Urutan Proses Transaksi', true, false, p2Min, 'openProfilPart(2)', 'toggleMinProfilPart(2)')}
+                        ${!p2Min ? `
+                            <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 text-sm sm:text-base leading-relaxed">
+                                <div>
+                                    <span class="text-xs font-bold uppercase text-indigo-600 dark:text-indigo-400 block mb-1">Target Pelanggan Utama:</span>
+                                    <div class="text-slate-800 dark:text-slate-100 whitespace-pre-line">${escapeHtml(formState.upel) || '-'}</div>
+                                </div>
+                                <div class="pt-3 border-t border-slate-100 dark:border-slate-800">
+                                    <span class="text-xs font-bold uppercase text-indigo-600 dark:text-indigo-400 block mb-1">Alur Proses Transaksi Saat Ini:</span>
+                                    <div class="text-slate-800 dark:text-slate-100 whitespace-pre-line">${escapeHtml(formState.ud) || '-'}</div>
+                                </div>
+                            </div>
+                        ` : `<p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 truncate px-1">${escapeHtml(formState.ud || formState.upel)}</p>`}
+                    </div>
+                `;
+            } else {
+                card2Html = `<div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-800">${renderWizardCardHeader('Bagian 3B', 'Karakteristik Pelanggan & Urutan Proses Transaksi Saat Ini', false, false, true, 'openProfilPart(2)', '')}</div>`;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-pen-to-square mr-1"></i>Tahap 3 • Wizard Profil UMKM Mitra</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Profil Usaha UMKM Mitra Pilihan Anda</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                            Lengkapi Bagian 3A dan Bagian 3B secara berurutan. Setiap bagian yang sudah disimpan akan diringkas menjadi kartu bacaan yang lega.
+                        </p>
+                    </div>
+
+                    <div class="space-y-4 my-auto">
+                        ${card1Html}
+                        ${card2Html}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide8() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-6">
+                    <div class="space-y-2">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Tahap 4 • Penjelasan Pengamatan Masalah</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Cara Mengamati 5 Hambatan (${term('friksi', 'Titik Friksi')}) pada Alur Layanan</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Gunakan pendekatan ${term('walkthrough', 'Task-Based Walkthrough')}: telusuri secara langsung tahapan yang harus dilalui pelanggan saat berinteraksi dengan UMKM mitra Anda (baik melalui media digital maupun di lokasi fisik usaha). Perhatikan <strong>3 komponen pengamatan</strong> berikut untuk setiap hambatan yang Anda temukan:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-auto">
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                            <span class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-xs font-extrabold">Komponen 1</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Titik / Bagian Tahapan</h3>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Sebutkan secara spesifik pada bagian atau tahapan mana kendala tersebut terjadi (misalnya saat tahap pencarian informasi awal, tahap pemesanan, tahap pencatatan, tahap pembayaran, atau tahap penyerahan barang/jasa).
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                            <span class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-xs font-extrabold">Komponen 2</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Uraian Hambatan yang Terlihat</h3>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Jelaskan secara utuh apa kesulitan, ketidakjelasan informasi, atau langkah berulang yang Anda temukan pada tahapan tersebut berdasarkan hasil pengamatan nyata Anda sendiri.
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                            <span class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-xs font-extrabold">Komponen 3</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Dampak bagi Pengguna / Usaha</h3>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Uraikan akibat yang ditimbulkan oleh hambatan tersebut terhadap kenyamanan pelanggan maupun terhadap kelancaran kerja pengelola UMKM.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-800/60 text-xs">
+                        <i class="fa-solid fa-arrow-right text-indigo-600 dark:text-indigo-400 mr-1.5"></i>Pada slide berikutnya, catat 5 hambatan satu per satu melalui kartu wizard yang lega.
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide9() {
+            let skenarioCardHtml = '';
+            if (uiWizard.skenarioEditing) {
+                skenarioCardHtml = `
+                    <div class="p-5 rounded-3xl bg-amber-50/60 dark:bg-amber-950/20 border-2 border-amber-400 dark:border-amber-700 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-extrabold uppercase tracking-wider text-amber-800 dark:text-amber-300"><i class="fa-solid fa-route mr-1.5"></i>Skenario Aktivitas yang Diamati</span>
+                            <span class="text-[11px] font-bold text-amber-700 dark:text-amber-400">Langkah Awal Pengamatan</span>
+                        </div>
+                        <p class="text-xs text-slate-600 dark:text-slate-300">Tuliskan tugas atau aktivitas yang Anda telusuri saat mengamati alur pelayanan UMKM mitra:</p>
+                        <textarea rows="2" oninput="autoResizeTextarea(this); updateField('skenario', this.value)" placeholder="Tuliskan skenario aktivitas yang Anda amati dari awal hingga akhir..." class="w-full p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 text-sm sm:text-base font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500">${escapeHtml(formState.skenario)}</textarea>
+                        <div class="flex justify-end">
+                            <button type="button" onclick="saveSkenarioCard()" class="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-extrabold transition">
+                                <i class="fa-solid fa-check mr-1"></i>Simpan Skenario & Mulai Catat Hambatan #1
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                skenarioCardHtml = `
+                    <div class="p-4 rounded-2xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="space-y-0.5">
+                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-amber-700 dark:text-amber-400"><i class="fa-solid fa-circle-check mr-1"></i>Skenario Aktivitas yang Diamati</span>
+                            <p class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100">${escapeHtml(formState.skenario) || '(Belum diisi)'}</p>
+                        </div>
+                        <button type="button" onclick="uiWizard.skenarioEditing=true; renderCurrentSlide();" class="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300 text-xs font-extrabold shrink-0 self-start sm:self-center">
+                            <i class="fa-solid fa-pen mr-1"></i>Edit Skenario
+                        </button>
+                    </div>
+                `;
+            }
+
+            let auditCardsHtml = '';
+            for (let i = 0; i < 5; i++) {
+                const r = formState.aud[i] || { k: '', m: '', d: '' };
+                const isEditing = uiWizard.auditActive === i;
+                const isSaved = uiWizard.auditSaved[i] || !!(r.k.trim() || r.m.trim() || r.d.trim());
+                const isMin = !!uiWizard.auditMinimized[i];
+                const titleSummary = r.k.trim() ? r.k : 'Titik Hambatan Ke-' + (i + 1);
+
+                if (isEditing) {
+                    auditCardsHtml += `
+                        <div class="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border-2 border-indigo-600 dark:border-indigo-400 shadow-md space-y-4">
+                            ${renderWizardCardHeader('Hambatan #' + (i + 1), titleSummary, isSaved, true, false, '', '')}
+
+                            <div class="space-y-4 pt-2 border-t border-slate-100 dark:border-slate-800">
+                                <div>
+                                    <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">
+                                        1. Titik atau Tahapan Layanan Tempat Masalah Terjadi *
+                                    </label>
+                                    <input type="text" value="${escapeHtml(r.k)}" oninput="updateAuditField(${i}, 'k', this.value)" placeholder="Tuliskan bagian atau tahapan layanan yang diamati..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                </div>
+
+                                <div>
+                                    <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">
+                                        2. Uraian Kesulitan atau Hambatan yang Terlihat *
+                                    </label>
+                                    <textarea rows="4" oninput="autoResizeTextarea(this); updateAuditField(${i}, 'm', this.value)" placeholder="Uraikan secara lengkap kendala atau hambatan yang Anda temukan pada bagian tersebut..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(r.m)}</textarea>
+                                </div>
+
+                                <div>
+                                    <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">
+                                        3. Dampak / Akibatnya bagi Pelanggan maupun Pengelola UMKM *
+                                    </label>
+                                    <textarea rows="3" oninput="autoResizeTextarea(this); updateAuditField(${i}, 'd', this.value)" placeholder="Jelaskan dampak dari hambatan tersebut terhadap proses transaksi atau pelayanan..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(r.d)}</textarea>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between gap-3 pt-1">
+                                <span class="text-xs text-slate-400">Hambatan ${i + 1} dari 5</span>
+                                <button type="button" onclick="saveAuditItem(${i})" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-extrabold transition flex items-center gap-2 shadow-sm">
+                                    <i class="fa-solid fa-check"></i>
+                                    <span>${i < 4 ? 'Simpan & Lanjut ke Hambatan #' + (i + 2) : 'Simpan Hambatan #5'}</span>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                } else if (isSaved) {
+                    auditCardsHtml += `
+                        <div class="p-4 sm:p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-emerald-300 dark:border-emerald-800/70 space-y-3 transition">
+                            ${renderWizardCardHeader('Hambatan #' + (i + 1), titleSummary, true, false, isMin, 'openAuditItem(' + i + ')', 'toggleMinAuditItem(' + i + ')')}
+                            ${isMin ? `
+                                <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 truncate px-1">${escapeHtml(r.m)}</p>
+                            ` : `
+                                <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 text-sm sm:text-base leading-relaxed">
+                                    <div>
+                                        <span class="text-xs font-bold uppercase text-indigo-600 dark:text-indigo-400 block mb-0.5">Titik / Tahapan Layanan:</span>
+                                        <div class="font-bold text-slate-900 dark:text-white">${escapeHtml(r.k) || '-'}</div>
+                                    </div>
+                                    <div class="pt-2 border-t border-slate-100 dark:border-slate-800">
+                                        <span class="text-xs font-bold uppercase text-indigo-600 dark:text-indigo-400 block mb-0.5">Uraian Hambatan:</span>
+                                        <div class="text-slate-800 dark:text-slate-100 whitespace-pre-line">${escapeHtml(r.m) || '-'}</div>
+                                    </div>
+                                    <div class="pt-2 border-t border-slate-100 dark:border-slate-800">
+                                        <span class="text-xs font-bold uppercase text-indigo-600 dark:text-indigo-400 block mb-0.5">Dampak bagi Pelanggan / UMKM:</span>
+                                        <div class="text-slate-800 dark:text-slate-100 whitespace-pre-line">${escapeHtml(r.d) || '-'}</div>
+                                    </div>
+                                </div>
+                            `}
+                        </div>
+                    `;
+                } else {
+                    auditCardsHtml += `
+                        <div class="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-800">
+                            ${renderWizardCardHeader('Hambatan #' + (i + 1), 'Belum diisi', false, false, true, 'openAuditItem(' + i + ')', '')}
+                        </div>
+                    `;
+                }
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div class="space-y-1">
+                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-pen-to-square mr-1"></i>Tahap 4 • Wizard 5 Hambatan (Titik Friksi)</span>
+                            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Pencatatan Skenario & 5 Hambatan Layanan</h2>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <button type="button" onclick="setAllAuditMin(false)" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300">Buka Baca Semua</button>
+                            <button type="button" onclick="setAllAuditMin(true)" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300">Lipat Semua</button>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3.5 my-auto">
+                        ${skenarioCardHtml}
+                        ${auditCardsHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide10() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-6">
+                    <div class="space-y-2">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Tahap 5 • Penjelasan Dugaan & Wawancara</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Merumuskan Dugaan Awal (${term('asumsi', 'Asumsi')}) & ${term('openquestion', 'Pertanyaan Terbuka')}</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Temuan dari pengamatan awal Anda masih bersifat <strong>Dugaan Sementara (${term('asumsi', 'Asumsi')})</strong>. Untuk menguji kebenarannya pada Pertemuan 2, pasangkan setiap dugaan dengan pertanyaan wawancara yang terbuka dan tidak mengarahkan jawaban:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 my-auto text-xs sm:text-sm">
+                        <div class="p-5 rounded-3xl bg-rose-50/60 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="px-2.5 py-1 rounded-lg bg-rose-600 text-white text-xs font-extrabold">Hindari: Pertanyaan Tertutup / Mengarahkan</span>
+                                <i class="fa-solid fa-circle-xmark text-lg text-rose-600"></i>
+                            </div>
+                            <p class="text-slate-700 dark:text-slate-200 leading-relaxed">
+                                Pertanyaan yang diawali kata <em>"Apakah Anda setuju bahwa..."</em> atau <em>"Apakah fitur X ini sulit dipakai?"</em> hanya memancing jawaban singkat "Ya/Tidak" dan menggiring narasumber mengikuti opini pewawancara.
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-xs font-extrabold">Gunakan: Pertanyaan Terbuka & Netral</span>
+                                <i class="fa-solid fa-circle-check text-lg text-emerald-600"></i>
+                            </div>
+                            <p class="text-slate-700 dark:text-slate-200 leading-relaxed">
+                                Gunakan kata tanya <em>"Bagaimana pengalaman Anda saat..."</em>, <em>"Ceritakan urutan ketika Anda..."</em>, atau <em>"Apa saja pertimbangan Anda saat..."</em> agar narasumber bebas menceritakan pengalamannya secara utuh.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-800/60 text-xs">
+                        <i class="fa-solid fa-shield-halved text-indigo-600 dark:text-indigo-400 mr-1.5"></i><strong>Etika Riset:</strong> Setiap kegiatan wawancara dan observasi wajib diawali dengan meminta persetujuan responden (${term('informedconsent', 'Informed Consent')}).
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide11() {
+            const pairs = [
+                { num: 1, aKey: 'a1', tKey: 't1', title: 'Pasangan Dugaan & Pertanyaan #1 (Aspek Pencarian Informasi / Katalog)' },
+                { num: 2, aKey: 'a2', tKey: 't2', title: 'Pasangan Dugaan & Pertanyaan #2 (Aspek Kemudahan Alur Transaksi)' },
+                { num: 3, aKey: 'a3', tKey: 't3', title: 'Pasangan Dugaan & Pertanyaan #3 (Aspek Pengelolaan / Operasional Mitra)' }
+            ];
+
+            let cardsHtml = '';
+            for (let i = 0; i < pairs.length; i++) {
+                const p = pairs[i];
+                const aVal = formState[p.aKey] || '';
+                const tVal = formState[p.tKey] || '';
+                const isEditing = uiWizard.risetActive === p.num;
+                const isSaved = uiWizard.risetSaved[p.num] || !!(aVal.trim() || tVal.trim());
+                const isMin = !!uiWizard.risetMinimized[p.num];
+
+                if (isEditing) {
+                    cardsHtml += `
+                        <div class="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border-2 border-indigo-600 dark:border-indigo-400 shadow-md space-y-4">
+                            ${renderWizardCardHeader('Bagian 5.' + p.num, p.title, isSaved, true, false, '', '')}
+                            <div class="space-y-4 pt-2 border-t border-slate-100 dark:border-slate-800">
+                                <div>
+                                    <label class="text-xs sm:text-sm font-bold text-indigo-700 dark:text-indigo-300 block mb-1.5">
+                                        Dugaan Sementara (Asumsi) #${p.num} Berdasarkan Pengamatan Anda *
+                                    </label>
+                                    <textarea rows="4" oninput="autoResizeTextarea(this); updateField('${p.aKey}', this.value)" placeholder="Tuliskan dugaan masalah yang ingin Anda buktikan kebenarannya..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(aVal)}</textarea>
+                                </div>
+                                <div>
+                                    <label class="text-xs sm:text-sm font-bold text-emerald-700 dark:text-emerald-300 block mb-1.5">
+                                        Pertanyaan Wawancara Terbuka & Netral untuk Menguji Dugaan #${p.num} *
+                                    </label>
+                                    <textarea rows="4" oninput="autoResizeTextarea(this); updateField('${p.tKey}', this.value)" placeholder="Tuliskan kalimat pertanyaan terbuka yang akan Anda ajukan kepada narasumber..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500">${escapeHtml(tVal)}</textarea>
+                                </div>
+                            </div>
+                            <div class="flex justify-end pt-1">
+                                <button type="button" onclick="saveRisetPart(${p.num})" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-extrabold transition flex items-center gap-2 shadow-sm">
+                                    <i class="fa-solid fa-check"></i>
+                                    <span>Simpan & Lanjut ke Bagian 5.${p.num + 1}</span>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                } else if (isSaved) {
+                    cardsHtml += `
+                        <div class="p-4 sm:p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-emerald-300 dark:border-emerald-800/70 space-y-3">
+                            ${renderWizardCardHeader('Bagian 5.' + p.num, p.title, true, false, isMin, 'openRisetPart(' + p.num + ')', 'toggleMinRisetPart(' + p.num + ')')}
+                            ${isMin ? `
+                                <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 truncate px-1">${escapeHtml(aVal)}</p>
+                            ` : `
+                                <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 text-sm sm:text-base leading-relaxed">
+                                    <div>
+                                        <span class="text-xs font-bold uppercase text-indigo-600 dark:text-indigo-400 block mb-0.5">Dugaan Sementara (Asumsi) #${p.num}:</span>
+                                        <div class="text-slate-800 dark:text-slate-100 whitespace-pre-line">${escapeHtml(aVal) || '-'}</div>
+                                    </div>
+                                    <div class="pt-2.5 border-t border-slate-100 dark:border-slate-800">
+                                        <span class="text-xs font-bold uppercase text-emerald-600 dark:text-emerald-400 block mb-0.5">Pertanyaan Wawancara Terbuka #${p.num}:</span>
+                                        <div class="text-slate-800 dark:text-slate-100 whitespace-pre-line">${escapeHtml(tVal) || '-'}</div>
+                                    </div>
+                                </div>
+                            `}
+                        </div>
+                    `;
+                } else {
+                    cardsHtml += `<div class="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-800">${renderWizardCardHeader('Bagian 5.' + p.num, p.title, false, false, true, 'openRisetPart(' + p.num + ')', '')}</div>`;
+                }
+            }
+
+            const r4Editing = uiWizard.risetActive === 4;
+            const r4Saved = uiWizard.risetSaved[4] || !!(formState.rt.trim() || formState.rn.trim());
+            const r4Min = !!uiWizard.risetMinimized[4];
+
+            if (r4Editing) {
+                cardsHtml += `
+                    <div class="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border-2 border-indigo-600 dark:border-indigo-400 shadow-md space-y-4">
+                        ${renderWizardCardHeader('Bagian 5.4', 'Tujuan Riset, Kriteria Narasumber, & Jadwal Lapangan', r4Saved, true, false, '', '')}
+                        <div class="space-y-4 pt-2 border-t border-slate-100 dark:border-slate-800">
+                            <div>
+                                <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Tujuan Utama Riset Lapangan *</label>
+                                <textarea rows="3" oninput="autoResizeTextarea(this); updateField('rt', this.value)" placeholder="Tuliskan tujuan riset yang ingin Anda capai pada wawancara Pertemuan 2..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(formState.rt)}</textarea>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Kriteria & Jumlah Calon Narasumber *</label>
+                                    <input type="text" value="${escapeHtml(formState.rn)}" oninput="updateField('rn', this.value)" placeholder="Tuliskan kriteria dan target jumlah narasumber..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                </div>
+                                <div>
+                                    <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Rencana Waktu Pelaksanaan *</label>
+                                    <input type="text" value="${escapeHtml(formState.rj)}" oninput="updateField('rj', this.value)" placeholder="Tuliskan rencana jadwal wawancara..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex justify-end pt-1">
+                            <button type="button" onclick="saveRisetPart(4)" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-extrabold transition flex items-center gap-2 shadow-sm">
+                                <i class="fa-solid fa-check"></i>
+                                <span>Simpan Rencana Riset</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else if (r4Saved) {
+                cardsHtml += `
+                    <div class="p-4 sm:p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-emerald-300 dark:border-emerald-800/70 space-y-3">
+                        ${renderWizardCardHeader('Bagian 5.4', 'Tujuan Riset, Kriteria Narasumber, & Jadwal Lapangan', true, false, r4Min, 'openRisetPart(4)', 'toggleMinRisetPart(4)')}
+                        ${!r4Min ? `
+                            <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2.5 text-sm sm:text-base leading-relaxed">
+                                <div><span class="text-xs font-bold uppercase text-indigo-600 dark:text-indigo-400 block">Tujuan Riset:</span><div class="text-slate-800 dark:text-slate-100 whitespace-pre-line">${escapeHtml(formState.rt) || '-'}</div></div>
+                                <div class="pt-2 border-t border-slate-100 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div><span class="text-xs font-bold uppercase text-slate-400 block">Calon Narasumber:</span><span class="font-semibold">${escapeHtml(formState.rn) || '-'}</span></div>
+                                    <div><span class="text-xs font-bold uppercase text-slate-400 block">Rencana Jadwal:</span><span class="font-semibold">${escapeHtml(formState.rj) || '-'}</span></div>
+                                </div>
+                            </div>
+                        ` : `<p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 truncate px-1">${escapeHtml(formState.rt)}</p>`}
+                    </div>
+                `;
+            } else {
+                cardsHtml += `<div class="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-800">${renderWizardCardHeader('Bagian 5.4', 'Tujuan Riset, Kriteria Narasumber, & Jadwal Lapangan', false, false, true, 'openRisetPart(4)', '')}</div>`;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div class="space-y-1">
+                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-pen-to-square mr-1"></i>Tahap 5 • Wizard Dugaan & Rencana Wawancara</span>
+                            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Pasangan Dugaan Awal & Pertanyaan Riset</h2>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <button type="button" onclick="setAllRisetMin(false)" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300">Buka Baca Semua</button>
+                            <button type="button" onclick="setAllRisetMin(true)" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300">Lipat Semua</button>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3.5 my-auto">
+                        ${cardsHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide12() {
+            return `
+                <div class="slide-enter space-y-5">
+                    <div class="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4 no-print">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Tahap Akhir • Dokumen Siap Kumpul</span>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Pratinjau Lembar Kerja Mahasiswa (LKM 01)</h2>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Periksa kembali hasil pekerjaan Anda di bawah ini, lalu klik tombol <strong>Generate & Unduh PDF</strong> untuk menyimpan laporan resmi format A4.</p>
+                        </div>
+
+                        <div class="flex flex-wrap items-center gap-2 shrink-0">
+                            <button type="button" onclick="window.print()" class="px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition">
+                                <i class="fa-solid fa-print mr-1"></i>Cetak / Save PDF Browser
+                            </button>
+                            <button type="button" id="btnDownloadPdf" onclick="downloadPdf()" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-extrabold transition shadow-md flex items-center gap-2">
+                                <i class="fa-solid fa-file-pdf"></i>
+                                <span>Generate & Unduh PDF</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="pdfWrapper" class="max-w-4xl mx-auto bg-white rounded-2xl shadow-md border border-slate-300 overflow-hidden">
+                        <div id="pdfPrintArea" class="p-6 sm:p-10 space-y-4">
+                            ${generatePdfHtmlString()}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function generatePdfHtmlString() {
+            const d = formState;
+            const dash = function (v) {
+                return (v && String(v).trim() !== '')
+                    ? escapeHtml(v)
+                    : '<span style="color:#94a3b8; font-style:italic;">(Belum diisi)</span>';
+            };
+
+            let auditRowsStr = '';
+            for (let i = 0; i < 5; i++) {
+                const r = d.aud[i] || { k: '', m: '', d: '' };
+                auditRowsStr += `
+                    <tr>
+                        <td style="text-align:center; font-weight:700; width:32px;">${i + 1}</td>
+                        <td style="width:25%; font-weight:600;">${dash(r.k)}</td>
+                        <td style="width:42%;">${dash(r.m)}</td>
+                        <td style="width:33%;">${dash(r.d)}</td>
+                    </tr>
+                `;
+            }
+
+            return `
+                <div style="border-bottom: 2px solid #1e293b; padding-bottom: 10px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+                    <div>
+                        <div style="font-size: 10px; font-weight: 800; letter-spacing: 0.06em; color: #4f46e5; text-transform: uppercase;">
+                            UNIVERSITAS PERINTIS INDONESIA (UPERTIS)
+                        </div>
+                        <div style="font-size: 15px; font-weight: 800; color: #0f172a; margin-top: 2px;">
+                            LEMBAR KERJA MAHASISWA (LKM 01) • PRAKTIKUM UI/UX
+                        </div>
+                        <div style="font-size: 11px; color: #475569; margin-top: 1px;">
+                            Program Studi S1 Bisnis Digital • Fakultas Ekonomi Bisnis dan Ilmu Sosial • Kode MK: BD7401
+                        </div>
+                    </div>
+                    <div style="text-align: right; font-size: 10px; color: #475569; background: #f8fafc; padding: 6px 10px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                        <div style="font-weight: 800; color: #0f172a;">PERTEMUAN 1</div>
+                        <div>Sub-CPMK 1.1 & 4.1</div>
+                        <div>Bobot: 2%</div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 12px;">
+                    <div style="font-size: 11px; font-weight: 800; color: #0f172a; margin-bottom: 5px; text-transform: uppercase;">
+                        1. Identitas Mahasiswa & Ruang Kerja Desain
+                    </div>
+                    <table class="pdf-table">
+                        <tr>
+                            <th style="width: 22%;">Nama Mahasiswa</th>
+                            <td style="width: 30%; font-weight: 700;">${dash(d.nama)}</td>
+                            <th style="width: 18%;">NIM</th>
+                            <td style="width: 30%; font-family: monospace; font-weight: 700;">${dash(d.nim)}</td>
+                        </tr>
+                        <tr>
+                            <th>Kelas / Semester</th>
+                            <td>${dash(d.kelas)}</td>
+                            <th>Tanggal Praktikum</th>
+                            <td>${dash(d.tgl)}</td>
+                        </tr>
+                        <tr>
+                            <th>Tautan File Figma</th>
+                            <td colspan="3" style="font-family: monospace; word-break: break-all;">${dash(d.link)}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div style="margin-bottom: 12px;">
+                    <div style="font-size: 11px; font-weight: 800; color: #0f172a; margin-bottom: 5px; text-transform: uppercase;">
+                        2. Refleksi Pengalaman & Pendapat Pribadi Mahasiswa
+                    </div>
+                    <table class="pdf-table">
+                        <tr>
+                            <th style="width: 28%;">1. Pengalaman Menggunakan Aplikasi</th>
+                            <td>${dash(d.r1)}</td>
+                        </tr>
+                        <tr>
+                            <th>2. Pengamatan Alur Transaksi Usaha</th>
+                            <td>${dash(d.r2)}</td>
+                        </tr>
+                        <tr>
+                            <th>3. Pandangan Pembuat vs Pengguna</th>
+                            <td>${dash(d.r3)}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div style="margin-bottom: 12px;">
+                    <div style="font-size: 11px; font-weight: 800; color: #0f172a; margin-bottom: 5px; text-transform: uppercase;">
+                        3. Profil Usaha UMKM Mitra
+                    </div>
+                    <table class="pdf-table">
+                        <tr>
+                            <th style="width: 22%;">Nama UMKM Mitra</th>
+                            <td style="width: 30%; font-weight: 700;">${dash(d.un)}</td>
+                            <th style="width: 18%;">Bidang Usaha</th>
+                            <td style="width: 30%;">${dash(d.ub)}</td>
+                        </tr>
+                        <tr>
+                            <th>Pemilik / Pengelola</th>
+                            <td>${dash(d.up)}</td>
+                            <th>Lokasi Usaha</th>
+                            <td>${dash(d.ul)}</td>
+                        </tr>
+                        <tr>
+                            <th>Cara Pelayanan Saat Ini</th>
+                            <td colspan="3">${dash(d.uk)}</td>
+                        </tr>
+                        <tr>
+                            <th>Target Pelanggan Utama</th>
+                            <td colspan="3">${dash(d.upel)}</td>
+                        </tr>
+                        <tr>
+                            <th>Alur Transaksi Saat Ini</th>
+                            <td colspan="3">${dash(d.ud)}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div style="margin-bottom: 12px;">
+                    <div style="font-size: 11px; font-weight: 800; color: #0f172a; margin-bottom: 5px; text-transform: uppercase;">
+                        4. Hasil Pengamatan 5 Kesulitan / Hambatan (Titik Friksi)
+                    </div>
+                    <div style="font-size: 10px; color: #334155; margin-bottom: 5px; padding: 6px 8px; background: #f8fafc; border: 1px solid #cbd5e1;">
+                        <strong>Skenario Aktivitas yang Diamati:</strong> ${dash(d.skenario)}
+                    </div>
+                    <table class="pdf-table">
+                        <thead>
+                            <tr>
+                                <th style="width:32px; text-align:center;">No</th>
+                                <th style="width:25%;">Titik / Tahapan Layanan</th>
+                                <th style="width:42%;">Uraian Kesulitan / Hambatan</th>
+                                <th style="width:33%;">Dampak bagi Pelanggan / UMKM</th>
+                            </tr>
+                        </thead>
+                        <tbody>${auditRowsStr}</tbody>
+                    </table>
+                </div>
+
+                <div style="margin-bottom: 16px;">
+                    <div style="font-size: 11px; font-weight: 800; color: #0f172a; margin-bottom: 5px; text-transform: uppercase;">
+                        5. Pasangan Dugaan Awal (Asumsi) & Rencana Wawancara Pertemuan 2
+                    </div>
+                    <table class="pdf-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 50%;">Dugaan Sementara (Asumsi Awal)</th>
+                                <th style="width: 50%;">Pertanyaan Wawancara Terbuka untuk Mengujinya</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Dugaan 1:</strong><br>${dash(d.a1)}</td>
+                                <td><strong>Pertanyaan 1:</strong><br>${dash(d.t1)}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Dugaan 2:</strong><br>${dash(d.a2)}</td>
+                                <td><strong>Pertanyaan 2:</strong><br>${dash(d.t2)}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Dugaan 3:</strong><br>${dash(d.a3)}</td>
+                                <td><strong>Pertanyaan 3:</strong><br>${dash(d.t3)}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <table class="pdf-table" style="margin-top: -1px;">
+                        <tr>
+                            <th style="width: 22%;">Tujuan Riset</th>
+                            <td style="width: 30%;">${dash(d.rt)}</td>
+                            <th style="width: 18%;">Calon Narasumber</th>
+                            <td style="width: 30%;">${dash(d.rn)} (${dash(d.rj)})</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; padding-top: 6px; font-size: 10px; color: #334155;">
+                    <div style="max-width: 360px; color: #64748b;">
+                        <strong>Pernyataan Orisinalitas:</strong> Seluruh isian pada lembar kerja ini disusun secara mandiri berdasarkan pengamatan nyata dan siap divalidasi melalui wawancara pada Pertemuan 2.
+                    </div>
+                    <div style="text-align: center; min-width: 180px;">
+                        <div>Padang, ${d.tgl ? escapeHtml(d.tgl) : '........................'}</div>
+                        <div style="margin-bottom: 38px; font-weight: 600;">Mahasiswa Pelaksana,</div>
+                        <div style="font-weight: 800; text-decoration: underline; color: #0f172a;">${d.nama ? escapeHtml(d.nama) : '( ........................................ )'}</div>
+                        <div style="font-family: monospace;">NIM: ${d.nim ? escapeHtml(d.nim) : '........................'}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // =========================================================================
+        // HANDLER IN-FORM WIZARD (SIMPAN, BACA, MINIMIZE, EDIT)
+        // =========================================================================
+        function saveIdentitasCard() {
+            uiWizard.identitasEditing = false;
+            uiWizard.identitasMinimized = false;
+            triggerAutoSave();
+            renderCurrentSlide();
+        }
+        function editIdentitasCard() {
+            uiWizard.identitasEditing = true;
+            renderCurrentSlide();
+        }
+        function toggleMinIdentitasCard() {
+            uiWizard.identitasMinimized = !uiWizard.identitasMinimized;
+            renderCurrentSlide();
+        }
+
+        function saveRefleksiItem(num) {
+            uiWizard.refleksiSaved[num] = true;
+            uiWizard.refleksiMinimized[num] = false;
+            if (num < 3 && !uiWizard.refleksiSaved[num + 1]) {
+                uiWizard.refleksiActive = num + 1;
+            } else {
+                uiWizard.refleksiActive = 0;
+            }
+            triggerAutoSave();
+            renderCurrentSlide();
+        }
+        function openRefleksiItem(num) {
+            uiWizard.refleksiActive = num;
+            renderCurrentSlide();
+        }
+        function toggleMinRefleksiItem(num) {
+            uiWizard.refleksiMinimized[num] = !uiWizard.refleksiMinimized[num];
+            renderCurrentSlide();
+        }
+        function setAllRefleksiMin(flag) {
+            uiWizard.refleksiActive = 0;
+            for (let i = 1; i <= 3; i++) {
+                uiWizard.refleksiSaved[i] = true;
+                uiWizard.refleksiMinimized[i] = flag;
+            }
+            renderCurrentSlide();
+        }
+
+        function saveProfilPart(partNum) {
+            uiWizard.profilSaved[partNum] = true;
+            uiWizard.profilMinimized[partNum] = false;
+            if (partNum === 1 && !uiWizard.profilSaved[2]) {
+                uiWizard.profilActive = 2;
+            } else {
+                uiWizard.profilActive = 0;
+            }
+            triggerAutoSave();
+            renderCurrentSlide();
+        }
+        function openProfilPart(partNum) {
+            uiWizard.profilActive = partNum;
+            renderCurrentSlide();
+        }
+        function toggleMinProfilPart(partNum) {
+            uiWizard.profilMinimized[partNum] = !uiWizard.profilMinimized[partNum];
+            renderCurrentSlide();
+        }
+
+        function saveSkenarioCard() {
+            uiWizard.skenarioEditing = false;
+            if (!uiWizard.auditSaved[0]) {
+                uiWizard.auditActive = 0;
+            }
+            triggerAutoSave();
+            renderCurrentSlide();
+        }
+        function saveAuditItem(idx) {
+            uiWizard.auditSaved[idx] = true;
+            uiWizard.auditMinimized[idx] = true;
+            if (idx < 4 && !uiWizard.auditSaved[idx + 1]) {
+                uiWizard.auditActive = idx + 1;
+            } else {
+                uiWizard.auditActive = -1;
+                uiWizard.auditMinimized[idx] = false;
+            }
+            triggerAutoSave();
+            renderCurrentSlide();
+        }
+        function openAuditItem(idx) {
+            uiWizard.auditActive = idx;
+            renderCurrentSlide();
+        }
+        function toggleMinAuditItem(idx) {
+            uiWizard.auditMinimized[idx] = !uiWizard.auditMinimized[idx];
+            renderCurrentSlide();
+        }
+        function setAllAuditMin(flag) {
+            uiWizard.auditActive = -1;
+            for (let i = 0; i < 5; i++) {
+                uiWizard.auditSaved[i] = true;
+                uiWizard.auditMinimized[i] = flag;
+            }
+            renderCurrentSlide();
+        }
+
+        function saveRisetPart(num) {
+            uiWizard.risetSaved[num] = true;
+            uiWizard.risetMinimized[num] = false;
+            if (num < 4 && !uiWizard.risetSaved[num + 1]) {
+                uiWizard.risetActive = num + 1;
+            } else {
+                uiWizard.risetActive = 0;
+            }
+            triggerAutoSave();
+            renderCurrentSlide();
+        }
+        function openRisetPart(num) {
+            uiWizard.risetActive = num;
+            renderCurrentSlide();
+        }
+        function toggleMinRisetPart(num) {
+            uiWizard.risetMinimized[num] = !uiWizard.risetMinimized[num];
+            renderCurrentSlide();
+        }
+        function setAllRisetMin(flag) {
+            uiWizard.risetActive = 0;
+            for (let i = 1; i <= 4; i++) {
+                uiWizard.risetSaved[i] = true;
+                uiWizard.risetMinimized[i] = flag;
+            }
+            renderCurrentSlide();
+        }
+
+        // =========================================================================
+        // DAFTAR 12 SLIDE PRAKTIKUM
+        // =========================================================================
+        const SLIDES = [
+            { id: 1, category: "Pengantar", title: "Pengantar Praktikum 1 & Alur Pengerjaan LKM 01", render: renderSlide1 },
+            { id: 2, category: "Penjelasan 1", title: "Orientasi 6 Konsep Dasar Figma & FigJam", render: renderSlide2 },
+            { id: 3, category: "Form Isian 1", title: "Form Identitas Mahasiswa & Tautan Ruang Kerja", render: renderSlide3 },
+            { id: 4, category: "Penjelasan 2", title: "Mengapa Perlu Refleksi Diri? ('You Are Not The User')", render: renderSlide4 },
+            { id: 5, category: "Form Isian 2", title: "Wizard Refleksi Pengalaman & Pendapat Pribadi", render: renderSlide5 },
+            { id: 6, category: "Penjelasan 3", title: "Kriteria UMKM Mitra (Online maupun 100% Offline)", render: renderSlide6 },
+            { id: 7, category: "Form Isian 3", title: "Wizard Profil Usaha UMKM Mitra Pilihan Anda", render: renderSlide7 },
+            { id: 8, category: "Penjelasan 4", title: "Cara Mengamati 5 Hambatan (Titik Friksi) Layanan", render: renderSlide8 },
+            { id: 9, category: "Form Isian 4", title: "Wizard Skenario & Pencatatan 5 Hambatan", render: renderSlide9 },
+            { id: 10, category: "Penjelasan 5", title: "Merumuskan Dugaan Awal & Pertanyaan Terbuka", render: renderSlide10 },
+            { id: 11, category: "Form Isian 5", title: "Wizard Pasangan Dugaan, Pertanyaan, & Rencana Riset", render: renderSlide11 },
+            { id: 12, category: "Unduh PDF", title: "Pratinjau Dokumen Resmi A4 & Unduh PDF", render: renderSlide12 }
+        ];
+
+        function renderCurrentSlide() {
+            const slide = SLIDES[currentSlideIndex];
+            const viewport = document.getElementById('slideViewport');
+            if (!viewport || !slide) return;
+            viewport.innerHTML = slide.render();
+
+            const pct = Math.round(((currentSlideIndex + 1) / TOTAL_SLIDES) * 100);
+            document.getElementById('topProgressBar').style.width = pct + '%';
+            document.getElementById('slideCounterBadge').textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES;
+            document.getElementById('mobileFooterCounter').textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES;
+            document.getElementById('slideCategoryPill').textContent = slide.category;
+            document.getElementById('headerSlideTitle').textContent = slide.title;
+
+            const prevBtn = document.getElementById('prevSlideBtn');
+            const nextBtn = document.getElementById('nextSlideBtn');
+            const nextBtnText = document.getElementById('nextBtnText');
+
+            prevBtn.disabled = currentSlideIndex === 0;
+            if (currentSlideIndex === TOTAL_SLIDES - 1) {
+                nextBtnText.textContent = "Selesai";
+                nextBtn.disabled = true;
+            } else {
+                nextBtnText.textContent = "Selanjutnya";
+                nextBtn.disabled = false;
+            }
+
+            renderDotsAndDrawer();
+
+            const textareas = viewport.querySelectorAll('textarea.auto-expand');
+            for (let i = 0; i < textareas.length; i++) {
+                autoResizeTextarea(textareas[i]);
+            }
+        }
+
+        function renderDotsAndDrawer() {
+            const dotsContainer = document.getElementById('slideDotsContainer');
+            let dotsHtml = '';
+            let drawerHtml = '';
+
+            for (let idx = 0; idx < SLIDES.length; idx++) {
+                const s = SLIDES[idx];
+                const isActive = idx === currentSlideIndex;
+                const isForm = s.category.indexOf('Form') !== -1;
+
+                const dotClass = isActive
+                    ? 'w-7 bg-indigo-600 dark:bg-indigo-400'
+                    : isForm
+                    ? 'w-2 bg-emerald-400/70 dark:bg-emerald-600 hover:bg-emerald-500'
+                    : 'w-2 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400';
+
+                dotsHtml += `<button type="button" onclick="goToSlide(${idx})" title="${escapeHtml(s.title)}" class="h-2 rounded-full transition-all ${dotClass}"></button>`;
+
+                const itemClass = isActive
+                    ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 font-bold'
+                    : 'hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-300';
+                const badgeClass = isActive
+                    ? 'bg-indigo-600 text-white'
+                    : isForm
+                    ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500';
+
+                drawerHtml += `
+                    <button type="button" onclick="selectSlideFromDrawer(${idx})" class="w-full text-left p-3 rounded-xl transition flex items-start gap-3 ${itemClass}">
+                        <span class="w-6 h-6 rounded-lg text-xs font-extrabold flex items-center justify-center shrink-0 ${badgeClass}">${s.id}</span>
+                        <div class="min-w-0">
+                            <div class="text-[10px] uppercase tracking-wider opacity-75">${escapeHtml(s.category)}</div>
+                            <div class="text-xs sm:text-sm truncate">${escapeHtml(s.title)}</div>
+                        </div>
+                    </button>
+                `;
+            }
+
+            if (dotsContainer) dotsContainer.innerHTML = dotsHtml;
+            const drawerList = document.getElementById('drawerSlideList');
+            if (drawerList) drawerList.innerHTML = drawerHtml;
+        }
+
+        function selectFigmaTool(key) {
+            activeFigmaTool = key;
+            renderCurrentSlide();
+        }
+
+        function selectSlideFromDrawer(index) {
+            goToSlide(index);
+            toggleSlideDrawer();
+        }
+
+        function changeSlide(direction) {
+            const nextIdx = currentSlideIndex + direction;
+            if (nextIdx >= 0 && nextIdx < TOTAL_SLIDES) {
+                currentSlideIndex = nextIdx;
+                renderCurrentSlide();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function goToSlide(index) {
+            if (index >= 0 && index < TOTAL_SLIDES) {
+                currentSlideIndex = index;
+                renderCurrentSlide();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function toggleSlideDrawer() {
+            const drawer = document.getElementById('slideDrawer');
+            const backdrop = document.getElementById('slideDrawerBackdrop');
+            const isClosed = drawer.classList.contains('-translate-x-full');
+
+            if (isClosed) {
+                backdrop.classList.remove('hidden');
+                setTimeout(function () { backdrop.classList.remove('opacity-0'); }, 10);
+                drawer.classList.remove('-translate-x-full');
+            } else {
+                backdrop.classList.add('opacity-0');
+                drawer.classList.add('-translate-x-full');
+                setTimeout(function () { backdrop.classList.add('hidden'); }, 200);
+            }
+        }
+
+        function clearAllData() {
+            const today = new Date().toISOString().split('T')[0];
+            formState = {
+                nama: "", nim: "", kelas: "", tgl: today, link: "",
+                r1: "", r2: "", r3: "",
+                un: "", ub: "", up: "", ul: "", uk: "", upel: "", ud: "",
+                skenario: "",
+                aud: [
+                    { k: '', m: '', d: '' },
+                    { k: '', m: '', d: '' },
+                    { k: '', m: '', d: '' },
+                    { k: '', m: '', d: '' },
+                    { k: '', m: '', d: '' }
+                ],
+                a1: "", t1: "", a2: "", t2: "", a3: "", t3: "",
+                rt: "", rn: "", rj: ""
+            };
+            uiWizard = {
+                identitasEditing: true,
+                identitasMinimized: false,
+                refleksiActive: 1,
+                refleksiSaved: { 1: false, 2: false, 3: false },
+                refleksiMinimized: { 1: false, 2: false, 3: false },
+                profilActive: 1,
+                profilSaved: { 1: false, 2: false },
+                profilMinimized: { 1: false, 2: false },
+                skenarioEditing: true,
+                auditActive: 0,
+                auditSaved: { 0: false, 1: false, 2: false, 3: false, 4: false },
+                auditMinimized: { 0: false, 1: false, 2: false, 3: false, 4: false },
+                risetActive: 1,
+                risetSaved: { 1: false, 2: false, 3: false, 4: false },
+                risetMinimized: { 1: false, 2: false, 3: false, 4: false }
+            };
+            try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+            renderCurrentSlide();
+        }
+
+        function downloadPdf() {
+            if (currentSlideIndex !== TOTAL_SLIDES - 1) {
+                goToSlide(TOTAL_SLIDES - 1);
+            }
+            const el = document.getElementById('pdfPrintArea');
+            const d = formState;
+            const cleanNim = (d.nim || 'NIM').replace(/[^a-zA-Z0-9_-]/g, '');
+            const cleanNama = (d.nama || 'Mahasiswa').trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '');
+            const fn = 'LKM_01_UIUX_' + cleanNim + '_' + cleanNama + '.pdf';
+
+            const btn = document.getElementById('btnDownloadPdf');
+            const orig = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span>Menyiapkan PDF...</span>';
+                btn.disabled = true;
+            }
+
+            if (typeof html2pdf !== 'undefined') {
+                html2pdf().set({
+                    margin: [8, 8, 8, 8],
+                    filename: fn,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                }).from(el).save().then(function () {
+                    if (btn) { btn.innerHTML = orig; btn.disabled = false; }
+                }).catch(function () {
+                    if (btn) { btn.innerHTML = orig; btn.disabled = false; }
+                    window.print();
+                });
+            } else {
+                if (btn) { btn.innerHTML = orig; btn.disabled = false; }
+                window.print();
+            }
+        }
+
+        // =========================================================================
+        // MODAL KAMUS ISTILAH
+        // =========================================================================
+        function showTerm(key) {
+            const item = GLOSSARY_DB[key];
+            if (!item) return;
+            document.getElementById('termCategoryBadge').textContent = item.category;
+            document.getElementById('termTitle').textContent = item.title;
+            document.getElementById('termMainDesc').textContent = item.main;
+            document.getElementById('termDetailDesc').textContent = item.detail;
+            document.getElementById('termSourceName').textContent = 'Sumber: ' + item.source;
+            document.getElementById('termSourceUrl').href = item.url;
+            const modal = document.getElementById('termModalBackdrop');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeTermModal() {
+            const modal = document.getElementById('termModalBackdrop');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function openGlossaryIndex() {
+            document.getElementById('glossarySearchInput').value = '';
+            renderGlossaryList('');
+            const modal = document.getElementById('glossaryModalBackdrop');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeGlossaryIndex() {
+            const modal = document.getElementById('glossaryModalBackdrop');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function selectGlossaryTerm(key) {
+            closeGlossaryIndex();
+            showTerm(key);
+        }
+
+        function renderGlossaryList(query) {
+            const q = String(query || '').trim().toLowerCase();
+            const keys = Object.keys(GLOSSARY_DB);
+            let html = '';
+            let count = 0;
+
+            for (let i = 0; i < keys.length; i++) {
+                const k = keys[i];
+                const item = GLOSSARY_DB[k];
+                if (
+                    item.title.toLowerCase().indexOf(q) !== -1 ||
+                    item.category.toLowerCase().indexOf(q) !== -1 ||
+                    item.main.toLowerCase().indexOf(q) !== -1
+                ) {
+                    count++;
+                    html += `
+                        <button type="button" data-term="${escapeHtml(k)}" onclick="selectGlossaryTerm(this.dataset.term)" class="text-left p-4 rounded-2xl bg-slate-50 hover:bg-indigo-50/60 dark:bg-slate-800/50 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800 transition space-y-1">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">${escapeHtml(item.category)}</span>
+                                <span class="text-[10px] text-slate-400">${escapeHtml(item.source)}</span>
+                            </div>
+                            <div class="text-sm font-extrabold text-slate-900 dark:text-white">${escapeHtml(item.title)}</div>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">${escapeHtml(item.main)}</p>
+                        </button>
+                    `;
+                }
+            }
+
+            const grid = document.getElementById('glossaryListGrid');
+            if (grid) {
+                grid.innerHTML = count > 0
+                    ? html
+                    : '<div class="col-span-2 text-center py-8 text-xs text-slate-500">Istilah tidak ditemukan.</div>';
+            }
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const ico = document.getElementById('themeIcon');
+            html.classList.toggle('dark');
+            ico.className = html.classList.contains('dark') ? 'fa-solid fa-sun text-amber-400 text-sm' : 'fa-solid fa-moon text-sm';
+        }
+
+        document.addEventListener('keydown', function (e) {
+            const activeTag = document.activeElement && document.activeElement.tagName
+                ? document.activeElement.tagName.toLowerCase()
+                : '';
+            if (activeTag === 'input' || activeTag === 'textarea') return;
+            if (e.key === 'ArrowRight') changeSlide(1);
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+            if (e.key === 'Escape') {
+                closeTermModal();
+                closeGlossaryIndex();
+            }
+        });
+
+        // Jalankan langsung saat script selesai dibaca tanpa menunggu eksternal asset
+        loadSavedState();
+        renderCurrentSlide();
+    </script>
+</body>
+</html>
