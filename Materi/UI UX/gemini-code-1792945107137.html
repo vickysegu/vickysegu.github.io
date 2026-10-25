@@ -1,0 +1,2782 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Praktikum 3: Workspace Dinamis Sintesis Riset Pengguna (LKM 03)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" defer></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <script>
+        if (typeof tailwind !== 'undefined') {
+            tailwind.config = {
+                darkMode: 'class',
+                theme: {
+                    extend: {
+                        fontFamily: {
+                            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                            mono: ['"JetBrains Mono"', 'monospace']
+                        }
+                    }
+                }
+            };
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .tech-term {
+            color: #4f46e5;
+            font-weight: 700;
+            cursor: pointer;
+            transition: color 0.15s ease, opacity 0.15s ease;
+        }
+        .dark .tech-term {
+            color: #818cf8;
+        }
+        .tech-term:hover {
+            color: #3730a3;
+            opacity: 0.85;
+        }
+        .dark .tech-term:hover {
+            color: #a5b4fc;
+        }
+
+        /* Pengaman anti-terpotong di semua ukuran layar */
+        #slideViewport,
+        #slideViewport p,
+        #slideViewport span,
+        #slideViewport div,
+        #slideViewport h2,
+        #slideViewport h3,
+        #slideViewport h4,
+        #slideViewport button {
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+        }
+
+        .slide-enter {
+            animation: fadeSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes fadeSlide {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        textarea.auto-expand {
+            resize: vertical;
+            min-height: 95px;
+            line-height: 1.6;
+        }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+        .dark ::-webkit-scrollbar-thumb { background: #334155; }
+
+        /* Gaya Kertas Cetak / PDF A4 */
+        #pdfPrintArea {
+            background: #ffffff;
+            color: #0f172a;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .pdf-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .pdf-table th, .pdf-table td {
+            border: 1px solid #cbd5e1;
+            padding: 7px 9px;
+            vertical-align: top;
+            font-size: 10.5px;
+            line-height: 1.45;
+            white-space: pre-line;
+        }
+        .pdf-table th {
+            background-color: #f1f5f9;
+            font-weight: 700;
+            color: #1e293b;
+            text-align: left;
+        }
+        .pdf-page-break {
+            page-break-before: always;
+            break-before: page;
+        }
+
+        @media print {
+            body * { visibility: hidden; }
+            #pdfWrapper, #pdfWrapper * { visibility: visible; }
+            #pdfWrapper {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
+            }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col justify-between transition-colors duration-200">
+
+    <!-- Header Navigasi Atas -->
+    <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 no-print">
+        <div class="w-full h-1 bg-slate-100 dark:bg-slate-800">
+            <div id="topProgressBar" class="h-full bg-indigo-600 dark:bg-indigo-500 transition-all duration-300" style="width: 8%;"></div>
+        </div>
+
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-2 sm:gap-3">
+            <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+                <button type="button" onclick="toggleSlideDrawer()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition flex items-center gap-2 text-xs sm:text-sm font-bold shrink-0">
+                    <i class="fa-solid fa-list-ul text-indigo-600 dark:text-indigo-400"></i>
+                    <span class="hidden sm:inline">Daftar Slide</span>
+                    <span id="slideCounterBadge" class="px-2 py-0.5 text-xs rounded-lg bg-indigo-600 text-white font-bold">1 / 12</span>
+                </button>
+
+                <div class="hidden md:flex items-center gap-2.5 min-w-0">
+                    <span id="slideCategoryPill" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 shrink-0">
+                        Pengantar
+                    </span>
+                    <h1 id="headerSlideTitle" class="text-sm font-bold text-slate-800 dark:text-slate-100 line-clamp-1">
+                        Panduan & Lembar Kerja Praktikum 3 (LKM 03)
+                    </h1>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 shrink-0">
+                <span id="saveBadge" class="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 text-xs font-bold">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Tersimpan Otomatis
+                </span>
+
+                <button type="button" onclick="openGlossaryIndex()" class="px-3 sm:px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 text-xs sm:text-sm font-bold flex items-center gap-2 transition">
+                    <i class="fa-solid fa-book-open text-indigo-600 dark:text-indigo-400"></i>
+                    <span>Kamus Istilah</span>
+                </button>
+
+                <button type="button" onclick="goToSlide(11)" class="hidden sm:flex px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-extrabold items-center gap-2 transition shadow-xs">
+                    <i class="fa-solid fa-file-pdf"></i>
+                    <span>Unduh PDF</span>
+                </button>
+
+                <button type="button" onclick="toggleTheme()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center transition" title="Ganti Tema Layar">
+                    <i id="themeIcon" class="fa-solid fa-moon text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Drawer Daftar Slide -->
+    <div id="slideDrawerBackdrop" onclick="toggleSlideDrawer()" class="fixed inset-0 bg-slate-950/50 backdrop-blur-xs z-40 hidden opacity-0 transition-opacity duration-200 no-print"></div>
+    <aside id="slideDrawer" class="fixed top-0 left-0 bottom-0 w-80 sm:w-96 bg-white dark:bg-slate-900 z-50 shadow-2xl border-r border-slate-200 dark:border-slate-800 transform -translate-x-full transition-transform duration-200 flex flex-col no-print">
+        <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Praktikum 3 • LKM 03</span>
+                <h2 class="text-base font-extrabold text-slate-900 dark:text-white mt-0.5">Daftar Slide Praktikum 3</h2>
+            </div>
+            <button type="button" onclick="toggleSlideDrawer()" class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div id="drawerSlideList" class="p-3.5 overflow-y-auto space-y-1.5 flex-1"></div>
+        <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 flex items-center justify-between">
+            <span>Workspace Relasional Dinamis</span>
+            <span class="font-bold">12 Slide</span>
+        </div>
+    </aside>
+
+    <!-- Area Utama Slide -->
+    <main class="flex-1 max-w-5xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-6 flex flex-col justify-center">
+        <div id="slideViewport" class="bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl shadow-xs border border-slate-200/80 dark:border-slate-800 p-4 sm:p-8 lg:p-10 min-h-[480px] flex flex-col justify-between relative">
+            <div class="py-12 text-center text-sm text-slate-500">Memuat workspace dinamis praktikum 3...</div>
+        </div>
+    </main>
+
+    <!-- Footer Navigasi Bawah -->
+    <footer class="sticky bottom-0 z-20 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 py-3 px-4 sm:px-6 no-print">
+        <div class="max-w-5xl mx-auto flex items-center justify-between gap-3">
+            <button type="button" id="prevSlideBtn" onclick="changeSlide(-1)" class="px-3.5 sm:px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                <i class="fa-solid fa-arrow-left text-xs"></i>
+                <span>Sebelumnya</span>
+            </button>
+
+            <div id="slideDotsContainer" class="hidden md:flex items-center gap-1.5 flex-wrap justify-center"></div>
+
+            <div class="md:hidden text-xs font-bold text-slate-500 dark:text-slate-400" id="mobileFooterCounter">
+                1 / 12
+            </div>
+
+            <button type="button" id="nextSlideBtn" onclick="changeSlide(1)" class="px-4 sm:px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-indigo-600 hover:bg-indigo-700 text-white transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                <span id="nextBtnText">Selanjutnya</span>
+                <i class="fa-solid fa-arrow-right text-xs"></i>
+            </button>
+        </div>
+    </footer>
+
+    <!-- Modal Penjelasan Istilah (Clickable Terms) -->
+    <div id="termModalBackdrop" onclick="closeTermModal()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4 no-print">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-lg w-full p-5 sm:p-7 shadow-2xl slide-enter max-h-[90vh] overflow-y-auto">
+            <div class="flex items-start justify-between gap-4 mb-4">
+                <div>
+                    <span id="termCategoryBadge" class="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">Kategori</span>
+                    <h3 id="termTitle" class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white mt-1.5">Nama Istilah</h3>
+                </div>
+                <button type="button" onclick="closeTermModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <p id="termMainDesc" class="text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200/70 dark:border-slate-700/70"></p>
+                <p id="termDetailDesc" class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed px-1"></p>
+                <div class="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800 text-xs px-1">
+                    <span id="termSourceName" class="font-semibold text-slate-400">Referensi</span>
+                    <a id="termSourceUrl" href="#" target="_blank" rel="noopener noreferrer" class="font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1.5">
+                        <span>Pelajari lebih lanjut</span>
+                        <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Kamus Istilah Lengkap -->
+    <div id="glossaryModalBackdrop" onclick="closeGlossaryIndex()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4 no-print">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-4xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden slide-enter">
+            <div class="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-base sm:text-xl font-extrabold text-slate-900 dark:text-white">Kamus Istilah Praktikum 3: Sintesis Riset Pengguna</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Klik pada istilah mana pun untuk membaca arti dan contoh penerapannya.</p>
+                </div>
+                <button type="button" onclick="closeGlossaryIndex()" class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-3 sm:p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-sm"></i>
+                    <input id="glossarySearchInput" oninput="renderGlossaryList(this.value)" type="text" placeholder="Cari istilah seperti Sintesis, Affinity Diagram, I-Statement, Empathy Map, Persona, Journey Map..." class="w-full pl-10 pr-4 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+            <div id="glossaryListGrid" class="p-4 sm:p-5 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+        </div>
+    </div>
+
+    <script>
+        // =========================================================================
+        // KAMUS ISTILAH PRAKTIKUM 3
+        // =========================================================================
+        const GLOSSARY_DB = {
+            sintesis: {
+                title: "Sintesis Riset (Research Synthesis)",
+                category: "Konsep Inti",
+                main: "Proses mengolah, mengelompokkan, dan menghubungkan data mentah hasil wawancara serta observasi lapangan hingga melahirkan pola pemahaman (insight) yang bermakna.",
+                detail: "Jika riset lapangan mengumpulkan kepingan fakta yang masih terpisah, maka sintesis adalah proses menyatukan kepingan tersebut hingga akar masalah utamanya terlihat jelas.",
+                source: "Interaction Design Foundation",
+                url: "https://www.interaction-design.org/literature/topics/user-research"
+            },
+            unpacking: {
+                title: "Unpacking Data (Memecah Catatan Lapangan)",
+                category: "Teknik Sintesis",
+                main: "Tahap awal sintesis di mana peneliti memecah setiap poin kutipan wawancara dan temuan observasi dari lembar catatan menjadi butir-butir temuan tunggal.",
+                detail: "Satu butir catatan hanya boleh memuat satu fakta atau satu kutipan beserta kode respondennya (misal [P1], [P2]) agar mudah dikelompokkan ke dalam klaster tema.",
+                source: "Stanford d.school",
+                url: "https://www.interaction-design.org/literature/article/stage-2-in-the-design-thinking-process-define-the-problem-and-interpret-the-results"
+            },
+            anonimisasi: {
+                title: "Anonimisasi Identitas Responden",
+                category: "Etika Riset",
+                main: "Praktik melindungi privasi narasumber dengan menyamarkan nama lengkap dan nomor kontak menggunakan kode responden (seperti P1, P2, P3, atau Pemilik).",
+                detail: "Merupakan kewajiban etika riset (Sub-CPMK 4.1) agar data pribadi narasumber tidak tersebar di dalam dokumen laporan.",
+                source: "Interaction Design Foundation",
+                url: "https://www.interaction-design.org/literature/topics/conducting-ethical-user-research"
+            },
+            affinity: {
+                title: "Affinity Diagram (Affinity Mapping / Metode KJ)",
+                category: "Artefak Sintesis 1",
+                main: "Teknik mengelompokkan puluhan kutipan wawancara dan catatan observasi yang semula acak ke dalam beberapa kelompok (cluster) berdasarkan kemiripan tema masalah.",
+                detail: "Membantu kita melihat masalah mana yang paling sering dialami oleh mayoritas responden, bukan sekadar satu keluhan kebetulan.",
+                source: "Nielsen Norman Group",
+                url: "https://www.nngroup.com/articles/affinity-diagram/"
+            },
+            istatement: {
+                title: "I-Statement (Pernyataan Sudut Pandang Pengguna)",
+                category: "Teknik Affinity Diagram",
+                main: "Cara memberi judul tema pada setiap klaster di Affinity Diagram menggunakan kalimat orang pertama ('Saya...') seolah-olah pengguna sendiri yang berbicara.",
+                detail: "Menjaga empati perancang agar tetap berpusat pada kebutuhan manusia, bukan sekadar menulis label teknis yang kaku.",
+                source: "Interaction Design Foundation",
+                url: "https://www.interaction-design.org/literature/topics/affinity-diagrams"
+            },
+            insight: {
+                title: "User Insight (Wawasan Kebutuhan Pengguna)",
+                category: "Hasil Sintesis",
+                main: "Kesimpulan mendalam dari sebuah klaster masalah yang menjelaskan 'apa pola yang terjadi', 'mengapa hal itu dialami pengguna', dan 'apa kebutuhan mendasarnya'.",
+                detail: "User Insight menjadi jembatan utama untuk merumuskan Problem Statement pada Pertemuan 4.",
+                source: "Nielsen Norman Group",
+                url: "https://www.nngroup.com/articles/ux-research-cheat-sheet/"
+            },
+            empathymap: {
+                title: "Empathy Map (Peta Empati 4 Kuadran)",
+                category: "Artefak Sintesis 2",
+                main: "Kanvas pemetaan yang merangkum hasil riset pengguna ke dalam 4 kuadran (Says, Thinks, Does, Feels) ditambah ringkasan Pains (Hambatan) dan Gains (Harapan).",
+                detail: "Sangat berguna untuk mendeteksi adanya ketidaksinkronan antara apa yang diucapkan pengguna (Says) dan apa yang sebenarnya mereka lakukan (Does).",
+                source: "Nielsen Norman Group",
+                url: "https://www.nngroup.com/articles/empathy-mapping/"
+            },
+            persona: {
+                title: "User Persona (Evidence-Based Persona)",
+                category: "Artefak Sintesis 3",
+                main: "Sosok profil karakter representatif yang dirangkum dari pola data nyata para responden wawancara untuk mewakili kelompok pelanggan utama UMKM.",
+                detail: "Memuat nama samaran, konteks latar belakang, kutipan utama, tujuan (Goals), titik frustrasi (Pain Points), kebiasaan (Behaviors), dan skenario pemicu.",
+                source: "Nielsen Norman Group",
+                url: "https://www.nngroup.com/articles/persona/"
+            },
+            journeymap: {
+                title: "Customer Journey Map (CJM)",
+                category: "Artefak Sintesis 4",
+                main: "Tabel kronologis yang memetakan perjalanan pelanggan melintasi tahapan transaksi saat ini, lengkap dengan tindakan, titik kontak, kurva emosi, hambatan, dan peluang perbaikan.",
+                detail: "Memperlihatkan secara jelas pada tahapan mana pelanggan mengalami titik emosi terendah (lembah friksi) yang paling mendesak untuk diperbaiki.",
+                source: "Nielsen Norman Group",
+                url: "https://www.nngroup.com/articles/customer-journey-mapping/"
+            },
+            touchpoint: {
+                title: "Touchpoint (Titik Kontak Layanan)",
+                category: "Komponen Journey Map",
+                main: "Setiap media, tempat, atau saluran di mana pelanggan berinteraksi langsung dengan layanan UMKM pada suatu tahapan transaksi.",
+                detail: "Bisa berupa titik kontak fisik/offline (meja kasir, papan harga, kertas nota) maupun titik kontak digital/online (profil medsos, ruang chat, QRIS).",
+                source: "Interaction Design Foundation",
+                url: "https://www.interaction-design.org/literature/topics/customer-journey-map"
+            },
+            emotionalcurve: {
+                title: "Emotional Curve (Kurva Emosi Pengguna)",
+                category: "Komponen Journey Map",
+                main: "Indikator perubahan perasaan pengguna (Senang, Netral, Bingung, atau Kecewa/Cemas) dari satu fase transaksi ke fase berikutnya di dalam Customer Journey Map.",
+                detail: "Fase yang memiliki emosi paling negatif menandakan letak prioritas utama perancangan solusi UI/UX Anda.",
+                source: "Nielsen Norman Group",
+                url: "https://www.nngroup.com/articles/customer-journey-mapping/"
+            }
+        };
+
+        function escapeHtml(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function term(key, label) {
+            const item = GLOSSARY_DB[key];
+            if (!item) return label || key;
+            const text = label || item.title.split(' (')[0];
+            return '<span class="tech-term" data-term="' + escapeHtml(key) + '" onclick="showTerm(this.dataset.term)">' + escapeHtml(text) + '</span>';
+        }
+
+        function autoResizeTextarea(el) {
+            if (!el) return;
+            el.style.height = 'auto';
+            el.style.height = Math.max(95, el.scrollHeight) + 'px';
+        }
+
+        // =========================================================================
+        // STATE DATA DINAMIS & RELASIONAL LKM 03 (DENGAN BATAS MINIMAL)
+        // =========================================================================
+        const STORAGE_KEY = 'upertis_lkm03_dynamic_v2';
+        let currentSlideIndex = 0;
+        const TOTAL_SLIDES = 12;
+
+        // Batas minimal wajib agar mahasiswa tidak mengisi terlalu sedikit
+        const MIN_RESPONDENTS = 4;      // Minimal 4 Narasumber (1 Pemilik + 3 Pelanggan)
+        const MIN_OBSERVATIONS = 3;     // Minimal 3 Catatan Observasi Lapangan
+        const MIN_CLUSTERS = 3;         // Minimal 3 Klaster Tema Affinity Diagram
+        const MIN_NOTES_PER_CLUSTER = 3;// Minimal 3 Kartu Kutipan per Klaster
+        const MIN_EMPATHY_ITEMS = 2;    // Minimal 2 Butir per Kuadran Empathy Map
+        const MIN_PERSONA_LIST = 2;     // Minimal 2 Butir Goals & 2 Butir Pain Points
+        const MIN_JOURNEY_PHASES = 5;   // Minimal 5 Fase Customer Journey Map
+
+        function createDefaultRespondents() {
+            return [
+                { code: 'Pemilik', role: 'Pemilik / Pengelola UMKM', profile: '' },
+                { code: 'P1', role: 'Pelanggan Sasaran', profile: '' },
+                { code: 'P2', role: 'Pelanggan Sasaran', profile: '' },
+                { code: 'P3', role: 'Pelanggan Sasaran', profile: '' }
+            ];
+        }
+
+        function createDefaultObservations() {
+            return [
+                { code: 'OBS-1', aspect: 'Urutan Tindakan (Activities)', note: '' },
+                { code: 'OBS-2', aspect: 'Lingkungan & Media (Environment)', note: '' },
+                { code: 'OBS-3', aspect: 'Bahasa Tubuh / Jalan Pintas (Workaround)', note: '' }
+            ];
+        }
+
+        function createDefaultClusters() {
+            return [
+                {
+                    label: '',
+                    insight: '',
+                    notes: [
+                        { source: 'P1', text: '' },
+                        { source: 'P2', text: '' },
+                        { source: 'OBS-1', text: '' }
+                    ]
+                },
+                {
+                    label: '',
+                    insight: '',
+                    notes: [
+                        { source: 'P1', text: '' },
+                        { source: 'P3', text: '' },
+                        { source: 'OBS-2', text: '' }
+                    ]
+                },
+                {
+                    label: '',
+                    insight: '',
+                    notes: [
+                        { source: 'Pemilik', text: '' },
+                        { source: 'P2', text: '' },
+                        { source: 'OBS-3', text: '' }
+                    ]
+                }
+            ];
+        }
+
+        function createDefaultEmpathy() {
+            return {
+                says: [{ source: 'P1', text: '' }, { source: 'P2', text: '' }],
+                thinks: [{ source: 'P1', text: '' }, { source: 'P3', text: '' }],
+                does: [{ source: 'OBS-1', text: '' }, { source: 'OBS-2', text: '' }],
+                feels: [{ source: 'P1', text: '' }, { source: 'Pemilik', text: '' }],
+                pains: ['', ''],
+                gains: ['', '']
+            };
+        }
+
+        function createDefaultPersona() {
+            return {
+                nama: '',
+                peran: '',
+                sources: ['P1', 'P2', 'P3'],
+                konteks: '',
+                quoteSource: 'P1',
+                quote: '',
+                goals: ['', ''],
+                pains: ['', ''],
+                behaviors: '',
+                skenario: ''
+            };
+        }
+
+        function createDefaultJourneyPhases() {
+            return [
+                { phaseTitle: 'Fase 1: Mencari Informasi & Harga', source: 'P1', emotion: '😐 Netral / Biasa Saja', action: '', touchpoint: '', pain: '', opportunity: '' },
+                { phaseTitle: 'Fase 2: Melakukan Pemesanan / Pencatatan', source: 'P2', emotion: '😟 Bingung / Terhambat', action: '', touchpoint: '', pain: '', opportunity: '' },
+                { phaseTitle: 'Fase 3: Pembayaran & Bukti Transaksi', source: 'P1', emotion: '😐 Netral / Biasa Saja', action: '', touchpoint: '', pain: '', opportunity: '' },
+                { phaseTitle: 'Fase 4: Menunggu Pesanan Diproses', source: 'P3', emotion: '😫 Cemas / Kecewa (Titik Friksi Kritis)', action: '', touchpoint: '', pain: '', opportunity: '' },
+                { phaseTitle: 'Fase 5: Menerima Barang / Layanan Selesai', source: 'Pemilik', emotion: '😊 Senang / Nyaman', action: '', touchpoint: '', pain: '', opportunity: '' }
+            ];
+        }
+
+        let formState = {
+            nama: '',
+            nim: '',
+            kelas: '',
+            tgl: new Date().toISOString().split('T')[0],
+            umkm: '',
+            bidang: '',
+            respondents: createDefaultRespondents(),
+            observations: createDefaultObservations(),
+            clusters: createDefaultClusters(),
+            empathy: createDefaultEmpathy(),
+            persona: createDefaultPersona(),
+            journey: createDefaultJourneyPhases()
+        };
+
+        let uiWizard = {
+            infoActive: 1, // 1 (Identitas), 2 (Daftar Narasumber Dinamis), 3 (Daftar Observasi Dinamis), 0
+            infoSaved: { 1: false, 2: false, 3: false },
+            infoMin: { 1: false, 2: false, 3: false },
+
+            affActive: 0, // index klaster aktif (0..n) atau -1
+            affSaved: {},
+            affMin: {},
+
+            emActive: 1, // 1 (Says & Thinks), 2 (Does & Feels), 3 (Pains & Gains), 0
+            emSaved: { 1: false, 2: false, 3: false },
+            emMin: { 1: false, 2: false, 3: false },
+
+            perActive: 1, // 1 (Profil, Checkbox Sumber, & Quote), 2 (Goals & Pains Dinamis), 3 (Behaviors & Skenario), 0
+            perSaved: { 1: false, 2: false, 3: false },
+            perMin: { 1: false, 2: false, 3: false },
+
+            cjmActive: 0, // index fase aktif (0..n) atau -1
+            cjmSaved: {},
+            cjmMin: {}
+        };
+
+        // =========================================================================
+        // GENERATOR DROPDOWN SUMBER DATA RELASIONAL (RESPONDEN + OBSERVASI)
+        // =========================================================================
+        function getAllSourcesList() {
+            const list = [];
+            for (let i = 0; i < formState.respondents.length; i++) {
+                const r = formState.respondents[i];
+                const code = (r.code || ('R' + (i + 1))).trim();
+                const desc = r.profile && r.profile.trim() !== ''
+                    ? r.role + ' — ' + r.profile.trim().substring(0, 38)
+                    : r.role;
+                list.push({ code: code, label: '[' + code + '] ' + desc });
+            }
+            for (let j = 0; j < formState.observations.length; j++) {
+                const ob = formState.observations[j];
+                const code = (ob.code || ('OBS-' + (j + 1))).trim();
+                list.push({ code: code, label: '[' + code + '] Observasi: ' + (ob.aspect || 'Lapangan') });
+            }
+            return list;
+        }
+
+        function renderSourceSelectOptions(selectedCode) {
+            const list = getAllSourcesList();
+            let html = '';
+            let found = false;
+            for (let i = 0; i < list.length; i++) {
+                const item = list[i];
+                const isSel = item.code === selectedCode;
+                if (isSel) found = true;
+                html += `<option value="${escapeHtml(item.code)}" ${isSel ? 'selected' : ''}>${escapeHtml(item.label)}</option>`;
+            }
+            if (!found && selectedCode) {
+                html = `<option value="${escapeHtml(selectedCode)}" selected>[${escapeHtml(selectedCode)}]</option>` + html;
+            }
+            return html;
+        }
+
+        function getSourceDetailLabel(code) {
+            const list = getAllSourcesList();
+            for (let i = 0; i < list.length; i++) {
+                if (list[i].code === code) return list[i].label;
+            }
+            return '[' + (code || '-') + ']';
+        }
+
+        // =========================================================================
+        // FUNGSI UPDATE & MANIPULASI BARIS DINAMIS (TAMBAH / HAPUS)
+        // =========================================================================
+        function updateField(fieldKey, val) {
+            formState[fieldKey] = val;
+            triggerAutoSave();
+        }
+
+        // 1. Narasumber Dinamis
+        function updateRespondent(idx, key, val) {
+            if (!formState.respondents[idx]) return;
+            formState.respondents[idx][key] = val;
+            triggerAutoSave();
+        }
+        function addRespondent() {
+            let pCount = 0;
+            for (let i = 0; i < formState.respondents.length; i++) {
+                if (formState.respondents[i].code.indexOf('P') === 0 && formState.respondents[i].code !== 'Pemilik') {
+                    pCount++;
+                }
+            }
+            const nextCode = 'P' + (pCount + 1);
+            formState.respondents.push({ code: nextCode, role: 'Pelanggan Sasaran', profile: '' });
+            triggerAutoSave();
+            renderCurrentSlide();
+        }
+        function removeRespondent(idx) {
+            if (formState.respondents.length <= MIN_RESPONDENTS) return;
+            formState.respondents.splice(idx, 1);
+            triggerAutoSave();
+            renderCurrentSlide();
+        }
+
+        // 2. Observasi Dinamis
+        function updateObservation(idx, key, val) {
+            if (!formState.observations[idx]) return;
+            formState.observations[idx][key] = val;
+            triggerAutoSave();
+        }
+        function addObservation() {
+            const nextNum = formState.observations.length + 1;
+            formState.observations.push({ code: 'OBS-' + nextNum, aspect: 'Temuan Lapangan Tambahan', note: '' });
+            triggerAutoSave();
+            renderCurrentSlide();
+        }
+        function removeObservation(idx) {
+            if (formState.observations.length <= MIN_OBSERVATIONS) return;
+            formState.observations.splice(idx, 1);
+            triggerAutoSave();
+            renderCurrentSlide();
+        }
+
+        // 3. Klaster & Kartu Kutipan Affinity Diagram Dinamis
+        function updateClusterMeta(cIdx, key, val) {
+            if (!formState.clusters[cIdx]) return;
+            formState.clusters[cIdx][key] = val;
+            triggerAutoSave();
+        }
+        function updateClusterNote(cIdx, nIdx, key, val) {
+            if (!formState.clusters[cIdx] || !formState.clusters[cIdx].notes[nIdx]) return;
+            formState.clusters[cIdx].notes[nIdx][key] = val;
+            triggerAutoSave();
+        }
+        function addClusterNote(cIdx) {
+            if (!formState.clusters[cIdx]) return;
+            const defaultSrc = formState.respondents[1] ? formState.respondents[1].code : 'P1';
+            formState.clusters[cIdx].notes.push({ source: defaultSrc, text: '' });
+            triggerAutoSave();
+            renderCurrentSlide();
+        }
+        function removeClusterNote(cIdx, nIdx) {
+            if (!formState.clusters[cIdx]) return;
+            if (formState.clusters[cIdx].notes.length <= MIN_NOTES_PER_CLUSTER) return;
+            formState.clusters[cIdx].notes.splice(nIdx, 1);
+            triggerAutoSave();
+            renderCurrentSlide();
+        }
+        function addAffinityCluster() {
+            const newIdx = formState.clusters.length;
+            formState.clusters.push({
+                label: '',
+                insight: '',
+                notes: [
+                    { source: 'P1', text: '' },
+                    { source: 'P2', text: '' },
+                    { source: 'OBS-1', text: '' }
+                ]
+            });
+            uiWizard.affActive = newIdx;
+            triggerAutoSave();
+            renderCurrentSlide();
+        }
+        function removeAffinityCluster(cIdx) {
+            if (formState.clusters.length <= MIN_CLUSTERS) return;
+            formState.clusters.splice(cIdx, 1);
+            uiWizard.affActive = 0;
+            triggerAutoSave();
+            renderCurrentSlide();
+        }
+
+        // 4. Empathy Map Dinamis
+        function updateEmpathyQuadItem(quadKey, idx, field, val) {
+            if (!formState.empathy[quadKey] || !formState.empathy[quadKey][idx]) return;
+            formState.empathy[quadKey][idx][field] = val;
+            triggerAutoSave();
+        }
+        function addEmpathyQuadItem(quadKey) {
+            const defaultSrc = quadKey === 'does' ? 'OBS-1' : 'P1';
+            formState.empathy[quadKey].push({ source: defaultSrc, text: '' });
+            triggerAutoSave();
+            renderCurrentSlide();
+        }
+        function removeEmpathyQuadItem(quadKey, idx) {
+            if (formState.empathy[quadKey].length <= MIN_EMPATHY_ITEMS) return;
+            formState.empathy[quadKey].splice(idx, 1);
+            triggerAutoSave();
+            renderCurrentSlide();
+        }
+        function updateEmpathySimpleList(listKey, idx, val) {
+            formState.empathy[listKey][idx] = val;
+            triggerAutoSave();
+        }
+        function addEmpathySimpleList(listKey) {
+            formState.empathy[listKey].push('');
+            triggerAutoSave();
+            renderCurrentSlide();
+        }
+        function removeEmpathySimpleList(listKey, idx) {
+            if (formState.empathy[listKey].length <= MIN_EMPATHY_ITEMS) return;
+            formState.empathy[listKey].splice(idx, 1);
+            triggerAutoSave();
+            renderCurrentSlide();
+        }
+
+        // 5. User Persona Dinamis
+        function updatePersonaField(key, val) {
+            formState.persona[key] = val;
+            triggerAutoSave();
+        }
+        function togglePersonaSourceCode(code) {
+            const arr = formState.persona.sources || [];
+            const pos = arr.indexOf(code);
+            if (pos === -1) {
+                arr.push(code);
+            } else if (arr.length > 1) {
+                arr.splice(pos, 1);
+            }
+            formState.persona.sources = arr;
+            triggerAutoSave();
+            renderCurrentSlide();
+        }
+        function updatePersonaListItem(listKey, idx, val) {
+            formState.persona[listKey][idx] = val;
+            triggerAutoSave();
+        }
+        function addPersonaListItem(listKey) {
+            formState.persona[listKey].push('');
+            triggerAutoSave();
+            renderCurrentSlide();
+        }
+        function removePersonaListItem(listKey, idx) {
+            if (formState.persona[listKey].length <= MIN_PERSONA_LIST) return;
+            formState.persona[listKey].splice(idx, 1);
+            triggerAutoSave();
+            renderCurrentSlide();
+        }
+
+        // 6. Customer Journey Map Dinamis
+        function updateJourneyField(idx, key, val) {
+            if (!formState.journey[idx]) return;
+            formState.journey[idx][key] = val;
+            triggerAutoSave();
+        }
+        function addJourneyPhase() {
+            const nextNum = formState.journey.length + 1;
+            formState.journey.push({
+                phaseTitle: 'Fase ' + nextNum + ': Tahapan Lanjutan',
+                source: 'P1',
+                emotion: '😐 Netral / Biasa Saja',
+                action: '',
+                touchpoint: '',
+                pain: '',
+                opportunity: ''
+            });
+            uiWizard.cjmActive = formState.journey.length - 1;
+            triggerAutoSave();
+            renderCurrentSlide();
+        }
+        function removeJourneyPhase(idx) {
+            if (formState.journey.length <= MIN_JOURNEY_PHASES) return;
+            formState.journey.splice(idx, 1);
+            uiWizard.cjmActive = 0;
+            triggerAutoSave();
+            renderCurrentSlide();
+        }
+
+        // =========================================================================
+        // SIMPAN & MUAT LOCALSTORAGE
+        // =========================================================================
+        let saveTimer = null;
+        function triggerAutoSave() {
+            clearTimeout(saveTimer);
+            const badge = document.getElementById('saveBadge');
+            if (badge) badge.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
+            saveTimer = setTimeout(function () {
+                try {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify({ form: formState, ui: uiWizard }));
+                } catch (e) {}
+                if (badge) badge.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Tersimpan Otomatis';
+            }, 350);
+        }
+
+        function loadSavedState() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (parsed.form) {
+                        formState = Object.assign(formState, parsed.form);
+                        if (!Array.isArray(formState.respondents) || formState.respondents.length < MIN_RESPONDENTS) {
+                            formState.respondents = createDefaultRespondents();
+                        }
+                        if (!Array.isArray(formState.observations) || formState.observations.length < MIN_OBSERVATIONS) {
+                            formState.observations = createDefaultObservations();
+                        }
+                        if (!Array.isArray(formState.clusters) || formState.clusters.length < MIN_CLUSTERS) {
+                            formState.clusters = createDefaultClusters();
+                        }
+                        if (!formState.empathy || !Array.isArray(formState.empathy.says)) {
+                            formState.empathy = createDefaultEmpathy();
+                        }
+                        if (!formState.persona || !Array.isArray(formState.persona.goals)) {
+                            formState.persona = createDefaultPersona();
+                        }
+                        if (!Array.isArray(formState.journey) || formState.journey.length < MIN_JOURNEY_PHASES) {
+                            formState.journey = createDefaultJourneyPhases();
+                        }
+                    }
+                    if (parsed.ui) {
+                        uiWizard = Object.assign(uiWizard, parsed.ui);
+                    }
+                } else {
+                    const rawLkm2 = localStorage.getItem('upertis_lkm02_neutral_v2');
+                    const rawLkm1 = localStorage.getItem('upertis_lkm01_neutral_v5');
+                    if (rawLkm2) {
+                        const p2 = JSON.parse(rawLkm2);
+                        if (p2 && p2.form) {
+                            formState.nama = p2.form.nama || '';
+                            formState.nim = p2.form.nim || '';
+                            formState.kelas = p2.form.kelas || '';
+                            formState.umkm = p2.form.umkm || '';
+                            formState.bidang = p2.form.bidang || '';
+                        }
+                    } else if (rawLkm1) {
+                        const p1 = JSON.parse(rawLkm1);
+                        if (p1 && p1.form) {
+                            formState.nama = p1.form.nama || '';
+                            formState.nim = p1.form.nim || '';
+                            formState.kelas = p1.form.kelas || '';
+                            formState.umkm = p1.form.un || '';
+                            formState.bidang = p1.form.ub || '';
+                        }
+                    }
+                }
+            } catch (e) {}
+        }
+
+        // =========================================================================
+        // HELPER KARTU WIZARD (EDIT MODE vs READ MODE vs MINIMIZED)
+        // =========================================================================
+        function renderWizardCardHeader(stepBadge, title, isSaved, isEditing, isMinimized, onEditClick, onToggleMinClick, extraDeleteBtnHtml) {
+            let statusHtml = '';
+            if (isSaved && !isEditing) {
+                statusHtml = `
+                    <div class="flex flex-wrap items-center gap-2 shrink-0">
+                        <span class="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 text-xs font-extrabold flex items-center gap-1">
+                            <i class="fa-solid fa-circle-check"></i> Tersimpan
+                        </span>
+                        <button type="button" onclick="${onToggleMinClick}" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center gap-1.5">
+                            <i class="fa-solid ${isMinimized ? 'fa-expand' : 'fa-compress'}"></i>
+                            <span>${isMinimized ? 'Baca Lengkap' : 'Minimize'}</span>
+                        </button>
+                        <button type="button" onclick="${onEditClick}" class="px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/80 dark:hover:bg-indigo-900 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-xs font-extrabold transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-pen"></i>
+                            <span>Edit</span>
+                        </button>
+                        ${extraDeleteBtnHtml || ''}
+                    </div>
+                `;
+            } else if (isEditing) {
+                statusHtml = `
+                    <div class="flex items-center gap-2 shrink-0">
+                        <span class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-xs font-extrabold">
+                            <i class="fa-solid fa-pen-nib mr-1"></i>Mode Menulis
+                        </span>
+                        ${extraDeleteBtnHtml || ''}
+                    </div>
+                `;
+            } else {
+                statusHtml = `
+                    <div class="flex items-center gap-2 shrink-0">
+                        <button type="button" onclick="${onEditClick}" class="px-3.5 py-1.5 rounded-xl bg-slate-200/80 hover:bg-indigo-600 hover:text-white dark:bg-slate-800 dark:hover:bg-indigo-600 text-slate-700 dark:text-slate-300 text-xs font-extrabold transition">
+                            Buka & Isi Bagian Ini
+                        </button>
+                        ${extraDeleteBtnHtml || ''}
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                    <div class="flex items-start sm:items-center gap-2.5 min-w-0">
+                        <span class="px-2.5 py-1 rounded-lg bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-extrabold shrink-0">${escapeHtml(stepBadge)}</span>
+                        <h3 class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white leading-snug">${escapeHtml(title)}</h3>
+                    </div>
+                    ${statusHtml}
+                </div>
+            `;
+        }
+
+        // =========================================================================
+        // RENDER 12 SLIDE PRAKTIKUM 3 (LKM 03 DINAMIS & RELASIONAL)
+        // =========================================================================
+
+        // SLIDE 1: Pengantar Praktikum 3
+        function renderSlide1() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center my-auto">
+                        <div class="lg:col-span-7 space-y-4">
+                            <div class="inline-flex flex-wrap items-center gap-2">
+                                <span class="px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 text-xs font-bold border border-indigo-200/60 dark:border-indigo-800/60">Praktikum Pertemuan 3 • Alokasi 2 x 170 Menit</span>
+                                <span class="px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 text-xs font-bold border border-emerald-200/60 dark:border-emerald-800/60">Sub-CPMK 1.2 & 4.1 (Bobot 5%)</span>
+                            </div>
+
+                            <h2 class="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white leading-tight">
+                                Workspace Dinamis Sintesis Riset: Mengolah Catatan Menjadi 4 Artefak UX
+                            </h2>
+
+                            <p class="text-xs sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Selamat datang di <strong>Workspace Sintesis Relasional LKM 03</strong>. Kode anonim narasumber (<code>Pemilik</code>, <code>P1</code>, <code>P2</code>, dst.) dan kode observasi (<code>OBS-1</code>, <code>OBS-2</code>) yang Anda daftarkan satu per satu pada Tahap 1 akan <strong>otomatis muncul sebagai pilihan Dropdown</strong> saat Anda menyusun <strong>${term('affinity', 'Affinity Diagram')}</strong>, <strong>${term('empathymap', 'Empathy Map')}</strong>, <strong>${term('persona', 'User Persona')}</strong>, dan <strong>${term('journeymap', 'Customer Journey Map')}</strong>.
+                            </p>
+
+                            <div class="flex flex-wrap items-center gap-3 pt-2">
+                                <button type="button" onclick="changeSlide(1)" class="px-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-extrabold transition flex items-center gap-2 shadow-sm">
+                                    <span>Mulai Daftarkan Responden</span>
+                                    <i class="fa-solid fa-arrow-right"></i>
+                                </button>
+                                <button type="button" onclick="clearAllData()" class="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 text-xs sm:text-sm font-bold transition flex items-center gap-2">
+                                    <i class="fa-solid fa-rotate-left"></i>
+                                    <span>Reset Semua Isian</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-5">
+                            <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 space-y-4">
+                                <div>
+                                    <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Standar Kuantitas Minimal</span>
+                                    <h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white mt-0.5">Syarat Kelengkapan LKM 03</h3>
+                                </div>
+                                <div class="space-y-2.5 text-xs">
+                                    <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 flex items-center gap-3">
+                                        <span class="w-7 h-7 rounded-lg bg-indigo-600 text-white font-extrabold flex items-center justify-center shrink-0">1</span>
+                                        <div><strong class="text-slate-900 dark:text-white block">Minimal 4 Narasumber & 3 Observasi (Slide 3)</strong><span class="text-slate-500">Diinput satu per satu (bisa ditambah sesuai jumlah responden).</span></div>
+                                    </div>
+                                    <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 flex items-center gap-3">
+                                        <span class="w-7 h-7 rounded-lg bg-indigo-600 text-white font-extrabold flex items-center justify-center shrink-0">2</span>
+                                        <div><strong class="text-slate-900 dark:text-white block">Minimal 3 Klaster Affinity Diagram (Slide 5)</strong><span class="text-slate-500">Wajib minimal 3 kartu kutipan ber-dropdown di setiap klaster.</span></div>
+                                    </div>
+                                    <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 flex items-center gap-3">
+                                        <span class="w-7 h-7 rounded-lg bg-indigo-600 text-white font-extrabold flex items-center justify-center shrink-0">3</span>
+                                        <div><strong class="text-slate-900 dark:text-white block">Minimal 2 Butir per Kuadran Empathy Map (Slide 7)</strong><span class="text-slate-500">Memilih sumber responden via dropdown pada Says, Thinks, Does, Feels.</span></div>
+                                    </div>
+                                    <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 flex items-center gap-3">
+                                        <span class="w-7 h-7 rounded-lg bg-indigo-600 text-white font-extrabold flex items-center justify-center shrink-0">4</span>
+                                        <div><strong class="text-slate-900 dark:text-white block">User Persona Berbasis Bukti Responden (Slide 9)</strong><span class="text-slate-500">Centang responden pembentuk Persona + minimal 2 Goals & 2 Pains.</span></div>
+                                    </div>
+                                    <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 flex items-center gap-3">
+                                        <span class="w-7 h-7 rounded-lg bg-emerald-600 text-white font-extrabold flex items-center justify-center shrink-0">5</span>
+                                        <div><strong class="text-slate-900 dark:text-white block">Minimal 5 Fase Customer Journey Map (Slide 11)</strong><span class="text-slate-500">Dapat ditambah jika tahapan transaksi lebih panjang & unduh PDF.</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 2 [PENJELASAN 1]: Mengapa Kode Anonim Diinput Satu per Satu & Terhubung ke Dropdown
+        function renderSlide2() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Tahap 1 • Penjelasan Sistem Kode Relasional</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Mengapa Narasumber Diinput Satu per Satu dengan Kode (${term('anonimisasi', 'Anonimisasi')})?</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Dalam riset UX profesional, setiap kutipan masalah wajib memiliki <strong>ketertelusuran bukti (traceability)</strong> tanpa membocorkan nama asli narasumber. Pada Slide 3 nanti, Anda akan mendaftarkan setiap narasumber dan catatan observasi satu per satu:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 my-auto text-xs sm:text-sm">
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                            <div class="flex items-center justify-between">
+                                <span class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-xs font-extrabold">1. Daftar Narasumber (Minimal 4 Orang)</span>
+                                <i class="fa-solid fa-users text-lg text-indigo-600 dark:text-indigo-400"></i>
+                            </div>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">1 Pengelola UMKM + Minimal 3 Pelanggan</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Setiap narasumber memiliki <strong>Kode Unik</strong> (misal <code>Pemilik</code>, <code>P1</code>, <code>P2</code>, <code>P3</code>), <strong>Peran</strong>, serta <strong>Profil Singkat</strong> (usia, pekerjaan, dan frekuensi transaksi). Jika Anda mewawancarai 5 pelanggan, klik tombol <strong>+ Tambah Narasumber</strong>.
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                            <div class="flex items-center justify-between">
+                                <span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-xs font-extrabold">2. Otomatis Muncul di Dropdown Form Lain</span>
+                                <i class="fa-solid fa-circle-nodes text-lg text-emerald-600 dark:text-emerald-400"></i>
+                            </div>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Tinggal Pilih Kode Saat Mengisi Artefak</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Seluruh kode yang Anda input di Slide 3 akan otomatis menjadi pilihan <em>Dropdown</em> saat Anda memasukkan kutipan di <em>Affinity Diagram</em>, <em>Empathy Map</em>, <em>Persona</em>, dan <em>Customer Journey Map</em>.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-800/60 text-xs leading-relaxed">
+                        <i class="fa-solid fa-list-check text-indigo-600 dark:text-indigo-400 mr-1.5"></i><strong>Instruksi Slide Berikutnya:</strong> Lengkapi Bagian 1A (Identitas), Bagian 1B (Minimal 4 Narasumber Anonim), dan Bagian 1C (Minimal 3 Fakta Observasi Lapangan).
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 3 [FORM ISIAN 1]: Wizard Identitas, Daftar Responden Dinamis (Min 4), & Observasi Dinamis (Min 3)
+        function renderSlide3() {
+            const p1Editing = uiWizard.infoActive === 1;
+            const p2Editing = uiWizard.infoActive === 2;
+            const p3Editing = uiWizard.infoActive === 3;
+
+            const p1Saved = uiWizard.infoSaved[1] || !!(formState.nama.trim() || formState.umkm.trim());
+            const p2Saved = uiWizard.infoSaved[2];
+            const p3Saved = uiWizard.infoSaved[3];
+
+            const p1Min = !!uiWizard.infoMin[1];
+            const p2Min = !!uiWizard.infoMin[2];
+            const p3Min = !!uiWizard.infoMin[3];
+
+            // Kartu 1A: Identitas Mahasiswa & UMKM Mitra
+            let card1Html = '';
+            if (p1Editing) {
+                card1Html = `
+                    <div class="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border-2 border-indigo-600 dark:border-indigo-400 shadow-md space-y-4">
+                        ${renderWizardCardHeader('Bagian 1A', 'Identitas Mahasiswa & UMKM Mitra', p1Saved, true, false, '', '')}
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100 dark:border-slate-800">
+                            <div>
+                                <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Nama Lengkap Mahasiswa *</label>
+                                <input type="text" value="${escapeHtml(formState.nama)}" oninput="updateField('nama', this.value)" placeholder="Ketik nama lengkap Anda..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Nomor Induk Mahasiswa (NIM) *</label>
+                                <input type="text" value="${escapeHtml(formState.nim)}" oninput="updateField('nim', this.value)" placeholder="Ketik NIM Anda..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base font-mono font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Kelas / Semester *</label>
+                                <input type="text" value="${escapeHtml(formState.kelas)}" oninput="updateField('kelas', this.value)" placeholder="Ketik kelas dan semester..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Tanggal Sintesis Riset *</label>
+                                <input type="date" value="${escapeHtml(formState.tgl)}" oninput="updateField('tgl', this.value)" class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Nama Usaha UMKM Mitra *</label>
+                                <input type="text" value="${escapeHtml(formState.umkm)}" oninput="updateField('umkm', this.value)" placeholder="Ketik nama UMKM mitra Anda..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Bidang / Kategori Usaha *</label>
+                                <input type="text" value="${escapeHtml(formState.bidang)}" oninput="updateField('bidang', this.value)" placeholder="Ketik bidang usaha mitra..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                        </div>
+                        <div class="flex justify-end pt-1">
+                            <button type="button" onclick="saveInfoPart(1)" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-extrabold transition flex items-center gap-2 shadow-sm">
+                                <i class="fa-solid fa-check"></i>
+                                <span>Simpan & Lanjut ke Daftar Narasumber</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else if (p1Saved) {
+                card1Html = `
+                    <div class="p-4 sm:p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-emerald-300 dark:border-emerald-800/70 space-y-3">
+                        ${renderWizardCardHeader('Bagian 1A', (formState.nama || 'Mahasiswa') + ' • Mitra: ' + (formState.umkm || '-'), true, false, p1Min, 'openInfoPart(1)', 'toggleMinInfoPart(1)')}
+                        ${!p1Min ? `
+                            <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm sm:text-base">
+                                <div><span class="text-xs font-bold uppercase text-slate-400 block">Mahasiswa</span><span class="font-extrabold text-slate-900 dark:text-white">${escapeHtml(formState.nama) || '-'} (${escapeHtml(formState.nim) || '-'})</span></div>
+                                <div><span class="text-xs font-bold uppercase text-slate-400 block">Kelas & Tanggal</span><span>${escapeHtml(formState.kelas) || '-'} • ${escapeHtml(formState.tgl) || '-'}</span></div>
+                                <div class="sm:col-span-2"><span class="text-xs font-bold uppercase text-slate-400 block">UMKM Mitra</span><span class="font-bold text-indigo-600 dark:text-indigo-400">${escapeHtml(formState.umkm) || '-'} (${escapeHtml(formState.bidang) || '-'})</span></div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            } else {
+                card1Html = `<div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-800">${renderWizardCardHeader('Bagian 1A', 'Identitas Mahasiswa & UMKM Mitra', false, false, true, 'openInfoPart(1)', '')}</div>`;
+            }
+
+            // Kartu 1B: Daftar Narasumber Dinamis (Min 4 Baris)
+            let card2Html = '';
+            if (p2Editing) {
+                let respRowsHtml = '';
+                const canDeleteResp = formState.respondents.length > MIN_RESPONDENTS;
+                for (let i = 0; i < formState.respondents.length; i++) {
+                    const r = formState.respondents[i];
+                    respRowsHtml += `
+                        <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 grid grid-cols-1 sm:grid-cols-12 gap-3 items-start">
+                            <div class="sm:col-span-2">
+                                <label class="text-[11px] font-extrabold text-indigo-600 dark:text-indigo-400 block mb-1">Kode #${i + 1} *</label>
+                                <input type="text" value="${escapeHtml(r.code)}" oninput="updateRespondent(${i}, 'code', this.value)" class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-mono font-extrabold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div class="sm:col-span-3">
+                                <label class="text-[11px] font-bold text-slate-600 dark:text-slate-300 block mb-1">Kelompok Peran *</label>
+                                <select onchange="updateRespondent(${i}, 'role', this.value)" class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <option value="Pemilik / Pengelola UMKM" ${r.role === 'Pemilik / Pengelola UMKM' ? 'selected' : ''}>Pemilik / Pengelola UMKM</option>
+                                    <option value="Pelanggan Sasaran" ${r.role === 'Pelanggan Sasaran' ? 'selected' : ''}>Pelanggan Sasaran</option>
+                                    <option value="Staf / Kasir UMKM" ${r.role === 'Staf / Kasir UMKM' ? 'selected' : ''}>Staf / Kasir UMKM</option>
+                                </select>
+                            </div>
+                            <div class="sm:col-span-6">
+                                <label class="text-[11px] font-bold text-slate-600 dark:text-slate-300 block mb-1">Profil Singkat Anonim (Usia, Pekerjaan, & Frekuensi Transaksi) *</label>
+                                <input type="text" value="${escapeHtml(r.profile)}" oninput="updateRespondent(${i}, 'profile', this.value)" placeholder="Tuliskan usia, pekerjaan singkat, dan seberapa sering bertransaksi..." class="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div class="sm:col-span-1 flex sm:justify-end pt-0 sm:pt-5">
+                                <button type="button" onclick="removeRespondent(${i})" ${!canDeleteResp ? 'disabled title="Wajib minimal 4 narasumber"' : 'title="Hapus baris ini"'} class="px-2.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 text-xs font-bold transition disabled:opacity-30 disabled:pointer-events-none">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                card2Html = `
+                    <div class="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border-2 border-indigo-600 dark:border-indigo-400 shadow-md space-y-4">
+                        ${renderWizardCardHeader('Bagian 1B', 'Daftar Kode Anonim Narasumber Wawancara (' + formState.respondents.length + ' Orang — Minimal ' + MIN_RESPONDENTS + ')', p2Saved, true, false, '', '')}
+                        <div class="p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-800 text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+                            <i class="fa-solid fa-circle-info text-indigo-600 dark:text-indigo-400 mr-1.5"></i><strong>Instruksi:</strong> Masukkan data setiap narasumber yang telah Anda wawancarai satu per satu (minimal 1 Pengelola UMKM dan 3 Pelanggan). Kode di bawah ini akan otomatis muncul di pilihan Dropdown pada tahap Affinity Diagram, Empathy Map, Persona, dan Journey Map.
+                        </div>
+                        <div class="space-y-3">
+                            ${respRowsHtml}
+                        </div>
+                        <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+                            <button type="button" onclick="addRespondent()" class="px-4 py-2.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950 dark:hover:bg-indigo-900 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-xs sm:text-sm font-extrabold transition flex items-center gap-2">
+                                <i class="fa-solid fa-plus"></i>
+                                <span>Tambah Narasumber Baru</span>
+                            </button>
+                            <button type="button" onclick="saveInfoPart(2)" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-extrabold transition flex items-center gap-2 shadow-sm">
+                                <i class="fa-solid fa-check"></i>
+                                <span>Simpan & Lanjut ke Fakta Observasi</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else if (p2Saved) {
+                let badgesHtml = '';
+                for (let i = 0; i < formState.respondents.length; i++) {
+                    const r = formState.respondents[i];
+                    badgesHtml += `<div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs"><strong class="font-mono text-indigo-600 dark:text-indigo-400">[${escapeHtml(r.code)}]</strong> <strong>${escapeHtml(r.role)}:</strong> ${escapeHtml(r.profile) || '(Profil belum diisi)'}</div>`;
+                }
+                card2Html = `
+                    <div class="p-4 sm:p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-emerald-300 dark:border-emerald-800/70 space-y-3">
+                        ${renderWizardCardHeader('Bagian 1B', 'Daftar Narasumber Terdaftar (' + formState.respondents.length + ' Responden Anonim)', true, false, p2Min, 'openInfoPart(2)', 'toggleMinInfoPart(2)')}
+                        ${!p2Min ? `<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">${badgesHtml}</div>` : ''}
+                    </div>
+                `;
+            } else {
+                card2Html = `<div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-800">${renderWizardCardHeader('Bagian 1B', 'Daftar Kode Anonim Narasumber Wawancara (Minimal ' + MIN_RESPONDENTS + ' Orang)', false, false, true, 'openInfoPart(2)', '')}</div>`;
+            }
+
+            // Kartu 1C: Daftar Catatan Observasi Dinamis (Min 3 Baris)
+            let card3Html = '';
+            if (p3Editing) {
+                let obsRowsHtml = '';
+                const canDeleteObs = formState.observations.length > MIN_OBSERVATIONS;
+                for (let j = 0; j < formState.observations.length; j++) {
+                    const ob = formState.observations[j];
+                    obsRowsHtml += `
+                        <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 grid grid-cols-1 sm:grid-cols-12 gap-3 items-start">
+                            <div class="sm:col-span-2">
+                                <label class="text-[11px] font-extrabold text-emerald-600 dark:text-emerald-400 block mb-1">Kode Obs *</label>
+                                <input type="text" value="${escapeHtml(ob.code)}" oninput="updateObservation(${j}, 'code', this.value)" class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-mono font-extrabold focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            </div>
+                            <div class="sm:col-span-3">
+                                <label class="text-[11px] font-bold text-slate-600 dark:text-slate-300 block mb-1">Aspek yang Diamati *</label>
+                                <input type="text" value="${escapeHtml(ob.aspect)}" oninput="updateObservation(${j}, 'aspect', this.value)" placeholder="Misal: Urutan Tindakan / Lingkungan..." class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            </div>
+                            <div class="sm:col-span-6">
+                                <label class="text-[11px] font-bold text-slate-600 dark:text-slate-300 block mb-1">Uraian Fakta Perilaku Nyata yang Terlihat di Lapangan *</label>
+                                <input type="text" value="${escapeHtml(ob.note)}" oninput="updateObservation(${j}, 'note', this.value)" placeholder="Tuliskan fakta perilaku atau situasi nyata yang Anda lihat langsung..." class="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            </div>
+                            <div class="sm:col-span-1 flex sm:justify-end pt-0 sm:pt-5">
+                                <button type="button" onclick="removeObservation(${j})" ${!canDeleteObs ? 'disabled title="Wajib minimal 3 catatan observasi"' : 'title="Hapus baris ini"'} class="px-2.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 text-xs font-bold transition disabled:opacity-30 disabled:pointer-events-none">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                card3Html = `
+                    <div class="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border-2 border-indigo-600 dark:border-indigo-400 shadow-md space-y-4">
+                        ${renderWizardCardHeader('Bagian 1C', 'Daftar Temuan Observasi Lapangan (' + formState.observations.length + ' Catatan — Minimal ' + MIN_OBSERVATIONS + ')', p3Saved, true, false, '', '')}
+                        <div class="space-y-3">
+                            ${obsRowsHtml}
+                        </div>
+                        <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+                            <button type="button" onclick="addObservation()" class="px-4 py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950 dark:hover:bg-emerald-900 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs sm:text-sm font-extrabold transition flex items-center gap-2">
+                                <i class="fa-solid fa-plus"></i>
+                                <span>Tambah Catatan Observasi</span>
+                            </button>
+                            <button type="button" onclick="saveInfoPart(3)" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-extrabold transition flex items-center gap-2 shadow-sm">
+                                <i class="fa-solid fa-check"></i>
+                                <span>Simpan Semua Data Sumber Riset</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else if (p3Saved) {
+                let obsListHtml = '';
+                for (let j = 0; j < formState.observations.length; j++) {
+                    const ob = formState.observations[j];
+                    obsListHtml += `<div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs"><strong class="font-mono text-emerald-600 dark:text-emerald-400">[${escapeHtml(ob.code)}]</strong> <strong>${escapeHtml(ob.aspect)}:</strong> ${escapeHtml(ob.note) || '-'}</div>`;
+                }
+                card3Html = `
+                    <div class="p-4 sm:p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-emerald-300 dark:border-emerald-800/70 space-y-3">
+                        ${renderWizardCardHeader('Bagian 1C', 'Daftar Temuan Observasi Lapangan (' + formState.observations.length + ' Catatan)', true, false, p3Min, 'openInfoPart(3)', 'toggleMinInfoPart(3)')}
+                        ${!p3Min ? `<div class="space-y-2">${obsListHtml}</div>` : ''}
+                    </div>
+                `;
+            } else {
+                card3Html = `<div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-800">${renderWizardCardHeader('Bagian 1C', 'Daftar Temuan Observasi Lapangan (Minimal ' + MIN_OBSERVATIONS + ' Catatan)', false, false, true, 'openInfoPart(3)', '')}</div>`;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-pen-to-square mr-1"></i>Tahap 1 • Database Sumber Riset (Narasumber & Observasi)</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Daftarkan Kode Narasumber & Fakta Observasi Anda</h2>
+                    </div>
+                    <div class="space-y-4 my-auto">
+                        ${card1Html}
+                        ${card2Html}
+                        ${card3Html}
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 4 [PENJELASAN 2]: Mengapa & Bagaimana Menyusun Affinity Diagram Dinamis
+        function renderSlide4() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Tahap 2 • Penjelasan Artefak 1: Affinity Diagram</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Cara Mengelompokkan Kartu Temuan dengan Dropdown Sumber</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Pada Slide 5 nanti, Anda wajib menyusun <strong>minimal ${MIN_CLUSTERS} Klaster Tema Masalah</strong> (Anda dapat menambah klaster baru jika menemukan lebih dari 3 tema). Di dalam setiap klaster, terdapat <strong>minimal ${MIN_NOTES_PER_CLUSTER} Kartu Catatan (Sticky Notes)</strong>:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-auto text-xs sm:text-sm">
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <span class="px-2.5 py-1 rounded-lg bg-amber-500 text-white text-xs font-extrabold">1. Pilih Sumber via Dropdown</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Minimal 3 Kartu per Klaster</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Untuk setiap kartu temuan di dalam klaster, pilih kode narasumber/observasi dari <strong>Dropdown</strong> (misal <code>[P1]</code>, <code>[P2]</code>, <code>[OBS-1]</code>), lalu ketik satu kalimat kutipan atau fakta masalahnya.
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <span class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-xs font-extrabold">2. Beri Judul Tema</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Gunakan Kalimat ${term('istatement', 'I-Statement')}</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Beri nama klaster tersebut menggunakan kalimat sudut pandang pengguna (<em>"Saya merasa kesulitan..."</em> atau <em>"Saya butuh kepastian..."</em>).
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-xs font-extrabold">3. Tarik Kesimpulan</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Rumuskan ${term('insight', 'User Insight')}</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Tuliskan kesimpulan <em>User Insight</em> yang menjelaskan <strong>mengapa</strong> pola masalah di klaster tersebut terjadi dan apa kebutuhan mendasarnya.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-800/60 text-xs leading-relaxed">
+                        <i class="fa-solid fa-list-check text-indigo-600 dark:text-indigo-400 mr-1.5"></i><strong>Instruksi Slide Berikutnya:</strong> Susunlah minimal 3 Klaster Tema Masalah pada Slide 5. Anda dapat menekan tombol <strong>+ Tambah Kartu Kutipan</strong> di dalam klaster maupun <strong>+ Tambah Klaster Tema Baru</strong>.
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 5 [FORM ISIAN 2]: Wizard Affinity Diagram Dinamis (Min 3 Klaster, Min 3 Kartu per Klaster + Dropdown)
+        function renderSlide5() {
+            let cardsHtml = '';
+            const canDeleteCluster = formState.clusters.length > MIN_CLUSTERS;
+
+            for (let i = 0; i < formState.clusters.length; i++) {
+                const c = formState.clusters[i];
+                const isEditing = uiWizard.affActive === i;
+                const isSaved = uiWizard.affSaved[i] || !!(c.label.trim() || c.insight.trim());
+                const isMin = !!uiWizard.affMin[i];
+                const headerTitle = c.label.trim() ? c.label : 'Klaster Tema Masalah #' + (i + 1) + ' (' + c.notes.length + ' Kartu Temuan)';
+
+                const delClusterBtn = canDeleteCluster
+                    ? `<button type="button" onclick="removeAffinityCluster(${i})" class="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/70 text-rose-600 dark:text-rose-400 text-xs font-bold transition" title="Hapus Klaster Ini"><i class="fa-solid fa-trash-can"></i></button>`
+                    : '';
+
+                if (isEditing) {
+                    const canDeleteNote = c.notes.length > MIN_NOTES_PER_CLUSTER;
+                    let notesHtml = '';
+                    for (let n = 0; n < c.notes.length; n++) {
+                        const noteObj = c.notes[n];
+                        notesHtml += `
+                            <div class="p-3.5 rounded-2xl bg-amber-50/80 dark:bg-amber-950/20 border border-amber-300 dark:border-amber-800/80 grid grid-cols-1 sm:grid-cols-12 gap-3 items-start">
+                                <div class="sm:col-span-4">
+                                    <label class="text-[11px] font-extrabold text-amber-900 dark:text-amber-300 block mb-1">Sumber Kartu #${n + 1} (Dropdown) *</label>
+                                    <select onchange="updateClusterNote(${i}, ${n}, 'source', this.value)" class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                        ${renderSourceSelectOptions(noteObj.source)}
+                                    </select>
+                                </div>
+                                <div class="sm:col-span-7">
+                                    <label class="text-[11px] font-bold text-slate-700 dark:text-slate-200 block mb-1">Isi Kutipan Responden / Fakta Temuan (1 Kartu = 1 Masalah) *</label>
+                                    <input type="text" value="${escapeHtml(noteObj.text)}" oninput="updateClusterNote(${i}, ${n}, 'text', this.value)" placeholder="Ketik kutipan langsung atau fakta temuan dari sumber tersebut..." class="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                </div>
+                                <div class="sm:col-span-1 flex sm:justify-end pt-0 sm:pt-5">
+                                    <button type="button" onclick="removeClusterNote(${i}, ${n})" ${!canDeleteNote ? 'disabled title="Wajib minimal 3 kartu per klaster"' : 'title="Hapus kartu ini"'} class="px-2.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 text-xs font-bold transition disabled:opacity-30 disabled:pointer-events-none">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    cardsHtml += `
+                        <div class="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border-2 border-indigo-600 dark:border-indigo-400 shadow-md space-y-4">
+                            ${renderWizardCardHeader('Klaster #' + (i + 1), headerTitle, isSaved, true, false, '', '', delClusterBtn)}
+
+                            <div class="space-y-3 pt-2 border-t border-slate-100 dark:border-slate-800">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-extrabold text-slate-700 dark:text-slate-200">1. Daftar Kartu Temuan (Sticky Notes) dalam Klaster Ini (Minimal ${MIN_NOTES_PER_CLUSTER} Kartu) *</span>
+                                    <button type="button" onclick="addClusterNote(${i})" class="px-3 py-1.5 rounded-xl bg-amber-100 hover:bg-amber-200 dark:bg-amber-950 dark:hover:bg-amber-900 text-amber-900 dark:text-amber-300 text-xs font-extrabold transition flex items-center gap-1.5">
+                                        <i class="fa-solid fa-plus"></i><span>Tambah Kartu Kutipan</span>
+                                    </button>
+                                </div>
+                                ${notesHtml}
+                            </div>
+
+                            <div class="space-y-4 pt-2 border-t border-slate-100 dark:border-slate-800">
+                                <div>
+                                    <label class="text-xs sm:text-sm font-bold text-indigo-700 dark:text-indigo-300 block mb-1.5">
+                                        2. Judul Tema Klaster #${i + 1} (Gunakan Kalimat Sudut Pandang Pengguna / I-Statement: "Saya...") *
+                                    </label>
+                                    <input type="text" value="${escapeHtml(c.label)}" oninput="updateClusterMeta(${i}, 'label', this.value)" placeholder="Tuliskan judul tema klaster dengan diawali kata 'Saya...'..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                </div>
+
+                                <div>
+                                    <label class="text-xs sm:text-sm font-bold text-emerald-700 dark:text-emerald-300 block mb-1.5">
+                                        3. Rumusan User Insight dari Klaster #${i + 1} (Mengapa Masalah Ini Terjadi & Apa Kebutuhan Mendasarnya?) *
+                                    </label>
+                                    <textarea rows="3" oninput="autoResizeTextarea(this); updateClusterMeta(${i}, 'insight', this.value)" placeholder="Tuliskan kesimpulan wawasan pengguna (User Insight) yang ditarik dari klaster ini..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500">${escapeHtml(c.insight)}</textarea>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between gap-3 pt-1">
+                                <span class="text-xs text-slate-400">Klaster ${i + 1} dari ${formState.clusters.length}</span>
+                                <button type="button" onclick="saveAffCluster(${i})" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-extrabold transition flex items-center gap-2 shadow-sm">
+                                    <i class="fa-solid fa-check"></i>
+                                    <span>${i < formState.clusters.length - 1 ? 'Simpan & Lanjut ke Klaster #' + (i + 2) : 'Simpan Klaster #' + (i + 1)}</span>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                } else if (isSaved) {
+                    let stickyCardsHtml = '';
+                    for (let n = 0; n < c.notes.length; n++) {
+                        const noteObj = c.notes[n];
+                        stickyCardsHtml += `
+                            <div class="p-3 rounded-xl bg-amber-100/90 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-800 text-xs space-y-1">
+                                <span class="px-2 py-0.5 rounded bg-amber-900/15 dark:bg-amber-400/20 font-mono text-[10px] font-extrabold text-amber-950 dark:text-amber-300 inline-block">${escapeHtml(getSourceDetailLabel(noteObj.source))}</span>
+                                <p class="font-semibold text-slate-800 dark:text-slate-100 leading-snug">${escapeHtml(noteObj.text) || '-'}</p>
+                            </div>
+                        `;
+                    }
+
+                    cardsHtml += `
+                        <div class="p-4 sm:p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-emerald-300 dark:border-emerald-800/70 space-y-3 transition">
+                            ${renderWizardCardHeader('Klaster #' + (i + 1), headerTitle, true, false, isMin, `openAffCluster(${i})`, `toggleMinAffCluster(${i})`, delClusterBtn)}
+                            ${isMin ? `
+                                <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 line-clamp-1 px-1"><strong>Insight:</strong> ${escapeHtml(c.insight)}</p>
+                            ` : `
+                                <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3.5 text-sm">
+                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">${stickyCardsHtml}</div>
+                                    <div class="pt-2.5 border-t border-slate-100 dark:border-slate-800">
+                                        <span class="text-xs font-bold uppercase text-emerald-600 dark:text-emerald-400 block mb-0.5">User Insight Klaster #${i + 1}:</span>
+                                        <div class="font-semibold text-slate-800 dark:text-slate-100 whitespace-pre-line">${escapeHtml(c.insight) || '-'}</div>
+                                    </div>
+                                </div>
+                            `}
+                        </div>
+                    `;
+                } else {
+                    cardsHtml += `
+                        <div class="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-800">
+                            ${renderWizardCardHeader('Klaster #' + (i + 1), headerTitle, false, false, true, `openAffCluster(${i})`, '', delClusterBtn)}
+                        </div>
+                    `;
+                }
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div class="space-y-1">
+                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-pen-to-square mr-1"></i>Tahap 2 • Wizard Affinity Diagram (${formState.clusters.length} Klaster — Minimal ${MIN_CLUSTERS})</span>
+                            <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Pengelompokan Kartu Temuan & Penarikan User Insight</h2>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2 shrink-0">
+                            <button type="button" onclick="addAffinityCluster()" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-plus"></i><span>Tambah Klaster Baru</span>
+                            </button>
+                            <button type="button" onclick="setAllAffMin(false)" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300">Buka Semua</button>
+                            <button type="button" onclick="setAllAffMin(true)" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300">Lipat Semua</button>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3.5 my-auto">
+                        ${cardsHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 6 [PENJELASAN 3]: Mengapa & Bagaimana Menyusun Empathy Map
+        function renderSlide6() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Tahap 3 • Penjelasan Artefak 2: Empathy Map</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Memetakan 4 Kuadran ${term('empathymap', 'Empathy Map')} dengan Dropdown Sumber</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Pada Slide 7, setiap kuadran (<em>Says, Thinks, Does, Feels</em>) wajib diisi <strong>minimal ${MIN_EMPATHY_ITEMS} butir temuan</strong> yang terhubung dengan kode responden/observasi dari Dropdown, ditambah <strong>minimal ${MIN_EMPATHY_ITEMS} butir Pains</strong> dan <strong>${MIN_EMPATHY_ITEMS} butir Gains</strong>:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 my-auto text-xs sm:text-sm">
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                            <span class="font-extrabold text-indigo-600 dark:text-indigo-400 block">1. SAYS & 2. THINKS (Min. 2 Butir)</span>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">Pilih kode responden dari dropdown lalu tuliskan ucapan langsungnya (<em>Says</em>) dan apa yang dipikirkannya (<em>Thinks</em>).</p>
+                        </div>
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                            <span class="font-extrabold text-emerald-600 dark:text-emerald-400 block">3. DOES & 4. FEELS (Min. 2 Butir)</span>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">Pilih kode observasi/responden lalu tuliskan tindakan nyatanya (<em>Does</em>) dan perasaan emosionalnya (<em>Feels</em>).</p>
+                        </div>
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-1.5 sm:col-span-2 lg:col-span-1">
+                            <span class="font-extrabold text-rose-600 dark:text-rose-400 block">5. PAINS & 6. GAINS (Min. 2 Butir)</span>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">Rangkum minimal 2 hambatan terbesar (<em>Pains</em>) dan minimal 2 harapan utama (<em>Gains</em>).</p>
+                        </div>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-800/60 text-xs leading-relaxed">
+                        <i class="fa-solid fa-list-check text-indigo-600 dark:text-indigo-400 mr-1.5"></i><strong>Instruksi Slide Berikutnya:</strong> Lengkapi ketiga bagian <em>Empathy Map</em> pada Slide 7. Anda dapat menambah butir baru di setiap kuadran dengan tombol <strong>+ Tambah Butir</strong>.
+                    </div>
+                </div>
+            `;
+        }
+
+        // Helper Render Kuadran Dinamis Empathy Map
+        function renderEmpathyQuadEditor(quadKey, titleLabel, badgeColor) {
+            const arr = formState.empathy[quadKey] || [];
+            const canDel = arr.length > MIN_EMPATHY_ITEMS;
+            let rows = '';
+            for (let i = 0; i < arr.length; i++) {
+                const it = arr[i];
+                rows += `
+                    <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-start">
+                        <div class="sm:col-span-4">
+                            <select onchange="updateEmpathyQuadItem('${quadKey}', ${i}, 'source', this.value)" class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                ${renderSourceSelectOptions(it.source)}
+                            </select>
+                        </div>
+                        <div class="sm:col-span-7">
+                            <input type="text" value="${escapeHtml(it.text)}" oninput="updateEmpathyQuadItem('${quadKey}', ${i}, 'text', this.value)" placeholder="Ketik butir temuan untuk kuadran ini..." class="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                        <div class="sm:col-span-1 flex justify-end">
+                            <button type="button" onclick="removeEmpathyQuadItem('${quadKey}', ${i})" ${!canDel ? 'disabled title="Minimal 2 butir"' : ''} class="px-2.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 text-xs font-bold transition disabled:opacity-30 disabled:pointer-events-none">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+            return `
+                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs sm:text-sm font-extrabold ${badgeColor}">${escapeHtml(titleLabel)} (Min. ${MIN_EMPATHY_ITEMS} Butir) *</span>
+                        <button type="button" onclick="addEmpathyQuadItem('${quadKey}')" class="px-3 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold hover:bg-indigo-50 transition">
+                            <i class="fa-solid fa-plus mr-1"></i>Tambah Butir
+                        </button>
+                    </div>
+                    <div class="space-y-2.5">${rows}</div>
+                </div>
+            `;
+        }
+
+        function renderEmpathyQuadReadList(quadKey) {
+            const arr = formState.empathy[quadKey] || [];
+            return arr.map(it => `<div class="p-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs"><strong class="font-mono text-indigo-600 dark:text-indigo-400">[${escapeHtml(it.source)}]</strong> ${escapeHtml(it.text) || '-'}</div>`).join('');
+        }
+
+        // SLIDE 7 [FORM ISIAN 3]: Wizard Empathy Map Dinamis
+        function renderSlide7() {
+            const e1Edit = uiWizard.emActive === 1;
+            const e2Edit = uiWizard.emActive === 2;
+            const e3Edit = uiWizard.emActive === 3;
+
+            const e1Saved = uiWizard.emSaved[1];
+            const e2Saved = uiWizard.emSaved[2];
+            const e3Saved = uiWizard.emSaved[3];
+
+            const e1Min = !!uiWizard.emMin[1];
+            const e2Min = !!uiWizard.emMin[2];
+            const e3Min = !!uiWizard.emMin[3];
+
+            // Bagian 1: SAYS & THINKS
+            let card1Html = '';
+            if (e1Edit) {
+                card1Html = `
+                    <div class="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border-2 border-indigo-600 dark:border-indigo-400 shadow-md space-y-4">
+                        ${renderWizardCardHeader('Empathy Map 1 / 3', 'Kuadran 1: SAYS (Ucapan) & Kuadran 2: THINKS (Pikiran)', e1Saved, true, false, '', '')}
+                        <div class="space-y-4 pt-2 border-t border-slate-100 dark:border-slate-800">
+                            ${renderEmpathyQuadEditor('says', '1. SAYS (Apa yang Diucapkan Langsung oleh Responden)', 'text-indigo-600 dark:text-indigo-400')}
+                            ${renderEmpathyQuadEditor('thinks', '2. THINKS (Apa yang Dipikirkan / Dikhawatirkan Responden)', 'text-sky-600 dark:text-sky-400')}
+                        </div>
+                        <div class="flex justify-end pt-1">
+                            <button type="button" onclick="saveEmPart(1)" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-extrabold transition flex items-center gap-2 shadow-sm">
+                                <i class="fa-solid fa-check"></i><span>Simpan & Lanjut ke DOES & FEELS</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else if (e1Saved) {
+                card1Html = `
+                    <div class="p-4 sm:p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-emerald-300 dark:border-emerald-800/70 space-y-3">
+                        ${renderWizardCardHeader('Empathy Map 1 / 3', 'Kuadran 1: SAYS (' + formState.empathy.says.length + ' butir) & Kuadran 2: THINKS (' + formState.empathy.thinks.length + ' butir)', true, false, e1Min, 'openEmPart(1)', 'toggleMinEmPart(1)')}
+                        ${!e1Min ? `
+                            <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="space-y-1.5"><span class="text-xs font-extrabold uppercase text-indigo-600">1. SAYS:</span>${renderEmpathyQuadReadList('says')}</div>
+                                <div class="space-y-1.5"><span class="text-xs font-extrabold uppercase text-sky-600">2. THINKS:</span>${renderEmpathyQuadReadList('thinks')}</div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            } else {
+                card1Html = `<div class="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-800">${renderWizardCardHeader('Empathy Map 1 / 3', 'Kuadran 1: SAYS (Ucapan) & Kuadran 2: THINKS (Pikiran)', false, false, true, 'openEmPart(1)', '')}</div>`;
+            }
+
+            // Bagian 2: DOES & FEELS
+            let card2Html = '';
+            if (e2Edit) {
+                card2Html = `
+                    <div class="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border-2 border-indigo-600 dark:border-indigo-400 shadow-md space-y-4">
+                        ${renderWizardCardHeader('Empathy Map 2 / 3', 'Kuadran 3: DOES (Tindakan) & Kuadran 4: FEELS (Perasaan)', e2Saved, true, false, '', '')}
+                        <div class="space-y-4 pt-2 border-t border-slate-100 dark:border-slate-800">
+                            ${renderEmpathyQuadEditor('does', '3. DOES (Perilaku & Tindakan Nyata yang Diamati)', 'text-emerald-600 dark:text-emerald-400')}
+                            ${renderEmpathyQuadEditor('feels', '4. FEELS (Perasaan / Emosi yang Dialami Pengguna)', 'text-amber-600 dark:text-amber-400')}
+                        </div>
+                        <div class="flex justify-end pt-1">
+                            <button type="button" onclick="saveEmPart(2)" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-extrabold transition flex items-center gap-2 shadow-sm">
+                                <i class="fa-solid fa-check"></i><span>Simpan & Lanjut ke PAINS & GAINS</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else if (e2Saved) {
+                card2Html = `
+                    <div class="p-4 sm:p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-emerald-300 dark:border-emerald-800/70 space-y-3">
+                        ${renderWizardCardHeader('Empathy Map 2 / 3', 'Kuadran 3: DOES (' + formState.empathy.does.length + ' butir) & Kuadran 4: FEELS (' + formState.empathy.feels.length + ' butir)', true, false, e2Min, 'openEmPart(2)', 'toggleMinEmPart(2)')}
+                        ${!e2Min ? `
+                            <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="space-y-1.5"><span class="text-xs font-extrabold uppercase text-emerald-600">3. DOES:</span>${renderEmpathyQuadReadList('does')}</div>
+                                <div class="space-y-1.5"><span class="text-xs font-extrabold uppercase text-amber-600">4. FEELS:</span>${renderEmpathyQuadReadList('feels')}</div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            } else {
+                card2Html = `<div class="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-800">${renderWizardCardHeader('Empathy Map 2 / 3', 'Kuadran 3: DOES (Tindakan) & Kuadran 4: FEELS (Perasaan)', false, false, true, 'openEmPart(2)', '')}</div>`;
+            }
+
+            // Bagian 3: PAINS & GAINS
+            let card3Html = '';
+            if (e3Edit) {
+                const canDelPain = formState.empathy.pains.length > MIN_EMPATHY_ITEMS;
+                const canDelGain = formState.empathy.gains.length > MIN_EMPATHY_ITEMS;
+
+                const painsInputs = formState.empathy.pains.map((val, idx) => `
+                    <div class="flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-lg bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 text-xs font-extrabold flex items-center justify-center shrink-0">${idx + 1}</span>
+                        <input type="text" value="${escapeHtml(val)}" oninput="updateEmpathySimpleList('pains', ${idx}, this.value)" placeholder="Tuliskan hambatan / kesulitan utama pengguna..." class="flex-1 px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-rose-500">
+                        <button type="button" onclick="removeEmpathySimpleList('pains', ${idx})" ${!canDelPain ? 'disabled' : ''} class="px-2.5 py-2 rounded-xl bg-rose-50 text-rose-600 text-xs font-bold disabled:opacity-30"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                `).join('');
+
+                const gainsInputs = formState.empathy.gains.map((val, idx) => `
+                    <div class="flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-xs font-extrabold flex items-center justify-center shrink-0">${idx + 1}</span>
+                        <input type="text" value="${escapeHtml(val)}" oninput="updateEmpathySimpleList('gains', ${idx}, this.value)" placeholder="Tuliskan harapan / manfaat utama yang diinginkan pengguna..." class="flex-1 px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <button type="button" onclick="removeEmpathySimpleList('gains', ${idx})" ${!canDelGain ? 'disabled' : ''} class="px-2.5 py-2 rounded-xl bg-rose-50 text-rose-600 text-xs font-bold disabled:opacity-30"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                `).join('');
+
+                card3Html = `
+                    <div class="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border-2 border-indigo-600 dark:border-indigo-400 shadow-md space-y-4">
+                        ${renderWizardCardHeader('Empathy Map 3 / 3', 'Ringkasan Bawah: PAINS (Hambatan) & GAINS (Harapan)', e3Saved, true, false, '', '')}
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-100 dark:border-slate-800">
+                            <div class="p-4 rounded-2xl bg-rose-50/50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800 space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-extrabold text-rose-700 dark:text-rose-300">5. PAINS (Min. ${MIN_EMPATHY_ITEMS} Butir) *</span>
+                                    <button type="button" onclick="addEmpathySimpleList('pains')" class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-rose-300 text-xs font-bold text-rose-700"><i class="fa-solid fa-plus mr-1"></i>Tambah</button>
+                                </div>
+                                <div class="space-y-2">${painsInputs}</div>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-extrabold text-emerald-700 dark:text-emerald-300">6. GAINS (Min. ${MIN_EMPATHY_ITEMS} Butir) *</span>
+                                    <button type="button" onclick="addEmpathySimpleList('gains')" class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-emerald-300 text-xs font-bold text-emerald-700"><i class="fa-solid fa-plus mr-1"></i>Tambah</button>
+                                </div>
+                                <div class="space-y-2">${gainsInputs}</div>
+                            </div>
+                        </div>
+                        <div class="flex justify-end pt-1">
+                            <button type="button" onclick="saveEmPart(3)" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-extrabold transition flex items-center gap-2 shadow-sm">
+                                <i class="fa-solid fa-check"></i><span>Simpan Seluruh Empathy Map</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else if (e3Saved) {
+                card3Html = `
+                    <div class="p-4 sm:p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-emerald-300 dark:border-emerald-800/70 space-y-3">
+                        ${renderWizardCardHeader('Empathy Map 3 / 3', 'Ringkasan PAINS (' + formState.empathy.pains.length + ' butir) & GAINS (' + formState.empathy.gains.length + ' butir)', true, false, e3Min, 'openEmPart(3)', 'toggleMinEmPart(3)')}
+                        ${!e3Min ? `
+                            <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs sm:text-sm">
+                                <div><span class="font-extrabold text-rose-600 block mb-1">PAINS:</span><ul class="list-disc list-inside space-y-1">${formState.empathy.pains.map(p => `<li>${escapeHtml(p) || '-'}</li>`).join('')}</ul></div>
+                                <div><span class="font-extrabold text-emerald-600 block mb-1">GAINS:</span><ul class="list-disc list-inside space-y-1">${formState.empathy.gains.map(g => `<li>${escapeHtml(g) || '-'}</li>`).join('')}</ul></div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            } else {
+                card3Html = `<div class="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-800">${renderWizardCardHeader('Empathy Map 3 / 3', 'Ringkasan Bawah: PAINS (Hambatan) & GAINS (Harapan)', false, false, true, 'openEmPart(3)', '')}</div>`;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div class="space-y-1">
+                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-pen-to-square mr-1"></i>Tahap 3 • Wizard Empathy Map Relasional</span>
+                            <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Pemetaan 4 Kuadran Empati + Pains & Gains</h2>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <button type="button" onclick="setAllEmMin(false)" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300">Buka Baca Semua</button>
+                            <button type="button" onclick="setAllEmMin(true)" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300">Lipat Semua</button>
+                        </div>
+                    </div>
+                    <div class="space-y-3.5 my-auto">
+                        ${card1Html}
+                        ${card2Html}
+                        ${card3Html}
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 8 [PENJELASAN 4]: Mengapa & Bagaimana Menyusun Kartu User Persona
+        function renderSlide8() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Tahap 4 • Penjelasan Artefak 3: User Persona</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Menyusun Kartu ${term('persona', 'User Persona')} Berbasis Bukti Responden</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Pada Slide 9, Anda akan merangkum pola temuan dari narasumber pelanggan menjadi satu sosok <em>User Persona</em>. Agar terbukti ilmiah (<em>Evidence-Based Persona</em>), Anda cukup <strong>mencentang kode responden mana saja</strong> yang membentuk profil Persona tersebut:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-auto text-xs sm:text-sm">
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <span class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-xs font-extrabold">1. Centang Sumber Responden</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Pilih Responden Pembentuk</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Centang kode responden (misal <code>P1</code>, <code>P2</code>, <code>P3</code>) yang datanya digabungkan menjadi sosok Persona ini, serta pilih sumber responden untuk kutipan utamanya.
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-xs font-extrabold">2. Goals & Pains Dinamis</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Minimal 2 Tujuan & 2 Frustrasi</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Tuliskan minimal 2 butir tujuan utama (<em>Goals</em>) dan minimal 2 butir titik frustrasi (<em>Pain Points</em>). Anda dapat menambah baris baru sesuai kebutuhan.
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <span class="px-2.5 py-1 rounded-lg bg-amber-500 text-white text-xs font-extrabold">3. Behaviors & Skenario</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Kebiasaan & Pemicu Transaksi</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Jelaskan kebiasaan transaksi/perangkat yang digunakan Persona ini serta situasi nyata apa yang memicunya membutuhkan layanan UMKM mitra.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-800/60 text-xs leading-relaxed">
+                        <i class="fa-solid fa-list-check text-indigo-600 dark:text-indigo-400 mr-1.5"></i><strong>Instruksi Slide Berikutnya:</strong> Lengkapi ketiga bagian pembentuk Kartu Visual <em>User Persona</em> pada Slide 9.
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 9 [FORM ISIAN 4]: Wizard Kartu User Persona Dinamis & Relasional
+        function renderSlide9() {
+            const p = formState.persona;
+            const p1Edit = uiWizard.perActive === 1;
+            const p2Edit = uiWizard.perActive === 2;
+            const p3Edit = uiWizard.perActive === 3;
+
+            const p1Saved = uiWizard.perSaved[1];
+            const p2Saved = uiWizard.perSaved[2];
+            const p3Saved = uiWizard.perSaved[3];
+
+            const p1Min = !!uiWizard.perMin[1];
+            const p2Min = !!uiWizard.perMin[2];
+            const p3Min = !!uiWizard.perMin[3];
+
+            // Bagian 1: Profil, Checkbox Sumber Responden, & Kutipan
+            let c1Html = '';
+            if (p1Edit) {
+                let sourceChecksHtml = '';
+                for (let i = 0; i < formState.respondents.length; i++) {
+                    const r = formState.respondents[i];
+                    const isChecked = (p.sources || []).indexOf(r.code) !== -1;
+                    const cls = isChecked
+                        ? 'bg-indigo-600 text-white border-indigo-600'
+                        : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700';
+                    sourceChecksHtml += `
+                        <button type="button" onclick="togglePersonaSourceCode('${escapeHtml(r.code)}')" class="px-3 py-1.5 rounded-xl border text-xs font-extrabold transition flex items-center gap-1.5 ${cls}">
+                            <i class="fa-solid ${isChecked ? 'fa-square-check' : 'fa-regular fa-square'}"></i>
+                            <span>[${escapeHtml(r.code)}] ${escapeHtml(r.role)}</span>
+                        </button>
+                    `;
+                }
+
+                c1Html = `
+                    <div class="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border-2 border-indigo-600 dark:border-indigo-400 shadow-md space-y-4">
+                        ${renderWizardCardHeader('Persona 1 / 3', 'Profil Karakter Representatif, Sumber Responden, & Kutipan Utama', p1Saved, true, false, '', '')}
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100 dark:border-slate-800">
+                            <div>
+                                <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Nama Samaran Persona & Rentang Usia *</label>
+                                <input type="text" value="${escapeHtml(p.nama)}" oninput="updatePersonaField('nama', this.value)" placeholder="Ketik nama representatif & usia..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Pekerjaan / Peran Keseharian Persona *</label>
+                                <input type="text" value="${escapeHtml(p.peran)}" oninput="updatePersonaField('peran', this.value)" placeholder="Ketik pekerjaan atau aktivitas utama Persona..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Pilih Kode Responden yang Datanya Membentuk Persona Ini (Klik untuk Centang) *</label>
+                            <div class="flex flex-wrap gap-2">${sourceChecksHtml}</div>
+                        </div>
+
+                        <div>
+                            <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Latar Belakang Kontekstual Persona *</label>
+                            <textarea rows="3" oninput="autoResizeTextarea(this); updatePersonaField('konteks', this.value)" placeholder="Uraikan keseharian dan konteks mengapa Persona ini membutuhkan layanan UMKM mitra..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(p.konteks)}</textarea>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+                            <div class="sm:col-span-4">
+                                <label class="text-xs font-bold text-indigo-700 dark:text-indigo-300 block mb-1.5">Sumber Kutipan Utama *</label>
+                                <select onchange="updatePersonaField('quoteSource', this.value)" class="w-full px-3 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    ${renderSourceSelectOptions(p.quoteSource)}
+                                </select>
+                            </div>
+                            <div class="sm:col-span-8">
+                                <label class="text-xs font-bold text-indigo-700 dark:text-indigo-300 block mb-1.5">Kalimat Kutipan Utama (Verbatim Quote) *</label>
+                                <input type="text" value="${escapeHtml(p.quote)}" oninput="updatePersonaField('quote', this.value)" placeholder="Tuliskan satu kalimat kutipan yang paling mewakili suara Persona ini..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base italic focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end pt-1">
+                            <button type="button" onclick="savePerPart(1)" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-extrabold transition flex items-center gap-2 shadow-sm">
+                                <i class="fa-solid fa-check"></i><span>Simpan & Lanjut ke Goals & Pain Points</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else if (p1Saved) {
+                c1Html = `
+                    <div class="p-4 sm:p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-emerald-300 dark:border-emerald-800/70 space-y-3">
+                        ${renderWizardCardHeader('Persona 1 / 3', (p.nama || 'Profil Persona') + ' • Sumber: [' + (p.sources || []).join(', ') + ']', true, false, p1Min, 'openPerPart(1)', 'toggleMinPerPart(1)')}
+                        ${!p1Min ? `
+                            <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2 text-sm">
+                                <div><strong>Nama & Peran:</strong> ${escapeHtml(p.nama) || '-'} (${escapeHtml(p.peran) || '-'})</div>
+                                <div><strong>Konteks:</strong> ${escapeHtml(p.konteks) || '-'}</div>
+                                <div class="p-2.5 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/40 border-l-4 border-indigo-500 italic">"[${escapeHtml(p.quoteSource)}] ${escapeHtml(p.quote) || '-'}"</div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            } else {
+                c1Html = `<div class="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-800">${renderWizardCardHeader('Persona 1 / 3', 'Profil Karakter Representatif, Sumber Responden, & Kutipan Utama', false, false, true, 'openPerPart(1)', '')}</div>`;
+            }
+
+            // Bagian 2: Goals & Pain Points Dinamis (Min 2 Butir)
+            let c2Html = '';
+            if (p2Edit) {
+                const canDelGoal = p.goals.length > MIN_PERSONA_LIST;
+                const canDelPain = p.pains.length > MIN_PERSONA_LIST;
+
+                const goalsHtml = p.goals.map((g, idx) => `
+                    <div class="flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-800 text-xs font-extrabold flex items-center justify-center shrink-0">${idx + 1}</span>
+                        <input type="text" value="${escapeHtml(g)}" oninput="updatePersonaListItem('goals', ${idx}, this.value)" placeholder="Tuliskan tujuan atau kebutuhan Persona..." class="flex-1 px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <button type="button" onclick="removePersonaListItem('goals', ${idx})" ${!canDelGoal ? 'disabled' : ''} class="px-2.5 py-2 rounded-xl bg-rose-50 text-rose-600 text-xs font-bold disabled:opacity-30"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                `).join('');
+
+                const painsHtml = p.pains.map((pn, idx) => `
+                    <div class="flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-lg bg-rose-100 text-rose-800 text-xs font-extrabold flex items-center justify-center shrink-0">${idx + 1}</span>
+                        <input type="text" value="${escapeHtml(pn)}" oninput="updatePersonaListItem('pains', ${idx}, this.value)" placeholder="Tuliskan titik frustrasi / hambatan utama Persona..." class="flex-1 px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-rose-500">
+                        <button type="button" onclick="removePersonaListItem('pains', ${idx})" ${!canDelPain ? 'disabled' : ''} class="px-2.5 py-2 rounded-xl bg-rose-50 text-rose-600 text-xs font-bold disabled:opacity-30"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                `).join('');
+
+                c2Html = `
+                    <div class="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border-2 border-indigo-600 dark:border-indigo-400 shadow-md space-y-4">
+                        ${renderWizardCardHeader('Persona 2 / 3', 'Daftar Goals & Needs (Min. 2) serta Pain Points (Min. 2)', p2Saved, true, false, '', '')}
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-100 dark:border-slate-800">
+                            <div class="p-4 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-extrabold text-emerald-700 dark:text-emerald-300">Goals & Needs (Min. ${MIN_PERSONA_LIST}) *</span>
+                                    <button type="button" onclick="addPersonaListItem('goals')" class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-emerald-300 text-xs font-bold text-emerald-700"><i class="fa-solid fa-plus mr-1"></i>Tambah Goal</button>
+                                </div>
+                                <div class="space-y-2">${goalsHtml}</div>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-rose-50/50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800 space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-extrabold text-rose-700 dark:text-rose-300">Pain Points / Frustrations (Min. ${MIN_PERSONA_LIST}) *</span>
+                                    <button type="button" onclick="addPersonaListItem('pains')" class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-rose-300 text-xs font-bold text-rose-700"><i class="fa-solid fa-plus mr-1"></i>Tambah Pain</button>
+                                </div>
+                                <div class="space-y-2">${painsHtml}</div>
+                            </div>
+                        </div>
+                        <div class="flex justify-end pt-1">
+                            <button type="button" onclick="savePerPart(2)" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-extrabold transition flex items-center gap-2 shadow-sm">
+                                <i class="fa-solid fa-check"></i><span>Simpan & Lanjut ke Behaviors & Skenario</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else if (p2Saved) {
+                c2Html = `
+                    <div class="p-4 sm:p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-emerald-300 dark:border-emerald-800/70 space-y-3">
+                        ${renderWizardCardHeader('Persona 2 / 3', 'Goals (' + p.goals.length + ' poin) & Pain Points (' + p.pains.length + ' poin)', true, false, p2Min, 'openPerPart(2)', 'toggleMinPerPart(2)')}
+                        ${!p2Min ? `
+                            <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs sm:text-sm">
+                                <div><span class="font-extrabold text-emerald-600 block mb-1">GOALS:</span><ul class="list-disc list-inside space-y-1">${p.goals.map(g => `<li>${escapeHtml(g) || '-'}</li>`).join('')}</ul></div>
+                                <div><span class="font-extrabold text-rose-600 block mb-1">PAIN POINTS:</span><ul class="list-disc list-inside space-y-1">${p.pains.map(pn => `<li>${escapeHtml(pn) || '-'}</li>`).join('')}</ul></div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            } else {
+                c2Html = `<div class="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-800">${renderWizardCardHeader('Persona 2 / 3', 'Daftar Goals & Needs (Min. 2) serta Pain Points (Min. 2)', false, false, true, 'openPerPart(2)', '')}</div>`;
+            }
+
+            // Bagian 3: Behaviors & Trigger Scenario
+            let c3Html = '';
+            if (p3Edit) {
+                c3Html = `
+                    <div class="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border-2 border-indigo-600 dark:border-indigo-400 shadow-md space-y-4">
+                        ${renderWizardCardHeader('Persona 3 / 3', 'Kebiasaan Transaksi (Behaviors) & Skenario Pemicu', p3Saved, true, false, '', '')}
+                        <div class="space-y-4 pt-2 border-t border-slate-100 dark:border-slate-800">
+                            <div>
+                                <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Behaviors (Kebiasaan Bertransaksi, Komunikasi, & Penggunaan Perangkat) *</label>
+                                <textarea rows="3" oninput="autoResizeTextarea(this); updatePersonaField('behaviors', this.value)" placeholder="Tuliskan kebiasaan nyata Persona ini saat mencari informasi, memesan, membayar, serta perangkat yang digunakan..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(p.behaviors)}</textarea>
+                            </div>
+                            <div>
+                                <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Trigger Scenario (Situasi Nyata Apa yang Memicu Persona Ini Membutuhkan Layanan UMKM?) *</label>
+                                <textarea rows="3" oninput="autoResizeTextarea(this); updatePersonaField('skenario', this.value)" placeholder="Ceritakan situasi spesifik dalam keseharian yang mendorong Persona ini memulai transaksi di UMKM mitra..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(p.skenario)}</textarea>
+                            </div>
+                        </div>
+                        <div class="flex justify-end pt-1">
+                            <button type="button" onclick="savePerPart(3)" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-extrabold transition flex items-center gap-2 shadow-sm">
+                                <i class="fa-solid fa-check"></i><span>Simpan Kartu User Persona</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else if (p3Saved) {
+                c3Html = `
+                    <div class="p-4 sm:p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-emerald-300 dark:border-emerald-800/70 space-y-3">
+                        ${renderWizardCardHeader('Persona 3 / 3', 'Kebiasaan Transaksi (Behaviors) & Skenario Pemicu', true, false, p3Min, 'openPerPart(3)', 'toggleMinPerPart(3)')}
+                        ${!p3Min ? `
+                            <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs sm:text-sm">
+                                <div><span class="font-extrabold text-indigo-600 block mb-1">BEHAVIORS:</span><div class="whitespace-pre-line">${escapeHtml(p.behaviors) || '-'}</div></div>
+                                <div><span class="font-extrabold text-amber-600 block mb-1">TRIGGER SCENARIO:</span><div class="whitespace-pre-line">${escapeHtml(p.skenario) || '-'}</div></div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            } else {
+                c3Html = `<div class="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-800">${renderWizardCardHeader('Persona 3 / 3', 'Kebiasaan Transaksi (Behaviors) & Skenario Pemicu', false, false, true, 'openPerPart(3)', '')}</div>`;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div class="space-y-1">
+                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-pen-to-square mr-1"></i>Tahap 4 • Wizard Kartu User Persona Relasional</span>
+                            <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Penyusunan Profil User Persona Berbasis Bukti</h2>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <button type="button" onclick="setAllPerMin(false)" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300">Buka Baca Semua</button>
+                            <button type="button" onclick="setAllPerMin(true)" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300">Lipat Semua</button>
+                        </div>
+                    </div>
+                    <div class="space-y-3.5 my-auto">
+                        ${c1Html}
+                        ${c2Html}
+                        ${c3Html}
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 10 [PENJELASAN 5]: Mengapa & Bagaimana Menyusun Customer Journey Map Dinamis
+        function renderSlide10() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Tahap 5 • Penjelasan Artefak 4: Customer Journey Map</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Memetakan Fase Perjalanan (${term('journeymap', 'Customer Journey Map')})</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Pada Slide 11, Anda wajib memetakan <strong>minimal ${MIN_JOURNEY_PHASES} Fase Perjalanan Kronologis</strong> yang dilalui pelanggan saat bertransaksi di UMKM mitra saat ini (Anda dapat menekan tombol <strong>+ Tambah Fase Baru</strong> jika prosesnya lebih panjang):
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 my-auto text-xs sm:text-sm">
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                            <span class="font-extrabold text-indigo-600 dark:text-indigo-400 block">1. Sumber Bukti & Emosi</span>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">Pilih sumber responden/observasi dari Dropdown serta pilih indikator ${term('emotionalcurve', 'kurva emosi')} pada fase tersebut.</p>
+                        </div>
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                            <span class="font-extrabold text-sky-600 dark:text-sky-400 block">2. Tindakan & Touchpoint</span>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">Jelaskan tindakan nyata pengguna dan di ${term('touchpoint', 'titik kontak')} mana interaksi itu berlangsung.</p>
+                        </div>
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                            <span class="font-extrabold text-rose-600 dark:text-rose-400 block">3. Titik Friksi (Pain Point)</span>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">Tuliskan hambatan spesifik pada fase tersebut yang menurunkan kepuasan pengguna.</p>
+                        </div>
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                            <span class="font-extrabold text-emerald-600 dark:text-emerald-400 block">4. Peluang (Opportunity)</span>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">Rumuskan peluang solusi desain untuk menghilangkan hambatan pada fase tersebut.</p>
+                        </div>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-800/60 text-xs leading-relaxed">
+                        <i class="fa-solid fa-list-check text-indigo-600 dark:text-indigo-400 mr-1.5"></i><strong>Instruksi Slide Berikutnya:</strong> Lengkapi kelima fase perjalanan transaksi UMKM mitra Anda pada Slide 11.
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 11 [FORM ISIAN 5]: Wizard Customer Journey Map Dinamis (Min 5 Fase + Dropdown Sumber)
+        function renderSlide11() {
+            const emotions = [
+                '😊 Senang / Nyaman',
+                '😐 Netral / Biasa Saja',
+                '😟 Bingung / Terhambat',
+                '😫 Cemas / Kecewa (Titik Friksi Kritis)'
+            ];
+
+            let cardsHtml = '';
+            const canDeletePhase = formState.journey.length > MIN_JOURNEY_PHASES;
+
+            for (let i = 0; i < formState.journey.length; i++) {
+                const ph = formState.journey[i];
+                const isEditing = uiWizard.cjmActive === i;
+                const isSaved = uiWizard.cjmSaved[i] || !!(ph.action.trim() || ph.pain.trim() || ph.opportunity.trim());
+                const isMin = !!uiWizard.cjmMin[i];
+
+                const delPhaseBtn = canDeletePhase
+                    ? `<button type="button" onclick="removeJourneyPhase(${i})" class="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/70 text-rose-600 dark:text-rose-400 text-xs font-bold transition" title="Hapus Fase Ini"><i class="fa-solid fa-trash-can"></i></button>`
+                    : '';
+
+                if (isEditing) {
+                    const emotionOptionsHtml = emotions.map(emVal => `<option value="${escapeHtml(emVal)}" ${ph.emotion === emVal ? 'selected' : ''}>${escapeHtml(emVal)}</option>`).join('');
+
+                    cardsHtml += `
+                        <div class="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border-2 border-indigo-600 dark:border-indigo-400 shadow-md space-y-4">
+                            ${renderWizardCardHeader('Fase ' + (i + 1) + ' / ' + formState.journey.length, ph.phaseTitle, isSaved, true, false, '', '', delPhaseBtn)}
+
+                            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3.5 pt-2 border-t border-slate-100 dark:border-slate-800">
+                                <div class="sm:col-span-5">
+                                    <label class="text-xs font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Nama Tahapan / Fase Ke-${i + 1} *</label>
+                                    <input type="text" value="${escapeHtml(ph.phaseTitle)}" oninput="updateJourneyField(${i}, 'phaseTitle', this.value)" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                </div>
+                                <div class="sm:col-span-3">
+                                    <label class="text-xs font-bold text-indigo-700 dark:text-indigo-300 block mb-1.5">Sumber Bukti (Dropdown) *</label>
+                                    <select onchange="updateJourneyField(${i}, 'source', this.value)" class="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                        ${renderSourceSelectOptions(ph.source)}
+                                    </select>
+                                </div>
+                                <div class="sm:col-span-4">
+                                    <label class="text-xs font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Kurva Emosi Pengguna *</label>
+                                    <select onchange="updateJourneyField(${i}, 'emotion', this.value)" class="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                        ${emotionOptionsHtml}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">1. Tindakan Pengguna (User Action) pada Fase Ini *</label>
+                                    <textarea rows="3" oninput="autoResizeTextarea(this); updateJourneyField(${i}, 'action', this.value)" placeholder="Tuliskan langkah nyata yang dilakukan pelanggan pada tahap ini..." class="auto-expand w-full p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(ph.action)}</textarea>
+                                </div>
+                                <div>
+                                    <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">2. Titik Kontak (Touchpoint) & Pikiran Pengguna *</label>
+                                    <textarea rows="3" oninput="autoResizeTextarea(this); updateJourneyField(${i}, 'touchpoint', this.value)" placeholder="Sebutkan media/tempat interaksinya (Touchpoint) serta apa yang dipikirkan pelanggan..." class="auto-expand w-full p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(ph.touchpoint)}</textarea>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-xs sm:text-sm font-bold text-rose-700 dark:text-rose-300 block mb-1.5">3. Titik Masalah / Hambatan (Pain Point) pada Fase Ini *</label>
+                                    <textarea rows="3" oninput="autoResizeTextarea(this); updateJourneyField(${i}, 'pain', this.value)" placeholder="Tuliskan kesulitan atau hambatan yang dialami pelanggan pada tahap ini..." class="auto-expand w-full p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-rose-500">${escapeHtml(ph.pain)}</textarea>
+                                </div>
+                                <div>
+                                    <label class="text-xs sm:text-sm font-bold text-emerald-700 dark:text-emerald-300 block mb-1.5">4. Peluang Perbaikan Desain (Design Opportunity) *</label>
+                                    <textarea rows="3" oninput="autoResizeTextarea(this); updateJourneyField(${i}, 'opportunity', this.value)" placeholder="Tuliskan peluang solusi atau perbaikan informasi untuk mengatasi hambatan di tahap ini..." class="auto-expand w-full p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-emerald-500">${escapeHtml(ph.opportunity)}</textarea>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between gap-3 pt-1">
+                                <span class="text-xs text-slate-400">Fase ${i + 1} dari ${formState.journey.length}</span>
+                                <button type="button" onclick="saveCjmPhase(${i})" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-extrabold transition flex items-center gap-2 shadow-sm">
+                                    <i class="fa-solid fa-check"></i>
+                                    <span>${i < formState.journey.length - 1 ? 'Simpan & Lanjut ke Fase ' + (i + 2) : 'Simpan Customer Journey Map'}</span>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                } else if (isSaved) {
+                    cardsHtml += `
+                        <div class="p-4 sm:p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-emerald-300 dark:border-emerald-800/70 space-y-3 transition">
+                            ${renderWizardCardHeader('[' + ph.source + '] ' + ph.emotion, ph.phaseTitle, true, false, isMin, `openCjmPhase(${i})`, `toggleMinCjmPhase(${i})`, delPhaseBtn)}
+                            ${isMin ? `
+                                <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 line-clamp-1 px-1"><strong>Masalah:</strong> ${escapeHtml(ph.pain)} | <strong>Peluang:</strong> ${escapeHtml(ph.opportunity)}</p>
+                            ` : `
+                                <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm sm:text-base leading-relaxed">
+                                    <div><span class="text-xs font-bold uppercase text-indigo-600 dark:text-indigo-400 block">1. Tindakan Pengguna:</span><div class="whitespace-pre-line">${escapeHtml(ph.action) || '-'}</div></div>
+                                    <div><span class="text-xs font-bold uppercase text-sky-600 dark:text-sky-400 block">2. Touchpoint & Pikiran:</span><div class="whitespace-pre-line">${escapeHtml(ph.touchpoint) || '-'}</div></div>
+                                    <div class="pt-2 border-t border-slate-100 dark:border-slate-800"><span class="text-xs font-bold uppercase text-rose-600 dark:text-rose-400 block">3. Pain Point (Hambatan):</span><div class="whitespace-pre-line">${escapeHtml(ph.pain) || '-'}</div></div>
+                                    <div class="pt-2 border-t border-slate-100 dark:border-slate-800"><span class="text-xs font-bold uppercase text-emerald-600 dark:text-emerald-400 block">4. Design Opportunity:</span><div class="font-semibold whitespace-pre-line">${escapeHtml(ph.opportunity) || '-'}</div></div>
+                                </div>
+                            `}
+                        </div>
+                    `;
+                } else {
+                    cardsHtml += `
+                        <div class="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-800">
+                            ${renderWizardCardHeader('Fase ' + (i + 1) + ' / ' + formState.journey.length, ph.phaseTitle, false, false, true, `openCjmPhase(${i})`, '', delPhaseBtn)}
+                        </div>
+                    `;
+                }
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div class="space-y-1">
+                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-pen-to-square mr-1"></i>Tahap 5 • Wizard Customer Journey Map (${formState.journey.length} Fase — Minimal ${MIN_JOURNEY_PHASES})</span>
+                            <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Pemetaan Perjalanan Transaksi, Emosi, & Peluang Solusi</h2>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2 shrink-0">
+                            <button type="button" onclick="addJourneyPhase()" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-plus"></i><span>Tambah Fase Baru</span>
+                            </button>
+                            <button type="button" onclick="setAllCjmMin(false)" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300">Buka Semua</button>
+                            <button type="button" onclick="setAllCjmMin(true)" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300">Lipat Semua</button>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3.5 my-auto">
+                        ${cardsHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 12 [PRATINJAU & UNDUH PDF]: Dokumen Resmi LKM 03 (4 Artefak Sintesis Visual)
+        function renderSlide12() {
+            return `
+                <div class="slide-enter space-y-5">
+                    <div class="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4 no-print">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Tahap Akhir • Dokumen Sintesis Siap Kumpul</span>
+                            <h2 class="text-lg sm:text-2xl font-extrabold text-slate-900 dark:text-white">Pratinjau LKM 03: 4 Artefak Sintesis Riset (Format A4)</h2>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Periksa kembali hasil sintesis relasional Anda di bawah ini, lalu klik tombol <strong>Generate & Unduh PDF</strong>.</p>
+                        </div>
+
+                        <div class="flex flex-wrap items-center gap-2 shrink-0">
+                            <button type="button" onclick="window.print()" class="px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition">
+                                <i class="fa-solid fa-print mr-1"></i>Cetak / Save PDF Browser
+                            </button>
+                            <button type="button" id="btnDownloadPdf" onclick="downloadPdf()" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-extrabold transition shadow-md flex items-center gap-2">
+                                <i class="fa-solid fa-file-pdf"></i>
+                                <span>Generate & Unduh PDF</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="pdfWrapper" class="max-w-4xl mx-auto bg-white rounded-2xl shadow-md border border-slate-300 overflow-hidden">
+                        <div id="pdfPrintArea" class="p-6 sm:p-10 space-y-5">
+                            ${generatePdfHtmlString()}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function generatePdfHtmlString() {
+            const d = formState;
+            const dash = function (v) {
+                return (v && String(v).trim() !== '')
+                    ? escapeHtml(v)
+                    : '<span style="color:#94a3b8; font-style:italic;">(Belum diisi)</span>';
+            };
+
+            const respSummaryHtml = d.respondents.map(r => `<div><strong>[${escapeHtml(r.code)}] ${escapeHtml(r.role)}:</strong> ${dash(r.profile)}</div>`).join('');
+            const obsSummaryHtml = d.observations.map(ob => `<div><strong>[${escapeHtml(ob.code)}] ${escapeHtml(ob.aspect)}:</strong> ${dash(ob.note)}</div>`).join('');
+
+            let clusterRowsHtml = '';
+            for (let i = 0; i < d.clusters.length; i++) {
+                const c = d.clusters[i];
+                const notesListHtml = c.notes.map(n => `<div>• <strong>[${escapeHtml(n.source)}]:</strong> ${dash(n.text)}</div>`).join('');
+                clusterRowsHtml += `
+                    <tr>
+                        <td style="text-align:center; font-weight:800; width:30px;">${i + 1}</td>
+                        <td style="width:26%; font-weight:700; color:#1e293b;">${dash(c.label)}</td>
+                        <td style="width:44%;">${notesListHtml}</td>
+                        <td style="width:30%; font-weight:600; background:#f8fafc;">${dash(c.insight)}</td>
+                    </tr>
+                `;
+            }
+
+            const formatQuadPdf = arr => arr.map(it => `<div>• <strong>[${escapeHtml(it.source)}]:</strong> ${dash(it.text)}</div>`).join('');
+            const formatSimplePdf = arr => arr.map(tx => `<div>• ${dash(tx)}</div>`).join('');
+
+            let journeyRowsHtml = '';
+            for (let i = 0; i < d.journey.length; i++) {
+                const ph = d.journey[i];
+                journeyRowsHtml += `
+                    <tr>
+                        <td style="width:20%; font-weight:700; color:#0f172a;">
+                            <div>${escapeHtml(ph.phaseTitle)}</div>
+                            <div style="margin-top:3px; font-family:monospace; font-size:9.5px; color:#4f46e5;">Sumber: [${escapeHtml(ph.source)}]</div>
+                            <div style="margin-top:3px; display:inline-block; padding:2px 6px; border-radius:4px; background:#e0e7ff; color:#3730a3; font-size:9.5px; font-weight:800;">${escapeHtml(ph.emotion)}</div>
+                        </td>
+                        <td style="width:20%;">${dash(ph.action)}</td>
+                        <td style="width:20%;">${dash(ph.touchpoint)}</td>
+                        <td style="width:20%; color:#9f1239;">${dash(ph.pain)}</td>
+                        <td style="width:20%; font-weight:600; color:#065f46;">${dash(ph.opportunity)}</td>
+                    </tr>
+                `;
+            }
+
+            const p = d.persona;
+
+            return `
+                <!-- HALAMAN 1: IDENTITAS, DATABASE RESPONDEN, AFFINITY DIAGRAM, & EMPATHY MAP -->
+                <div style="border-bottom: 2px solid #1e293b; padding-bottom: 10px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+                    <div>
+                        <div style="font-size: 10px; font-weight: 800; letter-spacing: 0.06em; color: #4f46e5; text-transform: uppercase;">
+                            UNIVERSITAS PERINTIS INDONESIA (UPERTIS)
+                        </div>
+                        <div style="font-size: 15px; font-weight: 800; color: #0f172a; margin-top: 2px;">
+                            LEMBAR KERJA MAHASISWA (LKM 03) • SINTESIS RISET PENGGUNA
+                        </div>
+                        <div style="font-size: 11px; color: #475569; margin-top: 1px;">
+                            Program Studi S1 Bisnis Digital • Fakultas Ekonomi Bisnis dan Ilmu Sosial • Kode MK: BD7401
+                        </div>
+                    </div>
+                    <div style="text-align: right; font-size: 10px; color: #475569; background: #f8fafc; padding: 6px 10px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                        <div style="font-weight: 800; color: #0f172a;">PERTEMUAN 3</div>
+                        <div>Sub-CPMK 1.2 & 4.1</div>
+                        <div>Bobot: 5%</div>
+                    </div>
+                </div>
+
+                <!-- 1. Identitas & Database Sumber Riset -->
+                <div style="margin-bottom: 12px;">
+                    <div style="font-size: 11px; font-weight: 800; color: #0f172a; margin-bottom: 5px; text-transform: uppercase;">
+                        1. Identitas Mahasiswa, UMKM Mitra, & Database Sumber Riset (Anonim)
+                    </div>
+                    <table class="pdf-table">
+                        <tr>
+                            <th style="width: 20%;">Nama Mahasiswa</th>
+                            <td style="width: 30%; font-weight: 700;">${dash(d.nama)}</td>
+                            <th style="width: 18%;">NIM</th>
+                            <td style="width: 32%; font-family: monospace; font-weight: 700;">${dash(d.nim)}</td>
+                        </tr>
+                        <tr>
+                            <th>Kelas & Tanggal</th>
+                            <td>${dash(d.kelas)} • ${dash(d.tgl)}</td>
+                            <th>UMKM Mitra</th>
+                            <td><strong>${dash(d.umkm)}</strong> (${dash(d.bidang)})</td>
+                        </tr>
+                        <tr>
+                            <th>Daftar Narasumber (${d.respondents.length} Orang)</th>
+                            <td colspan="3">${respSummaryHtml}</td>
+                        </tr>
+                        <tr>
+                            <th>Daftar Observasi (${d.observations.length} Catatan)</th>
+                            <td colspan="3">${obsSummaryHtml}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- 2. Artefak 1: Affinity Diagram -->
+                <div style="margin-bottom: 12px;">
+                    <div style="font-size: 11px; font-weight: 800; color: #0f172a; margin-bottom: 5px; text-transform: uppercase;">
+                        2. Artefak 1: Affinity Diagram (${d.clusters.length} Klaster Tema Masalah & User Insight)
+                    </div>
+                    <table class="pdf-table">
+                        <thead>
+                            <tr>
+                                <th style="width:30px; text-align:center;">No</th>
+                                <th style="width:26%;">Judul Tema Klaster (I-Statement)</th>
+                                <th style="width:44%;">Kumpulan Kartu Temuan & Kode Sumber</th>
+                                <th style="width:30%;">Rumusan User Insight</th>
+                            </tr>
+                        </thead>
+                        <tbody>${clusterRowsHtml}</tbody>
+                    </table>
+                </div>
+
+                <!-- 3. Artefak 2: Empathy Map -->
+                <div style="margin-bottom: 14px;">
+                    <div style="font-size: 11px; font-weight: 800; color: #0f172a; margin-bottom: 5px; text-transform: uppercase;">
+                        3. Artefak 2: Empathy Map (4 Kuadran Terhubung Kode Sumber + Pains & Gains)
+                    </div>
+                    <table class="pdf-table">
+                        <tbody>
+                            <tr>
+                                <td style="width: 50%;">
+                                    <div style="font-weight: 800; color: #4f46e5; margin-bottom: 3px;">1. SAYS (Ucapan Langsung Responden)</div>
+                                    ${formatQuadPdf(d.empathy.says)}
+                                </td>
+                                <td style="width: 50%;">
+                                    <div style="font-weight: 800; color: #0284c7; margin-bottom: 3px;">2. THINKS (Pikiran & Kekhawatiran Pengguna)</div>
+                                    ${formatQuadPdf(d.empathy.thinks)}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div style="font-weight: 800; color: #059669; margin-bottom: 3px;">3. DOES (Tindakan & Perilaku Nyata)</div>
+                                    ${formatQuadPdf(d.empathy.does)}
+                                </td>
+                                <td>
+                                    <div style="font-weight: 800; color: #d97706; margin-bottom: 3px;">4. FEELS (Perasaan & Emosi Pengguna)</div>
+                                    ${formatQuadPdf(d.empathy.feels)}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="background: #fff1f2;">
+                                    <div style="font-weight: 800; color: #be123c; margin-bottom: 3px;">5. PAINS (Hambatan & Kesulitan Terbesar)</div>
+                                    ${formatSimplePdf(d.empathy.pains)}
+                                </td>
+                                <td style="background: #ecfdf5;">
+                                    <div style="font-weight: 800; color: #047857; margin-bottom: 3px;">6. GAINS (Harapan & Manfaat Utama)</div>
+                                    ${formatSimplePdf(d.empathy.gains)}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- HALAMAN 2: KARTU USER PERSONA & TABEL CUSTOMER JOURNEY MAP -->
+                <div class="pdf-page-break" style="padding-top: 10px; border-top: 2px dashed #94a3b8;">
+                    <!-- 4. Artefak 3: Kartu Visual User Persona -->
+                    <div style="margin-bottom: 14px;">
+                        <div style="font-size: 11px; font-weight: 800; color: #0f172a; margin-bottom: 5px; text-transform: uppercase;">
+                            4. Artefak 3: Kartu User Persona Berbasis Bukti Responden
+                        </div>
+                        <table class="pdf-table">
+                            <tr>
+                                <th style="width: 22%;">Nama Samaran & Usia</th>
+                                <td style="width: 28%; font-weight: 800; font-size: 12px; color: #4f46e5;">${dash(p.nama)}</td>
+                                <th style="width: 20%;">Peran & Sumber Data</th>
+                                <td style="width: 30%; font-weight: 700;">${dash(p.peran)} <span style="font-family:monospace; color:#4f46e5;">[${escapeHtml((p.sources || []).join(', '))}]</span></td>
+                            </tr>
+                            <tr>
+                                <th>Kutipan Utama [${escapeHtml(p.quoteSource)}]</th>
+                                <td colspan="3" style="font-style: italic; font-weight: 600; background: #f8fafc;">"${dash(p.quote)}"</td>
+                            </tr>
+                            <tr>
+                                <th>Latar Belakang Konteks</th>
+                                <td colspan="3">${dash(p.konteks)}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="2" style="width: 50%;">
+                                    <div style="font-weight: 800; color: #047857; margin-bottom: 3px;">GOALS & NEEDS (${p.goals.length} Poin):</div>
+                                    ${formatSimplePdf(p.goals)}
+                                </td>
+                                <td colspan="2" style="width: 50%;">
+                                    <div style="font-weight: 800; color: #be123c; margin-bottom: 3px;">PAIN POINTS (${p.pains.length} Poin):</div>
+                                    ${formatSimplePdf(p.pains)}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="2">
+                                    <div style="font-weight: 800; color: #4f46e5; margin-bottom: 3px;">BEHAVIORS (Kebiasaan Transaksi & Perangkat):</div>
+                                    <div>${dash(p.behaviors)}</div>
+                                </td>
+                                <td colspan="2">
+                                    <div style="font-weight: 800; color: #b45309; margin-bottom: 3px;">TRIGGER SCENARIO (Skenario Pemicu):</div>
+                                    <div>${dash(p.skenario)}</div>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <!-- 5. Artefak 4: Tabel Customer Journey Map -->
+                    <div style="margin-bottom: 16px;">
+                        <div style="font-size: 11px; font-weight: 800; color: #0f172a; margin-bottom: 5px; text-transform: uppercase;">
+                            5. Artefak 4: Customer Journey Map (${d.journey.length} Fase Kronologis, Kurva Emosi, & Peluang Solusi)
+                        </div>
+                        <table class="pdf-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:20%;">Tahapan, Sumber, & Emosi</th>
+                                    <th style="width:20%;">Tindakan Pengguna</th>
+                                    <th style="width:20%;">Touchpoint & Pikiran</th>
+                                    <th style="width:20%;">Pain Points (Hambatan)</th>
+                                    <th style="width:20%;">Design Opportunities</th>
+                                </tr>
+                            </thead>
+                            <tbody>${journeyRowsHtml}</tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pengesahan -->
+                    <div style="display: flex; justify-content: space-between; align-items: flex-end; padding-top: 6px; font-size: 10px; color: #334155;">
+                        <div style="max-width: 380px; color: #64748b;">
+                            <strong>Pernyataan Orisinalitas & Etika Riset:</strong> Keempat artefak sintesis di atas disusun berdasarkan bukti wawancara dan observasi nyata pada UMKM mitra dengan menjaga anonimitas identitas responden.
+                        </div>
+                        <div style="text-align: center; min-width: 180px;">
+                            <div>Padang, ${d.tgl ? escapeHtml(d.tgl) : '........................'}</div>
+                            <div style="margin-bottom: 36px; font-weight: 600;">Mahasiswa Pelaksana,</div>
+                            <div style="font-weight: 800; text-decoration: underline; color: #0f172a;">${d.nama ? escapeHtml(d.nama) : '( ........................................ )'}</div>
+                            <div style="font-family: monospace;">NIM: ${d.nim ? escapeHtml(d.nim) : '........................'}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // =========================================================================
+        // HANDLER IN-FORM WIZARD (SIMPAN, BACA, MINIMIZE, EDIT)
+        // =========================================================================
+        function saveInfoPart(partNum) {
+            uiWizard.infoSaved[partNum] = true;
+            uiWizard.infoMin[partNum] = false;
+            if (partNum < 3 && !uiWizard.infoSaved[partNum + 1]) {
+                uiWizard.infoActive = partNum + 1;
+            } else {
+                uiWizard.infoActive = 0;
+            }
+            triggerAutoSave();
+            renderCurrentSlide();
+        }
+        function openInfoPart(partNum) {
+            uiWizard.infoActive = partNum;
+            renderCurrentSlide();
+        }
+        function toggleMinInfoPart(partNum) {
+            uiWizard.infoMin[partNum] = !uiWizard.infoMin[partNum];
+            renderCurrentSlide();
+        }
+
+        function saveAffCluster(idx) {
+            uiWizard.affSaved[idx] = true;
+            uiWizard.affMin[idx] = false;
+            if (idx < formState.clusters.length - 1 && !uiWizard.affSaved[idx + 1]) {
+                uiWizard.affActive = idx + 1;
+            } else {
+                uiWizard.affActive = -1;
+            }
+            triggerAutoSave();
+            renderCurrentSlide();
+        }
+        function openAffCluster(idx) {
+            uiWizard.affActive = idx;
+            renderCurrentSlide();
+        }
+        function toggleMinAffCluster(idx) {
+            uiWizard.affMin[idx] = !uiWizard.affMin[idx];
+            renderCurrentSlide();
+        }
+        function setAllAffMin(flag) {
+            uiWizard.affActive = -1;
+            for (let i = 0; i < formState.clusters.length; i++) {
+                uiWizard.affSaved[i] = true;
+                uiWizard.affMin[i] = flag;
+            }
+            renderCurrentSlide();
+        }
+
+        function saveEmPart(num) {
+            uiWizard.emSaved[num] = true;
+            uiWizard.emMin[num] = false;
+            if (num < 3 && !uiWizard.emSaved[num + 1]) {
+                uiWizard.emActive = num + 1;
+            } else {
+                uiWizard.emActive = 0;
+            }
+            triggerAutoSave();
+            renderCurrentSlide();
+        }
+        function openEmPart(num) {
+            uiWizard.emActive = num;
+            renderCurrentSlide();
+        }
+        function toggleMinEmPart(num) {
+            uiWizard.emMin[num] = !uiWizard.emMin[num];
+            renderCurrentSlide();
+        }
+        function setAllEmMin(flag) {
+            uiWizard.emActive = 0;
+            for (let i = 1; i <= 3; i++) {
+                uiWizard.emSaved[i] = true;
+                uiWizard.emMin[i] = flag;
+            }
+            renderCurrentSlide();
+        }
+
+        function savePerPart(num) {
+            uiWizard.perSaved[num] = true;
+            uiWizard.perMin[num] = false;
+            if (num < 3 && !uiWizard.perSaved[num + 1]) {
+                uiWizard.perActive = num + 1;
+            } else {
+                uiWizard.perActive = 0;
+            }
+            triggerAutoSave();
+            renderCurrentSlide();
+        }
+        function openPerPart(num) {
+            uiWizard.perActive = num;
+            renderCurrentSlide();
+        }
+        function toggleMinPerPart(num) {
+            uiWizard.perMin[num] = !uiWizard.perMin[num];
+            renderCurrentSlide();
+        }
+        function setAllPerMin(flag) {
+            uiWizard.perActive = 0;
+            for (let i = 1; i <= 3; i++) {
+                uiWizard.perSaved[i] = true;
+                uiWizard.perMin[i] = flag;
+            }
+            renderCurrentSlide();
+        }
+
+        function saveCjmPhase(idx) {
+            uiWizard.cjmSaved[idx] = true;
+            uiWizard.cjmMin[idx] = true;
+            if (idx < formState.journey.length - 1 && !uiWizard.cjmSaved[idx + 1]) {
+                uiWizard.cjmActive = idx + 1;
+            } else {
+                uiWizard.cjmActive = -1;
+                uiWizard.cjmMin[idx] = false;
+            }
+            triggerAutoSave();
+            renderCurrentSlide();
+        }
+        function openCjmPhase(idx) {
+            uiWizard.cjmActive = idx;
+            renderCurrentSlide();
+        }
+        function toggleMinCjmPhase(idx) {
+            uiWizard.cjmMin[idx] = !uiWizard.cjmMin[idx];
+            renderCurrentSlide();
+        }
+        function setAllCjmMin(flag) {
+            uiWizard.cjmActive = -1;
+            for (let i = 0; i < formState.journey.length; i++) {
+                uiWizard.cjmSaved[i] = true;
+                uiWizard.cjmMin[i] = flag;
+            }
+            renderCurrentSlide();
+        }
+
+        // =========================================================================
+        // DAFTAR 12 SLIDE PRAKTIKUM 3
+        // =========================================================================
+        const SLIDES = [
+            { id: 1, category: "Pengantar", title: "Pengantar Workspace Dinamis LKM 03 & Standar Minimal", render: renderSlide1 },
+            { id: 2, category: "Penjelasan 1", title: "Mengapa Narasumber Diinput Satu per Satu & Terhubung ke Dropdown?", render: renderSlide2 },
+            { id: 3, category: "Form Isian 1", title: "Database Narasumber Anonim (Min. 4) & Observasi (Min. 3)", render: renderSlide3 },
+            { id: 4, category: "Penjelasan 2", title: "Cara Mengelompokkan Kartu Temuan dengan Dropdown Sumber", render: renderSlide4 },
+            { id: 5, category: "Form Isian 2", title: "Wizard Affinity Diagram Dinamis (Min. 3 Klaster & 3 Kartu/Klaster)", render: renderSlide5 },
+            { id: 6, category: "Penjelasan 3", title: "Memetakan 4 Kuadran Empathy Map dengan Dropdown Sumber", render: renderSlide6 },
+            { id: 7, category: "Form Isian 3", title: "Wizard Empathy Map Relasional (Min. 2 Butir per Kuadran)", render: renderSlide7 },
+            { id: 8, category: "Penjelasan 4", title: "Menyusun Kartu User Persona Berbasis Bukti Responden", render: renderSlide8 },
+            { id: 9, category: "Form Isian 4", title: "Wizard Kartu User Persona Relasional (Min. 2 Goals & 2 Pains)", render: renderSlide9 },
+            { id: 10, category: "Penjelasan 5", title: "Memetakan Fase Perjalanan Customer Journey Map", render: renderSlide10 },
+            { id: 11, category: "Form Isian 5", title: "Wizard Customer Journey Map Dinamis (Min. 5 Fase)", render: renderSlide11 },
+            { id: 12, category: "Unduh PDF", title: "Pratinjau 4 Artefak Sintesis (LKM 03) & Unduh PDF A4", render: renderSlide12 }
+        ];
+
+        function renderCurrentSlide() {
+            const slide = SLIDES[currentSlideIndex];
+            const viewport = document.getElementById('slideViewport');
+            if (!viewport || !slide) return;
+            viewport.innerHTML = slide.render();
+
+            const pct = Math.round(((currentSlideIndex + 1) / TOTAL_SLIDES) * 100);
+            document.getElementById('topProgressBar').style.width = pct + '%';
+            document.getElementById('slideCounterBadge').textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES;
+            document.getElementById('mobileFooterCounter').textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES;
+            document.getElementById('slideCategoryPill').textContent = slide.category;
+            document.getElementById('headerSlideTitle').textContent = slide.title;
+
+            const prevBtn = document.getElementById('prevSlideBtn');
+            const nextBtn = document.getElementById('nextSlideBtn');
+            const nextBtnText = document.getElementById('nextBtnText');
+
+            prevBtn.disabled = currentSlideIndex === 0;
+            if (currentSlideIndex === TOTAL_SLIDES - 1) {
+                nextBtnText.textContent = "Selesai";
+                nextBtn.disabled = true;
+            } else {
+                nextBtnText.textContent = "Selanjutnya";
+                nextBtn.disabled = false;
+            }
+
+            renderDotsAndDrawer();
+
+            const textareas = viewport.querySelectorAll('textarea.auto-expand');
+            for (let i = 0; i < textareas.length; i++) {
+                autoResizeTextarea(textareas[i]);
+            }
+        }
+
+        function renderDotsAndDrawer() {
+            const dotsContainer = document.getElementById('slideDotsContainer');
+            let dotsHtml = '';
+            let drawerHtml = '';
+
+            for (let idx = 0; idx < SLIDES.length; idx++) {
+                const s = SLIDES[idx];
+                const isActive = idx === currentSlideIndex;
+                const isForm = s.category.indexOf('Form') !== -1;
+
+                const dotClass = isActive
+                    ? 'w-7 bg-indigo-600 dark:bg-indigo-400'
+                    : isForm
+                    ? 'w-2 bg-emerald-400/70 dark:bg-emerald-600 hover:bg-emerald-500'
+                    : 'w-2 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400';
+
+                dotsHtml += `<button type="button" onclick="goToSlide(${idx})" title="${escapeHtml(s.title)}" class="h-2 rounded-full transition-all ${dotClass}"></button>`;
+
+                const itemClass = isActive
+                    ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 font-bold'
+                    : 'hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-300';
+                const badgeClass = isActive
+                    ? 'bg-indigo-600 text-white'
+                    : isForm
+                    ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500';
+
+                drawerHtml += `
+                    <button type="button" onclick="selectSlideFromDrawer(${idx})" class="w-full text-left p-3 rounded-xl transition flex items-start gap-3 ${itemClass}">
+                        <span class="w-6 h-6 rounded-lg text-xs font-extrabold flex items-center justify-center shrink-0 mt-0.5 ${badgeClass}">${s.id}</span>
+                        <div class="min-w-0 flex-1">
+                            <div class="text-[10px] uppercase tracking-wider opacity-75">${escapeHtml(s.category)}</div>
+                            <div class="text-xs sm:text-sm leading-snug break-words">${escapeHtml(s.title)}</div>
+                        </div>
+                    </button>
+                `;
+            }
+
+            if (dotsContainer) dotsContainer.innerHTML = dotsHtml;
+            const drawerList = document.getElementById('drawerSlideList');
+            if (drawerList) drawerList.innerHTML = drawerHtml;
+        }
+
+        function selectSlideFromDrawer(index) {
+            goToSlide(index);
+            toggleSlideDrawer();
+        }
+
+        function changeSlide(direction) {
+            const nextIdx = currentSlideIndex + direction;
+            if (nextIdx >= 0 && nextIdx < TOTAL_SLIDES) {
+                currentSlideIndex = nextIdx;
+                renderCurrentSlide();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function goToSlide(index) {
+            if (index >= 0 && index < TOTAL_SLIDES) {
+                currentSlideIndex = index;
+                renderCurrentSlide();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function toggleSlideDrawer() {
+            const drawer = document.getElementById('slideDrawer');
+            const backdrop = document.getElementById('slideDrawerBackdrop');
+            const isClosed = drawer.classList.contains('-translate-x-full');
+
+            if (isClosed) {
+                backdrop.classList.remove('hidden');
+                setTimeout(function () { backdrop.classList.remove('opacity-0'); }, 10);
+                drawer.classList.remove('-translate-x-full');
+            } else {
+                backdrop.classList.add('opacity-0');
+                drawer.classList.add('-translate-x-full');
+                setTimeout(function () { backdrop.classList.add('hidden'); }, 200);
+            }
+        }
+
+        function clearAllData() {
+            const today = new Date().toISOString().split('T')[0];
+            formState = {
+                nama: "", nim: "", kelas: "", tgl: today,
+                umkm: "", bidang: "",
+                respondents: createDefaultRespondents(),
+                observations: createDefaultObservations(),
+                clusters: createDefaultClusters(),
+                empathy: createDefaultEmpathy(),
+                persona: createDefaultPersona(),
+                journey: createDefaultJourneyPhases()
+            };
+            uiWizard = {
+                infoActive: 1, infoSaved: { 1: false, 2: false, 3: false }, infoMin: { 1: false, 2: false, 3: false },
+                affActive: 0, affSaved: {}, affMin: {},
+                emActive: 1, emSaved: { 1: false, 2: false, 3: false }, emMin: { 1: false, 2: false, 3: false },
+                perActive: 1, perSaved: { 1: false, 2: false, 3: false }, perMin: { 1: false, 2: false, 3: false },
+                cjmActive: 0, cjmSaved: {}, cjmMin: {}
+            };
+            try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+            renderCurrentSlide();
+        }
+
+        function downloadPdf() {
+            if (currentSlideIndex !== TOTAL_SLIDES - 1) {
+                goToSlide(TOTAL_SLIDES - 1);
+            }
+            const el = document.getElementById('pdfPrintArea');
+            const d = formState;
+            const cleanNim = (d.nim || 'NIM').replace(/[^a-zA-Z0-9_-]/g, '');
+            const cleanNama = (d.nama || 'Mahasiswa').trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '');
+            const fn = 'LKM_03_Sintesis_UIUX_' + cleanNim + '_' + cleanNama + '.pdf';
+
+            const btn = document.getElementById('btnDownloadPdf');
+            const orig = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span>Menyiapkan PDF...</span>';
+                btn.disabled = true;
+            }
+
+            if (typeof html2pdf !== 'undefined') {
+                html2pdf().set({
+                    margin: [8, 8, 8, 8],
+                    filename: fn,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                }).from(el).save().then(function () {
+                    if (btn) { btn.innerHTML = orig; btn.disabled = false; }
+                }).catch(function () {
+                    if (btn) { btn.innerHTML = orig; btn.disabled = false; }
+                    window.print();
+                });
+            } else {
+                if (btn) { btn.innerHTML = orig; btn.disabled = false; }
+                window.print();
+            }
+        }
+
+        // =========================================================================
+        // MODAL KAMUS ISTILAH
+        // =========================================================================
+        function showTerm(key) {
+            const item = GLOSSARY_DB[key];
+            if (!item) return;
+            document.getElementById('termCategoryBadge').textContent = item.category;
+            document.getElementById('termTitle').textContent = item.title;
+            document.getElementById('termMainDesc').textContent = item.main;
+            document.getElementById('termDetailDesc').textContent = item.detail;
+            document.getElementById('termSourceName').textContent = 'Sumber: ' + item.source;
+            document.getElementById('termSourceUrl').href = item.url;
+            const modal = document.getElementById('termModalBackdrop');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeTermModal() {
+            const modal = document.getElementById('termModalBackdrop');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function openGlossaryIndex() {
+            document.getElementById('glossarySearchInput').value = '';
+            renderGlossaryList('');
+            const modal = document.getElementById('glossaryModalBackdrop');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeGlossaryIndex() {
+            const modal = document.getElementById('glossaryModalBackdrop');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function selectGlossaryTerm(key) {
+            closeGlossaryIndex();
+            showTerm(key);
+        }
+
+        function renderGlossaryList(query) {
+            const q = String(query || '').trim().toLowerCase();
+            const keys = Object.keys(GLOSSARY_DB);
+            let html = '';
+            let count = 0;
+
+            for (let i = 0; i < keys.length; i++) {
+                const k = keys[i];
+                const item = GLOSSARY_DB[k];
+                if (
+                    item.title.toLowerCase().indexOf(q) !== -1 ||
+                    item.category.toLowerCase().indexOf(q) !== -1 ||
+                    item.main.toLowerCase().indexOf(q) !== -1
+                ) {
+                    count++;
+                    html += `
+                        <button type="button" data-term="${escapeHtml(k)}" onclick="selectGlossaryTerm(this.dataset.term)" class="text-left p-4 rounded-2xl bg-slate-50 hover:bg-indigo-50/60 dark:bg-slate-800/50 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800 transition space-y-1">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">${escapeHtml(item.category)}</span>
+                                <span class="text-[10px] text-slate-400">${escapeHtml(item.source)}</span>
+                            </div>
+                            <div class="text-sm font-extrabold text-slate-900 dark:text-white leading-snug">${escapeHtml(item.title)}</div>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">${escapeHtml(item.main)}</p>
+                        </button>
+                    `;
+                }
+            }
+
+            const grid = document.getElementById('glossaryListGrid');
+            if (grid) {
+                grid.innerHTML = count > 0
+                    ? html
+                    : '<div class="col-span-2 text-center py-8 text-xs text-slate-500">Istilah tidak ditemukan.</div>';
+            }
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const ico = document.getElementById('themeIcon');
+            html.classList.toggle('dark');
+            ico.className = html.classList.contains('dark') ? 'fa-solid fa-sun text-amber-400 text-sm' : 'fa-solid fa-moon text-sm';
+        }
+
+        document.addEventListener('keydown', function (e) {
+            const activeTag = document.activeElement && document.activeElement.tagName
+                ? document.activeElement.tagName.toLowerCase()
+                : '';
+            if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') return;
+            if (e.key === 'ArrowRight') changeSlide(1);
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+            if (e.key === 'Escape') {
+                closeTermModal();
+                closeGlossaryIndex();
+            }
+        });
+
+        loadSavedState();
+        renderCurrentSlide();
+    </script>
+</body>
+</html>

@@ -1,0 +1,1833 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pertemuan 3: Sintesis Riset Pengguna (Affinity Diagram, Empathy Map, Persona, & Journey Map)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <script>
+        if (typeof tailwind !== 'undefined') {
+            tailwind.config = {
+                darkMode: 'class',
+                theme: {
+                    extend: {
+                        fontFamily: {
+                            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                            mono: ['"JetBrains Mono"', 'monospace']
+                        }
+                    }
+                }
+            };
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .tech-term {
+            color: #4f46e5;
+            font-weight: 700;
+            cursor: pointer;
+            transition: color 0.15s ease, opacity 0.15s ease;
+        }
+        .dark .tech-term {
+            color: #818cf8;
+        }
+        .tech-term:hover {
+            color: #3730a3;
+            opacity: 0.85;
+        }
+        .dark .tech-term:hover {
+            color: #a5b4fc;
+        }
+
+        /* Pengaman anti-terpotong di semua ukuran layar */
+        #slideViewport,
+        #slideViewport p,
+        #slideViewport span,
+        #slideViewport div,
+        #slideViewport h2,
+        #slideViewport h3,
+        #slideViewport h4,
+        #slideViewport button {
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+        }
+
+        .slide-enter {
+            animation: fadeSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes fadeSlide {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+        .dark ::-webkit-scrollbar-thumb { background: #334155; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col justify-between transition-colors duration-200">
+
+    <!-- Header Navigasi Atas -->
+    <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800">
+        <div class="w-full h-1 bg-slate-100 dark:bg-slate-800">
+            <div id="topProgressBar" class="h-full bg-indigo-600 dark:bg-indigo-500 transition-all duration-300" style="width: 5%;"></div>
+        </div>
+
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-2 sm:gap-3">
+            <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+                <button type="button" onclick="toggleSlideDrawer()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition flex items-center gap-2 text-xs sm:text-sm font-bold shrink-0">
+                    <i class="fa-solid fa-list-ul text-indigo-600 dark:text-indigo-400"></i>
+                    <span class="hidden sm:inline">Daftar Slide</span>
+                    <span id="slideCounterBadge" class="px-2 py-0.5 text-xs rounded-lg bg-indigo-600 text-white font-bold">1 / 20</span>
+                </button>
+
+                <div class="hidden md:flex items-center gap-2.5 min-w-0">
+                    <span id="slideCategoryPill" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 shrink-0">
+                        Pengantar
+                    </span>
+                    <h1 id="headerSlideTitle" class="text-sm font-bold text-slate-800 dark:text-slate-100 line-clamp-1">
+                        Sintesis Riset Pengguna & Pemetaan Masalah
+                    </h1>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 shrink-0">
+                <button type="button" onclick="openGlossaryIndex()" class="px-3 sm:px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 text-xs sm:text-sm font-bold flex items-center gap-2 transition">
+                    <i class="fa-solid fa-book-open text-indigo-600 dark:text-indigo-400"></i>
+                    <span>Kamus Istilah</span>
+                </button>
+
+                <button type="button" onclick="toggleTheme()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center transition" title="Ganti Tema Layar">
+                    <i id="themeIcon" class="fa-solid fa-moon text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Drawer Daftar Slide -->
+    <div id="slideDrawerBackdrop" onclick="toggleSlideDrawer()" class="fixed inset-0 bg-slate-950/50 backdrop-blur-xs z-40 hidden opacity-0 transition-opacity duration-200"></div>
+    <aside id="slideDrawer" class="fixed top-0 left-0 bottom-0 w-80 sm:w-96 bg-white dark:bg-slate-900 z-50 shadow-2xl border-r border-slate-200 dark:border-slate-800 transform -translate-x-full transition-transform duration-200 flex flex-col">
+        <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Pertemuan 3 • BD7401</span>
+                <h2 class="text-base font-extrabold text-slate-900 dark:text-white mt-0.5">Daftar Materi Pertemuan 3</h2>
+            </div>
+            <button type="button" onclick="toggleSlideDrawer()" class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div id="drawerSlideList" class="p-3.5 overflow-y-auto space-y-1.5 flex-1"></div>
+        <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 flex items-center justify-between">
+            <span>Gunakan panah Kiri / Kanan</span>
+            <span class="font-bold">20 Slide Interaktif</span>
+        </div>
+    </aside>
+
+    <!-- Area Utama Slide -->
+    <main class="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-6 flex flex-col justify-center">
+        <div id="slideViewport" class="bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl shadow-xs border border-slate-200/80 dark:border-slate-800 p-4 sm:p-8 lg:p-10 min-h-[460px] flex flex-col justify-between relative">
+            <div class="py-12 text-center text-sm text-slate-500">Memuat materi perkuliahan Pertemuan 3...</div>
+        </div>
+    </main>
+
+    <!-- Footer Navigasi Bawah -->
+    <footer class="sticky bottom-0 z-20 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 py-3 px-4 sm:px-6">
+        <div class="max-w-6xl mx-auto flex items-center justify-between gap-3">
+            <button type="button" id="prevSlideBtn" onclick="changeSlide(-1)" class="px-3.5 sm:px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                <i class="fa-solid fa-arrow-left text-xs"></i>
+                <span>Sebelumnya</span>
+            </button>
+
+            <div id="slideDotsContainer" class="hidden md:flex items-center gap-1.5 flex-wrap justify-center"></div>
+
+            <div class="md:hidden text-xs font-bold text-slate-500 dark:text-slate-400" id="mobileFooterCounter">1 / 20</div>
+
+            <button type="button" id="nextSlideBtn" onclick="changeSlide(1)" class="px-4 sm:px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-indigo-600 hover:bg-indigo-700 text-white transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                <span id="nextBtnText">Selanjutnya</span>
+                <i class="fa-solid fa-arrow-right text-xs"></i>
+            </button>
+        </div>
+    </footer>
+
+    <!-- Modal Penjelasan Istilah -->
+    <div id="termModalBackdrop" onclick="closeTermModal()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-lg w-full p-5 sm:p-7 shadow-2xl slide-enter max-h-[90vh] overflow-y-auto">
+            <div class="flex items-start justify-between gap-4 mb-4">
+                <div>
+                    <span id="termCategoryBadge" class="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">Kategori</span>
+                    <h3 id="termTitle" class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white mt-1.5">Nama Istilah</h3>
+                </div>
+                <button type="button" onclick="closeTermModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <p id="termMainDesc" class="text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200/70 dark:border-slate-700/70"></p>
+                <p id="termDetailDesc" class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed px-1"></p>
+                <div class="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800 text-xs px-1">
+                    <span id="termSourceName" class="font-semibold text-slate-400">Referensi</span>
+                    <a id="termSourceUrl" href="#" target="_blank" rel="noopener noreferrer" class="font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1.5">
+                        <span>Pelajari lebih lanjut</span>
+                        <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Kamus Istilah Lengkap -->
+    <div id="glossaryModalBackdrop" onclick="closeGlossaryIndex()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-4xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden slide-enter">
+            <div class="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-base sm:text-xl font-extrabold text-slate-900 dark:text-white">Kamus Istilah Pertemuan 3: Sintesis Riset & Pemetaan Pengguna</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Klik pada istilah mana pun untuk membaca arti dan contoh penerapannya.</p>
+                </div>
+                <button type="button" onclick="closeGlossaryIndex()" class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-3 sm:p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-sm"></i>
+                    <input id="glossarySearchInput" oninput="renderGlossaryList(this.value)" type="text" placeholder="Cari istilah seperti Sintesis, Affinity Diagram, Empathy Map, Persona, Customer Journey Map, Touchpoint..." class="w-full pl-10 pr-4 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+            <div id="glossaryListGrid" class="p-4 sm:p-5 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+        </div>
+    </div>
+
+    <script>
+        // =========================================================================
+        // DATABASE KAMUS ISTILAH PERTEMUAN 3
+        // =========================================================================
+        const GLOSSARY_DB = {
+            sintesis: {
+                title: "Sintesis Riset (Research Synthesis)",
+                category: "Konsep Inti",
+                main: "Proses mengolah, mengelompokkan, dan menghubungkan data mentah hasil wawancara serta observasi lapangan hingga melahirkan pola pemahaman (insight) yang bermakna.",
+                detail: "Jika riset lapangan mengumpulkan kepingan puzzle yang masih terpisah, maka sintesis adalah proses menyatukan kepingan tersebut hingga gambar besarnya terlihat jelas.",
+                source: "Interaction Design Foundation",
+                url: "https://www.interaction-design.org/literature/topics/user-research"
+            },
+            unpacking: {
+                title: "Unpacking Data (Memecah Catatan Lapangan)",
+                category: "Teknik Sintesis",
+                main: "Tahap awal sintesis di mana peneliti memecah setiap poin kutipan wawancara dan temuan observasi dari lembar catatan menjadi kartu-kartu temuan tunggal yang terpisah.",
+                detail: "Aturan wajib saat unpacking: satu kartu catatan (Sticky Note) hanya boleh berisi satu poin fakta atau satu kutipan agar mudah dikelompokkan berdasarkan kemiripan tema.",
+                source: "Stanford d.school",
+                url: "https://www.interaction-design.org/literature/article/stage-2-in-the-design-thinking-process-define-the-problem-and-interpret-the-results"
+            },
+            stickynotes: {
+                title: "Sticky Notes (Kartu Catatan Temuan)",
+                category: "Alat Sintesis",
+                main: "Kartu catatan ringkas (baik fisik maupun digital) yang digunakan untuk menuliskan satu kutipan responden atau satu fakta observasi lapangan.",
+                detail: "Dilengkapi dengan kode responden anonim (misal P1, P2, atau Pemilik) agar setiap kartu dapat dilacak sumber aslinya.",
+                source: "Nielsen Norman Group",
+                url: "https://www.nngroup.com/articles/affinity-diagram/"
+            },
+            affinity: {
+                title: "Affinity Diagram (Affinity Mapping / Metode KJ)",
+                category: "Artefak Sintesis",
+                main: "Teknik mengelompokkan puluhan kartu catatan temuan riset yang semula acak ke dalam beberapa kelompok (cluster) berdasarkan kemiripan tema atau pola masalah.",
+                detail: "Pertama kali diperkenalkan oleh antropolog Jepang Jiro Kawakita (Metode KJ). Membantu perancang menemukan masalah apa yang paling sering berulang di antara para responden.",
+                source: "Nielsen Norman Group",
+                url: "https://www.nngroup.com/articles/affinity-diagram/"
+            },
+            istatement: {
+                title: "I-Statement (Pernyataan Sudut Pandang Pengguna)",
+                category: "Teknik Affinity Diagram",
+                main: "Cara memberi judul pada kelompok (cluster) di Affinity Diagram menggunakan kalimat orang pertama ('Saya...') seolah-olah pengguna sendiri yang berbicara.",
+                detail: "Contoh: Daripada memberi judul kaku 'Masalah Harga', gunakan I-Statement: 'Saya ingin tahu total harga beserta ongkir sejak awal sebelum memesan.'",
+                source: "Interaction Design Foundation",
+                url: "https://www.interaction-design.org/literature/topics/affinity-diagrams"
+            },
+            insight: {
+                title: "User Insight (Wawasan Pengguna)",
+                category: "Hasil Sintesis",
+                main: "Temuan mendalam yang menjelaskan 'mengapa' pengguna melakukan suatu perilaku atau mengalami suatu kesulitan, bukan sekadar menyebutkan data permukaan.",
+                detail: "Sebuah insight yang kuat selalu menghubungkan perilaku yang diamati dengan alasan atau motivasi tersembunyi di baliknya.",
+                source: "Nielsen Norman Group",
+                url: "https://www.nngroup.com/articles/ux-research-cheat-sheet/"
+            },
+            empathymap: {
+                title: "Empathy Map (Peta Empati)",
+                category: "Artefak Sintesis",
+                main: "Kanvas visual 4 kuadran (Says, Thinks, Does, Feels) ditambah Pains & Gains yang dikembangkan oleh Dave Gray untuk merangkum dunia eksternal dan internal pengguna.",
+                detail: "Membantu kita melihat secara utuh apa yang diucapkan, dilakukan, dipikirkan, dan dirasakan oleh kelompok pelanggan UMKM.",
+                source: "Nielsen Norman Group",
+                url: "https://www.nngroup.com/articles/empathy-mapping/"
+            },
+            persona: {
+                title: "User Persona",
+                category: "Artefak Sintesis",
+                main: "Profil karakter representatif yang disusun berdasarkan pola data nyata dari beberapa responden wawancara untuk mewakili kelompok pengguna utama.",
+                detail: "Diperkenalkan oleh Alan Cooper (1999). Persona mencantumkan nama samaran, latar belakang, tujuan (goals), kebiasaan (behaviors), dan titik keluhan (pain points).",
+                source: "Nielsen Norman Group",
+                url: "https://www.nngroup.com/articles/persona/"
+            },
+            protopersona: {
+                title: "Proto-Persona vs Evidence-Based Persona",
+                category: "Konsep Persona",
+                main: "Proto-Persona adalah profil pengguna yang dibuat hanya dari tebakan tanpa riset. Evidence-Based Persona adalah persona yang disusun murni dari bukti wawancara lapangan.",
+                detail: "Pada mata kuliah ini, Anda wajib menyusun Evidence-Based Persona berdasarkan hasil wawancara nyata pada LKM 02.",
+                source: "Nielsen Norman Group",
+                url: "https://www.nngroup.com/articles/personas-study-guide/"
+            },
+            journeymap: {
+                title: "Customer Journey Map (CJM)",
+                category: "Artefak Sintesis",
+                main: "Peta visual kronologis yang menggambarkan urutan tahapan perjalanan pelanggan saat berinteraksi dengan layanan UMKM dari awal mencari informasi hingga selesai bertransaksi.",
+                detail: "Menampilkan tahapan (phases), tindakan pengguna, titik kontak (touchpoints), kurva naik-turun emosi, titik kesulitan (pain points), dan peluang perbaikan (opportunities).",
+                source: "Nielsen Norman Group",
+                url: "https://www.nngroup.com/articles/customer-journey-mapping/"
+            },
+            touchpoint: {
+                title: "Touchpoint (Titik Kontak Layanan)",
+                category: "Komponen Journey Map",
+                main: "Setiap media, tempat, atau saluran di mana pelanggan berinteraksi langsung dengan bisnis UMKM.",
+                detail: "Touchpoint bisa bersifat digital/online (seperti profil Instagram, chat WhatsApp, kode QRIS) maupun fisik/offline (seperti papan menu di warung, meja kasir, kertas nota).",
+                source: "Interaction Design Foundation",
+                url: "https://www.interaction-design.org/literature/topics/customer-journey-map"
+            },
+            emotionalcurve: {
+                title: "Emotional Curve (Kurva Emosi Pengguna)",
+                category: "Komponen Journey Map",
+                main: "Garis grafik naik-turun di dalam Customer Journey Map yang memperlihatkan perubahan perasaan pengguna (senang, netral, bingung, atau kecewa) di setiap tahapan transaksi.",
+                detail: "Titik lembah terendah pada kurva emosi menunjukkan letak masalah paling kritis yang wajib diprioritaskan solusinya oleh desainer UI/UX.",
+                source: "Nielsen Norman Group",
+                url: "https://www.nngroup.com/articles/customer-journey-mapping/"
+            }
+        };
+
+        function escapeHtml(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function term(key, label) {
+            const item = GLOSSARY_DB[key];
+            if (!item) return label || key;
+            const text = label || item.title.split(' (')[0];
+            return '<span class="tech-term" data-term="' + escapeHtml(key) + '" onclick="showTerm(this.dataset.term)">' + escapeHtml(text) + '</span>';
+        }
+
+        // =========================================================================
+        // STATE INTERAKTIF 20 SLIDE PERTEMUAN 3
+        // =========================================================================
+        let currentSlideIndex = 0;
+        const TOTAL_SLIDES = 20;
+
+        let s4StickyMode = 'good'; // 'bad' | 'good'
+        let s6AffinityStep = 1; // 1 (Unpack), 2 (Cluster), 3 (Label & Insight)
+        let s7InsightCase = 'online'; // 'online' | 'offline'
+        let s9EmpathyCase = 'offline'; // 'offline' (Laundry) | 'online' (Katering)
+        let s12PersonaPart = 1; // 1..6 (Anatomi 6 Blok Persona)
+        let s15CjmLayer = 1; // 1..6 (6 Baris Anatomi Journey Map)
+        let s16JourneyPhase = 1; // 1..5 (Simulasi 5 Tahap Perjalanan Pelanggan)
+        let openReflectionKey = { 1: false, 2: false, 3: false };
+
+        // =========================================================================
+        // FUNGSI RENDER 20 SLIDE PERTEMUAN 3 (FOKUS METODE SINTESIS TANPA FIGJAM)
+        // =========================================================================
+
+        // SLIDE 1: Pengantar Pertemuan 3 & Capaian Pembelajaran
+        function renderSlide1() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center my-auto">
+                        <div class="lg:col-span-7 space-y-4">
+                            <div class="inline-flex flex-wrap items-center gap-2">
+                                <span class="px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 text-xs font-bold border border-indigo-200/60 dark:border-indigo-800/60">Pertemuan 3 • Mata Kuliah UI/UX (BD7401)</span>
+                                <span class="px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 text-xs font-bold border border-emerald-200/60 dark:border-emerald-800/60">Tahap 1: Riset Pengguna & Perumusan Masalah</span>
+                            </div>
+
+                            <h2 class="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 dark:text-white leading-tight tracking-tight">
+                                Sintesis Riset Pengguna & <span class="text-indigo-600 dark:text-indigo-400">Pemetaan Masalah</span>
+                            </h2>
+
+                            <p class="text-xs sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Setelah Anda turun ke lapangan dan mencatat jawaban narasumber di lembar catatan (LKM 02), kini saatnya melakukan ${term('sintesis', 'sintesis riset')}. Kita akan mengolah data mentah wawancara dan observasi tersebut menjadi empat artefak utama UX: ${term('affinity', 'Affinity Diagram')}, ${term('empathymap', 'Empathy Map')}, ${term('persona', 'User Persona')}, dan ${term('journeymap', 'Customer Journey Map')}.
+                            </p>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80">
+                                    <div class="flex items-center gap-2.5 mb-1.5">
+                                        <span class="px-2 py-0.5 rounded-md bg-indigo-600 text-white text-[11px] font-extrabold">Sub-CPMK 1.2</span>
+                                        <span class="text-xs font-bold text-slate-500">C4, P3</span>
+                                    </div>
+                                    <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">Mengelompokkan dan menganalisis temuan wawancara serta observasi lapangan menjadi artefak pemetaan pengguna yang berbasis bukti.</p>
+                                </div>
+                                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80">
+                                    <div class="flex items-center gap-2.5 mb-1.5">
+                                        <span class="px-2 py-0.5 rounded-md bg-slate-800 dark:bg-slate-700 text-white text-[11px] font-extrabold">Sub-CPMK 4.1</span>
+                                        <span class="text-xs font-bold text-slate-500">A4, A5</span>
+                                    </div>
+                                    <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">Menjaga kerahasiaan privasi dan anonimisasi identitas responden saat menyusun artefak sintesis riset.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-5">
+                            <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 space-y-4">
+                                <div>
+                                    <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Alur Materi Pertemuan 3</span>
+                                    <h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white mt-1">4 Artefak Utama yang Kita Pelajari</h3>
+                                </div>
+                                <div class="space-y-2.5 text-xs">
+                                    <div class="flex items-start gap-3 p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800">
+                                        <div class="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 mt-0.5 font-extrabold">1</div>
+                                        <div>
+                                            <h4 class="font-bold text-slate-900 dark:text-white">Affinity Diagram (Pengelompokan Pola)</h4>
+                                            <p class="text-slate-500 dark:text-slate-400 mt-0.5">Memecah catatan wawancara ke kartu temuan lalu mengelompokkannya berdasarkan kemiripan tema.</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start gap-3 p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800">
+                                        <div class="w-8 h-8 rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-0.5 font-extrabold">2</div>
+                                        <div>
+                                            <h4 class="font-bold text-slate-900 dark:text-white">Empathy Map (Says, Thinks, Does, Feels)</h4>
+                                            <p class="text-slate-500 dark:text-slate-400 mt-0.5">Memetakan ucapan, tindakan, pikiran, perasaan, serta hambatan (Pains) dan harapan (Gains).</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start gap-3 p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800">
+                                        <div class="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-0.5 font-extrabold">3</div>
+                                        <div>
+                                            <h4 class="font-bold text-slate-900 dark:text-white">User Persona (Profil Karakter Pengguna)</h4>
+                                            <p class="text-slate-500 dark:text-slate-400 mt-0.5">Menyusun profil representatif pengguna utama berdasarkan pola nyata dari responden.</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start gap-3 p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800">
+                                        <div class="w-8 h-8 rounded-xl bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 mt-0.5 font-extrabold">4</div>
+                                        <div>
+                                            <h4 class="font-bold text-slate-900 dark:text-white">Customer Journey Map (Peta Perjalanan)</h4>
+                                            <p class="text-slate-500 dark:text-slate-400 mt-0.5">Memvisualisasikan alur tahapan transaksi, kurva emosi, titik friksi, dan peluang desain.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 2: Posisi Sintesis dalam Tahap 1 Kurikulum (Pertemuan 1 s/d 4)
+        function renderSlide2() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Alur Metodologi Desain</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Jembatan Antara Tahap Empathize dan Define</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Dalam kerangka <em>Double Diamond</em> (Design Council UK) dan <em>Design Thinking</em>, Pertemuan 3 merupakan titik peralihan penting dari pola pikir <strong>Divergen</strong> (mengumpulkan banyak data) menuju <strong>Konvergen</strong> (menyaring pola masalah utama):
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-auto">
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                            <span class="px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-extrabold">Pertemuan 2 (Selesai)</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">1. Pengumpulan Data Mentah (Divergen)</h3>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Anda telah mewawancarai pemilik UMKM serta pelanggan sasaran, menghasilkan puluhan kalimat kutipan dan catatan pengamatan perilaku di lembar <em>Field Notes</em>.
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-indigo-50/80 dark:bg-indigo-950/40 border-2 border-indigo-500 space-y-2.5 shadow-xs">
+                            <span class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-xs font-extrabold">Pertemuan 3 (Fokus Hari Ini)</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">2. Sintesis & Pemetaan Pola (Konvergen Awal)</h3>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Memecah data mentah ke kartu catatan, mengelompokkan keluhan yang berulang ke dalam ${term('affinity', 'Affinity Diagram')}, lalu merangkumnya menjadi ${term('empathymap', 'Empathy Map')}, ${term('persona', 'Persona')}, dan ${term('journeymap', 'Journey Map')}.
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                            <span class="px-2.5 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-xs font-extrabold">Pertemuan 4 (Minggu Depan)</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">3. Rumusan Masalah & Design Brief</h3>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Titik masalah paling kritis yang ditemukan pada <em>Persona</em> dan <em>Customer Journey Map</em> hari ini akan dikunci menjadi <em>Problem Statement</em> dan pertanyaan <em>How Might We</em>.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="p-3.5 rounded-2xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-xs text-amber-900 dark:text-amber-200 leading-relaxed">
+                        <i class="fa-solid fa-triangle-exclamation mr-1.5"></i><strong>Mengapa Tidak Boleh Langsung Lompat Membuat Desain Layar?</strong> Tanpa tahap sintesis, desainer hanya akan menebak-nebak fitur atau terpaku pada satu ucapan responden yang kebetulan paling diingat, sehingga gagal menyelesaikan akar masalah yang sebenarnya.
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 3: Mengapa Data Mentah Harus Disintesis? (Data -> Pola -> Insight)
+        function renderSlide3() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Konsep Dasar Sintesis</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Transformasi dari Data Mentah Menuju ${term('insight', 'User Insight')}</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Catatan wawancara di kertas Anda saat ini masih berupa <strong>data mentah yang terpisah-pisah</strong>. Tugas utama ${term('sintesis', 'sintesis riset')} adalah mengubah data mentah tersebut melalui 3 tahapan berpikir berikut:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 my-auto">
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-3">
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="px-2.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-extrabold">Tahap 1: Fakta Mentah</span>
+                                    <i class="fa-solid fa-file-lines text-slate-400"></i>
+                                </div>
+                                <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Kutipan & Catatan Observasi (Raw Data)</h3>
+                                <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    Potongan kalimat asli yang diucapkan masing-masing narasumber atau fakta perilaku yang terlihat saat pengamatan di lokasi UMKM.
+                                </p>
+                            </div>
+                            <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs italic text-slate-600 dark:text-slate-300">
+                                <strong>Contoh Data P1:</strong> "Saya kemarin datang ke toko laundry hari Kamis sore, ternyata baju kerja saya belum disetrika."
+                            </div>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-3">
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="px-2.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-xs font-extrabold">Tahap 2: Pola Berulang</span>
+                                    <i class="fa-solid fa-layer-group text-indigo-500"></i>
+                                </div>
+                                <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Klaster / Tema Masalah (Pattern)</h3>
+                                <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    Ketika catatan dari Responden P1, P2, dan P3 disandingkan pada kanvas sintesis, terlihat bahwa ketiganya mengalami kejadian serupa.
+                                </p>
+                            </div>
+                            <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-800 text-xs text-slate-700 dark:text-slate-200">
+                                <strong>Pola Ditemukan:</strong> 3 dari 4 pelanggan pernah bolak-balik ke toko fisik karena tidak tahu apakah cucian sudah selesai.
+                            </div>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 flex flex-col justify-between gap-3">
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="px-2.5 py-0.5 rounded bg-emerald-600 text-white text-xs font-extrabold">Tahap 3: User Insight</span>
+                                    <i class="fa-solid fa-lightbulb text-emerald-600"></i>
+                                </div>
+                                <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Wawasan Kebutuhan Pengguna</h3>
+                                <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    Menjelaskan <em>mengapa</em> masalah itu penting bagi pengguna dan <em>apa kebutuhan mendasarnya</em> tanpa langsung mengunci bentuk tombol teknisnya.
+                                </p>
+                            </div>
+                            <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-800 text-xs font-semibold text-emerald-900 dark:text-emerald-200">
+                                <strong>Insight:</strong> Pelanggan membutuhkan kepastian status pengerjaan cucian sebelum berangkat ke toko agar tidak membuang waktu di sela jam kerja.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 4: Aturan Emas Memecah Catatan ke Kartu Sticky Notes (Unpacking)
+        function renderSlide4() {
+            let demoBox = '';
+            if (s4StickyMode === 'bad') {
+                demoBox = `
+                    <div class="p-5 rounded-3xl bg-rose-50/70 dark:bg-rose-950/20 border-2 border-rose-300 dark:border-rose-800 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span class="px-2.5 py-1 rounded-lg bg-rose-600 text-white text-xs font-extrabold"><i class="fa-solid fa-xmark mr-1"></i>Cara yang SALAH saat Mencatat Kartu Temuan</span>
+                            <span class="text-xs font-bold text-rose-600 dark:text-rose-400">Sulit Dikelompokkan!</span>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                            <div class="p-4 rounded-2xl bg-amber-200 text-slate-900 shadow-md font-sans text-xs space-y-1.5 border border-amber-300">
+                                <div class="font-extrabold text-rose-800">Wawancara Siti Rahma (0812-3456-7890):</div>
+                                <p class="leading-relaxed">"Saya susah lihat harga menu di IG karena tulisannya kecil, terus pas chat WA adminnya balas lama banget sampai 1 jam, dan pas mau bayar tidak ada QRIS jadi harus cari ATM dulu."</p>
+                            </div>
+                            <div class="space-y-2 text-xs text-slate-700 dark:text-slate-200">
+                                <div class="font-extrabold text-rose-700 dark:text-rose-300">Mengapa kartu catatan di samping salah?</div>
+                                <ul class="space-y-1.5 list-disc list-inside">
+                                    <li><strong>Menumpuk 3 Masalah Sekaligus:</strong> Menggabungkan masalah foto menu IG, balasan chat WA, dan pembayaran QRIS dalam 1 kartu. Saat nanti ingin dikelompokkan per topik, kartu ini tidak bisa dipisah!</li>
+                                    <li><strong>Melanggar Privasi (Sub-CPMK 4.1):</strong> Mencantumkan nama terang dan nomor HP asli responden pada laporan.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                demoBox = `
+                    <div class="p-5 rounded-3xl bg-emerald-50/70 dark:bg-emerald-950/20 border-2 border-emerald-400 dark:border-emerald-700 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-xs font-extrabold"><i class="fa-solid fa-check mr-1"></i>Cara yang BENAR (1 Kartu = 1 Poin Temuan + Kode Anonim)</span>
+                            <span class="text-xs font-bold text-emerald-700 dark:text-emerald-300">Siap Di-cluster!</span>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                            <div class="p-3.5 rounded-2xl bg-amber-200 text-slate-900 shadow-sm space-y-1.5 border border-amber-300">
+                                <span class="px-2 py-0.5 rounded bg-amber-900/15 text-amber-950 font-mono text-[10px] font-extrabold">[Responden P1]</span>
+                                <p class="font-semibold leading-snug">"Tulisan harga pada foto menu di Instagram terlalu kecil sehingga sulit dibaca di layar HP."</p>
+                            </div>
+                            <div class="p-3.5 rounded-2xl bg-amber-200 text-slate-900 shadow-sm space-y-1.5 border border-amber-300">
+                                <span class="px-2 py-0.5 rounded bg-amber-900/15 text-amber-950 font-mono text-[10px] font-extrabold">[Responden P1]</span>
+                                <p class="font-semibold leading-snug">"Menunggu balasan chat admin WhatsApp hampir 1 jam untuk memastikan stok porsi masih ada."</p>
+                            </div>
+                            <div class="p-3.5 rounded-2xl bg-amber-200 text-slate-900 shadow-sm space-y-1.5 border border-amber-300">
+                                <span class="px-2 py-0.5 rounded bg-amber-900/15 text-amber-950 font-mono text-[10px] font-extrabold">[Responden P1]</span>
+                                <p class="font-semibold leading-snug">"Belum tersedia pembayaran QRIS sehingga harus berjalan mencari mesin ATM terlebih dahulu."</p>
+                            </div>
+                        </div>
+                        <p class="text-xs text-emerald-900 dark:text-emerald-200 font-semibold">
+                            <i class="fa-solid fa-circle-check mr-1.5"></i>Dengan memecahnya menjadi 3 kartu catatan terpisah dan memakai kode <strong>[Responden P1]</strong>, setiap poin kini dapat dimasukkan ke kelompok tema yang berbeda dengan sangat mudah dan aman secara etika.
+                        </p>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="space-y-1">
+                            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Persiapan Data Sintesis</span>
+                            <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Aturan Emas ${term('unpacking', 'Unpacking Data')} ke ${term('stickynotes', 'Sticky Notes')}</h2>
+                        </div>
+                        <div class="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl self-start shrink-0">
+                            <button type="button" onclick="setS4Sticky('good')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition ${s4StickyMode === 'good' ? 'bg-emerald-600 text-white shadow-2xs' : 'text-slate-600 dark:text-slate-300'}">Cara yang Benar</button>
+                            <button type="button" onclick="setS4Sticky('bad')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition ${s4StickyMode === 'bad' ? 'bg-rose-600 text-white shadow-2xs' : 'text-slate-600 dark:text-slate-300'}">Contoh yang Salah</button>
+                        </div>
+                    </div>
+
+                    <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                        Saat memindahkan catatan dari kertas <em>Field Notes</em> ke ruang kerja sintesis, patuhi aturan <strong>1 Kartu Catatan = 1 Poin Temuan</strong> serta gunakan kode anonim (<code>P1</code>, <code>P2</code>, <code>Pemilik</code>):
+                    </p>
+
+                    <div class="my-auto">
+                        ${demoBox}
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 5: Artefak 1 - Konsep Affinity Diagram (Metode KJ)
+        function renderSlide5() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Artefak Sintesis 1 • Pengelompokan Pola</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Mengenal ${term('affinity', 'Affinity Diagram')} (Affinity Mapping)</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Diperkenalkan oleh antropolog Jepang <strong>Jiro Kawakita (Metode KJ)</strong> dan dipopulerkan dalam desain produk oleh <strong>Gray, Brown, & Macanufo (2010)</strong> dalam buku <em>Gamestorming</em>, Affinity Diagram adalah metode untuk mengorganisasikan puluhan catatan kualitatif yang acak menjadi kelompok tema yang terstruktur.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-auto">
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                            <div class="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-bold"><i class="fa-solid fa-arrow-up-wide-short"></i></div>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">1. Pendekatan Bottom-Up</h3>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Jangan membuat judul kategori terlebih dahulu! Biarkan kelompok tema terbentuk secara alami dari kemiripan isi kartu-kartu temuan yang Anda sandingkan.
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                            <div class="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-bold"><i class="fa-solid fa-palette"></i></div>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">2. Kode Sumber Responden</h3>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Beri tanda sumber pada setiap catatan (misalnya Pelanggan P1-P5, Pengelola UMKM, dan Catatan Observasi) agar terlihat apakah suatu masalah dialami oleh banyak orang.
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                            <div class="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center font-bold"><i class="fa-solid fa-quote-right"></i></div>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">3. Label Tema dengan ${term('istatement', 'I-Statement')}</h3>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Setelah beberapa kartu berkumpul dalam satu kelompok, beri nama kelompok tersebut menggunakan kalimat sudut pandang pengguna (<em>"Saya kesulitan..."</em> atau <em>"Saya butuh..."</em>).
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-800/60 text-xs">
+                        <i class="fa-solid fa-arrow-right text-indigo-600 dark:text-indigo-400 mr-1.5"></i>Klik <strong>Selanjutnya</strong> untuk mencoba simulasi interaktif 3 tahap penyusunan <em>Affinity Diagram</em>.
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 6: Laboratorium Interaktif Affinity Diagram (3 Tahap)
+        function renderSlide6() {
+            let boardHtml = '';
+            if (s6AffinityStep === 1) {
+                boardHtml = `
+                    <div class="space-y-3">
+                        <div class="text-xs font-bold text-slate-500 dark:text-slate-400">Kanvas Sintesis • Tahap 1: 6 Catatan Temuan Masih Tersebar Acak (Belum Dikelompokkan)</div>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+                            <div class="p-3 rounded-xl bg-amber-200 text-slate-900 shadow-xs"><span class="font-mono text-[10px] font-bold block text-amber-900">[P1 - Pelanggan]</span>"Datang ke toko hari Kamis ternyata cucian belum kering, terpaksa pulang lagi."</div>
+                            <div class="p-3 rounded-xl bg-sky-200 text-slate-900 shadow-xs"><span class="font-mono text-[10px] font-bold block text-sky-900">[Pemilik UMKM]</span>"Sering repot membongkar tumpukan rak karena pelanggan lupa bawa kertas nota."</div>
+                            <div class="p-3 rounded-xl bg-amber-200 text-slate-900 shadow-xs"><span class="font-mono text-[10px] font-bold block text-amber-900">[P2 - Pelanggan]</span>"Tidak ada daftar harga cuci satuan (jaket/sepatu) di spanduk dinding toko."</div>
+                            <div class="p-3 rounded-xl bg-emerald-200 text-slate-900 shadow-xs"><span class="font-mono text-[10px] font-bold block text-emerald-900">[Observasi]</span>Pelanggan terlihat memotret nota kertas dengan HP karena takut kertasnya hilang.</div>
+                            <div class="p-3 rounded-xl bg-amber-200 text-slate-900 shadow-xs"><span class="font-mono text-[10px] font-bold block text-amber-900">[P3 - Pelanggan]</span>"Harus tanya penjaga toko dulu kalau mau tahu tarif paket kilat 6 jam."</div>
+                            <div class="p-3 rounded-xl bg-amber-200 text-slate-900 shadow-xs"><span class="font-mono text-[10px] font-bold block text-amber-900">[P2 - Pelanggan]</span>"Pernah dua kali kecele datang ke tempat laundry tapi pakaian belum selesai disetrika."</div>
+                        </div>
+                    </div>
+                `;
+            } else if (s6AffinityStep === 2) {
+                boardHtml = `
+                    <div class="space-y-3">
+                        <div class="text-xs font-bold text-indigo-600 dark:text-indigo-400">Kanvas Sintesis • Tahap 2: Kartu yang Memiliki Kemiripan Masalah Didekatkan Menjadi 3 Kelompok (Cluster)</div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-dashed border-indigo-400 space-y-2">
+                                <span class="text-[10px] font-extrabold uppercase text-indigo-600 dark:text-indigo-400">Kelompok Pola A (2 Kartu)</span>
+                                <div class="p-2.5 rounded-lg bg-amber-200 text-slate-900"><strong>[P2]:</strong> "Tidak ada daftar harga cuci jaket/sepatu di dinding toko."</div>
+                                <div class="p-2.5 rounded-lg bg-amber-200 text-slate-900"><strong>[P3]:</strong> "Harus tanya penjaga dulu untuk tahu tarif paket kilat."</div>
+                            </div>
+                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-dashed border-rose-400 space-y-2">
+                                <span class="text-[10px] font-extrabold uppercase text-rose-600 dark:text-rose-400">Kelompok Pola B (2 Kartu)</span>
+                                <div class="p-2.5 rounded-lg bg-amber-200 text-slate-900"><strong>[P1]:</strong> "Datang hari Kamis ternyata cucian belum kering."</div>
+                                <div class="p-2.5 rounded-lg bg-amber-200 text-slate-900"><strong>[P2]:</strong> "Dua kali kecele datang tapi pakaian belum selesai disetrika."</div>
+                            </div>
+                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-dashed border-emerald-400 space-y-2">
+                                <span class="text-[10px] font-extrabold uppercase text-emerald-600 dark:text-emerald-400">Kelompok Pola C (2 Kartu)</span>
+                                <div class="p-2.5 rounded-lg bg-sky-200 text-slate-900"><strong>[Pemilik]:</strong> "Repot bongkar rak karena pelanggan lupa bawa nota kertas."</div>
+                                <div class="p-2.5 rounded-lg bg-emerald-200 text-slate-900"><strong>[Observasi]:</strong> Pelanggan memotret nota kertas karena takut hilang.</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                boardHtml = `
+                    <div class="space-y-3">
+                        <div class="text-xs font-bold text-emerald-600 dark:text-emerald-400">Kanvas Sintesis • Tahap 3: Setiap Klaster Diberi Judul Tema ("I-Statement") & Ditarik Kesimpulan Insight-nya</div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                            <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-indigo-300 dark:border-indigo-800 space-y-2">
+                                <div class="p-2 rounded-lg bg-indigo-600 text-white font-extrabold">Tema 1: "Saya ingin tahu rincian tarif layanan satuan & kilat sejak awal."</div>
+                                <p class="text-slate-600 dark:text-slate-300"><strong>Insight:</strong> Ketidakjelasan daftar harga membuat pelanggan ragu dan membebani penjaga toko dengan pertanyaan berulang.</p>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-rose-300 dark:border-rose-800 space-y-2">
+                                <div class="p-2 rounded-lg bg-rose-600 text-white font-extrabold">Tema 2: "Saya butuh kepastian apakah cucian sudah siap diambil sebelum ke toko."</div>
+                                <p class="text-slate-600 dark:text-slate-300"><strong>Insight:</strong> Ketidakpastian waktu selesai adalah sumber kekecewaan terbesar pelanggan karena membuang waktu perjalanan mereka.</p>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-800 space-y-2">
+                                <div class="p-2 rounded-lg bg-emerald-600 text-white font-extrabold">Tema 3: "Saya khawatir nota kertas hilang saat akan mengambil pakaian."</div>
+                                <p class="text-slate-600 dark:text-slate-300"><strong>Insight:</strong> Bukti transaksi yang mudah dicari melalui nomor HP/nama sangat dibutuhkan baik oleh pelanggan maupun pemilik usaha.</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Simulasi Interaktif Pengelompokan Pola</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Laboratorium 3 Tahap Menyusun ${term('affinity', 'Affinity Diagram')}</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                            Klik Langkah 1, Langkah 2, dan Langkah 3 di bawah ini untuk melihat bagaimana catatan wawancara yang berantakan berubah menjadi tema masalah yang terstruktur:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        <button type="button" onclick="setS6Step(1)" class="p-3.5 rounded-2xl border text-left transition ${s6AffinityStep === 1 ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-[10px] font-bold uppercase opacity-80">Langkah 1</div>
+                            <div class="text-xs sm:text-sm font-extrabold mt-0.5">1. Sebar Kartu Catatan (Unpack)</div>
+                        </button>
+                        <button type="button" onclick="setS6Step(2)" class="p-3.5 rounded-2xl border text-left transition ${s6AffinityStep === 2 ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-[10px] font-bold uppercase opacity-80">Langkah 2</div>
+                            <div class="text-xs sm:text-sm font-extrabold mt-0.5">2. Kelompokkan Pola (Cluster)</div>
+                        </button>
+                        <button type="button" onclick="setS6Step(3)" class="p-3.5 rounded-2xl border text-left transition ${s6AffinityStep === 3 ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-[10px] font-bold uppercase opacity-80">Langkah 3</div>
+                            <div class="text-xs sm:text-sm font-extrabold mt-0.5">3. Beri Judul Tema & Insight</div>
+                        </button>
+                    </div>
+
+                    <div class="p-4 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 my-auto">
+                        ${boardHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 7: Rumus Menarik User Insight dari Klaster Affinity Diagram
+        function renderSlide7() {
+            const examples = {
+                online: {
+                    title: "Contoh Penarikan Insight pada UMKM Online (Katering via WA/IG)",
+                    fact: "4 dari 5 responden pelanggan mengatakan mereka batal memesan makan siang ketika admin WhatsApp belum membalas chat konfirmasi ketersediaan menu dalam waktu 15 menit.",
+                    reason: "Karena jam istirahat kantor sangat singkat, sehingga mereka tidak berani mentransfer uang sebelum yakin porsi makanannya masih tersedia dan bisa dikirim tepat waktu.",
+                    insight: "Pelanggan pekerja kantoran membutuhkan visibilitas sisa kuota porsi harian secara langsung sebelum melakukan pembayaran, agar mereka dapat memesan dengan tenang tanpa harus menunggu balasan chat manual dari admin."
+                },
+                offline: {
+                    title: "Contoh Penarikan Insight pada UMKM 100% Offline (Bengkel / Servis)",
+                    fact: "Berdasarkan observasi dan wawancara, pelanggan yang meninggalkan kendaraannya di bengkel menelepon pemilik bengkel rata-rata 3 kali sehari.",
+                    reason: "Karena pelanggan merasa cemas apabila ada pergantian suku cadang tambahan yang biayanya melebihi uang tunai yang mereka siapkan.",
+                    insight: "Pelanggan membutuhkan transparansi estimasi biaya perbaikan dan konfirmasi persetujuan sebelum suku cadang diganti, sehingga mereka merasa aman dari kejutan biaya saat mengambil kendaraan."
+                }
+            };
+            const cur = examples[s7InsightCase];
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="space-y-1">
+                            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Merumuskan Temuan Kunci</span>
+                            <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Rumus Menulis ${term('insight', 'User Insight')} yang Tajam</h2>
+                        </div>
+                        <div class="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl self-start shrink-0">
+                            <button type="button" onclick="setS7Case('online')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition ${s7InsightCase === 'online' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 dark:text-slate-300'}">Contoh UMKM Online</button>
+                            <button type="button" onclick="setS7Case('offline')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition ${s7InsightCase === 'offline' ? 'bg-emerald-600 text-white shadow-2xs' : 'text-slate-600 dark:text-slate-300'}">Contoh UMKM Offline</button>
+                        </div>
+                    </div>
+
+                    <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                        Sebuah <em>Insight</em> tidak hanya menyebutkan fakta permukaan, melainkan menggabungkan <strong>Fakta Pola Lapangan + Alasan Psikologis/Konteks ("Karena...") + Dampak Kebutuhan Pengguna</strong>:
+                    </p>
+
+                    <div class="p-4 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-4 my-auto">
+                        <h3 class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white">${cur.title}</h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs sm:text-sm">
+                            <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 space-y-1.5">
+                                <span class="text-[10px] font-extrabold uppercase text-indigo-600 dark:text-indigo-400">1. Pola Fakta yang Ditemukan (What Happened):</span>
+                                <p class="text-slate-700 dark:text-slate-200 leading-relaxed">${cur.fact}</p>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 space-y-1.5">
+                                <span class="text-[10px] font-extrabold uppercase text-amber-600 dark:text-amber-400">2. Alasan di Baliknya (Why It Happened):</span>
+                                <p class="text-slate-700 dark:text-slate-200 leading-relaxed">${cur.reason}</p>
+                            </div>
+                        </div>
+
+                        <div class="p-4 rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-800 text-xs sm:text-sm space-y-1">
+                            <span class="text-[10px] font-extrabold uppercase text-emerald-700 dark:text-emerald-300"><i class="fa-solid fa-star mr-1"></i>3. Rumusan User Insight Utuh:</span>
+                            <p class="font-bold text-slate-900 dark:text-white leading-relaxed">${cur.insight}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 8: Artefak 2 - Konsep Empathy Map (Dave Gray)
+        function renderSlide8() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Artefak Sintesis 2 • Pemetaan Empati</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Menyusun ${term('empathymap', 'Empathy Map')} (Peta Empati Pengguna)</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Dikembangkan oleh <strong>Dave Gray</strong> (pendiri XPLANE & penulis <em>Gamestorming</em>), Empathy Map membantu kita menyusun potret utuh satu kelompok pengguna ke dalam <strong>4 Kuadran Utama</strong> ditambah ringkasan <strong>Pains (Hambatan)</strong> dan <strong>Gains (Harapan)</strong>:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 my-auto text-xs sm:text-sm">
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                            <span class="px-2 py-0.5 rounded bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-extrabold text-xs">1. SAYS (Ucapan)</span>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">Kutipan kalimat langsung yang diucapkan responden saat wawancara berlangsung.</p>
+                        </div>
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                            <span class="px-2 py-0.5 rounded bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-300 font-extrabold text-xs">2. THINKS (Pikiran)</span>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">Apa yang sebenarnya dipikirkan, dipertimbangkan, atau dikhawatirkan di dalam benak pengguna.</p>
+                        </div>
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                            <span class="px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-extrabold text-xs">3. DOES (Tindakan)</span>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">Perilaku fisik atau langkah nyata yang dilakukan pengguna saat bertransaksi (hasil observasi).</p>
+                        </div>
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                            <span class="px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 font-extrabold text-xs">4. FEELS (Perasaan)</span>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">Keadaan emosional yang dirasakan pengguna (ragu, terburu-buru, kesal, atau lega) beserta penyebabnya.</p>
+                        </div>
+                        <div class="p-4 rounded-2xl bg-rose-50/70 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800 space-y-1.5">
+                            <span class="px-2 py-0.5 rounded bg-rose-600 text-white font-extrabold text-xs">5. PAINS (Hambatan Utama)</span>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">Rasa sakit, titik friksi, risiko kerugian, atau halangan terbesar yang menghambat pengguna mencapai tujuannya.</p>
+                        </div>
+                        <div class="p-4 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 space-y-1.5">
+                            <span class="px-2 py-0.5 rounded bg-emerald-600 text-white font-extrabold text-xs">6. GAINS (Harapan & Manfaat)</span>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">Hasil ideal, penghematan waktu, atau rasa tenang yang paling diinginkan oleh pengguna.</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 9: Simulator Visual Kanvas Empathy Map (UMKM Offline vs Online)
+        function renderSlide9() {
+            const maps = {
+                offline: {
+                    label: "Pelanggan UMKM Laundry Kiloan (100% Offline)",
+                    says: ['"Kapan ya kira-kira cucian saya selesai disetrika?"', '"Nota kertasnya kemarin keselip di saku celana."'],
+                    thinks: ['"Jangan-jangan kalau saya ke sana sekarang bajunya belum kering."', '"Malas sekali kalau harus bolak-balik dua kali."'],
+                    does: ['Memotret nota kertas dengan kamera HP setelah menimbang cucian.', 'Datang langsung ke toko hanya untuk menanyakan status cucian.'],
+                    feels: ['Ragu dan khawatir baju kerja tidak siap dipakai besok pagi.', 'Lega ketika melihat tumpukan bajunya sudah rapi di rak.'],
+                    pains: 'Tidak ada informasi status selesainya cucian & risiko kertas nota fisik hilang.',
+                    gains: 'Tahu secara pasti kapan pakaian siap diambil & bukti nota tersimpan praktis di HP.'
+                },
+                online: {
+                    label: "Pelanggan UMKM Katering Makan Siang (Via WA & IG)",
+                    says: ['"Kak, menu ayam bakar madu untuk siang ini masih ada?"', '"Totalnya jadi berapa ya kalau tambah ongkir ke kantor saya?"'],
+                    thinks: ['"Kalau adminnya lama balas, jam istirahat makan siang saya keburu habis."', '"Takut salah hitung nominal transfer."'],
+                    does: ['Menggulir banyak foto lama di Instagram untuk mencari menu hari ini.', 'Mengetik ulang nama dan alamat kantor setiap kali memesan via WA.'],
+                    feels: ['Terburu-buru dan cemas menunggu kepastian stok saat jam makan siang.', 'Tenang setelah mendapat balasan pesanan sedang diantar kurir.'],
+                    pains: 'Menu harian tersembunyi di feed IG lama & harus mengetik format chat panjang berulang kali.',
+                    gains: 'Melihat menu yang masih tersedia hari ini secara instan & memesan ulang tanpa mengetik dari nol.'
+                }
+            };
+            const cur = maps[s9EmpathyCase];
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Visualisasi Kanvas Empati</span>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Contoh Tampilan ${term('empathymap', 'Empathy Map')} Utuh</h2>
+                        </div>
+                        <div class="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl self-start shrink-0">
+                            <button type="button" onclick="setS9Empathy('offline')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${s9EmpathyCase === 'offline' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 dark:text-slate-300'}">Kasus UMKM Offline</button>
+                            <button type="button" onclick="setS9Empathy('online')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${s9EmpathyCase === 'online' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 dark:text-slate-300'}">Kasus UMKM Online</button>
+                        </div>
+                    </div>
+
+                    <div class="p-4 sm:p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-3 my-auto text-xs">
+                        <div class="text-center font-extrabold text-indigo-600 dark:text-indigo-400 pb-1 border-b border-slate-200 dark:border-slate-700">
+                            Subjek Peta Empati: ${cur.label}
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 space-y-1.5">
+                                <span class="font-extrabold text-indigo-600 dark:text-indigo-400 uppercase"><i class="fa-solid fa-quote-left mr-1"></i>1. SAYS (Ucapan)</span>
+                                ${cur.says.map(s => `<div class="p-2 rounded-lg bg-amber-100 dark:bg-amber-950/60 text-slate-800 dark:text-slate-200">${s}</div>`).join('')}
+                            </div>
+                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 space-y-1.5">
+                                <span class="font-extrabold text-sky-600 dark:text-sky-400 uppercase"><i class="fa-solid fa-brain mr-1"></i>2. THINKS (Pikiran)</span>
+                                ${cur.thinks.map(s => `<div class="p-2 rounded-lg bg-sky-100 dark:bg-sky-950/60 text-slate-800 dark:text-slate-200">${s}</div>`).join('')}
+                            </div>
+                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 space-y-1.5">
+                                <span class="font-extrabold text-emerald-600 dark:text-emerald-400 uppercase"><i class="fa-solid fa-person-walking mr-1"></i>3. DOES (Tindakan)</span>
+                                ${cur.does.map(s => `<div class="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-slate-800 dark:text-slate-200">${s}</div>`).join('')}
+                            </div>
+                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 space-y-1.5">
+                                <span class="font-extrabold text-amber-600 dark:text-amber-400 uppercase"><i class="fa-solid fa-heart-pulse mr-1"></i>4. FEELS (Perasaan)</span>
+                                ${cur.feels.map(s => `<div class="p-2 rounded-lg bg-rose-100 dark:bg-rose-950/60 text-slate-800 dark:text-slate-200">${s}</div>`).join('')}
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                            <div class="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800">
+                                <strong class="text-rose-700 dark:text-rose-300 block">PAINS (Hambatan Utama):</strong>
+                                <span class="text-slate-700 dark:text-slate-200">${cur.pains}</span>
+                            </div>
+                            <div class="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800">
+                                <strong class="text-emerald-700 dark:text-emerald-300 block">GAINS (Harapan & Manfaat):</strong>
+                                <span class="text-slate-700 dark:text-slate-200">${cur.gains}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 10: Menganalisis Kesenjangan di Dalam Empathy Map
+        function renderSlide10() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Analisis Mendalam Empathy Map</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Cara Membaca Kesenjangan Antar-Kuadran di Empathy Map</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Jangan sekadar mengisi catatan di dalam 4 kotak ${term('empathymap', 'Empathy Map')}! Nilai tertinggi dari peta empati justru muncul ketika Anda membandingkan isi antar-kuadran untuk menemukan <strong>3 jenis ketidaksinkronan</strong> berikut:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-auto text-xs sm:text-sm">
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                            <span class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-xs font-extrabold">1. SAYS vs DOES</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Ucapan vs Tindakan Nyata</h3>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Di kuadran <em>Says</em> pengguna berkata proses pemesanan "mudah", tetapi di kuadran <em>Does</em> tercatat mereka butuh 10 menit dan salah ketik format pesanan. Artinya ada friksi tersembunyi yang sudah dianggap biasa oleh pengguna.
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                            <span class="px-2.5 py-1 rounded-lg bg-amber-500 text-white text-xs font-extrabold">2. SAYS vs THINKS</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Ucapan Sopan vs Kekhawatiran</h3>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Pelanggan tidak enak hati mengeluh langsung kepada pemilik warung (<em>Says</em>), namun di dalam pikirannya (<em>Thinks</em>) mereka ragu membeli lagi jika harga tidak transparan.
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                            <span class="px-2.5 py-1 rounded-lg bg-rose-600 text-white text-xs font-extrabold">3. DOES vs FEELS</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Tindakan Terpaksa vs Emosi</h3>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Pengguna tetap menyelesaikan langkah pembayaran (<em>Does</em>), tetapi kuadran <em>Feels</em> menunjukkan mereka merasa cemas dan lelah. Tanpa perbaikan UX, pelanggan seperti ini mudah berpindah ke kompetitor.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 11: Artefak 3 - Konsep User Persona (Alan Cooper & NN/g)
+        function renderSlide11() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Artefak Sintesis 3 • Profil Representatif</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Apa Itu ${term('persona', 'User Persona')} dan Mengapa Kita Membuatnya?</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Diperkenalkan oleh pelopor desain interaksi <strong>Alan Cooper (1999)</strong> dalam buku <em>The Inmates Are Running the Asylum</em>, <strong>User Persona</strong> adalah sosok karakter arketipe (representatif) yang dirangkum dari pola nyata para responden wawancara untuk mewakili kelompok pengguna sasaran utama.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-auto">
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <div class="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-bold"><i class="fa-solid fa-user-check"></i></div>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">1. Menjaga Fokus Empati</h3>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Daripada merancang untuk "semua orang" yang abstrak, kita merancang khusus untuk menyelesaikan kebutuhan nyata sosok Persona yang jelas profil dan kesulitannya.
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <div class="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-bold"><i class="fa-solid fa-filter"></i></div>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">2. Kompas Penentu Fitur</h3>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Saat bingung memilih fitur di Pertemuan 4-6 nanti, kita cukup bertanya: <em>"Apakah fitur ini benar-benar dibutuhkan oleh Persona kita, atau hanya keinginan kita sendiri?"</em>
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <div class="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center font-bold"><i class="fa-solid fa-shield-halved"></i></div>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">3. Melindungi Privasi Responden</h3>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Persona menggunakan nama fiktif/samaran dan ilustrasi avatar untuk merangkum gabungan data dari 3 sampai 5 responden nyata, sehingga identitas asli responden tetap terlindungi.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 12: Simulator Interaktif Anatomi Kartu User Persona (6 Komponen)
+        function renderSlide12() {
+            const parts = {
+                1: {
+                    btn: "1. Profil & Konteks",
+                    title: "Blok 1: Nama Samaran, Demografi Kontekstual, & Latar Belakang",
+                    desc: "Memberi wajah manusiawi pada data riset. Mencantumkan nama representatif, rentang usia, pekerjaan/aktivitas harian, serta konteks mengapa ia membutuhkan layanan UMKM tersebut."
+                },
+                2: {
+                    btn: "2. Kutipan (Quote)",
+                    title: "Blok 2: Satu Kalimat Kutipan Utama (Verbatim Quote)",
+                    desc: "Satu kalimat paling kuat dari hasil wawancara yang langsung merangkum sikap, kebutuhan utama, atau kegelisahan terbesar dari sosok Persona ini."
+                },
+                3: {
+                    btn: "3. Goals & Needs",
+                    title: "Blok 3: Tujuan & Kebutuhan Utama (Goals & Needs)",
+                    desc: "Apa yang ingin dicapai oleh Persona ini saat berinteraksi dengan UMKM? Tuliskan tujuan praktis dan emosionalnya secara spesifik."
+                },
+                4: {
+                    btn: "4. Pain Points",
+                    title: "Blok 4: Titik Frustrasi & Hambatan (Frustrations / Pain Points)",
+                    desc: "Kesulitan nyata yang dialami Persona saat ini (diambil langsung dari klaster terbesar pada Affinity Diagram dan bagian Pains pada Empathy Map)."
+                },
+                5: {
+                    btn: "5. Behaviors",
+                    title: "Blok 5: Kebiasaan Transaksi & Penggunaan Perangkat (Behaviors)",
+                    desc: "Bagaimana kebiasaan sehari-harinya saat mencari informasi, berbelanja, membayar (tunai vs QRIS/transfer), serta perangkat apa yang paling sering ia gunakan."
+                },
+                6: {
+                    btn: "6. Skenario Pemicu",
+                    title: "Blok 6: Skenario Pemicu Transaksi (Trigger Scenario)",
+                    desc: "Situasi nyata dalam keseharian yang mendorong Persona ini memutuskan untuk mencari atau membeli produk/jasa dari UMKM mitra."
+                }
+            };
+            const cur = parts[s12PersonaPart];
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Simulasi Kartu Persona</span>
+                        <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Anatomi 6 Komponen Kartu ${term('persona', 'User Persona')}</h2>
+                        <p class="text-xs text-slate-600 dark:text-slate-300">Klik keenam tombol di bawah untuk melihat bagian mana yang disorot pada kartu User Persona:</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+                        ${[1, 2, 3, 4, 5, 6].map(n => `
+                            <button type="button" onclick="setS12Part(${n})" class="p-2 rounded-xl border text-xs font-extrabold transition text-center leading-snug ${s12PersonaPart === n ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                                ${parts[n].btn}
+                            </button>
+                        `).join('')}
+                    </div>
+
+                    <!-- Kartu Visual User Persona -->
+                    <div class="p-4 sm:p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-3 my-auto text-xs">
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-3.5 items-stretch">
+                            <!-- Kolom Kiri Kartu Persona -->
+                            <div class="lg:col-span-4 p-4 rounded-2xl bg-white dark:bg-slate-900 border ${s12PersonaPart === 1 || s12PersonaPart === 2 ? 'border-2 border-indigo-600 ring-2 ring-indigo-500/20' : 'border-slate-200 dark:border-slate-700'} flex flex-col justify-between space-y-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-12 h-12 rounded-2xl bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xl shrink-0"><i class="fa-solid fa-user-tie"></i></div>
+                                    <div>
+                                        <span class="text-[10px] font-bold uppercase text-indigo-600 dark:text-indigo-400">Persona Pelanggan Utama</span>
+                                        <h4 class="text-sm font-extrabold text-slate-900 dark:text-white">Dimas Prasetyo (24 Th)</h4>
+                                        <p class="text-[11px] text-slate-500">Karyawan Swasta & Anak Kos</p>
+                                    </div>
+                                </div>
+                                <div class="p-2.5 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/40 italic text-slate-700 dark:text-slate-200 border-l-4 border-indigo-500">
+                                    "Saya pulang kerja sudah malam, jadi butuh kepastian apakah pakaian saya sudah selesai dicuci sebelum mampir ke toko."
+                                </div>
+                                <div class="text-[11px] text-slate-500 space-y-1">
+                                    <div><strong>Gabungan Data:</strong> Responden P1, P2, & P4</div>
+                                    <div><strong>Frekuensi:</strong> Mencuci 2x seminggu</div>
+                                </div>
+                            </div>
+
+                            <!-- Kolom Kanan Kartu Persona -->
+                            <div class="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border ${s12PersonaPart === 3 ? 'border-2 border-indigo-600 ring-2 ring-indigo-500/20' : 'border-slate-200 dark:border-slate-700'} space-y-1">
+                                    <span class="font-extrabold text-emerald-600 dark:text-emerald-400 uppercase"><i class="fa-solid fa-bullseye mr-1"></i>3. Goals & Needs</span>
+                                    <p class="text-slate-600 dark:text-slate-300 leading-relaxed">• Mengetahui harga layanan satuan dan paket kilat secara jelas.<br>• Mendapat kepastian kapan cucian selesai tanpa harus bolak-balik ke lokasi.</p>
+                                </div>
+                                <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border ${s12PersonaPart === 4 ? 'border-2 border-indigo-600 ring-2 ring-indigo-500/20' : 'border-slate-200 dark:border-slate-700'} space-y-1">
+                                    <span class="font-extrabold text-rose-600 dark:text-rose-400 uppercase"><i class="fa-solid fa-triangle-exclamation mr-1"></i>4. Pain Points (Frustrations)</span>
+                                    <p class="text-slate-600 dark:text-slate-300 leading-relaxed">• Sering kecele datang ke toko namun pakaian belum kering.<br>• Kertas nota fisik sering terselip atau hilang saat akan mengambil barang.</p>
+                                </div>
+                                <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border ${s12PersonaPart === 5 ? 'border-2 border-indigo-600 ring-2 ring-indigo-500/20' : 'border-slate-200 dark:border-slate-700'} space-y-1">
+                                    <span class="font-extrabold text-indigo-600 dark:text-indigo-400 uppercase"><i class="fa-solid fa-mobile-screen mr-1"></i>5. Behaviors (Kebiasaan)</span>
+                                    <p class="text-slate-600 dark:text-slate-300 leading-relaxed">• Selalu membawa smartphone dan lebih suka membayar non-tunai (QRIS).<br>• Memotret kertas nota dengan kamera HP sebagai cadangan.</p>
+                                </div>
+                                <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border ${s12PersonaPart === 6 ? 'border-2 border-indigo-600 ring-2 ring-indigo-500/20' : 'border-slate-200 dark:border-slate-700'} space-y-1">
+                                    <span class="font-extrabold text-amber-600 dark:text-amber-400 uppercase"><i class="fa-solid fa-bolt mr-1"></i>6. Skenario Pemicu</span>
+                                    <p class="text-slate-600 dark:text-slate-300 leading-relaxed">Saat pakaian kerja menumpuk di tengah minggu dan ia harus memastikan seragamnya siap dipakai untuk rapat hari Jumat pagi.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-3 rounded-xl bg-indigo-600 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div><strong>${cur.title}:</strong> ${cur.desc}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 13: Evidence-Based Persona vs Marketing Stereotype / Proto-Persona
+        function renderSlide13() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Kualitas User Persona</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">${term('protopersona', 'Evidence-Based Persona vs Proto-Persona')}</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Banyak pemula membuat kesalahan dengan mengarang cerita fiksi di dalam User Persona. Perhatikan perbedaan antara Persona yang sekadar tebakan dengan Persona berbasis bukti riset:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 my-auto text-xs sm:text-sm">
+                        <div class="p-5 rounded-3xl bg-rose-50/60 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="px-2.5 py-1 rounded-lg bg-rose-600 text-white text-xs font-extrabold">Hindari: Proto-Persona / Karangan Fiktif</span>
+                                <i class="fa-solid fa-circle-xmark text-lg text-rose-600"></i>
+                            </div>
+                            <ul class="space-y-2 text-slate-700 dark:text-slate-200 list-disc list-inside leading-relaxed">
+                                <li>Dibuat hanya berdasarkan imajinasi atau asumsi mahasiswa tanpa wawancara nyata.</li>
+                                <li>Dipenuhi hobi yang tidak relevan dengan konteks UMKM (misal: <em>"Suka menonton film Korea dan memelihara kucing"</em> padahal sedang meneliti aplikasi bengkel motor).</li>
+                                <li>Bagian <em>Goals</em> dan <em>Pain Points</em> tidak memiliki rujukan dari kutipan responden mana pun.</li>
+                            </ul>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-xs font-extrabold">Wajib: Evidence-Based UX Persona</span>
+                                <i class="fa-solid fa-circle-check text-lg text-emerald-600"></i>
+                            </div>
+                            <ul class="space-y-2 text-slate-700 dark:text-slate-200 list-disc list-inside leading-relaxed">
+                                <li>Disusun dari penggabungan pola nyata 3 sampai 5 responden yang memiliki tujuan dan kendala serupa di lapangan.</li>
+                                <li>Fokus pada perilaku transaksi, konteks penggunaan, dan hambatan yang relevan langsung dengan layanan UMKM mitra.</li>
+                                <li>Setiap poin di dalam <em>Goals</em> dan <em>Pain Points</em> dapat dilacak kembali ke kartu temuan pada <em>Affinity Diagram</em>.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 14: Artefak 4 - Konsep Customer Journey Map (CJM)
+        function renderSlide14() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Artefak Sintesis 4 • Alur Pengalaman Kronologis</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Memetakan Pengalaman dengan ${term('journeymap', 'Customer Journey Map')}</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Jika <em>User Persona</em> menjawab <strong>"Siapa pengguna kita?"</strong>, maka <strong>Customer Journey Map (CJM)</strong> menjawab <strong>"Bagaimana urutan perjalanan yang dialami Persona tersebut dari detik pertama hingga transaksi selesai?"</strong>
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-auto">
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <div class="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-bold"><i class="fa-solid fa-timeline"></i></div>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">1. Melihat Alur End-to-End</h3>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Memecah proses pelayanan UMKM ke dalam beberapa fase berurutan (mulai dari mencari info, memesan, membayar, menunggu proses, hingga menerima barang/jasa).
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <div class="w-10 h-10 rounded-2xl bg-rose-600 text-white flex items-center justify-center font-bold"><i class="fa-solid fa-chart-line"></i></div>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">2. Melacak ${term('emotionalcurve', 'Kurva Emosi')}</h3>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Memperlihatkan secara visual pada tahap mana perasaan pelanggan sedang senang (😊) dan pada tahap mana perasaan mereka jatuh ke titik terendah/kecewa (😟).
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <div class="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-bold"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">3. Melahirkan Peluang Desain</h3>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Setiap titik masalah (<em>Pain Point</em>) pada tahapan perjalanan langsung dipasangkan dengan baris <strong>Peluang Perbaikan (Opportunities)</strong> di bagian paling bawah tabel.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 15: Anatomi 6 Baris Customer Journey Map
+        function renderSlide15() {
+            const layers = {
+                1: {
+                    btn: "1. Tahapan (Phases)",
+                    title: "Baris 1: Tahapan Perjalanan (Journey Phases)",
+                    desc: "Kolom-kolom waktu dari kiri ke kanan yang membagi perjalanan pelanggan menjadi 4 sampai 5 babak kronologis (Misal: 1. Cari Info -> 2. Pesan/Antar -> 3. Bayar -> 4. Tunggu Proses -> 5. Ambil/Terima).",
+                    sample: "Tahap 1: Mencari Info Layanan -> Tahap 2: Menyerahkan Cucian -> Tahap 3: Menunggu Selesai -> Tahap 4: Mengambil & Bayar"
+                },
+                2: {
+                    btn: "2. Tindakan (Actions)",
+                    title: "Baris 2: Tindakan Nyata Pengguna (User Actions)",
+                    desc: "Langkah fisik atau perilaku spesifik yang dilakukan oleh Persona pada setiap tahapan tersebut (diambil dari kuadran Does dan catatan observasi).",
+                    sample: "Pada Tahap 2: Pelanggan datang membawa tas pakaian kotor, menunggu ditimbang oleh staf, lalu menerima secarik nota kertas."
+                },
+                3: {
+                    btn: "3. Touchpoints",
+                    title: "Baris 3: Titik Kontak & Saluran Layanan (Touchpoints & Channels)",
+                    desc: "Media, alat, atau tempat di mana pengguna bersentuhan dengan layanan UMKM pada tahap tersebut (bisa berupa lokasi fisik maupun media digital).",
+                    sample: "Touchpoints: Spanduk harga di dinding toko, meja timbangan kasir, buku tulis besar, dan kertas nota fisik."
+                },
+                4: {
+                    btn: "4. Pikiran & Emosi",
+                    title: "Baris 4: Pikiran Pengguna & Kurva Emosi (Thoughts & Emotional Curve)",
+                    desc: "Pertanyaan yang muncul di benak pengguna beserta indikator ekspresi emosi (Senang / Netral / Bingung / Kecewa) untuk membentuk grafik naik-turun pengalaman.",
+                    sample: "Pada Tahap 3 (Menunggu): 😟 Kecewa/Ragu — 'Sudah 3 hari kok belum ada kabar ya? Kalau saya ke toko sekarang takut belum kering.'"
+                },
+                5: {
+                    btn: "5. Pain Points",
+                    title: "Baris 5: Titik Friksi & Hambatan (Pain Points)",
+                    desc: "Hambatan spesifik yang menyebabkan kurva emosi pelanggan turun pada tahap tersebut.",
+                    sample: "Pain Point Tahap 3: Tidak ada pemberitahuan status cucian sehingga pelanggan harus menebak-nebak dan bolak-balik ke toko."
+                },
+                6: {
+                    btn: "6. Opportunities",
+                    title: "Baris 6: Peluang Perbaikan Desain (Design Opportunities)",
+                    desc: "Ide peluang perbaikan alur atau informasi yang dapat kita rancang untuk menghilangkan Pain Point pada tahapan tersebut.",
+                    sample: "Opportunity Tahap 3: Menyediakan fitur pelacakan status cucian (Sedang Dicuci / Disetrika / Siap Diambil) yang mudah diakses dari ponsel."
+                }
+            };
+            const cur = layers[s15CjmLayer];
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Struktur Tabel CJM</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Anatomi 6 Lajur Baris pada ${term('journeymap', 'Customer Journey Map')}</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                            Sebuah tabel <em>Customer Journey Map</em> tersusun atas 6 baris dari atas ke bawah. Klik keenam baris di bawah ini:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+                        ${[1, 2, 3, 4, 5, 6].map(n => `
+                            <button type="button" onclick="setS15Layer(${n})" class="p-2.5 rounded-xl border text-xs font-extrabold transition text-center leading-snug ${s15CjmLayer === n ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                                ${layers[n].btn}
+                            </button>
+                        `).join('')}
+                    </div>
+
+                    <div class="p-4 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-4 my-auto">
+                        <div>
+                            <span class="px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 text-xs font-extrabold">Lajur Baris #${s15CjmLayer} dari 6</span>
+                            <h3 class="text-base sm:text-xl font-extrabold text-slate-900 dark:text-white mt-2">${cur.title}</h3>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">${cur.desc}</p>
+                        </div>
+
+                        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 space-y-1 text-xs sm:text-sm">
+                            <span class="text-[10px] font-extrabold uppercase text-indigo-600 dark:text-indigo-400 block">Contoh Pengisian pada Tabel Journey Map:</span>
+                            <p class="font-semibold text-slate-800 dark:text-slate-100 leading-relaxed">${cur.sample}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 16: Simulator Interaktif Customer Journey Map UMKM (5 Fase + Kurva Emosi)
+        function renderSlide16() {
+            const phases = {
+                1: {
+                    name: "Fase 1: Mencari Info & Harga",
+                    emotion: "😐 Netral / Sedikit Bingung",
+                    emotionColor: "bg-amber-500",
+                    action: "Membuka Instagram / datang melihat papan menu di toko untuk mengecek layanan dan harga.",
+                    touchpoint: "Feed Instagram / Spanduk Dinding Toko",
+                    thought: '"Harga paket reguler ada, tapi kalau mau layanan khusus atau tambah item biayanya berapa ya?"',
+                    pain: "Informasi harga layanan tambahan dan ketersediaan kuota harian belum tercantum jelas.",
+                    opportunity: "Menyajikan katalog layanan terstruktur lengkap dengan harga per varian dan status ketersediaan."
+                },
+                2: {
+                    name: "Fase 2: Memesan & Pencatatan",
+                    emotion: "😟 Lelah / Terhambat",
+                    emotionColor: "bg-rose-500",
+                    action: "Mengantre di meja kasir atau mengetik ulang format pesanan panjang secara manual di chat WhatsApp.",
+                    touchpoint: "Meja Kasir & Buku Nota / Chat WhatsApp",
+                    thought: '"Kenapa harus ketik ulang alamat dan rincian dari awal terus ya? Padahal saya pelanggan tetap."',
+                    pain: "Proses pencatatan manual lambat pada jam ramai dan rawan terjadi salah tulis pesanan.",
+                    opportunity: "Menyediakan formulir pemesanan interaktif dengan pilihan menu sekali klik tanpa mengetik manual."
+                },
+                3: {
+                    name: "Fase 3: Pembayaran & Bukti",
+                    emotion: "😐 Netral",
+                    emotionColor: "bg-amber-500",
+                    action: "Membayar uang tunai atau menyalin nomor rekening lalu menyerahkan/mengirim bukti bayar.",
+                    touchpoint: "Uang Tunai / Kertas Nota / Screenshot Transfer",
+                    thought: '"Nota kertas sekecil ini harus disimpan di mana supaya tidak hilang saat mau ambil barang nanti?"',
+                    pain: "Kertas nota fisik mudah hilang atau nomor rekening sulit disalin dari gambar/chat panjang.",
+                    opportunity: "Menyediakan kode QRIS yang jelas serta tiket nota digital yang tersimpan rapi di layar ponsel."
+                },
+                4: {
+                    name: "Fase 4: Menunggu Pesanan Diproses",
+                    emotion: "😫 Sangat Cemas (Lembah Friksi Terendah)",
+                    emotionColor: "bg-rose-600",
+                    action: "Menunggu tanpa kabar atau bolak-balik mengecek ke lokasi toko apakah pesanan sudah selesai.",
+                    touchpoint: "Telepon / Chat Tanya Admin / Datang ke Toko",
+                    thought: '"Sudah selesai belum ya? Kalau saya datang ke toko sekarang jangan-jangan belum siap."',
+                    pain: "Ketidakpastian status pengerjaan membuat pelanggan membuang waktu bolak-balik ke toko.",
+                    opportunity: "Menampilkan indikator tahapan progres pesanan secara langsung (Diterima -> Diproses -> Siap Diambil)."
+                },
+                5: {
+                    name: "Fase 5: Menerima Barang / Layanan",
+                    emotion: "😊 Lega & Puas",
+                    emotionColor: "bg-emerald-500",
+                    action: "Menunjukkan bukti pesanan di kasir/kurir dan menerima barang/layanan dalam kondisi baik.",
+                    touchpoint: "Rak Pengambilan Toko / Kurir Pengantar",
+                    thought: '"Syukurlah hasilnya rapi dan sesuai pesanan, tapi semoga besok-besok cara pesannya lebih praktis."',
+                    pain: "Staf toko butuh waktu lama mencari barang di rak jika pelanggan lupa membawa kertas nota.",
+                    opportunity: "Pencarian cepat pesanan berdasarkan kode tiket atau nomor HP pelanggan saat pengambilan."
+                }
+            };
+            const cur = phases[s16JourneyPhase];
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Simulasi Peta Perjalanan Pelanggan</span>
+                        <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Laboratorium Interaktif ${term('journeymap', 'Customer Journey Map')} (5 Fase)</h2>
+                        <p class="text-xs text-slate-600 dark:text-slate-300">Klik Fase 1 sampai Fase 5 secara berurutan untuk menelusuri perubahan emosi, titik friksi, dan peluang solusi desain:</p>
+                    </div>
+
+                    <!-- Tombol 5 Fase Kronologis -->
+                    <div class="grid grid-cols-1 sm:grid-cols-5 gap-2">
+                        ${[1, 2, 3, 4, 5].map(n => `
+                            <button type="button" onclick="setS16Phase(${n})" class="p-2.5 rounded-xl border text-left transition ${s16JourneyPhase === n ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                                <div class="text-[10px] font-bold uppercase opacity-80">Tahap ${n}</div>
+                                <div class="text-xs font-extrabold mt-0.5 leading-snug">${phases[n].name.split(': ')[1]}</div>
+                            </button>
+                        `).join('')}
+                    </div>
+
+                    <!-- Detail Fase Aktif -->
+                    <div class="p-4 sm:p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-3.5 my-auto text-xs">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-slate-200 dark:border-slate-700">
+                            <h3 class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white">${cur.name}</h3>
+                            <div class="flex items-center gap-2">
+                                <span class="text-slate-500 font-bold">Status Emosi:</span>
+                                <span class="px-2.5 py-1 rounded-lg text-white font-extrabold ${cur.emotionColor}">${cur.emotion}</span>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 space-y-1">
+                                <span class="font-extrabold text-indigo-600 dark:text-indigo-400 uppercase block">1. Tindakan (Action)</span>
+                                <p class="text-slate-700 dark:text-slate-200 leading-relaxed">${cur.action}</p>
+                            </div>
+                            <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 space-y-1">
+                                <span class="font-extrabold text-sky-600 dark:text-sky-400 uppercase block">2. Titik Kontak (${term('touchpoint', 'Touchpoint')})</span>
+                                <p class="text-slate-700 dark:text-slate-200 leading-relaxed font-semibold">${cur.touchpoint}</p>
+                            </div>
+                            <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 space-y-1">
+                                <span class="font-extrabold text-amber-600 dark:text-amber-400 uppercase block">3. Pikiran Pengguna (Thought)</span>
+                                <p class="italic text-slate-700 dark:text-slate-200 leading-relaxed">${cur.thought}</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div class="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 space-y-1">
+                                <span class="font-extrabold text-rose-700 dark:text-rose-300 uppercase block"><i class="fa-solid fa-circle-exclamation mr-1"></i>4. Titik Masalah (Pain Point)</span>
+                                <p class="text-slate-800 dark:text-slate-100 leading-relaxed">${cur.pain}</p>
+                            </div>
+                            <div class="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 space-y-1">
+                                <span class="font-extrabold text-emerald-700 dark:text-emerald-300 uppercase block"><i class="fa-solid fa-lightbulb mr-1"></i>5. Peluang Solusi (Opportunity)</span>
+                                <p class="text-slate-800 dark:text-slate-100 leading-relaxed font-semibold">${cur.opportunity}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 17: Benang Merah Keempat Artefak Sintesis
+        function renderSlide17() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Alur Keterhubungan Artefak</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Bagaimana Keempat Artefak Ini Saling Terhubung?</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Keempat artefak yang Anda susun pada Pertemuan 3 bukanlah tugas yang berdiri sendiri-sendiri, melainkan satu rangkaian alur analisis yang saling mengisi secara berurutan:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 my-auto text-xs">
+                        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <span class="px-2.5 py-0.5 rounded bg-amber-500 text-white font-extrabold">Langkah 1</span>
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Affinity Diagram</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Mengelompokkan puluhan kutipan mentah dari lembar <em>Field Notes</em> LKM 02 menjadi <strong>3 sampai 5 Klaster Tema Masalah</strong> yang paling sering berulang.
+                            </p>
+                        </div>
+
+                        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <span class="px-2.5 py-0.5 rounded bg-indigo-600 text-white font-extrabold">Langkah 2</span>
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Empathy Map</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Memetakan isi klaster tersebut ke dalam dimensi <em>Says, Thinks, Does, Feels</em> untuk merumuskan <strong>Pains (Hambatan)</strong> dan <strong>Gains (Harapan)</strong>.
+                            </p>
+                        </div>
+
+                        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <span class="px-2.5 py-0.5 rounded bg-emerald-600 text-white font-extrabold">Langkah 3</span>
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">User Persona</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Merangkum <em>Pains</em> dan <em>Gains</em> tadi menjadi sosok profil karakter representatif (lengkap dengan tujuan, frustrasi, dan kebiasaan transaksinya).
+                            </p>
+                        </div>
+
+                        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <span class="px-2.5 py-0.5 rounded bg-rose-600 text-white font-extrabold">Langkah 4</span>
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Customer Journey Map</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Menempatkan sosok <em>Persona</em> tersebut ke dalam urutan tahapan waktu transaksi untuk melihat di titik mana kurva emosinya jatuh dan apa peluang solusinya.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-800/60 text-xs leading-relaxed">
+                        <i class="fa-solid fa-check-double text-indigo-600 dark:text-indigo-400 mr-1.5"></i><strong>Konsistensi Data:</strong> Pastikan masalah utama yang tertulis di dalam kartu <em>User Persona</em> dan <em>Customer Journey Map</em> benar-benar berasal dari klaster terbesar pada <em>Affinity Diagram</em> Anda.
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 18: 4 Kesalahan Umum Sintesis & Etika Privasi Data
+        function renderSlide18() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Evaluasi Kualitas & Etika (Sub-CPMK 1.2 & 4.1)</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Empat Kesalahan Umum Saat Melakukan Sintesis Riset</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                            Periksa kembali hasil analisis Anda agar terhindar dari keempat kesalahan yang sering mengurangi keakuratan sintesis berikut:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 my-auto text-xs sm:text-sm">
+                        <div class="p-4 sm:p-5 rounded-3xl bg-rose-50/60 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800 space-y-2">
+                            <div class="font-extrabold text-rose-700 dark:text-rose-300"><i class="fa-solid fa-circle-xmark mr-1.5"></i>1. Mengelompokkan Berdasarkan Nomor Pertanyaan, Bukan Pola Masalah</div>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Jangan mengelompokkan catatan hanya berdasarkan "Jawaban Nomor 1", "Jawaban Nomor 2". Kelompokkanlah berdasarkan <strong>kemiripan isi masalah atau kebutuhan</strong> lintas nomor pertanyaan!
+                            </p>
+                        </div>
+
+                        <div class="p-4 sm:p-5 rounded-3xl bg-rose-50/60 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800 space-y-2">
+                            <div class="font-extrabold text-rose-700 dark:text-rose-300"><i class="fa-solid fa-circle-xmark mr-1.5"></i>2. Cherry-Picking (Hanya Memilih Kutipan yang Disukai)</div>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Membuang catatan wawancara yang tidak sesuai dengan keinginan pembuat aplikasi. Jika dugaan awal Anda di LKM 01 ternyata terbantahkan oleh fakta lapangan, ikutilah fakta lapangan tersebut!
+                            </p>
+                        </div>
+
+                        <div class="p-4 sm:p-5 rounded-3xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 space-y-2">
+                            <div class="font-extrabold text-amber-800 dark:text-amber-300"><i class="fa-solid fa-triangle-exclamation mr-1.5"></i>3. Journey Map Hanya Menceritakan Proses di Dalam Aplikasi Masa Depan</div>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Pada tahap ini, <em>Current-State Customer Journey Map</em> harus memetakan <strong>alur nyata yang dialami pelanggan saat ini</strong> (baik di toko fisik maupun chat WA), bukan alur aplikasi yang belum dibuat.
+                            </p>
+                        </div>
+
+                        <div class="p-4 sm:p-5 rounded-3xl bg-indigo-50/60 dark:bg-indigo-950/20 border border-indigo-200 dark:border-indigo-800 space-y-2">
+                            <div class="font-extrabold text-indigo-700 dark:text-indigo-300"><i class="fa-solid fa-user-shield mr-1.5"></i>4. Membocorkan Data Pribadi Responden pada Dokumen Laporan</div>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Jaga etika kerahasiaan data: jangan mencantumkan nomor HP asli, alamat rumah pribadi, atau foto wajah responden tanpa izin. Gunakan kode <code>P1</code>, <code>P2</code>, dst.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 19: Jembatan Menuju Pertemuan 4 (Problem Statement & HMW) + Refleksi
+        function renderSlide19() {
+            const questions = [
+                {
+                    id: 1,
+                    title: "1. Mengapa Satu Kartu Catatan Hanya Boleh Berisi Satu Ide/Kutipan?",
+                    question: "Apa yang terjadi saat penyusunan Affinity Diagram apabila mahasiswa menuliskan seluruh jawaban satu responden di dalam satu kartu catatan yang panjang?",
+                    answer: "Kartu tersebut tidak akan bisa dipisahkan saat kita ingin mengelompokkan masalah berdasarkan tema (misal memisahkan tema harga dengan tema waktu tunggu). Akibatnya, pola masalah utama tidak terlihat jelas."
+                },
+                {
+                    id: 2,
+                    title: "2. Apa Perbedaan Fungsi Persona dan Customer Journey Map?",
+                    question: "Mengapa kita perlu membuat Customer Journey Map padahal kita sudah memiliki kartu User Persona?",
+                    answer: "User Persona menjelaskan 'Siapa' penggunanya (tujuan dan frustrasi secara umum), sedangkan Customer Journey Map memetakan 'Kapan dan pada tahap mana' frustrasi tersebut muncul secara kronologis dari awal hingga akhir transaksi."
+                },
+                {
+                    id: 3,
+                    title: "3. Bagaimana Jika Dugaan Awal Kita di LKM 01 Terbantahkan?",
+                    question: "Jika setelah menyusun Affinity Diagram ternyata masalah terbesar yang dikeluhkan pelanggan berbeda dengan dugaan awal Anda di Pertemuan 1, apa yang harus dilakukan?",
+                    answer: "Itulah tujuan sejati riset UX! Anda wajib memperbarui fokus masalah mengikuti bukti nyata dari responden (evidence-based), bukan memaksakan dugaan awal yang tidak terbukti."
+                }
+            ];
+
+            let cardsHtml = '';
+            for (let i = 0; i < questions.length; i++) {
+                const q = questions[i];
+                const isOpen = openReflectionKey[q.id];
+                cardsHtml += `
+                    <div class="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-3">
+                        <div class="space-y-1.5">
+                            <div class="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">${q.title}</div>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">${q.question}</p>
+                        </div>
+                        <div class="pt-2 border-t border-slate-200/70 dark:border-slate-700/70">
+                            <button type="button" onclick="toggleReflectionAnswer(${q.id})" class="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1.5">
+                                <i class="fa-regular ${isOpen ? 'fa-eye-slash' : 'fa-lightbulb'}"></i>
+                                <span>${isOpen ? 'Sembunyikan Kunci Konsep' : 'Lihat Kunci Konsep'}</span>
+                            </button>
+                            ${isOpen ? `<div class="mt-2.5 p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">${q.answer}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Menuju Pertemuan 4 (Problem Statement & Design Brief)</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Refleksi Pemahaman Sintesis Riset</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Titik masalah paling kritis (lembah emosi terendah) pada <em>Customer Journey Map</em> dan <em>User Persona</em> hari ini akan menjadi bahan utama untuk merumuskan <strong>Problem Statement (Point of View)</strong> serta pertanyaan <strong>How Might We (HMW)</strong> pada Pertemuan 4.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-auto">
+                        ${cardsHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 20: Rangkuman Inti & Daftar Referensi Pertemuan 3
+        function renderSlide20() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Penutup Materi Pertemuan 3</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Rangkuman Inti & Daftar Referensi Perkuliahan</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">Ringkasan lima prinsip utama sintesis riset pengguna beserta rujukan literaturnya:</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 my-auto">
+                        <div class="lg:col-span-6 p-4 sm:p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-3">
+                            <h3 class="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider"><i class="fa-solid fa-list-check text-indigo-600 mr-1.5"></i>5 Poin Kunci Pertemuan 3</h3>
+                            <ol class="space-y-2 text-xs text-slate-700 dark:text-slate-300 list-decimal list-inside leading-relaxed">
+                                <li><strong>Unpacking dengan Kode Anonim:</strong> Setiap kutipan atau fakta observasi dipecah menjadi 1 kartu catatan terpisah dengan kode responden anonim (<code>P1</code>, <code>P2</code>, dst).</li>
+                                <li><strong>Affinity Diagram (Bottom-Up):</strong> Mengelompokkan catatan berdasarkan kemiripan masalah dan memberi label tema dalam sudut pandang pengguna (<em>I-Statements</em>).</li>
+                                <li><strong>Empathy Map (4 Kuadran + Pains & Gains):</strong> Memetakan keselarasan maupun kontradiksi antara <em>Says, Thinks, Does,</em> dan <em>Feels</em>.</li>
+                                <li><strong>Evidence-Based User Persona:</strong> Menyusun profil karakter pengguna utama berdasarkan gabungan bukti lapangan, bukan karangan fiktif.</li>
+                                <li><strong>Customer Journey Map (CJM):</strong> Memvisualisasikan tahapan transaksi, kurva naik-turun emosi, titik friksi, dan peluang perbaikan desain.</li>
+                            </ol>
+                        </div>
+
+                        <div class="lg:col-span-6 p-4 sm:p-5 rounded-3xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 space-y-3">
+                            <h3 class="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider"><i class="fa-solid fa-book-open text-indigo-600 mr-1.5"></i>Daftar Referensi Utama</h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                                <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"><strong class="text-indigo-700 dark:text-indigo-300">Gray, Brown, & Macanufo (2010)</strong><br><em>Gamestorming: A Playbook for Innovators (Empathy Map & Affinity).</em> O'Reilly.</div>
+                                <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"><strong class="text-indigo-700 dark:text-indigo-300">Cooper, A., Reimann, R., & Cronin, D. (2014)</strong><br><em>About Face: The Essentials of Interaction Design (Personas).</em> Wiley.</div>
+                                <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"><strong class="text-indigo-700 dark:text-indigo-300">Kalbach, J. (2020)</strong><br><em>Mapping Experiences: Complete Guide to Customer Journey Maps.</em> O'Reilly.</div>
+                                <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"><strong class="text-indigo-700 dark:text-indigo-300">Sharp, Rogers, & Preece (2019)</strong><br><em>Interaction Design: Beyond Human-Computer Interaction (5th ed.).</em> Wiley.</div>
+                                <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"><strong class="text-indigo-700 dark:text-indigo-300">Lidwell, Holden, & Butler (2020)</strong><br><em>Universal Principles of UX: 100 Timeless Strategies.</em> Rockport.</div>
+                                <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"><strong class="text-indigo-700 dark:text-indigo-300">Nielsen Norman Group</strong><br><em>Affinity Diagramming, Personas, & Journey Mapping Guides.</em> nngroup.com.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-emerald-600 text-white text-center">
+                        <p class="text-xs sm:text-sm font-bold"><i class="fa-solid fa-diagram-project mr-1.5"></i>Selanjutnya pada Sesi Praktikum 3 (LKM 03): Menyusun Affinity Diagram, Empathy Map, User Persona, & Customer Journey Map di Workspace HTML!</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // =========================================================================
+        // DAFTAR 20 SLIDE PERTEMUAN 3
+        // =========================================================================
+        const SLIDES = [
+            { id: 1, category: "Pengantar", title: "Sintesis Riset Pengguna & Capaian Pembelajaran", render: renderSlide1 },
+            { id: 2, category: "Alur Metodologi", title: "Posisi Sintesis: Jembatan Antara Empathize dan Define", render: renderSlide2 },
+            { id: 3, category: "Konsep Sintesis", title: "Transformasi dari Data Mentah Menuju User Insight", render: renderSlide3 },
+            { id: 4, category: "Persiapan Data", title: "Aturan Emas Unpacking Data ke Kartu Catatan (Sticky Notes)", render: renderSlide4 },
+            { id: 5, category: "Artefak 1: Affinity", title: "Mengenal Affinity Diagram (Metode KJ) & I-Statements", render: renderSlide5 },
+            { id: 6, category: "Simulasi Affinity", title: "Laboratorium 3 Tahap Menyusun Affinity Diagram", render: renderSlide6 },
+            { id: 7, category: "Rumus Insight", title: "Rumus Menarik User Insight dari Klaster Affinity Diagram", render: renderSlide7 },
+            { id: 8, category: "Artefak 2: Empathy Map", title: "Menyusun Empathy Map (4 Kuadran + Pains & Gains)", render: renderSlide8 },
+            { id: 9, category: "Simulasi Empathy Map", title: "Visualisasi Kanvas Empathy Map Utuh (UMKM Offline & Online)", render: renderSlide9 },
+            { id: 10, category: "Analisis Empati", title: "Cara Membaca Kesenjangan Antar-Kuadran di Empathy Map", render: renderSlide10 },
+            { id: 11, category: "Artefak 3: Persona", title: "Apa Itu User Persona dan Mengapa Kita Membuatnya?", render: renderSlide11 },
+            { id: 12, category: "Simulasi Persona", title: "Anatomi 6 Komponen Kartu User Persona", render: renderSlide12 },
+            { id: 13, category: "Kualitas Persona", title: "Evidence-Based UX Persona vs Proto-Persona (Karangan Fiktif)", render: renderSlide13 },
+            { id: 14, category: "Artefak 4: Journey Map", title: "Memetakan Pengalaman dengan Customer Journey Map (CJM)", render: renderSlide14 },
+            { id: 15, category: "Anatomi CJM", title: "Anatomi 6 Lajur Baris pada Tabel Customer Journey Map", render: renderSlide15 },
+            { id: 16, category: "Simulasi Journey Map", title: "Laboratorium Interaktif Customer Journey Map UMKM (5 Fase)", render: renderSlide16 },
+            { id: 17, category: "Integrasi Artefak", title: "Benang Merah Keterhubungan Keempat Artefak Sintesis", render: renderSlide17 },
+            { id: 18, category: "Evaluasi & Etika", title: "Empat Kesalahan Umum Saat Melakukan Sintesis Riset", render: renderSlide18 },
+            { id: 19, category: "Refleksi", title: "Keterkaitan Menuju Pertemuan 4 & Refleksi Pemahaman", render: renderSlide19 },
+            { id: 20, category: "Penutup", title: "Rangkuman Inti & Daftar Referensi Perkuliahan", render: renderSlide20 }
+        ];
+
+        // =========================================================================
+        // NAVIGASI & HANDLER INTERAKTIF
+        // =========================================================================
+        function renderCurrentSlide() {
+            const slide = SLIDES[currentSlideIndex];
+            const viewport = document.getElementById('slideViewport');
+            if (!viewport || !slide) return;
+            viewport.innerHTML = slide.render();
+
+            const pct = Math.round(((currentSlideIndex + 1) / TOTAL_SLIDES) * 100);
+            document.getElementById('topProgressBar').style.width = pct + '%';
+            document.getElementById('slideCounterBadge').textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES;
+            document.getElementById('mobileFooterCounter').textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES;
+            document.getElementById('slideCategoryPill').textContent = slide.category;
+            document.getElementById('headerSlideTitle').textContent = slide.title;
+
+            const prevBtn = document.getElementById('prevSlideBtn');
+            const nextBtn = document.getElementById('nextSlideBtn');
+            const nextBtnText = document.getElementById('nextBtnText');
+
+            prevBtn.disabled = currentSlideIndex === 0;
+            if (currentSlideIndex === TOTAL_SLIDES - 1) {
+                nextBtnText.textContent = "Selesai";
+                nextBtn.disabled = true;
+            } else {
+                nextBtnText.textContent = "Selanjutnya";
+                nextBtn.disabled = false;
+            }
+
+            renderDotsAndDrawer();
+        }
+
+        function renderDotsAndDrawer() {
+            const dotsContainer = document.getElementById('slideDotsContainer');
+            let dotsHtml = '';
+            let drawerHtml = '';
+
+            for (let idx = 0; idx < SLIDES.length; idx++) {
+                const s = SLIDES[idx];
+                const isActive = idx === currentSlideIndex;
+                const dotClass = isActive
+                    ? 'w-6 bg-indigo-600 dark:bg-indigo-400'
+                    : 'w-1.5 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400';
+
+                dotsHtml += `<button type="button" onclick="goToSlide(${idx})" title="${escapeHtml(s.title)}" class="h-2 rounded-full transition-all ${dotClass}"></button>`;
+
+                const itemClass = isActive
+                    ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 font-bold'
+                    : 'hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-300';
+                const badgeClass = isActive
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500';
+
+                drawerHtml += `
+                    <button type="button" onclick="selectSlideFromDrawer(${idx})" class="w-full text-left p-3 rounded-xl transition flex items-start gap-3 ${itemClass}">
+                        <span class="w-6 h-6 rounded-lg text-xs font-extrabold flex items-center justify-center shrink-0 mt-0.5 ${badgeClass}">${s.id}</span>
+                        <div class="min-w-0 flex-1">
+                            <div class="text-[10px] uppercase tracking-wider opacity-75">${escapeHtml(s.category)}</div>
+                            <div class="text-xs sm:text-sm leading-snug break-words">${escapeHtml(s.title)}</div>
+                        </div>
+                    </button>
+                `;
+            }
+
+            if (dotsContainer) dotsContainer.innerHTML = dotsHtml;
+            const drawerList = document.getElementById('drawerSlideList');
+            if (drawerList) drawerList.innerHTML = drawerHtml;
+        }
+
+        function selectSlideFromDrawer(index) {
+            goToSlide(index);
+            toggleSlideDrawer();
+        }
+
+        function changeSlide(direction) {
+            const nextIdx = currentSlideIndex + direction;
+            if (nextIdx >= 0 && nextIdx < TOTAL_SLIDES) {
+                currentSlideIndex = nextIdx;
+                renderCurrentSlide();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function goToSlide(index) {
+            if (index >= 0 && index < TOTAL_SLIDES) {
+                currentSlideIndex = index;
+                renderCurrentSlide();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function toggleSlideDrawer() {
+            const drawer = document.getElementById('slideDrawer');
+            const backdrop = document.getElementById('slideDrawerBackdrop');
+            const isClosed = drawer.classList.contains('-translate-x-full');
+
+            if (isClosed) {
+                backdrop.classList.remove('hidden');
+                setTimeout(function () { backdrop.classList.remove('opacity-0'); }, 10);
+                drawer.classList.remove('-translate-x-full');
+            } else {
+                backdrop.classList.add('opacity-0');
+                drawer.classList.add('-translate-x-full');
+                setTimeout(function () { backdrop.classList.add('hidden'); }, 200);
+            }
+        }
+
+        function setS4Sticky(m) { s4StickyMode = m; renderCurrentSlide(); }
+        function setS6Step(st) { s6AffinityStep = st; renderCurrentSlide(); }
+        function setS7Case(c) { s7InsightCase = c; renderCurrentSlide(); }
+        function setS9Empathy(c) { s9EmpathyCase = c; renderCurrentSlide(); }
+        function setS12Part(p) { s12PersonaPart = p; renderCurrentSlide(); }
+        function setS15Layer(l) { s15CjmLayer = l; renderCurrentSlide(); }
+        function setS16Phase(ph) { s16JourneyPhase = ph; renderCurrentSlide(); }
+        function toggleReflectionAnswer(id) { openReflectionKey[id] = !openReflectionKey[id]; renderCurrentSlide(); }
+
+        // =========================================================================
+        // MODAL KAMUS ISTILAH
+        // =========================================================================
+        function showTerm(key) {
+            const item = GLOSSARY_DB[key];
+            if (!item) return;
+            document.getElementById('termCategoryBadge').textContent = item.category;
+            document.getElementById('termTitle').textContent = item.title;
+            document.getElementById('termMainDesc').textContent = item.main;
+            document.getElementById('termDetailDesc').textContent = item.detail;
+            document.getElementById('termSourceName').textContent = "Sumber: " + item.source;
+            document.getElementById('termSourceUrl').href = item.url;
+            const modal = document.getElementById('termModalBackdrop');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeTermModal() {
+            const modal = document.getElementById('termModalBackdrop');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function openGlossaryIndex() {
+            document.getElementById('glossarySearchInput').value = '';
+            renderGlossaryList('');
+            const modal = document.getElementById('glossaryModalBackdrop');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeGlossaryIndex() {
+            const modal = document.getElementById('glossaryModalBackdrop');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function selectGlossaryTerm(key) {
+            closeGlossaryIndex();
+            showTerm(key);
+        }
+
+        function renderGlossaryList(query) {
+            const q = String(query || '').trim().toLowerCase();
+            const allKeys = Object.keys(GLOSSARY_DB);
+            let html = '';
+            let count = 0;
+
+            for (let i = 0; i < allKeys.length; i++) {
+                const k = allKeys[i];
+                const item = GLOSSARY_DB[k];
+                if (
+                    item.title.toLowerCase().indexOf(q) !== -1 ||
+                    item.category.toLowerCase().indexOf(q) !== -1 ||
+                    item.main.toLowerCase().indexOf(q) !== -1
+                ) {
+                    count++;
+                    html += `
+                        <button type="button" data-term="${escapeHtml(k)}" onclick="selectGlossaryTerm(this.dataset.term)" class="text-left p-4 rounded-2xl bg-slate-50 hover:bg-indigo-50/60 dark:bg-slate-800/50 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800 transition space-y-1">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">${escapeHtml(item.category)}</span>
+                                <span class="text-[10px] text-slate-400">${escapeHtml(item.source)}</span>
+                            </div>
+                            <div class="text-sm font-extrabold text-slate-900 dark:text-white leading-snug">${escapeHtml(item.title)}</div>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">${escapeHtml(item.main)}</p>
+                        </button>
+                    `;
+                }
+            }
+
+            const container = document.getElementById('glossaryListGrid');
+            if (container) {
+                container.innerHTML = count > 0
+                    ? html
+                    : '<div class="col-span-2 text-center py-8 text-xs text-slate-500">Istilah tidak ditemukan.</div>';
+            }
+        }
+
+        function toggleTheme() {
+            const htmlEl = document.documentElement;
+            const icon = document.getElementById('themeIcon');
+            htmlEl.classList.toggle('dark');
+            const isDark = htmlEl.classList.contains('dark');
+            icon.className = isDark ? 'fa-solid fa-sun text-amber-400 text-sm' : 'fa-solid fa-moon text-sm';
+        }
+
+        document.addEventListener('keydown', function (e) {
+            const activeTag = document.activeElement && document.activeElement.tagName
+                ? document.activeElement.tagName.toLowerCase()
+                : '';
+            if (activeTag === 'input' || activeTag === 'textarea') return;
+            if (e.key === 'ArrowRight') changeSlide(1);
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+            if (e.key === 'Escape') {
+                closeTermModal();
+                closeGlossaryIndex();
+            }
+        });
+
+        renderCurrentSlide();
+    </script>
+</body>
+</html>
