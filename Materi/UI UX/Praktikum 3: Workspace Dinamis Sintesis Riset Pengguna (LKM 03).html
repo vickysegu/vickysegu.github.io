@@ -72,6 +72,17 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        @keyframes shakeError {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .input-error {
+            border-color: #e11d48 !important;
+            box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.18) !important;
+            animation: shakeError 0.3s ease-in-out;
+        }
+
         textarea.auto-expand {
             resize: vertical;
             min-height: 95px;
@@ -131,13 +142,25 @@
 </head>
 <body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col justify-between transition-colors duration-200">
 
+    <!-- Input File Tersembunyi untuk Muat Data Proyek (.json) -->
+    <input type="file" id="jsonFileInput" accept=".json,application/json" class="hidden" onchange="handleJsonFileImport(event)">
+
+    <!-- Toast Peringatan Validasi & Status File -->
+    <div id="toastBanner" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 hidden max-w-md w-[92%] sm:w-full px-4 py-3.5 rounded-2xl shadow-2xl border flex items-start gap-3 transition-all duration-200 no-print">
+        <i id="toastIcon" class="fa-solid fa-circle-exclamation text-lg mt-0.5 shrink-0"></i>
+        <div class="flex-1 text-xs sm:text-sm font-bold leading-snug" id="toastMessage">Pesan notifikasi</div>
+        <button type="button" onclick="hideToast()" class="text-current opacity-70 hover:opacity-100 shrink-0">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+
     <!-- Header Navigasi Atas -->
     <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 no-print">
         <div class="w-full h-1 bg-slate-100 dark:bg-slate-800">
             <div id="topProgressBar" class="h-full bg-indigo-600 dark:bg-indigo-500 transition-all duration-300" style="width: 8%;"></div>
         </div>
 
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-2 sm:gap-3">
+        <div class="max-w-5xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-2">
             <div class="flex items-center gap-2 sm:gap-3 min-w-0">
                 <button type="button" onclick="toggleSlideDrawer()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition flex items-center gap-2 text-xs sm:text-sm font-bold shrink-0">
                     <i class="fa-solid fa-list-ul text-indigo-600 dark:text-indigo-400"></i>
@@ -145,29 +168,40 @@
                     <span id="slideCounterBadge" class="px-2 py-0.5 text-xs rounded-lg bg-indigo-600 text-white font-bold">1 / 12</span>
                 </button>
 
-                <div class="hidden md:flex items-center gap-2.5 min-w-0">
+                <div class="hidden lg:flex items-center gap-2 min-w-0">
                     <span id="slideCategoryPill" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 shrink-0">
                         Pengantar
                     </span>
-                    <h1 id="headerSlideTitle" class="text-sm font-bold text-slate-800 dark:text-slate-100 line-clamp-1">
+                    <h1 id="headerSlideTitle" class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 truncate">
                         Panduan & Lembar Kerja Praktikum 3 (LKM 03)
                     </h1>
                 </div>
             </div>
 
-            <div class="flex items-center gap-2 shrink-0">
-                <span id="saveBadge" class="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 text-xs font-bold">
-                    <i class="fa-solid fa-cloud-arrow-up"></i> Tersimpan Otomatis
+            <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                <span id="saveBadge" class="hidden xl:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Tersimpan
                 </span>
 
-                <button type="button" onclick="openGlossaryIndex()" class="px-3 sm:px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 text-xs sm:text-sm font-bold flex items-center gap-2 transition">
-                    <i class="fa-solid fa-book-open text-indigo-600 dark:text-indigo-400"></i>
-                    <span>Kamus Istilah</span>
+                <!-- Tombol Simpan & Muat File Data (.json) -->
+                <button type="button" onclick="exportJsonData()" class="px-2.5 sm:px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:hover:bg-emerald-900 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-extrabold flex items-center gap-1.5 transition" title="Simpan File Data Proyek (.json) untuk dibawa ke perangkat lain">
+                    <i class="fa-solid fa-download"></i>
+                    <span class="hidden sm:inline">Simpan .JSON</span>
                 </button>
 
-                <button type="button" onclick="goToSlide(11)" class="hidden sm:flex px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-extrabold items-center gap-2 transition shadow-xs">
+                <button type="button" onclick="triggerImportJson()" class="px-2.5 sm:px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:hover:bg-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-800 text-xs font-extrabold flex items-center gap-1.5 transition" title="Muat File Data Proyek (.json) dari LKM 01, LKM 02, atau LKM 03">
+                    <i class="fa-solid fa-upload"></i>
+                    <span class="hidden sm:inline">Muat .JSON</span>
+                </button>
+
+                <button type="button" onclick="openGlossaryIndex()" class="px-2.5 sm:px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 text-xs font-bold flex items-center gap-1.5 transition" title="Buka Kamus Istilah">
+                    <i class="fa-solid fa-book-open text-indigo-600 dark:text-indigo-400"></i>
+                    <span class="hidden md:inline">Kamus</span>
+                </button>
+
+                <button type="button" onclick="goToSlide(11)" class="hidden sm:flex px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold items-center gap-1.5 transition shadow-xs">
                     <i class="fa-solid fa-file-pdf"></i>
-                    <span>Unduh PDF</span>
+                    <span>PDF</span>
                 </button>
 
                 <button type="button" onclick="toggleTheme()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center transition" title="Ganti Tema Layar">
@@ -191,7 +225,7 @@
         </div>
         <div id="drawerSlideList" class="p-3.5 overflow-y-auto space-y-1.5 flex-1"></div>
         <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 flex items-center justify-between">
-            <span>Workspace Relasional Dinamis</span>
+            <span>Semua Form Wajib Diisi Berurutan</span>
             <span class="font-bold">12 Slide</span>
         </div>
     </aside>
@@ -389,13 +423,59 @@
         }
 
         // =========================================================================
+        // NOTIFIKASI TOAST & HIGHLIGHT VALIDASI
+        // =========================================================================
+        let toastTimer = null;
+        function showToast(message, type) {
+            clearTimeout(toastTimer);
+            const banner = document.getElementById('toastBanner');
+            const icon = document.getElementById('toastIcon');
+            const msgEl = document.getElementById('toastMessage');
+            if (!banner || !msgEl) return;
+
+            msgEl.textContent = message;
+            banner.className = 'fixed top-20 left-1/2 transform -translate-x-1/2 z-50 max-w-lg w-[92%] sm:w-full px-4 py-3.5 rounded-2xl shadow-2xl border flex items-start gap-3 transition-all duration-200 no-print slide-enter ';
+
+            if (type === 'success') {
+                banner.className += 'bg-emerald-600 text-white border-emerald-500';
+                icon.className = 'fa-solid fa-circle-check text-lg mt-0.5 shrink-0';
+            } else {
+                banner.className += 'bg-rose-600 text-white border-rose-500';
+                icon.className = 'fa-solid fa-triangle-exclamation text-lg mt-0.5 shrink-0';
+            }
+
+            banner.classList.remove('hidden');
+            toastTimer = setTimeout(hideToast, 4500);
+        }
+
+        function hideToast() {
+            const banner = document.getElementById('toastBanner');
+            if (banner) banner.classList.add('hidden');
+        }
+
+        function highlightEmptyInput(inputId, message) {
+            showToast(message, 'error');
+            setTimeout(function () {
+                const el = document.getElementById(inputId);
+                if (el) {
+                    el.classList.add('input-error');
+                    el.focus();
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    el.addEventListener('input', function removeErr() {
+                        el.classList.remove('input-error');
+                        el.removeEventListener('input', removeErr);
+                    });
+                }
+            }, 60);
+        }
+
+        // =========================================================================
         // STATE DATA DINAMIS & RELASIONAL LKM 03 (DENGAN BATAS MINIMAL)
         // =========================================================================
         const STORAGE_KEY = 'upertis_lkm03_dynamic_v2';
         let currentSlideIndex = 0;
         const TOTAL_SLIDES = 12;
 
-        // Batas minimal wajib agar mahasiswa tidak mengisi terlalu sedikit
         const MIN_RESPONDENTS = 4;      // Minimal 4 Narasumber (1 Pemilik + 3 Pelanggan)
         const MIN_OBSERVATIONS = 3;     // Minimal 3 Catatan Observasi Lapangan
         const MIN_CLUSTERS = 3;         // Minimal 3 Klaster Tema Affinity Diagram
@@ -527,6 +607,235 @@
         };
 
         // =========================================================================
+        // FUNGSI VALIDASI KETAT (SEMUA FIELD & ARRAY DINAMIS WAJIB LENGKAP)
+        // =========================================================================
+        function isInfoPartComplete(partNum) {
+            if (partNum === 1) {
+                return !!(formState.nama.trim() && formState.nim.trim() && formState.kelas.trim() && formState.tgl.trim() && formState.umkm.trim() && formState.bidang.trim());
+            }
+            if (partNum === 2) {
+                if (!Array.isArray(formState.respondents) || formState.respondents.length < MIN_RESPONDENTS) return false;
+                for (let i = 0; i < formState.respondents.length; i++) {
+                    const r = formState.respondents[i];
+                    if (!r.code.trim() || !r.profile.trim()) return false;
+                }
+                return true;
+            }
+            if (partNum === 3) {
+                if (!Array.isArray(formState.observations) || formState.observations.length < MIN_OBSERVATIONS) return false;
+                for (let j = 0; j < formState.observations.length; j++) {
+                    const ob = formState.observations[j];
+                    if (!ob.code.trim() || !ob.aspect.trim() || !ob.note.trim()) return false;
+                }
+                return true;
+            }
+            return false;
+        }
+
+        function isClusterComplete(cIdx) {
+            const c = formState.clusters[cIdx];
+            if (!c || !c.label.trim() || !c.insight.trim()) return false;
+            if (!Array.isArray(c.notes) || c.notes.length < MIN_NOTES_PER_CLUSTER) return false;
+            for (let n = 0; n < c.notes.length; n++) {
+                if (!c.notes[n].text.trim()) return false;
+            }
+            return true;
+        }
+
+        function isEmpathyPartComplete(partNum) {
+            const em = formState.empathy;
+            if (partNum === 1) {
+                if (em.says.length < MIN_EMPATHY_ITEMS || em.thinks.length < MIN_EMPATHY_ITEMS) return false;
+                for (let i = 0; i < em.says.length; i++) if (!em.says[i].text.trim()) return false;
+                for (let i = 0; i < em.thinks.length; i++) if (!em.thinks[i].text.trim()) return false;
+                return true;
+            }
+            if (partNum === 2) {
+                if (em.does.length < MIN_EMPATHY_ITEMS || em.feels.length < MIN_EMPATHY_ITEMS) return false;
+                for (let i = 0; i < em.does.length; i++) if (!em.does[i].text.trim()) return false;
+                for (let i = 0; i < em.feels.length; i++) if (!em.feels[i].text.trim()) return false;
+                return true;
+            }
+            if (partNum === 3) {
+                if (em.pains.length < MIN_EMPATHY_ITEMS || em.gains.length < MIN_EMPATHY_ITEMS) return false;
+                for (let i = 0; i < em.pains.length; i++) if (!em.pains[i].trim()) return false;
+                for (let i = 0; i < em.gains.length; i++) if (!em.gains[i].trim()) return false;
+                return true;
+            }
+            return false;
+        }
+
+        function isPersonaPartComplete(partNum) {
+            const p = formState.persona;
+            if (partNum === 1) {
+                return !!(p.nama.trim() && p.peran.trim() && Array.isArray(p.sources) && p.sources.length >= 1 && p.konteks.trim() && p.quote.trim());
+            }
+            if (partNum === 2) {
+                if (p.goals.length < MIN_PERSONA_LIST || p.pains.length < MIN_PERSONA_LIST) return false;
+                for (let i = 0; i < p.goals.length; i++) if (!p.goals[i].trim()) return false;
+                for (let i = 0; i < p.pains.length; i++) if (!p.pains[i].trim()) return false;
+                return true;
+            }
+            if (partNum === 3) {
+                return !!(p.behaviors.trim() && p.skenario.trim());
+            }
+            return false;
+        }
+
+        function isJourneyPhaseComplete(idx) {
+            const ph = formState.journey[idx];
+            return !!(ph && ph.phaseTitle.trim() && ph.action.trim() && ph.touchpoint.trim() && ph.pain.trim() && ph.opportunity.trim());
+        }
+
+        function syncSavedStatesFromData() {
+            for (let k = 1; k <= 3; k++) uiWizard.infoSaved[k] = isInfoPartComplete(k);
+            if (!uiWizard.infoSaved[1]) uiWizard.infoActive = 1;
+            else if (!uiWizard.infoSaved[2]) uiWizard.infoActive = 2;
+            else if (!uiWizard.infoSaved[3]) uiWizard.infoActive = 3;
+            else uiWizard.infoActive = 0;
+
+            for (let i = 0; i < formState.clusters.length; i++) {
+                uiWizard.affSaved[i] = isClusterComplete(i);
+            }
+            for (let k = 1; k <= 3; k++) uiWizard.emSaved[k] = isEmpathyPartComplete(k);
+            for (let k = 1; k <= 3; k++) uiWizard.perSaved[k] = isPersonaPartComplete(k);
+            for (let i = 0; i < formState.journey.length; i++) {
+                uiWizard.cjmSaved[i] = isJourneyPhaseComplete(i);
+            }
+        }
+
+        function validateFormSlide(slideIdx) {
+            // Slide 3 (idx 2): Identitas, Minimal 4 Narasumber, Minimal 3 Observasi
+            if (slideIdx === 2) {
+                if (!formState.nama.trim()) { uiWizard.infoActive = 1; renderCurrentSlide(); highlightEmptyInput('inp_nama', 'Nama Lengkap Mahasiswa (Bagian 1A) wajib diisi.'); return false; }
+                if (!formState.nim.trim()) { uiWizard.infoActive = 1; renderCurrentSlide(); highlightEmptyInput('inp_nim', 'Nomor Induk Mahasiswa (Bagian 1A) wajib diisi.'); return false; }
+                if (!formState.kelas.trim()) { uiWizard.infoActive = 1; renderCurrentSlide(); highlightEmptyInput('inp_kelas', 'Kelas / Semester (Bagian 1A) wajib diisi.'); return false; }
+                if (!formState.tgl.trim()) { uiWizard.infoActive = 1; renderCurrentSlide(); highlightEmptyInput('inp_tgl', 'Tanggal Sintesis Riset (Bagian 1A) wajib diisi.'); return false; }
+                if (!formState.umkm.trim()) { uiWizard.infoActive = 1; renderCurrentSlide(); highlightEmptyInput('inp_umkm', 'Nama Usaha UMKM Mitra (Bagian 1A) wajib diisi.'); return false; }
+                if (!formState.bidang.trim()) { uiWizard.infoActive = 1; renderCurrentSlide(); highlightEmptyInput('inp_bidang', 'Bidang / Kategori Usaha (Bagian 1A) wajib diisi.'); return false; }
+                uiWizard.infoSaved[1] = true;
+
+                for (let i = 0; i < formState.respondents.length; i++) {
+                    const r = formState.respondents[i];
+                    if (!r.code.trim()) { uiWizard.infoActive = 2; renderCurrentSlide(); highlightEmptyInput('inp_resp_code_' + i, 'Kode Narasumber #' + (i + 1) + ' (Bagian 1B) wajib diisi.'); return false; }
+                    if (!r.profile.trim()) { uiWizard.infoActive = 2; renderCurrentSlide(); highlightEmptyInput('inp_resp_profile_' + i, 'Profil Singkat Narasumber [' + r.code + '] (Bagian 1B) wajib diisi.'); return false; }
+                }
+                uiWizard.infoSaved[2] = true;
+
+                for (let j = 0; j < formState.observations.length; j++) {
+                    const ob = formState.observations[j];
+                    if (!ob.code.trim()) { uiWizard.infoActive = 3; renderCurrentSlide(); highlightEmptyInput('inp_obs_code_' + j, 'Kode Observasi #' + (j + 1) + ' (Bagian 1C) wajib diisi.'); return false; }
+                    if (!ob.aspect.trim()) { uiWizard.infoActive = 3; renderCurrentSlide(); highlightEmptyInput('inp_obs_aspect_' + j, 'Aspek Observasi #' + (j + 1) + ' (Bagian 1C) wajib diisi.'); return false; }
+                    if (!ob.note.trim()) { uiWizard.infoActive = 3; renderCurrentSlide(); highlightEmptyInput('inp_obs_note_' + j, 'Uraian Fakta Observasi [' + ob.code + '] (Bagian 1C) wajib diisi.'); return false; }
+                }
+                uiWizard.infoSaved[3] = true;
+                uiWizard.infoActive = 0;
+                return true;
+            }
+
+            // Slide 5 (idx 4): Affinity Diagram (Minimal 3 Klaster, Minimal 3 Kartu/Klaster)
+            if (slideIdx === 4) {
+                for (let i = 0; i < formState.clusters.length; i++) {
+                    const c = formState.clusters[i];
+                    for (let n = 0; n < c.notes.length; n++) {
+                        if (!c.notes[n].text.trim()) {
+                            uiWizard.affActive = i;
+                            renderCurrentSlide();
+                            highlightEmptyInput('inp_aff_note_' + i + '_' + n, 'Isi Kartu Kutipan #' + (n + 1) + ' pada Klaster #' + (i + 1) + ' wajib diisi.');
+                            return false;
+                        }
+                    }
+                    if (!c.label.trim()) {
+                        uiWizard.affActive = i;
+                        renderCurrentSlide();
+                        highlightEmptyInput('inp_aff_label_' + i, 'Judul Tema (I-Statement) pada Klaster #' + (i + 1) + ' wajib diisi.');
+                        return false;
+                    }
+                    if (!c.insight.trim()) {
+                        uiWizard.affActive = i;
+                        renderCurrentSlide();
+                        highlightEmptyInput('inp_aff_insight_' + i, 'Rumusan User Insight pada Klaster #' + (i + 1) + ' wajib diisi.');
+                        return false;
+                    }
+                    uiWizard.affSaved[i] = true;
+                }
+                uiWizard.affActive = -1;
+                return true;
+            }
+
+            // Slide 7 (idx 6): Empathy Map (Says, Thinks, Does, Feels, Pains, Gains)
+            if (slideIdx === 6) {
+                const em = formState.empathy;
+                for (let i = 0; i < em.says.length; i++) {
+                    if (!em.says[i].text.trim()) { uiWizard.emActive = 1; renderCurrentSlide(); highlightEmptyInput('inp_em_says_' + i, 'Butir SAYS #' + (i + 1) + ' pada Empathy Map wajib diisi.'); return false; }
+                }
+                for (let i = 0; i < em.thinks.length; i++) {
+                    if (!em.thinks[i].text.trim()) { uiWizard.emActive = 1; renderCurrentSlide(); highlightEmptyInput('inp_em_thinks_' + i, 'Butir THINKS #' + (i + 1) + ' pada Empathy Map wajib diisi.'); return false; }
+                }
+                uiWizard.emSaved[1] = true;
+
+                for (let i = 0; i < em.does.length; i++) {
+                    if (!em.does[i].text.trim()) { uiWizard.emActive = 2; renderCurrentSlide(); highlightEmptyInput('inp_em_does_' + i, 'Butir DOES #' + (i + 1) + ' pada Empathy Map wajib diisi.'); return false; }
+                }
+                for (let i = 0; i < em.feels.length; i++) {
+                    if (!em.feels[i].text.trim()) { uiWizard.emActive = 2; renderCurrentSlide(); highlightEmptyInput('inp_em_feels_' + i, 'Butir FEELS #' + (i + 1) + ' pada Empathy Map wajib diisi.'); return false; }
+                }
+                uiWizard.emSaved[2] = true;
+
+                for (let i = 0; i < em.pains.length; i++) {
+                    if (!em.pains[i].trim()) { uiWizard.emActive = 3; renderCurrentSlide(); highlightEmptyInput('inp_em_pains_' + i, 'Butir PAINS (Hambatan) #' + (i + 1) + ' pada Empathy Map wajib diisi.'); return false; }
+                }
+                for (let i = 0; i < em.gains.length; i++) {
+                    if (!em.gains[i].trim()) { uiWizard.emActive = 3; renderCurrentSlide(); highlightEmptyInput('inp_em_gains_' + i, 'Butir GAINS (Harapan) #' + (i + 1) + ' pada Empathy Map wajib diisi.'); return false; }
+                }
+                uiWizard.emSaved[3] = true;
+                uiWizard.emActive = 0;
+                return true;
+            }
+
+            // Slide 9 (idx 8): User Persona
+            if (slideIdx === 8) {
+                const p = formState.persona;
+                if (!p.nama.trim()) { uiWizard.perActive = 1; renderCurrentSlide(); highlightEmptyInput('inp_p_nama', 'Nama Samaran & Rentang Usia Persona wajib diisi.'); return false; }
+                if (!p.peran.trim()) { uiWizard.perActive = 1; renderCurrentSlide(); highlightEmptyInput('inp_p_peran', 'Pekerjaan / Peran Keseharian Persona wajib diisi.'); return false; }
+                if (!p.konteks.trim()) { uiWizard.perActive = 1; renderCurrentSlide(); highlightEmptyInput('inp_p_konteks', 'Latar Belakang Kontekstual Persona wajib diisi.'); return false; }
+                if (!p.quote.trim()) { uiWizard.perActive = 1; renderCurrentSlide(); highlightEmptyInput('inp_p_quote', 'Kalimat Kutipan Utama Persona wajib diisi.'); return false; }
+                uiWizard.perSaved[1] = true;
+
+                for (let i = 0; i < p.goals.length; i++) {
+                    if (!p.goals[i].trim()) { uiWizard.perActive = 2; renderCurrentSlide(); highlightEmptyInput('inp_p_goals_' + i, 'Butir Goal & Need #' + (i + 1) + ' pada Persona wajib diisi.'); return false; }
+                }
+                for (let i = 0; i < p.pains.length; i++) {
+                    if (!p.pains[i].trim()) { uiWizard.perActive = 2; renderCurrentSlide(); highlightEmptyInput('inp_p_pains_' + i, 'Butir Pain Point #' + (i + 1) + ' pada Persona wajib diisi.'); return false; }
+                }
+                uiWizard.perSaved[2] = true;
+
+                if (!p.behaviors.trim()) { uiWizard.perActive = 3; renderCurrentSlide(); highlightEmptyInput('inp_p_behaviors', 'Behaviors (Kebiasaan Transaksi & Perangkat) wajib diisi.'); return false; }
+                if (!p.skenario.trim()) { uiWizard.perActive = 3; renderCurrentSlide(); highlightEmptyInput('inp_p_skenario', 'Trigger Scenario (Skenario Pemicu) wajib diisi.'); return false; }
+                uiWizard.perSaved[3] = true;
+                uiWizard.perActive = 0;
+                return true;
+            }
+
+            // Slide 11 (idx 10): Customer Journey Map (Minimal 5 Fase)
+            if (slideIdx === 10) {
+                for (let i = 0; i < formState.journey.length; i++) {
+                    const ph = formState.journey[i];
+                    if (!ph.phaseTitle.trim()) { uiWizard.cjmActive = i; renderCurrentSlide(); highlightEmptyInput('inp_cjm_title_' + i, 'Nama Tahapan pada Fase #' + (i + 1) + ' wajib diisi.'); return false; }
+                    if (!ph.action.trim()) { uiWizard.cjmActive = i; renderCurrentSlide(); highlightEmptyInput('inp_cjm_action_' + i, 'Tindakan Pengguna pada Fase #' + (i + 1) + ' wajib diisi.'); return false; }
+                    if (!ph.touchpoint.trim()) { uiWizard.cjmActive = i; renderCurrentSlide(); highlightEmptyInput('inp_cjm_tp_' + i, 'Touchpoint & Pikiran Pengguna pada Fase #' + (i + 1) + ' wajib diisi.'); return false; }
+                    if (!ph.pain.trim()) { uiWizard.cjmActive = i; renderCurrentSlide(); highlightEmptyInput('inp_cjm_pain_' + i, 'Titik Masalah (Pain Point) pada Fase #' + (i + 1) + ' wajib diisi.'); return false; }
+                    if (!ph.opportunity.trim()) { uiWizard.cjmActive = i; renderCurrentSlide(); highlightEmptyInput('inp_cjm_opp_' + i, 'Peluang Perbaikan Desain (Opportunity) pada Fase #' + (i + 1) + ' wajib diisi.'); return false; }
+                    uiWizard.cjmSaved[i] = true;
+                }
+                uiWizard.cjmActive = -1;
+                return true;
+            }
+
+            return true;
+        }
+
+        // =========================================================================
         // GENERATOR DROPDOWN SUMBER DATA RELASIONAL (RESPONDEN + OBSERVASI)
         // =========================================================================
         function getAllSourcesList() {
@@ -579,7 +888,6 @@
             triggerAutoSave();
         }
 
-        // 1. Narasumber Dinamis
         function updateRespondent(idx, key, val) {
             if (!formState.respondents[idx]) return;
             formState.respondents[idx][key] = val;
@@ -604,7 +912,6 @@
             renderCurrentSlide();
         }
 
-        // 2. Observasi Dinamis
         function updateObservation(idx, key, val) {
             if (!formState.observations[idx]) return;
             formState.observations[idx][key] = val;
@@ -623,7 +930,6 @@
             renderCurrentSlide();
         }
 
-        // 3. Klaster & Kartu Kutipan Affinity Diagram Dinamis
         function updateClusterMeta(cIdx, key, val) {
             if (!formState.clusters[cIdx]) return;
             formState.clusters[cIdx][key] = val;
@@ -671,7 +977,6 @@
             renderCurrentSlide();
         }
 
-        // 4. Empathy Map Dinamis
         function updateEmpathyQuadItem(quadKey, idx, field, val) {
             if (!formState.empathy[quadKey] || !formState.empathy[quadKey][idx]) return;
             formState.empathy[quadKey][idx][field] = val;
@@ -705,7 +1010,6 @@
             renderCurrentSlide();
         }
 
-        // 5. User Persona Dinamis
         function updatePersonaField(key, val) {
             formState.persona[key] = val;
             triggerAutoSave();
@@ -738,7 +1042,6 @@
             renderCurrentSlide();
         }
 
-        // 6. Customer Journey Map Dinamis
         function updateJourneyField(idx, key, val) {
             if (!formState.journey[idx]) return;
             formState.journey[idx][key] = val;
@@ -768,7 +1071,7 @@
         }
 
         // =========================================================================
-        // SIMPAN & MUAT LOCALSTORAGE
+        // SIMPAN & MUAT LOCALSTORAGE SERTA FILE PROYEK (.JSON)
         // =========================================================================
         let saveTimer = null;
         function triggerAutoSave() {
@@ -779,7 +1082,7 @@
                 try {
                     localStorage.setItem(STORAGE_KEY, JSON.stringify({ form: formState, ui: uiWizard }));
                 } catch (e) {}
-                if (badge) badge.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Tersimpan Otomatis';
+                if (badge) badge.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Tersimpan';
             }, 350);
         }
 
@@ -812,6 +1115,7 @@
                     if (parsed.ui) {
                         uiWizard = Object.assign(uiWizard, parsed.ui);
                     }
+                    syncSavedStatesFromData();
                 } else {
                     const rawLkm2 = localStorage.getItem('upertis_lkm02_neutral_v2');
                     const rawLkm1 = localStorage.getItem('upertis_lkm01_neutral_v5');
@@ -823,6 +1127,7 @@
                             formState.kelas = p2.form.kelas || '';
                             formState.umkm = p2.form.umkm || '';
                             formState.bidang = p2.form.bidang || '';
+                            syncSavedStatesFromData();
                         }
                     } else if (rawLkm1) {
                         const p1 = JSON.parse(rawLkm1);
@@ -832,10 +1137,133 @@
                             formState.kelas = p1.form.kelas || '';
                             formState.umkm = p1.form.un || '';
                             formState.bidang = p1.form.ub || '';
+                            syncSavedStatesFromData();
                         }
                     }
                 }
             } catch (e) {}
+        }
+
+        function exportJsonData() {
+            triggerAutoSave();
+            const cleanNim = (formState.nim || 'NIM').replace(/[^a-zA-Z0-9_-]/g, '');
+            const cleanNama = (formState.nama || 'Mahasiswa').trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '');
+            const filename = 'Data_Proyek_UIUX_LKM03_' + cleanNim + '_' + cleanNama + '.json';
+
+            let lkm01Backup = null;
+            let lkm02Backup = null;
+            try {
+                const raw1 = localStorage.getItem('upertis_lkm01_neutral_v5');
+                if (raw1) lkm01Backup = JSON.parse(raw1);
+                const raw2 = localStorage.getItem('upertis_lkm02_neutral_v2');
+                if (raw2) lkm02Backup = JSON.parse(raw2);
+            } catch (e) {}
+
+            const payload = {
+                app: 'UPERTIS_UIUX_WORKSPACE',
+                version: '1.0',
+                exportedAt: new Date().toISOString(),
+                lkm01: lkm01Backup,
+                lkm02: lkm02Backup,
+                lkm03: {
+                    form: formState,
+                    ui: uiWizard
+                }
+            };
+
+            const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showToast('File data proyek LKM 03 (.json) berhasil diunduh! Simpan file ini untuk dilanjutkan di perangkat lain atau pada Pertemuan 4.', 'success');
+        }
+
+        function triggerImportJson() {
+            const inp = document.getElementById('jsonFileInput');
+            if (inp) {
+                inp.value = '';
+                inp.click();
+            }
+        }
+
+        function handleJsonFileImport(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+
+                    if (parsed && parsed.lkm01) {
+                        try { localStorage.setItem('upertis_lkm01_neutral_v5', JSON.stringify(parsed.lkm01)); } catch (err) {}
+                    }
+                    if (parsed && parsed.lkm02) {
+                        try { localStorage.setItem('upertis_lkm02_neutral_v2', JSON.stringify(parsed.lkm02)); } catch (err) {}
+                    }
+
+                    // Kasus 1: File memiliki data LKM 03 lengkap
+                    if (parsed && parsed.lkm03 && parsed.lkm03.form) {
+                        formState = Object.assign(formState, parsed.lkm03.form);
+                        if (parsed.lkm03.ui) {
+                            uiWizard = Object.assign(uiWizard, parsed.lkm03.ui);
+                        }
+                        syncSavedStatesFromData();
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify({ form: formState, ui: uiWizard }));
+                        renderCurrentSlide();
+                        showToast('Data proyek LKM 03 berhasil dimuat sepenuhnya dari file .json!', 'success');
+                        return;
+                    }
+
+                    // Kasus 2: Mahasiswa memuat file .json dari LKM 02 atau LKM 01
+                    if (parsed && ((parsed.lkm02 && parsed.lkm02.form) || (parsed.lkm01 && parsed.lkm01.form))) {
+                        const f2 = parsed.lkm02 && parsed.lkm02.form ? parsed.lkm02.form : null;
+                        const f1 = parsed.lkm01 && parsed.lkm01.form ? parsed.lkm01.form : null;
+
+                        if (f2) {
+                            formState.nama = f2.nama || formState.nama;
+                            formState.nim = f2.nim || formState.nim;
+                            formState.kelas = f2.kelas || formState.kelas;
+                            formState.umkm = f2.umkm || formState.umkm;
+                            formState.bidang = f2.bidang || formState.bidang;
+                        } else if (f1) {
+                            formState.nama = f1.nama || formState.nama;
+                            formState.nim = f1.nim || formState.nim;
+                            formState.kelas = f1.kelas || formState.kelas;
+                            formState.umkm = f1.un || formState.umkm;
+                            formState.bidang = f1.ub || formState.bidang;
+                        }
+
+                        syncSavedStatesFromData();
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify({ form: formState, ui: uiWizard }));
+                        renderCurrentSlide();
+                        showToast('Identitas Mahasiswa & Profil UMKM dari pertemuan sebelumnya berhasil dimuat! Silakan lengkapi sintesis LKM 03.', 'success');
+                        return;
+                    }
+
+                    // Kasus 3: Format langsung { form, ui }
+                    if (parsed && parsed.form && Array.isArray(parsed.form.clusters)) {
+                        formState = Object.assign(formState, parsed.form);
+                        if (parsed.ui) uiWizard = Object.assign(uiWizard, parsed.ui);
+                        syncSavedStatesFromData();
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify({ form: formState, ui: uiWizard }));
+                        renderCurrentSlide();
+                        showToast('Data proyek LKM 03 berhasil dimuat!', 'success');
+                        return;
+                    }
+
+                    showToast('Format file .json tidak dikenali untuk LKM 03.', 'error');
+                } catch (err) {
+                    showToast('Gagal membaca file .json. Pastikan file tidak rusak.', 'error');
+                }
+            };
+            reader.readAsText(file);
         }
 
         // =========================================================================
@@ -847,7 +1275,7 @@
                 statusHtml = `
                     <div class="flex flex-wrap items-center gap-2 shrink-0">
                         <span class="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 text-xs font-extrabold flex items-center gap-1">
-                            <i class="fa-solid fa-circle-check"></i> Tersimpan
+                            <i class="fa-solid fa-circle-check"></i> Lengkap
                         </span>
                         <button type="button" onclick="${onToggleMinClick}" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center gap-1.5">
                             <i class="fa-solid ${isMinimized ? 'fa-expand' : 'fa-compress'}"></i>
@@ -864,7 +1292,7 @@
                 statusHtml = `
                     <div class="flex items-center gap-2 shrink-0">
                         <span class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-xs font-extrabold">
-                            <i class="fa-solid fa-pen-nib mr-1"></i>Mode Menulis
+                            <i class="fa-solid fa-pen-nib mr-1"></i>Wajib Diisi (*)
                         </span>
                         ${extraDeleteBtnHtml || ''}
                     </div>
@@ -872,8 +1300,8 @@
             } else {
                 statusHtml = `
                     <div class="flex items-center gap-2 shrink-0">
-                        <button type="button" onclick="${onEditClick}" class="px-3.5 py-1.5 rounded-xl bg-slate-200/80 hover:bg-indigo-600 hover:text-white dark:bg-slate-800 dark:hover:bg-indigo-600 text-slate-700 dark:text-slate-300 text-xs font-extrabold transition">
-                            Buka & Isi Bagian Ini
+                        <button type="button" onclick="${onEditClick}" class="px-3.5 py-1.5 rounded-xl bg-amber-100 hover:bg-indigo-600 hover:text-white dark:bg-amber-950/80 dark:hover:bg-indigo-600 text-amber-800 dark:text-amber-300 text-xs font-extrabold transition">
+                            Belum Diisi • Buka Bagian Ini
                         </button>
                         ${extraDeleteBtnHtml || ''}
                     </div>
@@ -892,7 +1320,7 @@
         }
 
         // =========================================================================
-        // RENDER 12 SLIDE PRAKTIKUM 3 (LKM 03 DINAMIS & RELASIONAL)
+        // RENDER 12 SLIDE PRAKTIKUM 3 (LKM 03 DINAMIS, RELASIONAL, & WAJIB ISI)
         // =========================================================================
 
         // SLIDE 1: Pengantar Praktikum 3
@@ -911,17 +1339,21 @@
                             </h2>
 
                             <p class="text-xs sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
-                                Selamat datang di <strong>Workspace Sintesis Relasional LKM 03</strong>. Kode anonim narasumber (<code>Pemilik</code>, <code>P1</code>, <code>P2</code>, dst.) dan kode observasi (<code>OBS-1</code>, <code>OBS-2</code>) yang Anda daftarkan satu per satu pada Tahap 1 akan <strong>otomatis muncul sebagai pilihan Dropdown</strong> saat Anda menyusun <strong>${term('affinity', 'Affinity Diagram')}</strong>, <strong>${term('empathymap', 'Empathy Map')}</strong>, <strong>${term('persona', 'User Persona')}</strong>, dan <strong>${term('journeymap', 'Customer Journey Map')}</strong>.
+                                Selamat datang di <strong>Workspace Sintesis Relasional LKM 03</strong>. Kode anonim narasumber (<code>Pemilik</code>, <code>P1</code>, <code>P2</code>, dst.) dan kode observasi (<code>OBS-1</code>, <code>OBS-2</code>) yang Anda daftarkan pada Tahap 1 akan <strong>otomatis muncul sebagai pilihan Dropdown</strong> saat menyusun <strong>${term('affinity', 'Affinity Diagram')}</strong>, <strong>${term('empathymap', 'Empathy Map')}</strong>, <strong>${term('persona', 'User Persona')}</strong>, dan <strong>${term('journeymap', 'Customer Journey Map')}</strong>. Gunakan tombol <strong>Muat Data Proyek (.json)</strong> jika ingin memuat data dari LKM sebelumnya.
                             </p>
 
-                            <div class="flex flex-wrap items-center gap-3 pt-2">
+                            <div class="flex flex-wrap items-center gap-2.5 pt-2">
                                 <button type="button" onclick="changeSlide(1)" class="px-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-extrabold transition flex items-center gap-2 shadow-sm">
                                     <span>Mulai Daftarkan Responden</span>
                                     <i class="fa-solid fa-arrow-right"></i>
                                 </button>
+                                <button type="button" onclick="triggerImportJson()" class="px-4 py-3 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:hover:bg-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-800 text-xs sm:text-sm font-extrabold transition flex items-center gap-2">
+                                    <i class="fa-solid fa-upload"></i>
+                                    <span>Muat Data Proyek (.json)</span>
+                                </button>
                                 <button type="button" onclick="clearAllData()" class="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 text-xs sm:text-sm font-bold transition flex items-center gap-2">
                                     <i class="fa-solid fa-rotate-left"></i>
-                                    <span>Reset Semua Isian</span>
+                                    <span>Reset</span>
                                 </button>
                             </div>
                         </div>
@@ -929,13 +1361,13 @@
                         <div class="lg:col-span-5">
                             <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 space-y-4">
                                 <div>
-                                    <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Standar Kuantitas Minimal</span>
+                                    <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Standar Kuantitas Minimal (Wajib)</span>
                                     <h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white mt-0.5">Syarat Kelengkapan LKM 03</h3>
                                 </div>
                                 <div class="space-y-2.5 text-xs">
                                     <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 flex items-center gap-3">
                                         <span class="w-7 h-7 rounded-lg bg-indigo-600 text-white font-extrabold flex items-center justify-center shrink-0">1</span>
-                                        <div><strong class="text-slate-900 dark:text-white block">Minimal 4 Narasumber & 3 Observasi (Slide 3)</strong><span class="text-slate-500">Diinput satu per satu (bisa ditambah sesuai jumlah responden).</span></div>
+                                        <div><strong class="text-slate-900 dark:text-white block">Minimal 4 Narasumber & 3 Observasi (Slide 3)</strong><span class="text-slate-500">Wajib diisi lengkap satu per satu (bisa ditambah).</span></div>
                                     </div>
                                     <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 flex items-center gap-3">
                                         <span class="w-7 h-7 rounded-lg bg-indigo-600 text-white font-extrabold flex items-center justify-center shrink-0">2</span>
@@ -943,7 +1375,7 @@
                                     </div>
                                     <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 flex items-center gap-3">
                                         <span class="w-7 h-7 rounded-lg bg-indigo-600 text-white font-extrabold flex items-center justify-center shrink-0">3</span>
-                                        <div><strong class="text-slate-900 dark:text-white block">Minimal 2 Butir per Kuadran Empathy Map (Slide 7)</strong><span class="text-slate-500">Memilih sumber responden via dropdown pada Says, Thinks, Does, Feels.</span></div>
+                                        <div><strong class="text-slate-900 dark:text-white block">Minimal 2 Butir per Kuadran Empathy Map (Slide 7)</strong><span class="text-slate-500">Wajib mengisi Says, Thinks, Does, Feels, Pains, & Gains.</span></div>
                                     </div>
                                     <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 flex items-center gap-3">
                                         <span class="w-7 h-7 rounded-lg bg-indigo-600 text-white font-extrabold flex items-center justify-center shrink-0">4</span>
@@ -951,7 +1383,7 @@
                                     </div>
                                     <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 flex items-center gap-3">
                                         <span class="w-7 h-7 rounded-lg bg-emerald-600 text-white font-extrabold flex items-center justify-center shrink-0">5</span>
-                                        <div><strong class="text-slate-900 dark:text-white block">Minimal 5 Fase Customer Journey Map (Slide 11)</strong><span class="text-slate-500">Dapat ditambah jika tahapan transaksi lebih panjang & unduh PDF.</span></div>
+                                        <div><strong class="text-slate-900 dark:text-white block">Minimal 5 Fase Customer Journey Map (Slide 11)</strong><span class="text-slate-500">Lengkapi 5 fase perjalanan, simpan .JSON & unduh PDF.</span></div>
                                     </div>
                                 </div>
                             </div>
@@ -1010,9 +1442,9 @@
             const p2Editing = uiWizard.infoActive === 2;
             const p3Editing = uiWizard.infoActive === 3;
 
-            const p1Saved = uiWizard.infoSaved[1] || !!(formState.nama.trim() || formState.umkm.trim());
-            const p2Saved = uiWizard.infoSaved[2];
-            const p3Saved = uiWizard.infoSaved[3];
+            const p1Saved = isInfoPartComplete(1);
+            const p2Saved = isInfoPartComplete(2);
+            const p3Saved = isInfoPartComplete(3);
 
             const p1Min = !!uiWizard.infoMin[1];
             const p2Min = !!uiWizard.infoMin[2];
@@ -1027,27 +1459,27 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100 dark:border-slate-800">
                             <div>
                                 <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Nama Lengkap Mahasiswa *</label>
-                                <input type="text" value="${escapeHtml(formState.nama)}" oninput="updateField('nama', this.value)" placeholder="Ketik nama lengkap Anda..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <input type="text" id="inp_nama" value="${escapeHtml(formState.nama)}" oninput="updateField('nama', this.value)" placeholder="Ketik nama lengkap Anda..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
                             </div>
                             <div>
                                 <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Nomor Induk Mahasiswa (NIM) *</label>
-                                <input type="text" value="${escapeHtml(formState.nim)}" oninput="updateField('nim', this.value)" placeholder="Ketik NIM Anda..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base font-mono font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <input type="text" id="inp_nim" value="${escapeHtml(formState.nim)}" oninput="updateField('nim', this.value)" placeholder="Ketik NIM Anda..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base font-mono font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
                             </div>
                             <div>
                                 <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Kelas / Semester *</label>
-                                <input type="text" value="${escapeHtml(formState.kelas)}" oninput="updateField('kelas', this.value)" placeholder="Ketik kelas dan semester..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <input type="text" id="inp_kelas" value="${escapeHtml(formState.kelas)}" oninput="updateField('kelas', this.value)" placeholder="Ketik kelas dan semester..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
                             </div>
                             <div>
                                 <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Tanggal Sintesis Riset *</label>
-                                <input type="date" value="${escapeHtml(formState.tgl)}" oninput="updateField('tgl', this.value)" class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <input type="date" id="inp_tgl" value="${escapeHtml(formState.tgl)}" oninput="updateField('tgl', this.value)" class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500">
                             </div>
                             <div>
                                 <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Nama Usaha UMKM Mitra *</label>
-                                <input type="text" value="${escapeHtml(formState.umkm)}" oninput="updateField('umkm', this.value)" placeholder="Ketik nama UMKM mitra Anda..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <input type="text" id="inp_umkm" value="${escapeHtml(formState.umkm)}" oninput="updateField('umkm', this.value)" placeholder="Ketik nama UMKM mitra Anda..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
                             </div>
                             <div>
                                 <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Bidang / Kategori Usaha *</label>
-                                <input type="text" value="${escapeHtml(formState.bidang)}" oninput="updateField('bidang', this.value)" placeholder="Ketik bidang usaha mitra..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <input type="text" id="inp_bidang" value="${escapeHtml(formState.bidang)}" oninput="updateField('bidang', this.value)" placeholder="Ketik bidang usaha mitra..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
                             </div>
                         </div>
                         <div class="flex justify-end pt-1">
@@ -1061,12 +1493,12 @@
             } else if (p1Saved) {
                 card1Html = `
                     <div class="p-4 sm:p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-emerald-300 dark:border-emerald-800/70 space-y-3">
-                        ${renderWizardCardHeader('Bagian 1A', (formState.nama || 'Mahasiswa') + ' • Mitra: ' + (formState.umkm || '-'), true, false, p1Min, 'openInfoPart(1)', 'toggleMinInfoPart(1)')}
+                        ${renderWizardCardHeader('Bagian 1A', formState.nama + ' • Mitra: ' + formState.umkm, true, false, p1Min, 'openInfoPart(1)', 'toggleMinInfoPart(1)')}
                         ${!p1Min ? `
                             <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm sm:text-base">
-                                <div><span class="text-xs font-bold uppercase text-slate-400 block">Mahasiswa</span><span class="font-extrabold text-slate-900 dark:text-white">${escapeHtml(formState.nama) || '-'} (${escapeHtml(formState.nim) || '-'})</span></div>
-                                <div><span class="text-xs font-bold uppercase text-slate-400 block">Kelas & Tanggal</span><span>${escapeHtml(formState.kelas) || '-'} • ${escapeHtml(formState.tgl) || '-'}</span></div>
-                                <div class="sm:col-span-2"><span class="text-xs font-bold uppercase text-slate-400 block">UMKM Mitra</span><span class="font-bold text-indigo-600 dark:text-indigo-400">${escapeHtml(formState.umkm) || '-'} (${escapeHtml(formState.bidang) || '-'})</span></div>
+                                <div><span class="text-xs font-bold uppercase text-slate-400 block">Mahasiswa</span><span class="font-extrabold text-slate-900 dark:text-white">${escapeHtml(formState.nama)} (${escapeHtml(formState.nim)})</span></div>
+                                <div><span class="text-xs font-bold uppercase text-slate-400 block">Kelas & Tanggal</span><span>${escapeHtml(formState.kelas)} • ${escapeHtml(formState.tgl)}</span></div>
+                                <div class="sm:col-span-2"><span class="text-xs font-bold uppercase text-slate-400 block">UMKM Mitra</span><span class="font-bold text-indigo-600 dark:text-indigo-400">${escapeHtml(formState.umkm)} (${escapeHtml(formState.bidang)})</span></div>
                             </div>
                         ` : ''}
                     </div>
@@ -1086,7 +1518,7 @@
                         <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 grid grid-cols-1 sm:grid-cols-12 gap-3 items-start">
                             <div class="sm:col-span-2">
                                 <label class="text-[11px] font-extrabold text-indigo-600 dark:text-indigo-400 block mb-1">Kode #${i + 1} *</label>
-                                <input type="text" value="${escapeHtml(r.code)}" oninput="updateRespondent(${i}, 'code', this.value)" class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-mono font-extrabold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <input type="text" id="inp_resp_code_${i}" value="${escapeHtml(r.code)}" oninput="updateRespondent(${i}, 'code', this.value)" class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-mono font-extrabold focus:outline-none focus:ring-2 focus:ring-indigo-500">
                             </div>
                             <div class="sm:col-span-3">
                                 <label class="text-[11px] font-bold text-slate-600 dark:text-slate-300 block mb-1">Kelompok Peran *</label>
@@ -1098,7 +1530,7 @@
                             </div>
                             <div class="sm:col-span-6">
                                 <label class="text-[11px] font-bold text-slate-600 dark:text-slate-300 block mb-1">Profil Singkat Anonim (Usia, Pekerjaan, & Frekuensi Transaksi) *</label>
-                                <input type="text" value="${escapeHtml(r.profile)}" oninput="updateRespondent(${i}, 'profile', this.value)" placeholder="Tuliskan usia, pekerjaan singkat, dan seberapa sering bertransaksi..." class="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <input type="text" id="inp_resp_profile_${i}" value="${escapeHtml(r.profile)}" oninput="updateRespondent(${i}, 'profile', this.value)" placeholder="Tuliskan usia, pekerjaan singkat, dan seberapa sering bertransaksi (wajib diisi)..." class="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                             </div>
                             <div class="sm:col-span-1 flex sm:justify-end pt-0 sm:pt-5">
                                 <button type="button" onclick="removeRespondent(${i})" ${!canDeleteResp ? 'disabled title="Wajib minimal 4 narasumber"' : 'title="Hapus baris ini"'} class="px-2.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 text-xs font-bold transition disabled:opacity-30 disabled:pointer-events-none">
@@ -1113,7 +1545,7 @@
                     <div class="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border-2 border-indigo-600 dark:border-indigo-400 shadow-md space-y-4">
                         ${renderWizardCardHeader('Bagian 1B', 'Daftar Kode Anonim Narasumber Wawancara (' + formState.respondents.length + ' Orang — Minimal ' + MIN_RESPONDENTS + ')', p2Saved, true, false, '', '')}
                         <div class="p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-800 text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
-                            <i class="fa-solid fa-circle-info text-indigo-600 dark:text-indigo-400 mr-1.5"></i><strong>Instruksi:</strong> Masukkan data setiap narasumber yang telah Anda wawancarai satu per satu (minimal 1 Pengelola UMKM dan 3 Pelanggan). Kode di bawah ini akan otomatis muncul di pilihan Dropdown pada tahap Affinity Diagram, Empathy Map, Persona, dan Journey Map.
+                            <i class="fa-solid fa-circle-info text-indigo-600 dark:text-indigo-400 mr-1.5"></i><strong>Instruksi:</strong> Masukkan data setiap narasumber yang telah Anda wawancarai satu per satu (minimal 1 Pengelola UMKM dan 3 Pelanggan). Seluruh baris wajib diisi.
                         </div>
                         <div class="space-y-3">
                             ${respRowsHtml}
@@ -1134,7 +1566,7 @@
                 let badgesHtml = '';
                 for (let i = 0; i < formState.respondents.length; i++) {
                     const r = formState.respondents[i];
-                    badgesHtml += `<div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs"><strong class="font-mono text-indigo-600 dark:text-indigo-400">[${escapeHtml(r.code)}]</strong> <strong>${escapeHtml(r.role)}:</strong> ${escapeHtml(r.profile) || '(Profil belum diisi)'}</div>`;
+                    badgesHtml += `<div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs"><strong class="font-mono text-indigo-600 dark:text-indigo-400">[${escapeHtml(r.code)}]</strong> <strong>${escapeHtml(r.role)}:</strong> ${escapeHtml(r.profile)}</div>`;
                 }
                 card2Html = `
                     <div class="p-4 sm:p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-emerald-300 dark:border-emerald-800/70 space-y-3">
@@ -1157,15 +1589,15 @@
                         <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 grid grid-cols-1 sm:grid-cols-12 gap-3 items-start">
                             <div class="sm:col-span-2">
                                 <label class="text-[11px] font-extrabold text-emerald-600 dark:text-emerald-400 block mb-1">Kode Obs *</label>
-                                <input type="text" value="${escapeHtml(ob.code)}" oninput="updateObservation(${j}, 'code', this.value)" class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-mono font-extrabold focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                <input type="text" id="inp_obs_code_${j}" value="${escapeHtml(ob.code)}" oninput="updateObservation(${j}, 'code', this.value)" class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-mono font-extrabold focus:outline-none focus:ring-2 focus:ring-emerald-500">
                             </div>
                             <div class="sm:col-span-3">
                                 <label class="text-[11px] font-bold text-slate-600 dark:text-slate-300 block mb-1">Aspek yang Diamati *</label>
-                                <input type="text" value="${escapeHtml(ob.aspect)}" oninput="updateObservation(${j}, 'aspect', this.value)" placeholder="Misal: Urutan Tindakan / Lingkungan..." class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                <input type="text" id="inp_obs_aspect_${j}" value="${escapeHtml(ob.aspect)}" oninput="updateObservation(${j}, 'aspect', this.value)" placeholder="Misal: Urutan Tindakan / Lingkungan..." class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500">
                             </div>
                             <div class="sm:col-span-6">
                                 <label class="text-[11px] font-bold text-slate-600 dark:text-slate-300 block mb-1">Uraian Fakta Perilaku Nyata yang Terlihat di Lapangan *</label>
-                                <input type="text" value="${escapeHtml(ob.note)}" oninput="updateObservation(${j}, 'note', this.value)" placeholder="Tuliskan fakta perilaku atau situasi nyata yang Anda lihat langsung..." class="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                <input type="text" id="inp_obs_note_${j}" value="${escapeHtml(ob.note)}" oninput="updateObservation(${j}, 'note', this.value)" placeholder="Tuliskan fakta perilaku atau situasi nyata yang Anda lihat langsung (wajib diisi)..." class="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                             </div>
                             <div class="sm:col-span-1 flex sm:justify-end pt-0 sm:pt-5">
                                 <button type="button" onclick="removeObservation(${j})" ${!canDeleteObs ? 'disabled title="Wajib minimal 3 catatan observasi"' : 'title="Hapus baris ini"'} class="px-2.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 text-xs font-bold transition disabled:opacity-30 disabled:pointer-events-none">
@@ -1198,7 +1630,7 @@
                 let obsListHtml = '';
                 for (let j = 0; j < formState.observations.length; j++) {
                     const ob = formState.observations[j];
-                    obsListHtml += `<div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs"><strong class="font-mono text-emerald-600 dark:text-emerald-400">[${escapeHtml(ob.code)}]</strong> <strong>${escapeHtml(ob.aspect)}:</strong> ${escapeHtml(ob.note) || '-'}</div>`;
+                    obsListHtml += `<div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs"><strong class="font-mono text-emerald-600 dark:text-emerald-400">[${escapeHtml(ob.code)}]</strong> <strong>${escapeHtml(ob.aspect)}:</strong> ${escapeHtml(ob.note)}</div>`;
                 }
                 card3Html = `
                     <div class="p-4 sm:p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-emerald-300 dark:border-emerald-800/70 space-y-3">
@@ -1213,7 +1645,7 @@
             return `
                 <div class="slide-enter flex flex-col justify-between h-full gap-5">
                     <div class="space-y-1">
-                        <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-pen-to-square mr-1"></i>Tahap 1 • Database Sumber Riset (Narasumber & Observasi)</span>
+                        <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-pen-to-square mr-1"></i>Tahap 1 • Database Sumber Riset (Wajib Lengkap)</span>
                         <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Daftarkan Kode Narasumber & Fakta Observasi Anda</h2>
                     </div>
                     <div class="space-y-4 my-auto">
@@ -1264,7 +1696,7 @@
                     </div>
 
                     <div class="p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-800/60 text-xs leading-relaxed">
-                        <i class="fa-solid fa-list-check text-indigo-600 dark:text-indigo-400 mr-1.5"></i><strong>Instruksi Slide Berikutnya:</strong> Susunlah minimal 3 Klaster Tema Masalah pada Slide 5. Anda dapat menekan tombol <strong>+ Tambah Kartu Kutipan</strong> di dalam klaster maupun <strong>+ Tambah Klaster Tema Baru</strong>.
+                        <i class="fa-solid fa-list-check text-indigo-600 dark:text-indigo-400 mr-1.5"></i><strong>Instruksi Slide Berikutnya:</strong> Susunlah minimal 3 Klaster Tema Masalah secara lengkap pada Slide 5.
                     </div>
                 </div>
             `;
@@ -1278,7 +1710,7 @@
             for (let i = 0; i < formState.clusters.length; i++) {
                 const c = formState.clusters[i];
                 const isEditing = uiWizard.affActive === i;
-                const isSaved = uiWizard.affSaved[i] || !!(c.label.trim() || c.insight.trim());
+                const isSaved = isClusterComplete(i);
                 const isMin = !!uiWizard.affMin[i];
                 const headerTitle = c.label.trim() ? c.label : 'Klaster Tema Masalah #' + (i + 1) + ' (' + c.notes.length + ' Kartu Temuan)';
 
@@ -1301,7 +1733,7 @@
                                 </div>
                                 <div class="sm:col-span-7">
                                     <label class="text-[11px] font-bold text-slate-700 dark:text-slate-200 block mb-1">Isi Kutipan Responden / Fakta Temuan (1 Kartu = 1 Masalah) *</label>
-                                    <input type="text" value="${escapeHtml(noteObj.text)}" oninput="updateClusterNote(${i}, ${n}, 'text', this.value)" placeholder="Ketik kutipan langsung atau fakta temuan dari sumber tersebut..." class="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <input type="text" id="inp_aff_note_${i}_${n}" value="${escapeHtml(noteObj.text)}" oninput="updateClusterNote(${i}, ${n}, 'text', this.value)" placeholder="Ketik kutipan langsung atau fakta temuan dari sumber tersebut (wajib diisi)..." class="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                                 </div>
                                 <div class="sm:col-span-1 flex sm:justify-end pt-0 sm:pt-5">
                                     <button type="button" onclick="removeClusterNote(${i}, ${n})" ${!canDeleteNote ? 'disabled title="Wajib minimal 3 kartu per klaster"' : 'title="Hapus kartu ini"'} class="px-2.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 text-xs font-bold transition disabled:opacity-30 disabled:pointer-events-none">
@@ -1331,19 +1763,19 @@
                                     <label class="text-xs sm:text-sm font-bold text-indigo-700 dark:text-indigo-300 block mb-1.5">
                                         2. Judul Tema Klaster #${i + 1} (Gunakan Kalimat Sudut Pandang Pengguna / I-Statement: "Saya...") *
                                     </label>
-                                    <input type="text" value="${escapeHtml(c.label)}" oninput="updateClusterMeta(${i}, 'label', this.value)" placeholder="Tuliskan judul tema klaster dengan diawali kata 'Saya...'..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <input type="text" id="inp_aff_label_${i}" value="${escapeHtml(c.label)}" oninput="updateClusterMeta(${i}, 'label', this.value)" placeholder="Tuliskan judul tema klaster dengan diawali kata 'Saya...'..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
                                 </div>
 
                                 <div>
                                     <label class="text-xs sm:text-sm font-bold text-emerald-700 dark:text-emerald-300 block mb-1.5">
                                         3. Rumusan User Insight dari Klaster #${i + 1} (Mengapa Masalah Ini Terjadi & Apa Kebutuhan Mendasarnya?) *
                                     </label>
-                                    <textarea rows="3" oninput="autoResizeTextarea(this); updateClusterMeta(${i}, 'insight', this.value)" placeholder="Tuliskan kesimpulan wawasan pengguna (User Insight) yang ditarik dari klaster ini..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500">${escapeHtml(c.insight)}</textarea>
+                                    <textarea id="inp_aff_insight_${i}" rows="3" oninput="autoResizeTextarea(this); updateClusterMeta(${i}, 'insight', this.value)" placeholder="Tuliskan kesimpulan wawasan pengguna (User Insight) yang ditarik dari klaster ini..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500">${escapeHtml(c.insight)}</textarea>
                                 </div>
                             </div>
 
                             <div class="flex items-center justify-between gap-3 pt-1">
-                                <span class="text-xs text-slate-400">Klaster ${i + 1} dari ${formState.clusters.length}</span>
+                                <span class="text-xs text-slate-400">Klaster ${i + 1} dari ${formState.clusters.length} (Wajib Lengkap)</span>
                                 <button type="button" onclick="saveAffCluster(${i})" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-extrabold transition flex items-center gap-2 shadow-sm">
                                     <i class="fa-solid fa-check"></i>
                                     <span>${i < formState.clusters.length - 1 ? 'Simpan & Lanjut ke Klaster #' + (i + 2) : 'Simpan Klaster #' + (i + 1)}</span>
@@ -1358,7 +1790,7 @@
                         stickyCardsHtml += `
                             <div class="p-3 rounded-xl bg-amber-100/90 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-800 text-xs space-y-1">
                                 <span class="px-2 py-0.5 rounded bg-amber-900/15 dark:bg-amber-400/20 font-mono text-[10px] font-extrabold text-amber-950 dark:text-amber-300 inline-block">${escapeHtml(getSourceDetailLabel(noteObj.source))}</span>
-                                <p class="font-semibold text-slate-800 dark:text-slate-100 leading-snug">${escapeHtml(noteObj.text) || '-'}</p>
+                                <p class="font-semibold text-slate-800 dark:text-slate-100 leading-snug">${escapeHtml(noteObj.text)}</p>
                             </div>
                         `;
                     }
@@ -1373,7 +1805,7 @@
                                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">${stickyCardsHtml}</div>
                                     <div class="pt-2.5 border-t border-slate-100 dark:border-slate-800">
                                         <span class="text-xs font-bold uppercase text-emerald-600 dark:text-emerald-400 block mb-0.5">User Insight Klaster #${i + 1}:</span>
-                                        <div class="font-semibold text-slate-800 dark:text-slate-100 whitespace-pre-line">${escapeHtml(c.insight) || '-'}</div>
+                                        <div class="font-semibold text-slate-800 dark:text-slate-100 whitespace-pre-line">${escapeHtml(c.insight)}</div>
                                     </div>
                                 </div>
                             `}
@@ -1392,7 +1824,7 @@
                 <div class="slide-enter flex flex-col justify-between h-full gap-5">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <div class="space-y-1">
-                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-pen-to-square mr-1"></i>Tahap 2 • Wizard Affinity Diagram (${formState.clusters.length} Klaster — Minimal ${MIN_CLUSTERS})</span>
+                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-pen-to-square mr-1"></i>Tahap 2 • Wizard Affinity Diagram (${formState.clusters.length} Klaster — Minimal ${MIN_CLUSTERS} Wajib)</span>
                             <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Pengelompokan Kartu Temuan & Penarikan User Insight</h2>
                         </div>
                         <div class="flex flex-wrap items-center gap-2 shrink-0">
@@ -1439,13 +1871,12 @@
                     </div>
 
                     <div class="p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-800/60 text-xs leading-relaxed">
-                        <i class="fa-solid fa-list-check text-indigo-600 dark:text-indigo-400 mr-1.5"></i><strong>Instruksi Slide Berikutnya:</strong> Lengkapi ketiga bagian <em>Empathy Map</em> pada Slide 7. Anda dapat menambah butir baru di setiap kuadran dengan tombol <strong>+ Tambah Butir</strong>.
+                        <i class="fa-solid fa-list-check text-indigo-600 dark:text-indigo-400 mr-1.5"></i><strong>Instruksi Slide Berikutnya:</strong> Lengkapi ketiga bagian <em>Empathy Map</em> pada Slide 7.
                     </div>
                 </div>
             `;
         }
 
-        // Helper Render Kuadran Dinamis Empathy Map
         function renderEmpathyQuadEditor(quadKey, titleLabel, badgeColor) {
             const arr = formState.empathy[quadKey] || [];
             const canDel = arr.length > MIN_EMPATHY_ITEMS;
@@ -1460,7 +1891,7 @@
                             </select>
                         </div>
                         <div class="sm:col-span-7">
-                            <input type="text" value="${escapeHtml(it.text)}" oninput="updateEmpathyQuadItem('${quadKey}', ${i}, 'text', this.value)" placeholder="Ketik butir temuan untuk kuadran ini..." class="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <input type="text" id="inp_em_${quadKey}_${i}" value="${escapeHtml(it.text)}" oninput="updateEmpathyQuadItem('${quadKey}', ${i}, 'text', this.value)" placeholder="Ketik butir temuan untuk kuadran ini (wajib diisi)..." class="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                         </div>
                         <div class="sm:col-span-1 flex justify-end">
                             <button type="button" onclick="removeEmpathyQuadItem('${quadKey}', ${i})" ${!canDel ? 'disabled title="Minimal 2 butir"' : ''} class="px-2.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 text-xs font-bold transition disabled:opacity-30 disabled:pointer-events-none">
@@ -1485,7 +1916,7 @@
 
         function renderEmpathyQuadReadList(quadKey) {
             const arr = formState.empathy[quadKey] || [];
-            return arr.map(it => `<div class="p-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs"><strong class="font-mono text-indigo-600 dark:text-indigo-400">[${escapeHtml(it.source)}]</strong> ${escapeHtml(it.text) || '-'}</div>`).join('');
+            return arr.map(it => `<div class="p-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs"><strong class="font-mono text-indigo-600 dark:text-indigo-400">[${escapeHtml(it.source)}]</strong> ${escapeHtml(it.text)}</div>`).join('');
         }
 
         // SLIDE 7 [FORM ISIAN 3]: Wizard Empathy Map Dinamis
@@ -1494,15 +1925,14 @@
             const e2Edit = uiWizard.emActive === 2;
             const e3Edit = uiWizard.emActive === 3;
 
-            const e1Saved = uiWizard.emSaved[1];
-            const e2Saved = uiWizard.emSaved[2];
-            const e3Saved = uiWizard.emSaved[3];
+            const e1Saved = isEmpathyPartComplete(1);
+            const e2Saved = isEmpathyPartComplete(2);
+            const e3Saved = isEmpathyPartComplete(3);
 
             const e1Min = !!uiWizard.emMin[1];
             const e2Min = !!uiWizard.emMin[2];
             const e3Min = !!uiWizard.emMin[3];
 
-            // Bagian 1: SAYS & THINKS
             let card1Html = '';
             if (e1Edit) {
                 card1Html = `
@@ -1535,7 +1965,6 @@
                 card1Html = `<div class="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-800">${renderWizardCardHeader('Empathy Map 1 / 3', 'Kuadran 1: SAYS (Ucapan) & Kuadran 2: THINKS (Pikiran)', false, false, true, 'openEmPart(1)', '')}</div>`;
             }
 
-            // Bagian 2: DOES & FEELS
             let card2Html = '';
             if (e2Edit) {
                 card2Html = `
@@ -1568,7 +1997,6 @@
                 card2Html = `<div class="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-800">${renderWizardCardHeader('Empathy Map 2 / 3', 'Kuadran 3: DOES (Tindakan) & Kuadran 4: FEELS (Perasaan)', false, false, true, 'openEmPart(2)', '')}</div>`;
             }
 
-            // Bagian 3: PAINS & GAINS
             let card3Html = '';
             if (e3Edit) {
                 const canDelPain = formState.empathy.pains.length > MIN_EMPATHY_ITEMS;
@@ -1577,7 +2005,7 @@
                 const painsInputs = formState.empathy.pains.map((val, idx) => `
                     <div class="flex items-center gap-2">
                         <span class="w-6 h-6 rounded-lg bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 text-xs font-extrabold flex items-center justify-center shrink-0">${idx + 1}</span>
-                        <input type="text" value="${escapeHtml(val)}" oninput="updateEmpathySimpleList('pains', ${idx}, this.value)" placeholder="Tuliskan hambatan / kesulitan utama pengguna..." class="flex-1 px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-rose-500">
+                        <input type="text" id="inp_em_pains_${idx}" value="${escapeHtml(val)}" oninput="updateEmpathySimpleList('pains', ${idx}, this.value)" placeholder="Tuliskan hambatan / kesulitan utama pengguna (wajib diisi)..." class="flex-1 px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-rose-500">
                         <button type="button" onclick="removeEmpathySimpleList('pains', ${idx})" ${!canDelPain ? 'disabled' : ''} class="px-2.5 py-2 rounded-xl bg-rose-50 text-rose-600 text-xs font-bold disabled:opacity-30"><i class="fa-solid fa-trash-can"></i></button>
                     </div>
                 `).join('');
@@ -1585,7 +2013,7 @@
                 const gainsInputs = formState.empathy.gains.map((val, idx) => `
                     <div class="flex items-center gap-2">
                         <span class="w-6 h-6 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-xs font-extrabold flex items-center justify-center shrink-0">${idx + 1}</span>
-                        <input type="text" value="${escapeHtml(val)}" oninput="updateEmpathySimpleList('gains', ${idx}, this.value)" placeholder="Tuliskan harapan / manfaat utama yang diinginkan pengguna..." class="flex-1 px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <input type="text" id="inp_em_gains_${idx}" value="${escapeHtml(val)}" oninput="updateEmpathySimpleList('gains', ${idx}, this.value)" placeholder="Tuliskan harapan / manfaat utama yang diinginkan pengguna (wajib diisi)..." class="flex-1 px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                         <button type="button" onclick="removeEmpathySimpleList('gains', ${idx})" ${!canDelGain ? 'disabled' : ''} class="px-2.5 py-2 rounded-xl bg-rose-50 text-rose-600 text-xs font-bold disabled:opacity-30"><i class="fa-solid fa-trash-can"></i></button>
                     </div>
                 `).join('');
@@ -1622,8 +2050,8 @@
                         ${renderWizardCardHeader('Empathy Map 3 / 3', 'Ringkasan PAINS (' + formState.empathy.pains.length + ' butir) & GAINS (' + formState.empathy.gains.length + ' butir)', true, false, e3Min, 'openEmPart(3)', 'toggleMinEmPart(3)')}
                         ${!e3Min ? `
                             <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs sm:text-sm">
-                                <div><span class="font-extrabold text-rose-600 block mb-1">PAINS:</span><ul class="list-disc list-inside space-y-1">${formState.empathy.pains.map(p => `<li>${escapeHtml(p) || '-'}</li>`).join('')}</ul></div>
-                                <div><span class="font-extrabold text-emerald-600 block mb-1">GAINS:</span><ul class="list-disc list-inside space-y-1">${formState.empathy.gains.map(g => `<li>${escapeHtml(g) || '-'}</li>`).join('')}</ul></div>
+                                <div><span class="font-extrabold text-rose-600 block mb-1">PAINS:</span><ul class="list-disc list-inside space-y-1">${formState.empathy.pains.map(p => `<li>${escapeHtml(p)}</li>`).join('')}</ul></div>
+                                <div><span class="font-extrabold text-emerald-600 block mb-1">GAINS:</span><ul class="list-disc list-inside space-y-1">${formState.empathy.gains.map(g => `<li>${escapeHtml(g)}</li>`).join('')}</ul></div>
                             </div>
                         ` : ''}
                     </div>
@@ -1636,7 +2064,7 @@
                 <div class="slide-enter flex flex-col justify-between h-full gap-5">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <div class="space-y-1">
-                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-pen-to-square mr-1"></i>Tahap 3 • Wizard Empathy Map Relasional</span>
+                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-pen-to-square mr-1"></i>Tahap 3 • Wizard Empathy Map Relasional (Wajib Lengkap)</span>
                             <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Pemetaan 4 Kuadran Empati + Pains & Gains</h2>
                         </div>
                         <div class="flex items-center gap-2 shrink-0">
@@ -1705,15 +2133,14 @@
             const p2Edit = uiWizard.perActive === 2;
             const p3Edit = uiWizard.perActive === 3;
 
-            const p1Saved = uiWizard.perSaved[1];
-            const p2Saved = uiWizard.perSaved[2];
-            const p3Saved = uiWizard.perSaved[3];
+            const p1Saved = isPersonaPartComplete(1);
+            const p2Saved = isPersonaPartComplete(2);
+            const p3Saved = isPersonaPartComplete(3);
 
             const p1Min = !!uiWizard.perMin[1];
             const p2Min = !!uiWizard.perMin[2];
             const p3Min = !!uiWizard.perMin[3];
 
-            // Bagian 1: Profil, Checkbox Sumber Responden, & Kutipan
             let c1Html = '';
             if (p1Edit) {
                 let sourceChecksHtml = '';
@@ -1737,22 +2164,22 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100 dark:border-slate-800">
                             <div>
                                 <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Nama Samaran Persona & Rentang Usia *</label>
-                                <input type="text" value="${escapeHtml(p.nama)}" oninput="updatePersonaField('nama', this.value)" placeholder="Ketik nama representatif & usia..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <input type="text" id="inp_p_nama" value="${escapeHtml(p.nama)}" oninput="updatePersonaField('nama', this.value)" placeholder="Ketik nama representatif & usia..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
                             </div>
                             <div>
                                 <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Pekerjaan / Peran Keseharian Persona *</label>
-                                <input type="text" value="${escapeHtml(p.peran)}" oninput="updatePersonaField('peran', this.value)" placeholder="Ketik pekerjaan atau aktivitas utama Persona..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <input type="text" id="inp_p_peran" value="${escapeHtml(p.peran)}" oninput="updatePersonaField('peran', this.value)" placeholder="Ketik pekerjaan atau aktivitas utama Persona..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
                             </div>
                         </div>
 
                         <div>
-                            <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Pilih Kode Responden yang Datanya Membentuk Persona Ini (Klik untuk Centang) *</label>
+                            <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Pilih Kode Responden yang Datanya Membentuk Persona Ini (Minimal 1 Tercentang) *</label>
                             <div class="flex flex-wrap gap-2">${sourceChecksHtml}</div>
                         </div>
 
                         <div>
                             <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Latar Belakang Kontekstual Persona *</label>
-                            <textarea rows="3" oninput="autoResizeTextarea(this); updatePersonaField('konteks', this.value)" placeholder="Uraikan keseharian dan konteks mengapa Persona ini membutuhkan layanan UMKM mitra..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(p.konteks)}</textarea>
+                            <textarea id="inp_p_konteks" rows="3" oninput="autoResizeTextarea(this); updatePersonaField('konteks', this.value)" placeholder="Uraikan keseharian dan konteks mengapa Persona ini membutuhkan layanan UMKM mitra..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(p.konteks)}</textarea>
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
@@ -1764,7 +2191,7 @@
                             </div>
                             <div class="sm:col-span-8">
                                 <label class="text-xs font-bold text-indigo-700 dark:text-indigo-300 block mb-1.5">Kalimat Kutipan Utama (Verbatim Quote) *</label>
-                                <input type="text" value="${escapeHtml(p.quote)}" oninput="updatePersonaField('quote', this.value)" placeholder="Tuliskan satu kalimat kutipan yang paling mewakili suara Persona ini..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base italic focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <input type="text" id="inp_p_quote" value="${escapeHtml(p.quote)}" oninput="updatePersonaField('quote', this.value)" placeholder="Tuliskan satu kalimat kutipan yang paling mewakili suara Persona ini..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base italic focus:outline-none focus:ring-2 focus:ring-indigo-500">
                             </div>
                         </div>
 
@@ -1778,12 +2205,12 @@
             } else if (p1Saved) {
                 c1Html = `
                     <div class="p-4 sm:p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-emerald-300 dark:border-emerald-800/70 space-y-3">
-                        ${renderWizardCardHeader('Persona 1 / 3', (p.nama || 'Profil Persona') + ' • Sumber: [' + (p.sources || []).join(', ') + ']', true, false, p1Min, 'openPerPart(1)', 'toggleMinPerPart(1)')}
+                        ${renderWizardCardHeader('Persona 1 / 3', p.nama + ' • Sumber: [' + (p.sources || []).join(', ') + ']', true, false, p1Min, 'openPerPart(1)', 'toggleMinPerPart(1)')}
                         ${!p1Min ? `
                             <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2 text-sm">
-                                <div><strong>Nama & Peran:</strong> ${escapeHtml(p.nama) || '-'} (${escapeHtml(p.peran) || '-'})</div>
-                                <div><strong>Konteks:</strong> ${escapeHtml(p.konteks) || '-'}</div>
-                                <div class="p-2.5 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/40 border-l-4 border-indigo-500 italic">"[${escapeHtml(p.quoteSource)}] ${escapeHtml(p.quote) || '-'}"</div>
+                                <div><strong>Nama & Peran:</strong> ${escapeHtml(p.nama)} (${escapeHtml(p.peran)})</div>
+                                <div><strong>Konteks:</strong> ${escapeHtml(p.konteks)}</div>
+                                <div class="p-2.5 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/40 border-l-4 border-indigo-500 italic">"[${escapeHtml(p.quoteSource)}] ${escapeHtml(p.quote)}"</div>
                             </div>
                         ` : ''}
                     </div>
@@ -1792,7 +2219,6 @@
                 c1Html = `<div class="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-800">${renderWizardCardHeader('Persona 1 / 3', 'Profil Karakter Representatif, Sumber Responden, & Kutipan Utama', false, false, true, 'openPerPart(1)', '')}</div>`;
             }
 
-            // Bagian 2: Goals & Pain Points Dinamis (Min 2 Butir)
             let c2Html = '';
             if (p2Edit) {
                 const canDelGoal = p.goals.length > MIN_PERSONA_LIST;
@@ -1801,7 +2227,7 @@
                 const goalsHtml = p.goals.map((g, idx) => `
                     <div class="flex items-center gap-2">
                         <span class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-800 text-xs font-extrabold flex items-center justify-center shrink-0">${idx + 1}</span>
-                        <input type="text" value="${escapeHtml(g)}" oninput="updatePersonaListItem('goals', ${idx}, this.value)" placeholder="Tuliskan tujuan atau kebutuhan Persona..." class="flex-1 px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <input type="text" id="inp_p_goals_${idx}" value="${escapeHtml(g)}" oninput="updatePersonaListItem('goals', ${idx}, this.value)" placeholder="Tuliskan tujuan atau kebutuhan Persona (wajib diisi)..." class="flex-1 px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                         <button type="button" onclick="removePersonaListItem('goals', ${idx})" ${!canDelGoal ? 'disabled' : ''} class="px-2.5 py-2 rounded-xl bg-rose-50 text-rose-600 text-xs font-bold disabled:opacity-30"><i class="fa-solid fa-trash-can"></i></button>
                     </div>
                 `).join('');
@@ -1809,7 +2235,7 @@
                 const painsHtml = p.pains.map((pn, idx) => `
                     <div class="flex items-center gap-2">
                         <span class="w-6 h-6 rounded-lg bg-rose-100 text-rose-800 text-xs font-extrabold flex items-center justify-center shrink-0">${idx + 1}</span>
-                        <input type="text" value="${escapeHtml(pn)}" oninput="updatePersonaListItem('pains', ${idx}, this.value)" placeholder="Tuliskan titik frustrasi / hambatan utama Persona..." class="flex-1 px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-rose-500">
+                        <input type="text" id="inp_p_pains_${idx}" value="${escapeHtml(pn)}" oninput="updatePersonaListItem('pains', ${idx}, this.value)" placeholder="Tuliskan titik frustrasi / hambatan utama Persona (wajib diisi)..." class="flex-1 px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-rose-500">
                         <button type="button" onclick="removePersonaListItem('pains', ${idx})" ${!canDelPain ? 'disabled' : ''} class="px-2.5 py-2 rounded-xl bg-rose-50 text-rose-600 text-xs font-bold disabled:opacity-30"><i class="fa-solid fa-trash-can"></i></button>
                     </div>
                 `).join('');
@@ -1846,8 +2272,8 @@
                         ${renderWizardCardHeader('Persona 2 / 3', 'Goals (' + p.goals.length + ' poin) & Pain Points (' + p.pains.length + ' poin)', true, false, p2Min, 'openPerPart(2)', 'toggleMinPerPart(2)')}
                         ${!p2Min ? `
                             <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs sm:text-sm">
-                                <div><span class="font-extrabold text-emerald-600 block mb-1">GOALS:</span><ul class="list-disc list-inside space-y-1">${p.goals.map(g => `<li>${escapeHtml(g) || '-'}</li>`).join('')}</ul></div>
-                                <div><span class="font-extrabold text-rose-600 block mb-1">PAIN POINTS:</span><ul class="list-disc list-inside space-y-1">${p.pains.map(pn => `<li>${escapeHtml(pn) || '-'}</li>`).join('')}</ul></div>
+                                <div><span class="font-extrabold text-emerald-600 block mb-1">GOALS:</span><ul class="list-disc list-inside space-y-1">${p.goals.map(g => `<li>${escapeHtml(g)}</li>`).join('')}</ul></div>
+                                <div><span class="font-extrabold text-rose-600 block mb-1">PAIN POINTS:</span><ul class="list-disc list-inside space-y-1">${p.pains.map(pn => `<li>${escapeHtml(pn)}</li>`).join('')}</ul></div>
                             </div>
                         ` : ''}
                     </div>
@@ -1856,7 +2282,6 @@
                 c2Html = `<div class="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-800">${renderWizardCardHeader('Persona 2 / 3', 'Daftar Goals & Needs (Min. 2) serta Pain Points (Min. 2)', false, false, true, 'openPerPart(2)', '')}</div>`;
             }
 
-            // Bagian 3: Behaviors & Trigger Scenario
             let c3Html = '';
             if (p3Edit) {
                 c3Html = `
@@ -1865,11 +2290,11 @@
                         <div class="space-y-4 pt-2 border-t border-slate-100 dark:border-slate-800">
                             <div>
                                 <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Behaviors (Kebiasaan Bertransaksi, Komunikasi, & Penggunaan Perangkat) *</label>
-                                <textarea rows="3" oninput="autoResizeTextarea(this); updatePersonaField('behaviors', this.value)" placeholder="Tuliskan kebiasaan nyata Persona ini saat mencari informasi, memesan, membayar, serta perangkat yang digunakan..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(p.behaviors)}</textarea>
+                                <textarea id="inp_p_behaviors" rows="3" oninput="autoResizeTextarea(this); updatePersonaField('behaviors', this.value)" placeholder="Tuliskan kebiasaan nyata Persona ini saat mencari informasi, memesan, membayar, serta perangkat yang digunakan..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(p.behaviors)}</textarea>
                             </div>
                             <div>
                                 <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Trigger Scenario (Situasi Nyata Apa yang Memicu Persona Ini Membutuhkan Layanan UMKM?) *</label>
-                                <textarea rows="3" oninput="autoResizeTextarea(this); updatePersonaField('skenario', this.value)" placeholder="Ceritakan situasi spesifik dalam keseharian yang mendorong Persona ini memulai transaksi di UMKM mitra..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(p.skenario)}</textarea>
+                                <textarea id="inp_p_skenario" rows="3" oninput="autoResizeTextarea(this); updatePersonaField('skenario', this.value)" placeholder="Ceritakan situasi spesifik dalam keseharian yang mendorong Persona ini memulai transaksi di UMKM mitra..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(p.skenario)}</textarea>
                             </div>
                         </div>
                         <div class="flex justify-end pt-1">
@@ -1885,8 +2310,8 @@
                         ${renderWizardCardHeader('Persona 3 / 3', 'Kebiasaan Transaksi (Behaviors) & Skenario Pemicu', true, false, p3Min, 'openPerPart(3)', 'toggleMinPerPart(3)')}
                         ${!p3Min ? `
                             <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs sm:text-sm">
-                                <div><span class="font-extrabold text-indigo-600 block mb-1">BEHAVIORS:</span><div class="whitespace-pre-line">${escapeHtml(p.behaviors) || '-'}</div></div>
-                                <div><span class="font-extrabold text-amber-600 block mb-1">TRIGGER SCENARIO:</span><div class="whitespace-pre-line">${escapeHtml(p.skenario) || '-'}</div></div>
+                                <div><span class="font-extrabold text-indigo-600 block mb-1">BEHAVIORS:</span><div class="whitespace-pre-line">${escapeHtml(p.behaviors)}</div></div>
+                                <div><span class="font-extrabold text-amber-600 block mb-1">TRIGGER SCENARIO:</span><div class="whitespace-pre-line">${escapeHtml(p.skenario)}</div></div>
                             </div>
                         ` : ''}
                     </div>
@@ -1899,7 +2324,7 @@
                 <div class="slide-enter flex flex-col justify-between h-full gap-5">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <div class="space-y-1">
-                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-pen-to-square mr-1"></i>Tahap 4 • Wizard Kartu User Persona Relasional</span>
+                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-pen-to-square mr-1"></i>Tahap 4 • Wizard Kartu User Persona Relasional (Wajib Lengkap)</span>
                             <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Penyusunan Profil User Persona Berbasis Bukti</h2>
                         </div>
                         <div class="flex items-center gap-2 shrink-0">
@@ -1948,7 +2373,7 @@
                     </div>
 
                     <div class="p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-800/60 text-xs leading-relaxed">
-                        <i class="fa-solid fa-list-check text-indigo-600 dark:text-indigo-400 mr-1.5"></i><strong>Instruksi Slide Berikutnya:</strong> Lengkapi kelima fase perjalanan transaksi UMKM mitra Anda pada Slide 11.
+                        <i class="fa-solid fa-list-check text-indigo-600 dark:text-indigo-400 mr-1.5"></i><strong>Instruksi Slide Berikutnya:</strong> Lengkapi seluruh fase perjalanan transaksi UMKM mitra Anda pada Slide 11.
                     </div>
                 </div>
             `;
@@ -1969,7 +2394,7 @@
             for (let i = 0; i < formState.journey.length; i++) {
                 const ph = formState.journey[i];
                 const isEditing = uiWizard.cjmActive === i;
-                const isSaved = uiWizard.cjmSaved[i] || !!(ph.action.trim() || ph.pain.trim() || ph.opportunity.trim());
+                const isSaved = isJourneyPhaseComplete(i);
                 const isMin = !!uiWizard.cjmMin[i];
 
                 const delPhaseBtn = canDeletePhase
@@ -1986,7 +2411,7 @@
                             <div class="grid grid-cols-1 sm:grid-cols-12 gap-3.5 pt-2 border-t border-slate-100 dark:border-slate-800">
                                 <div class="sm:col-span-5">
                                     <label class="text-xs font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Nama Tahapan / Fase Ke-${i + 1} *</label>
-                                    <input type="text" value="${escapeHtml(ph.phaseTitle)}" oninput="updateJourneyField(${i}, 'phaseTitle', this.value)" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <input type="text" id="inp_cjm_title_${i}" value="${escapeHtml(ph.phaseTitle)}" oninput="updateJourneyField(${i}, 'phaseTitle', this.value)" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
                                 </div>
                                 <div class="sm:col-span-3">
                                     <label class="text-xs font-bold text-indigo-700 dark:text-indigo-300 block mb-1.5">Sumber Bukti (Dropdown) *</label>
@@ -2005,27 +2430,27 @@
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">1. Tindakan Pengguna (User Action) pada Fase Ini *</label>
-                                    <textarea rows="3" oninput="autoResizeTextarea(this); updateJourneyField(${i}, 'action', this.value)" placeholder="Tuliskan langkah nyata yang dilakukan pelanggan pada tahap ini..." class="auto-expand w-full p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(ph.action)}</textarea>
+                                    <textarea id="inp_cjm_action_${i}" rows="3" oninput="autoResizeTextarea(this); updateJourneyField(${i}, 'action', this.value)" placeholder="Tuliskan langkah nyata yang dilakukan pelanggan pada tahap ini..." class="auto-expand w-full p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(ph.action)}</textarea>
                                 </div>
                                 <div>
                                     <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">2. Titik Kontak (Touchpoint) & Pikiran Pengguna *</label>
-                                    <textarea rows="3" oninput="autoResizeTextarea(this); updateJourneyField(${i}, 'touchpoint', this.value)" placeholder="Sebutkan media/tempat interaksinya (Touchpoint) serta apa yang dipikirkan pelanggan..." class="auto-expand w-full p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(ph.touchpoint)}</textarea>
+                                    <textarea id="inp_cjm_tp_${i}" rows="3" oninput="autoResizeTextarea(this); updateJourneyField(${i}, 'touchpoint', this.value)" placeholder="Sebutkan media/tempat interaksinya (Touchpoint) serta apa yang dipikirkan pelanggan..." class="auto-expand w-full p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(ph.touchpoint)}</textarea>
                                 </div>
                             </div>
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label class="text-xs sm:text-sm font-bold text-rose-700 dark:text-rose-300 block mb-1.5">3. Titik Masalah / Hambatan (Pain Point) pada Fase Ini *</label>
-                                    <textarea rows="3" oninput="autoResizeTextarea(this); updateJourneyField(${i}, 'pain', this.value)" placeholder="Tuliskan kesulitan atau hambatan yang dialami pelanggan pada tahap ini..." class="auto-expand w-full p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-rose-500">${escapeHtml(ph.pain)}</textarea>
+                                    <textarea id="inp_cjm_pain_${i}" rows="3" oninput="autoResizeTextarea(this); updateJourneyField(${i}, 'pain', this.value)" placeholder="Tuliskan kesulitan atau hambatan yang dialami pelanggan pada tahap ini..." class="auto-expand w-full p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-rose-500">${escapeHtml(ph.pain)}</textarea>
                                 </div>
                                 <div>
                                     <label class="text-xs sm:text-sm font-bold text-emerald-700 dark:text-emerald-300 block mb-1.5">4. Peluang Perbaikan Desain (Design Opportunity) *</label>
-                                    <textarea rows="3" oninput="autoResizeTextarea(this); updateJourneyField(${i}, 'opportunity', this.value)" placeholder="Tuliskan peluang solusi atau perbaikan informasi untuk mengatasi hambatan di tahap ini..." class="auto-expand w-full p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-emerald-500">${escapeHtml(ph.opportunity)}</textarea>
+                                    <textarea id="inp_cjm_opp_${i}" rows="3" oninput="autoResizeTextarea(this); updateJourneyField(${i}, 'opportunity', this.value)" placeholder="Tuliskan peluang solusi atau perbaikan informasi untuk mengatasi hambatan di tahap ini..." class="auto-expand w-full p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-emerald-500">${escapeHtml(ph.opportunity)}</textarea>
                                 </div>
                             </div>
 
                             <div class="flex items-center justify-between gap-3 pt-1">
-                                <span class="text-xs text-slate-400">Fase ${i + 1} dari ${formState.journey.length}</span>
+                                <span class="text-xs text-slate-400">Fase ${i + 1} dari ${formState.journey.length} (Wajib Lengkap)</span>
                                 <button type="button" onclick="saveCjmPhase(${i})" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-extrabold transition flex items-center gap-2 shadow-sm">
                                     <i class="fa-solid fa-check"></i>
                                     <span>${i < formState.journey.length - 1 ? 'Simpan & Lanjut ke Fase ' + (i + 2) : 'Simpan Customer Journey Map'}</span>
@@ -2041,10 +2466,10 @@
                                 <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 line-clamp-1 px-1"><strong>Masalah:</strong> ${escapeHtml(ph.pain)} | <strong>Peluang:</strong> ${escapeHtml(ph.opportunity)}</p>
                             ` : `
                                 <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm sm:text-base leading-relaxed">
-                                    <div><span class="text-xs font-bold uppercase text-indigo-600 dark:text-indigo-400 block">1. Tindakan Pengguna:</span><div class="whitespace-pre-line">${escapeHtml(ph.action) || '-'}</div></div>
-                                    <div><span class="text-xs font-bold uppercase text-sky-600 dark:text-sky-400 block">2. Touchpoint & Pikiran:</span><div class="whitespace-pre-line">${escapeHtml(ph.touchpoint) || '-'}</div></div>
-                                    <div class="pt-2 border-t border-slate-100 dark:border-slate-800"><span class="text-xs font-bold uppercase text-rose-600 dark:text-rose-400 block">3. Pain Point (Hambatan):</span><div class="whitespace-pre-line">${escapeHtml(ph.pain) || '-'}</div></div>
-                                    <div class="pt-2 border-t border-slate-100 dark:border-slate-800"><span class="text-xs font-bold uppercase text-emerald-600 dark:text-emerald-400 block">4. Design Opportunity:</span><div class="font-semibold whitespace-pre-line">${escapeHtml(ph.opportunity) || '-'}</div></div>
+                                    <div><span class="text-xs font-bold uppercase text-indigo-600 dark:text-indigo-400 block">1. Tindakan Pengguna:</span><div class="whitespace-pre-line">${escapeHtml(ph.action)}</div></div>
+                                    <div><span class="text-xs font-bold uppercase text-sky-600 dark:text-sky-400 block">2. Touchpoint & Pikiran:</span><div class="whitespace-pre-line">${escapeHtml(ph.touchpoint)}</div></div>
+                                    <div class="pt-2 border-t border-slate-100 dark:border-slate-800"><span class="text-xs font-bold uppercase text-rose-600 dark:text-rose-400 block">3. Pain Point (Hambatan):</span><div class="whitespace-pre-line">${escapeHtml(ph.pain)}</div></div>
+                                    <div class="pt-2 border-t border-slate-100 dark:border-slate-800"><span class="text-xs font-bold uppercase text-emerald-600 dark:text-emerald-400 block">4. Design Opportunity:</span><div class="font-semibold whitespace-pre-line">${escapeHtml(ph.opportunity)}</div></div>
                                 </div>
                             `}
                         </div>
@@ -2062,7 +2487,7 @@
                 <div class="slide-enter flex flex-col justify-between h-full gap-5">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <div class="space-y-1">
-                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-pen-to-square mr-1"></i>Tahap 5 • Wizard Customer Journey Map (${formState.journey.length} Fase — Minimal ${MIN_JOURNEY_PHASES})</span>
+                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-pen-to-square mr-1"></i>Tahap 5 • Wizard Customer Journey Map (${formState.journey.length} Fase — Minimal ${MIN_JOURNEY_PHASES} Wajib)</span>
                             <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Pemetaan Perjalanan Transaksi, Emosi, & Peluang Solusi</h2>
                         </div>
                         <div class="flex flex-wrap items-center gap-2 shrink-0">
@@ -2087,14 +2512,18 @@
                 <div class="slide-enter space-y-5">
                     <div class="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4 no-print">
                         <div>
-                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Tahap Akhir • Dokumen Sintesis Siap Kumpul</span>
+                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-circle-check mr-1"></i>Seluruh 4 Artefak Sintesis Telah Lengkap • Siap Kumpul</span>
                             <h2 class="text-lg sm:text-2xl font-extrabold text-slate-900 dark:text-white">Pratinjau LKM 03: 4 Artefak Sintesis Riset (Format A4)</h2>
-                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Periksa kembali hasil sintesis relasional Anda di bawah ini, lalu klik tombol <strong>Generate & Unduh PDF</strong>.</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Unduh <strong>File Data (.JSON)</strong> untuk dipakai merumuskan Problem Statement pada Pertemuan 4, dan klik <strong>Generate & Unduh PDF</strong>.</p>
                         </div>
 
                         <div class="flex flex-wrap items-center gap-2 shrink-0">
+                            <button type="button" onclick="exportJsonData()" class="px-3.5 py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 text-xs font-extrabold transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-download"></i>
+                                <span>Simpan Data (.JSON)</span>
+                            </button>
                             <button type="button" onclick="window.print()" class="px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition">
-                                <i class="fa-solid fa-print mr-1"></i>Cetak / Save PDF Browser
+                                <i class="fa-solid fa-print mr-1"></i>Cetak Browser
                             </button>
                             <button type="button" id="btnDownloadPdf" onclick="downloadPdf()" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-extrabold transition shadow-md flex items-center gap-2">
                                 <i class="fa-solid fa-file-pdf"></i>
@@ -2350,12 +2779,34 @@
         }
 
         // =========================================================================
-        // HANDLER IN-FORM WIZARD (SIMPAN, BACA, MINIMIZE, EDIT)
+        // HANDLER IN-FORM WIZARD DENGAN VALIDASI WAJIB ISI
         // =========================================================================
         function saveInfoPart(partNum) {
+            if (partNum === 1) {
+                if (!formState.nama.trim()) { highlightEmptyInput('inp_nama', 'Nama Lengkap Mahasiswa wajib diisi.'); return; }
+                if (!formState.nim.trim()) { highlightEmptyInput('inp_nim', 'Nomor Induk Mahasiswa (NIM) wajib diisi.'); return; }
+                if (!formState.kelas.trim()) { highlightEmptyInput('inp_kelas', 'Kelas / Semester wajib diisi.'); return; }
+                if (!formState.tgl.trim()) { highlightEmptyInput('inp_tgl', 'Tanggal Sintesis Riset wajib diisi.'); return; }
+                if (!formState.umkm.trim()) { highlightEmptyInput('inp_umkm', 'Nama Usaha UMKM Mitra wajib diisi.'); return; }
+                if (!formState.bidang.trim()) { highlightEmptyInput('inp_bidang', 'Bidang / Kategori Usaha wajib diisi.'); return; }
+            } else if (partNum === 2) {
+                for (let i = 0; i < formState.respondents.length; i++) {
+                    const r = formState.respondents[i];
+                    if (!r.code.trim()) { highlightEmptyInput('inp_resp_code_' + i, 'Kode Narasumber #' + (i + 1) + ' wajib diisi.'); return; }
+                    if (!r.profile.trim()) { highlightEmptyInput('inp_resp_profile_' + i, 'Profil Singkat Narasumber [' + r.code + '] wajib diisi.'); return; }
+                }
+            } else if (partNum === 3) {
+                for (let j = 0; j < formState.observations.length; j++) {
+                    const ob = formState.observations[j];
+                    if (!ob.code.trim()) { highlightEmptyInput('inp_obs_code_' + j, 'Kode Observasi #' + (j + 1) + ' wajib diisi.'); return; }
+                    if (!ob.aspect.trim()) { highlightEmptyInput('inp_obs_aspect_' + j, 'Aspek Observasi #' + (j + 1) + ' wajib diisi.'); return; }
+                    if (!ob.note.trim()) { highlightEmptyInput('inp_obs_note_' + j, 'Uraian Fakta Observasi [' + ob.code + '] wajib diisi.'); return; }
+                }
+            }
+
             uiWizard.infoSaved[partNum] = true;
             uiWizard.infoMin[partNum] = false;
-            if (partNum < 3 && !uiWizard.infoSaved[partNum + 1]) {
+            if (partNum < 3 && !isInfoPartComplete(partNum + 1)) {
                 uiWizard.infoActive = partNum + 1;
             } else {
                 uiWizard.infoActive = 0;
@@ -2373,9 +2824,25 @@
         }
 
         function saveAffCluster(idx) {
+            const c = formState.clusters[idx];
+            for (let n = 0; n < c.notes.length; n++) {
+                if (!c.notes[n].text.trim()) {
+                    highlightEmptyInput('inp_aff_note_' + idx + '_' + n, 'Isi Kartu Kutipan #' + (n + 1) + ' pada Klaster #' + (idx + 1) + ' wajib diisi.');
+                    return;
+                }
+            }
+            if (!c.label.trim()) {
+                highlightEmptyInput('inp_aff_label_' + idx, 'Judul Tema (I-Statement) pada Klaster #' + (idx + 1) + ' wajib diisi.');
+                return;
+            }
+            if (!c.insight.trim()) {
+                highlightEmptyInput('inp_aff_insight_' + idx, 'Rumusan User Insight pada Klaster #' + (idx + 1) + ' wajib diisi.');
+                return;
+            }
+
             uiWizard.affSaved[idx] = true;
             uiWizard.affMin[idx] = false;
-            if (idx < formState.clusters.length - 1 && !uiWizard.affSaved[idx + 1]) {
+            if (idx < formState.clusters.length - 1 && !isClusterComplete(idx + 1)) {
                 uiWizard.affActive = idx + 1;
             } else {
                 uiWizard.affActive = -1;
@@ -2392,18 +2859,42 @@
             renderCurrentSlide();
         }
         function setAllAffMin(flag) {
-            uiWizard.affActive = -1;
             for (let i = 0; i < formState.clusters.length; i++) {
-                uiWizard.affSaved[i] = true;
-                uiWizard.affMin[i] = flag;
+                if (isClusterComplete(i)) {
+                    uiWizard.affMin[i] = flag;
+                }
             }
             renderCurrentSlide();
         }
 
         function saveEmPart(num) {
+            const em = formState.empathy;
+            if (num === 1) {
+                for (let i = 0; i < em.says.length; i++) {
+                    if (!em.says[i].text.trim()) { highlightEmptyInput('inp_em_says_' + i, 'Butir SAYS #' + (i + 1) + ' wajib diisi.'); return; }
+                }
+                for (let i = 0; i < em.thinks.length; i++) {
+                    if (!em.thinks[i].text.trim()) { highlightEmptyInput('inp_em_thinks_' + i, 'Butir THINKS #' + (i + 1) + ' wajib diisi.'); return; }
+                }
+            } else if (num === 2) {
+                for (let i = 0; i < em.does.length; i++) {
+                    if (!em.does[i].text.trim()) { highlightEmptyInput('inp_em_does_' + i, 'Butir DOES #' + (i + 1) + ' wajib diisi.'); return; }
+                }
+                for (let i = 0; i < em.feels.length; i++) {
+                    if (!em.feels[i].text.trim()) { highlightEmptyInput('inp_em_feels_' + i, 'Butir FEELS #' + (i + 1) + ' wajib diisi.'); return; }
+                }
+            } else if (num === 3) {
+                for (let i = 0; i < em.pains.length; i++) {
+                    if (!em.pains[i].trim()) { highlightEmptyInput('inp_em_pains_' + i, 'Butir PAINS (Hambatan) #' + (i + 1) + ' wajib diisi.'); return; }
+                }
+                for (let i = 0; i < em.gains.length; i++) {
+                    if (!em.gains[i].trim()) { highlightEmptyInput('inp_em_gains_' + i, 'Butir GAINS (Harapan) #' + (i + 1) + ' wajib diisi.'); return; }
+                }
+            }
+
             uiWizard.emSaved[num] = true;
             uiWizard.emMin[num] = false;
-            if (num < 3 && !uiWizard.emSaved[num + 1]) {
+            if (num < 3 && !isEmpathyPartComplete(num + 1)) {
                 uiWizard.emActive = num + 1;
             } else {
                 uiWizard.emActive = 0;
@@ -2420,18 +2911,36 @@
             renderCurrentSlide();
         }
         function setAllEmMin(flag) {
-            uiWizard.emActive = 0;
             for (let i = 1; i <= 3; i++) {
-                uiWizard.emSaved[i] = true;
-                uiWizard.emMin[i] = flag;
+                if (isEmpathyPartComplete(i)) {
+                    uiWizard.emMin[i] = flag;
+                }
             }
             renderCurrentSlide();
         }
 
         function savePerPart(num) {
+            const p = formState.persona;
+            if (num === 1) {
+                if (!p.nama.trim()) { highlightEmptyInput('inp_p_nama', 'Nama Samaran & Usia Persona wajib diisi.'); return; }
+                if (!p.peran.trim()) { highlightEmptyInput('inp_p_peran', 'Pekerjaan / Peran Keseharian Persona wajib diisi.'); return; }
+                if (!p.konteks.trim()) { highlightEmptyInput('inp_p_konteks', 'Latar Belakang Kontekstual Persona wajib diisi.'); return; }
+                if (!p.quote.trim()) { highlightEmptyInput('inp_p_quote', 'Kalimat Kutipan Utama Persona wajib diisi.'); return; }
+            } else if (num === 2) {
+                for (let i = 0; i < p.goals.length; i++) {
+                    if (!p.goals[i].trim()) { highlightEmptyInput('inp_p_goals_' + i, 'Butir Goal & Need #' + (i + 1) + ' wajib diisi.'); return; }
+                }
+                for (let i = 0; i < p.pains.length; i++) {
+                    if (!p.pains[i].trim()) { highlightEmptyInput('inp_p_pains_' + i, 'Butir Pain Point #' + (i + 1) + ' wajib diisi.'); return; }
+                }
+            } else if (num === 3) {
+                if (!p.behaviors.trim()) { highlightEmptyInput('inp_p_behaviors', 'Behaviors (Kebiasaan Transaksi & Perangkat) wajib diisi.'); return; }
+                if (!p.skenario.trim()) { highlightEmptyInput('inp_p_skenario', 'Trigger Scenario (Skenario Pemicu) wajib diisi.'); return; }
+            }
+
             uiWizard.perSaved[num] = true;
             uiWizard.perMin[num] = false;
-            if (num < 3 && !uiWizard.perSaved[num + 1]) {
+            if (num < 3 && !isPersonaPartComplete(num + 1)) {
                 uiWizard.perActive = num + 1;
             } else {
                 uiWizard.perActive = 0;
@@ -2448,18 +2957,25 @@
             renderCurrentSlide();
         }
         function setAllPerMin(flag) {
-            uiWizard.perActive = 0;
             for (let i = 1; i <= 3; i++) {
-                uiWizard.perSaved[i] = true;
-                uiWizard.perMin[i] = flag;
+                if (isPersonaPartComplete(i)) {
+                    uiWizard.perMin[i] = flag;
+                }
             }
             renderCurrentSlide();
         }
 
         function saveCjmPhase(idx) {
+            const ph = formState.journey[idx];
+            if (!ph.phaseTitle.trim()) { highlightEmptyInput('inp_cjm_title_' + idx, 'Nama Tahapan pada Fase #' + (idx + 1) + ' wajib diisi.'); return; }
+            if (!ph.action.trim()) { highlightEmptyInput('inp_cjm_action_' + idx, 'Tindakan Pengguna pada Fase #' + (idx + 1) + ' wajib diisi.'); return; }
+            if (!ph.touchpoint.trim()) { highlightEmptyInput('inp_cjm_tp_' + idx, 'Touchpoint & Pikiran Pengguna pada Fase #' + (idx + 1) + ' wajib diisi.'); return; }
+            if (!ph.pain.trim()) { highlightEmptyInput('inp_cjm_pain_' + idx, 'Titik Masalah (Pain Point) pada Fase #' + (idx + 1) + ' wajib diisi.'); return; }
+            if (!ph.opportunity.trim()) { highlightEmptyInput('inp_cjm_opp_' + idx, 'Peluang Perbaikan Desain (Opportunity) pada Fase #' + (idx + 1) + ' wajib diisi.'); return; }
+
             uiWizard.cjmSaved[idx] = true;
             uiWizard.cjmMin[idx] = true;
-            if (idx < formState.journey.length - 1 && !uiWizard.cjmSaved[idx + 1]) {
+            if (idx < formState.journey.length - 1 && !isJourneyPhaseComplete(idx + 1)) {
                 uiWizard.cjmActive = idx + 1;
             } else {
                 uiWizard.cjmActive = -1;
@@ -2477,10 +2993,10 @@
             renderCurrentSlide();
         }
         function setAllCjmMin(flag) {
-            uiWizard.cjmActive = -1;
             for (let i = 0; i < formState.journey.length; i++) {
-                uiWizard.cjmSaved[i] = true;
-                uiWizard.cjmMin[i] = flag;
+                if (isJourneyPhaseComplete(i)) {
+                    uiWizard.cjmMin[i] = flag;
+                }
             }
             renderCurrentSlide();
         }
@@ -2581,25 +3097,34 @@
         }
 
         function selectSlideFromDrawer(index) {
-            goToSlide(index);
             toggleSlideDrawer();
+            goToSlide(index);
         }
 
         function changeSlide(direction) {
             const nextIdx = currentSlideIndex + direction;
             if (nextIdx >= 0 && nextIdx < TOTAL_SLIDES) {
-                currentSlideIndex = nextIdx;
-                renderCurrentSlide();
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                goToSlide(nextIdx);
             }
         }
 
-        function goToSlide(index) {
-            if (index >= 0 && index < TOTAL_SLIDES) {
-                currentSlideIndex = index;
-                renderCurrentSlide();
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+        function goToSlide(targetIdx) {
+            if (targetIdx < 0 || targetIdx >= TOTAL_SLIDES) return;
+
+            if (targetIdx > currentSlideIndex) {
+                for (let checkIdx = currentSlideIndex; checkIdx < targetIdx; checkIdx++) {
+                    if ([2, 4, 6, 8, 10].indexOf(checkIdx) !== -1) {
+                        currentSlideIndex = checkIdx;
+                        if (!validateFormSlide(checkIdx)) {
+                            return;
+                        }
+                    }
+                }
             }
+
+            currentSlideIndex = targetIdx;
+            renderCurrentSlide();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function toggleSlideDrawer() {
@@ -2638,13 +3163,27 @@
                 cjmActive: 0, cjmSaved: {}, cjmMin: {}
             };
             try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+            currentSlideIndex = 0;
             renderCurrentSlide();
+            showToast('Seluruh isian telah dikosongkan.', 'success');
         }
 
         function downloadPdf() {
-            if (currentSlideIndex !== TOTAL_SLIDES - 1) {
-                goToSlide(TOTAL_SLIDES - 1);
+            for (let i = 0; i < TOTAL_SLIDES - 1; i++) {
+                if ([2, 4, 6, 8, 10].indexOf(i) !== -1) {
+                    if (!validateFormSlide(i)) {
+                        currentSlideIndex = i;
+                        renderCurrentSlide();
+                        return;
+                    }
+                }
             }
+
+            if (currentSlideIndex !== TOTAL_SLIDES - 1) {
+                currentSlideIndex = TOTAL_SLIDES - 1;
+                renderCurrentSlide();
+            }
+
             const el = document.getElementById('pdfPrintArea');
             const d = formState;
             const cleanNim = (d.nim || 'NIM').replace(/[^a-zA-Z0-9_-]/g, '');
