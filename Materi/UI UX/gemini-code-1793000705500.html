@@ -1,0 +1,1483 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pertemuan 4: Problem Statement, How Might We, Prioritas MVP, & Design Brief</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <script>
+        if (typeof tailwind !== 'undefined') {
+            tailwind.config = {
+                darkMode: 'class',
+                theme: {
+                    extend: {
+                        fontFamily: {
+                            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                            mono: ['"JetBrains Mono"', 'monospace']
+                        }
+                    }
+                }
+            };
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .tech-term {
+            color: #4f46e5;
+            font-weight: 700;
+            cursor: pointer;
+            transition: color 0.15s ease, opacity 0.15s ease;
+        }
+        .dark .tech-term {
+            color: #818cf8;
+        }
+        .tech-term:hover {
+            color: #3730a3;
+            opacity: 0.85;
+        }
+        .dark .tech-term:hover {
+            color: #a5b4fc;
+        }
+
+        /* Pengaman anti-terpotong di semua ukuran layar (Mobile & Desktop) */
+        #slideViewport,
+        #slideViewport p,
+        #slideViewport span,
+        #slideViewport div,
+        #slideViewport h2,
+        #slideViewport h3,
+        #slideViewport h4,
+        #slideViewport button {
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+        }
+
+        .slide-enter {
+            animation: fadeSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes fadeSlide {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+        .dark ::-webkit-scrollbar-thumb { background: #334155; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col justify-between transition-colors duration-200">
+
+    <!-- Header Navigasi Atas -->
+    <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800">
+        <div class="w-full h-1 bg-slate-100 dark:bg-slate-800">
+            <div id="topProgressBar" class="h-full bg-indigo-600 dark:bg-indigo-500 transition-all duration-300" style="width: 6%;"></div>
+        </div>
+
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+                <button type="button" onclick="toggleSlideDrawer()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition flex items-center gap-2 text-xs sm:text-sm font-bold shrink-0">
+                    <i class="fa-solid fa-list-ul text-indigo-600 dark:text-indigo-400"></i>
+                    <span class="hidden sm:inline">Daftar Slide</span>
+                    <span id="slideCounterBadge" class="px-2 py-0.5 text-xs rounded-lg bg-indigo-600 text-white font-bold">1 / 16</span>
+                </button>
+
+                <div class="hidden md:flex items-center gap-2.5 min-w-0">
+                    <span id="slideCategoryPill" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 shrink-0">
+                        Pengantar
+                    </span>
+                    <h1 id="headerSlideTitle" class="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">
+                        Problem Statement, HMW, Prioritas MVP, & Design Brief
+                    </h1>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 shrink-0">
+                <button type="button" onclick="openGlossaryIndex()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 text-xs sm:text-sm font-bold flex items-center gap-2 transition">
+                    <i class="fa-solid fa-book-open text-indigo-600 dark:text-indigo-400"></i>
+                    <span>Kamus Istilah</span>
+                </button>
+
+                <button type="button" onclick="toggleTheme()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center transition" title="Ganti Tema Layar">
+                    <i id="themeIcon" class="fa-solid fa-moon text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Drawer Daftar Slide -->
+    <div id="slideDrawerBackdrop" onclick="toggleSlideDrawer()" class="fixed inset-0 bg-slate-950/50 backdrop-blur-xs z-40 hidden opacity-0 transition-opacity duration-200"></div>
+    <aside id="slideDrawer" class="fixed top-0 left-0 bottom-0 w-80 sm:w-96 bg-white dark:bg-slate-900 z-50 shadow-2xl border-r border-slate-200 dark:border-slate-800 transform -translate-x-full transition-transform duration-200 flex flex-col">
+        <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Pertemuan 4 • BD7401</span>
+                <h2 class="text-base font-extrabold text-slate-900 dark:text-white mt-0.5">Daftar Materi Pertemuan 4</h2>
+            </div>
+            <button type="button" onclick="toggleSlideDrawer()" class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div id="drawerSlideList" class="p-3.5 overflow-y-auto space-y-1 flex-1"></div>
+        <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 flex items-center justify-between">
+            <span>Gunakan tombol panah Kiri / Kanan</span>
+            <span class="font-bold">16 Slide Interaktif</span>
+        </div>
+    </aside>
+
+    <!-- Area Utama Slide -->
+    <main class="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-6 flex flex-col justify-center">
+        <div id="slideViewport" class="bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl shadow-xs border border-slate-200/80 dark:border-slate-800 p-4 sm:p-8 lg:p-10 min-h-[480px] flex flex-col justify-between relative">
+            <div class="py-12 text-center text-sm text-slate-500">Memuat materi perkuliahan Pertemuan 4...</div>
+        </div>
+    </main>
+
+    <!-- Footer Navigasi Bawah -->
+    <footer class="sticky bottom-0 z-20 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 py-3 px-4 sm:px-6">
+        <div class="max-w-6xl mx-auto flex items-center justify-between gap-4">
+            <button type="button" id="prevSlideBtn" onclick="changeSlide(-1)" class="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                <i class="fa-solid fa-arrow-left text-xs"></i>
+                <span>Sebelumnya</span>
+            </button>
+
+            <div id="slideDotsContainer" class="hidden md:flex items-center gap-1.5 flex-wrap justify-center"></div>
+
+            <div class="md:hidden text-xs font-bold text-slate-500 dark:text-slate-400" id="mobileFooterCounter">1 / 16</div>
+
+            <button type="button" id="nextSlideBtn" onclick="changeSlide(1)" class="px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-indigo-600 hover:bg-indigo-700 text-white transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                <span id="nextBtnText">Selanjutnya</span>
+                <i class="fa-solid fa-arrow-right text-xs"></i>
+            </button>
+        </div>
+    </footer>
+
+    <!-- Modal Penjelasan Istilah -->
+    <div id="termModalBackdrop" onclick="closeTermModal()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl slide-enter">
+            <div class="flex items-start justify-between gap-4 mb-4">
+                <div>
+                    <span id="termCategoryBadge" class="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">Kategori</span>
+                    <h3 id="termTitle" class="text-xl font-extrabold text-slate-900 dark:text-white mt-1.5">Nama Istilah</h3>
+                </div>
+                <button type="button" onclick="closeTermModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <p id="termMainDesc" class="text-sm text-slate-700 dark:text-slate-200 leading-relaxed bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200/70 dark:border-slate-700/70"></p>
+                <p id="termDetailDesc" class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed px-1"></p>
+                <div class="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800 text-xs px-1">
+                    <span id="termSourceName" class="font-semibold text-slate-400">Referensi</span>
+                    <a id="termSourceUrl" href="#" target="_blank" rel="noopener noreferrer" class="font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1.5">
+                        <span>Pelajari lebih lanjut</span>
+                        <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Kamus Istilah Lengkap -->
+    <div id="glossaryModalBackdrop" onclick="closeGlossaryIndex()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-4xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden slide-enter">
+            <div class="p-5 sm:p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white">Kamus Istilah Pertemuan 4: Define, HMW, MVP, & Design Brief</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Klik pada istilah mana pun untuk membaca arti dan contoh penerapannya dalam bisnis digital.</p>
+                </div>
+                <button type="button" onclick="closeGlossaryIndex()" class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-sm"></i>
+                    <input id="glossarySearchInput" oninput="renderGlossaryList(this.value)" type="text" placeholder="Cari istilah seperti Point of View, Problem Statement, How Might We, MVP, Impact vs Effort, Backstage..." class="w-full pl-10 pr-4 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+            <div id="glossaryListGrid" class="p-5 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+        </div>
+    </div>
+
+    <script>
+        // =========================================================================
+        // DATABASE KAMUS ISTILAH PERTEMUAN 4
+        // =========================================================================
+        const GLOSSARY_DB = {
+            define: {
+                title: "Tahap Define (Perumusan Masalah)",
+                category: "Design Thinking",
+                main: "Tahap kedua dalam Design Thinking yang berfokus menyaring hasil sintesis riset menjadi rumusan masalah utama (Problem Statement) yang tajam, spesifik, dan dapat ditindaklanjuti.",
+                detail: "Pada model Double Diamond, tahap Define merupakan proses berpikir konvergen (menyempitkan fokus) yang menutup Berlian Pertama (Ruang Masalah).",
+                source: "Interaction Design Foundation",
+                url: "https://www.interaction-design.org/literature/article/stage-2-in-the-design-thinking-process-define-the-problem-and-interpret-the-results"
+            },
+            pov: {
+                title: "Point of View (POV)",
+                category: "Kerangka Define",
+                main: "Rumusan pernyataan masalah terstruktur yang memadukan tiga elemen utama: Siapa penggunanya (User), Apa kebutuhan mendasarnya (Need), dan Mengapa hal itu penting berdasarkan temuan riset (Insight).",
+                detail: "Rumus standar Stanford d.school: '[User Persona] membutuhkan cara untuk [Kebutuhan dalam kata kerja] karena [User Insight / Akar Masalah dari lapangan]'.",
+                source: "Stanford d.school",
+                url: "https://www.interaction-design.org/literature/article/define-and-frame-your-design-challenge-by-creating-your-point-of-view-and-ask-how-might-we"
+            },
+            problemstatement: {
+                title: "Problem Statement (Pernyataan Masalah)",
+                category: "Luaran Utama Define",
+                main: "Deskripsi ringkas dan jelas mengenai masalah utama pengguna yang harus dipecahkan oleh tim perancang sebelum mulai menggambar solusi antarmuka.",
+                detail: "Problem Statement yang baik harus berpusat pada manusia (human-centered), berbasis bukti riset, dan tidak menyisipkan tebakan fitur teknis di dalamnya.",
+                source: "Nielsen Norman Group",
+                url: "https://www.nngroup.com/articles/problem-statements/"
+            },
+            userneed: {
+                title: "User Need (Kebutuhan Pengguna Berbasis Kata Kerja)",
+                category: "Komponen POV",
+                main: "Tujuan atau kebutuhan fungsional/emosional pengguna yang dinyatakan menggunakan kata kerja (verbs), bukan kata benda berupa fitur aplikasi (nouns).",
+                detail: "Contoh benar (kata kerja): 'memastikan ketersediaan stok sebelum datang ke toko'. Contoh salah (kata benda/fitur): 'membutuhkan fitur notifikasi stok otomatis'.",
+                source: "Nielsen Norman Group",
+                url: "https://www.nngroup.com/articles/user-need-statements/"
+            },
+            traceability: {
+                title: "Traceability (Ketertelusuran Bukti Riset)",
+                category: "Kualitas Riset UX",
+                main: "Kemampuan melacak setiap keputusan desain atau pernyataan masalah kembali ke sumber data aslinya (seperti kode responden P1, P2, atau catatan observasi OBS-1).",
+                detail: "Mencegah mahasiswa mengarang masalah baru di Pertemuan 4 yang tidak ada hubungannya dengan hasil wawancara Pertemuan 3.",
+                source: "Interaction Design Foundation",
+                url: "https://www.interaction-design.org/literature/topics/user-research"
+            },
+            hmw: {
+                title: "How Might We (HMW / Bagaimana Kita Dapat...)",
+                category: "Jembatan Define ke Ideate",
+                main: "Teknik mengubah pernyataan masalah (Problem Statement) menjadi kalimat tanya terbuka yang memicu eksplorasi banyak ide solusi kreatif.",
+                detail: "Kata 'How' mengasumsikan solusi itu ada, 'Might' memberi kebebasan bereksperimen tanpa takut salah, dan 'We' menekankan kolaborasi lintas disiplin.",
+                source: "IDEO / Stanford d.school",
+                url: "https://www.nngroup.com/articles/how-might-we-questions/"
+            },
+            serviceblueprint: {
+                title: "Service Blueprint Ringkas (Kesiapan Operasional)",
+                category: "Strategi Bisnis Digital",
+                main: "Pemetaan yang menghubungkan pengalaman pelanggan di layar (Frontstage) dengan proses kerja nyata pemilik atau staf UMKM di balik layar (Backstage).",
+                detail: "Memastikan solusi digital yang dirancang untuk pelanggan tidak membebani operasional harian pengelola UMKM.",
+                source: "Nielsen Norman Group",
+                url: "https://www.nngroup.com/articles/service-blueprints-definition/"
+            },
+            frontstage: {
+                title: "Frontstage (Layar & Interaksi Pelanggan)",
+                category: "Service Blueprint",
+                main: "Segala sesuatu yang dilihat, disentuh, dan dialami langsung oleh pelanggan akhir (seperti katalog menu, halaman pemesanan, dan bukti pembayaran).",
+                detail: "Harus selaras dengan kemampuan pengelola usaha di balik layar (Backstage).",
+                source: "Nielsen Norman Group",
+                url: "https://www.nngroup.com/articles/service-blueprints-definition/"
+            },
+            backstage: {
+                title: "Backstage (Operasional Pengelola UMKM)",
+                category: "Service Blueprint",
+                main: "Aktivitas kerja di balik layar yang dilakukan oleh pemilik atau staf UMKM untuk memenuhi pesanan pelanggan (misal memasak, mencuci pakaian, mengecek stok, atau mencatat nota).",
+                detail: "Memahami batasan Backstage (seperti tangan kotor/basah atau bekerja sendirian) sangat penting agar desainer tidak membuat dashboard admin yang terlalu rumit.",
+                source: "Nielsen Norman Group",
+                url: "https://www.nngroup.com/articles/service-blueprints-definition/"
+            },
+            impacteffort: {
+                title: "Impact vs Effort Matrix (Matriks Prioritas 2x2)",
+                category: "Manajemen Produk Digital",
+                main: "Alat pengambilan keputusan yang mengelompokkan ide-ide fitur ke dalam 4 kuadran berdasarkan besarnya Dampak bagi Pengguna (Impact) dan Kemudahan Penerapan bagi UMKM (Effort).",
+                detail: "Membantu mahasiswa memilih fitur paling bernilai tinggi dan paling realistis untuk dijadikan MVP.",
+                source: "Nielsen Norman Group",
+                url: "https://www.nngroup.com/articles/prioritization-matrices/"
+            },
+            mvp: {
+                title: "Minimum Viable Product (MVP)",
+                category: "Strategi Produk",
+                main: "Versi produk atau rancangan prototipe yang memuat fitur-fitur paling esensial (Quick Wins) untuk memecahkan masalah inti pengguna dan siap diuji.",
+                detail: "Pada mata kuliah ini, fitur yang masuk ke kuadran MVP akan menjadi fokus pembuatan User Flow dan Wireframe pada Pertemuan 5 s/d 7.",
+                source: "Interaction Design Foundation",
+                url: "https://www.interaction-design.org/literature/topics/minimum-viable-product"
+            },
+            featurecreep: {
+                title: "Feature Creep / Scope Creep",
+                category: "Risiko Produk",
+                main: "Kecenderungan menambahkan terlalu banyak fitur tambahan yang tidak krusial sehingga aplikasi menjadi rumit digunakan pelanggan dan memberatkan pemilik UMKM.",
+                detail: "Dapat dicegah sejak Pertemuan 4 menggunakan penyaringan Impact vs Effort Matrix.",
+                source: "Interaction Design Foundation",
+                url: "https://www.interaction-design.org/literature/topics/feature-creep"
+            },
+            designbrief: {
+                title: "UX Design Brief (Ringkasan Acuan Perancangan)",
+                category: "Dokumen Acuan Proyek",
+                main: "Dokumen ringkas penutup Tahap 1 yang merangkum profil pengguna, pernyataan masalah, batasan operasional UMKM, ruang lingkup fitur MVP, dan tolok ukur keberhasilan.",
+                detail: "Berfungsi sebagai kompas utama saat mahasiswa mulai merancang struktur menu (Sitemap) dan kerangka layar (Wireframe) di Figma.",
+                source: "Nielsen Norman Group",
+                url: "https://www.interaction-design.org/literature/topics/design-brief"
+            },
+            uxmetrics: {
+                title: "UX Metrics & Business Metrics",
+                category: "Evaluasi Keberhasilan",
+                main: "Indikator terukur untuk menilai apakah solusi desain berhasil membantu pengguna (misal: waktu pemesanan lebih cepat, tingkat salah pesan turun) dan berdampak bagi bisnis UMKM.",
+                detail: "Akan diuji secara nyata saat mahasiswa melaksanakan Usability Testing pada Pertemuan 11 dan 12.",
+                source: "Nielsen Norman Group",
+                url: "https://www.nngroup.com/articles/usability-metrics/"
+            }
+        };
+
+        function escapeHtml(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function term(key, customLabel) {
+            const item = GLOSSARY_DB[key];
+            if (!item) return customLabel || key;
+            const label = customLabel || item.title.split(' (')[0];
+            return '<span class="tech-term" onclick="showTerm(\'' + key + '\')">' + label + '</span>';
+        }
+
+        // =========================================================================
+        // STATE INTERAKTIF SLIDE PERTEMUAN 4
+        // =========================================================================
+        let currentSlideIndex = 0;
+        const TOTAL_SLIDES = 16;
+
+        let s5PovMode = 'bad_solution';
+        let s5DomainIdx = 0;
+        let s8HmwScope = 'just_right';
+        let s11CaseIdx = 0;
+        let s13ActiveQuad = 'q1';
+        let openReflectionKey = { 1: false, 2: false, 3: false };
+
+        // =========================================================================
+        // FUNGSI RENDER 16 SLIDE PERTEMUAN 4
+        // =========================================================================
+
+        // SLIDE 1: Pengantar Pertemuan 4 & Capaian Pembelajaran
+        function renderSlide1() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center my-auto">
+                        <div class="lg:col-span-7 space-y-5">
+                            <div class="inline-flex flex-wrap items-center gap-2">
+                                <span class="px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 text-xs font-bold border border-indigo-200/60 dark:border-indigo-800/60">Pertemuan 4 • Penutup Tahap 1 (Define & Ideate Awal)</span>
+                                <span class="px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 text-xs font-bold border border-emerald-200/60 dark:border-emerald-800/60">S1 Bisnis Digital • Sub-CPMK 1.2 & 2.1</span>
+                            </div>
+
+                            <h2 class="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 dark:text-white leading-tight tracking-tight">
+                                Merumuskan <span class="text-indigo-600 dark:text-indigo-400">Problem Statement</span>, HMW, Prioritas MVP, & Design Brief
+                            </h2>
+
+                            <p class="text-xs sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Pada Pertemuan 3, kita telah mengolah catatan wawancara menjadi 4 artefak sintesis. Hari ini pada Pertemuan 4, kita memasuki puncak tahap ${term('define', 'Define')} untuk mengunci masalah utama pengguna melalui rumus ${term('pov', 'Point of View (POV)')}, mengubahnya menjadi pertanyaan pemicu ide ${term('hmw', 'How Might We (HMW)')}, memperhitungkan <strong>kesiapan operasional pemilik UMKM</strong>, serta menyaring fitur utama (${term('mvp', 'MVP')}) di dalam ${term('designbrief', 'UX Design Brief')}.
+                            </p>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
+                                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80">
+                                    <div class="flex items-center gap-2.5 mb-1.5">
+                                        <span class="px-2 py-0.5 rounded-md bg-indigo-600 text-white text-[11px] font-extrabold">Sub-CPMK 1.2</span>
+                                        <span class="text-xs font-bold text-slate-500">C4, P3</span>
+                                    </div>
+                                    <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">Menganalisis temuan sintesis riset menjadi rumusan masalah utama (Problem Statement) dan pertanyaan eksplorasi How Might We yang terukur.</p>
+                                </div>
+                                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80">
+                                    <div class="flex items-center gap-2.5 mb-1.5">
+                                        <span class="px-2 py-0.5 rounded-md bg-emerald-600 text-white text-[11px] font-extrabold">Sub-CPMK 2.1</span>
+                                        <span class="text-xs font-bold text-slate-500">C4, P4</span>
+                                    </div>
+                                    <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">Menentukan prioritas fitur solusi (MVP) yang selaras dengan kebutuhan pelanggan sekaligus realistis bagi operasional UMKM mitra.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-5">
+                            <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 space-y-4">
+                                <div>
+                                    <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">5 Pilar Pembahasan Hari Ini</span>
+                                    <h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white mt-1">Peta Materi Pertemuan 4</h3>
+                                </div>
+                                <div class="space-y-2.5 text-xs">
+                                    <div class="flex items-start gap-3 p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800">
+                                        <div class="w-7 h-7 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-0.5 font-extrabold">1</div>
+                                        <div><strong class="text-slate-900 dark:text-white block">Rantai Bukti LKM 03 ke POV & Problem Statement</strong><span class="text-slate-500">Merangkai Persona + User Need + Insight tanpa mengarang masalah baru.</span></div>
+                                    </div>
+                                    <div class="flex items-start gap-3 p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800">
+                                        <div class="w-7 h-7 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-0.5 font-extrabold">2</div>
+                                        <div><strong class="text-slate-900 dark:text-white block">Generator Pertanyaan How Might We (HMW)</strong><span class="text-slate-500">Menurunkan Problem Statement menjadi 3 sudut pandang pemicu ide solusi.</span></div>
+                                    </div>
+                                    <div class="flex items-start gap-3 p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800">
+                                        <div class="w-7 h-7 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-0.5 font-extrabold">3</div>
+                                        <div><strong class="text-slate-900 dark:text-white block">Batasan Operasional Pengelola UMKM (Backstage)</strong><span class="text-slate-500">Menyesuaikan kecanggihan fitur dengan kapasitas kerja nyata staf UMKM.</span></div>
+                                    </div>
+                                    <div class="flex items-start gap-3 p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800">
+                                        <div class="w-7 h-7 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-0.5 font-extrabold">4</div>
+                                        <div><strong class="text-slate-900 dark:text-white block">Matriks Prioritas Fitur (Impact vs Effort) & MVP</strong><span class="text-slate-500">Menyaring ide solusi agar bebas dari jebakan Feature Creep.</span></div>
+                                    </div>
+                                    <div class="flex items-start gap-3 p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800">
+                                        <div class="w-7 h-7 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 mt-0.5 font-extrabold">5</div>
+                                        <div><strong class="text-slate-900 dark:text-white block">UX Design Brief & Metrik Keberhasilan</strong><span class="text-slate-500">Kontrak acuan perancangan menuju tahap Sitemap & Wireframe.</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 2: Posisi Pertemuan 4 sebagai Puncak Berlian Pertama (Double Diamond)
+        function renderSlide2() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Alur Double Diamond</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Mengapa Kita Tidak Boleh Langsung Menggambar Layar Sebelum Tahap Define?</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Albert Einstein pernah berkata: <em>"Jika saya diberi waktu 1 jam untuk memecahkan masalah, saya akan menghabiskan 55 menit untuk mendefinisikan masalahnya dengan tepat, dan 5 menit untuk merancang solusinya."</em>
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-3.5 my-auto text-xs">
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2">
+                            <span class="px-2.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-[10px]">PERTEMUAN 1 & 2</span>
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">1. Discover (Divergen)</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">Mengamati titik friksi layanan UMKM dan mengumpulkan data mentah melalui wawancara terbuka di lapangan.</p>
+                        </div>
+
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2">
+                            <span class="px-2.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-[10px]">PERTEMUAN 3</span>
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">2. Sintesis Riset</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">Mengelompokkan kutipan responden menjadi <em>Affinity Diagram, Empathy Map, User Persona,</em> dan <em>Customer Journey Map</em>.</p>
+                        </div>
+
+                        <div class="p-4 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/50 border-2 border-indigo-600 dark:border-indigo-400 shadow-sm space-y-2">
+                            <span class="px-2.5 py-0.5 rounded bg-indigo-600 text-white font-extrabold text-[10px]">PERTEMUAN 4 (HARI INI)</span>
+                            <h3 class="text-sm font-extrabold text-indigo-700 dark:text-indigo-300">3. Define & Fokus MVP</h3>
+                            <p class="text-slate-700 dark:text-slate-200 leading-relaxed font-semibold">Menyaring hasil sintesis menjadi <em>Problem Statement</em>, pertanyaan <em>How Might We</em>, batasan operasional UMKM, & fitur <em>MVP</em>.</p>
+                        </div>
+
+                        <div class="p-4 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 space-y-2">
+                            <span class="px-2.5 py-0.5 rounded bg-emerald-600 text-white font-bold text-[10px]">PERTEMUAN 5 s/d 7</span>
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">4. Ruang Solusi (Figma)</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">Menerjemahkan fitur MVP dari <em>Design Brief</em> menjadi <em>Sitemap, User Flow,</em> dan kerangka layar (<em>Wireframe</em>) di Figma.</p>
+                        </div>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-xs sm:text-sm text-slate-700 dark:text-slate-200">
+                        <i class="fa-solid fa-triangle-exclamation text-amber-600 mr-1.5"></i><strong>Kesalahan Terbesar Mahasiswa:</strong> Sudah capek-capek mewawancarai responden di Pertemuan 2 dan membuat Persona di Pertemuan 3, tetapi saat merumuskan masalah di Pertemuan 4 justru <strong>mengarang masalah baru</strong> yang tidak ada kaitannya dengan hasil wawancara!
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 3: Rantai Bukti Relasional dari LKM 03 ke LKM 04
+        function renderSlide3() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Ketertelusuran Bukti (${term('traceability', 'Traceability')})</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Rantai Relasional: Dari Artefak LKM 03 Menuju Problem Statement LKM 04</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Perhatikan bagaimana keempat artefak sintesis yang telah Anda buat pada Pertemuan 3 langsung menjadi <strong>bahan baku pembentuk ${term('pov', 'Point of View (POV)')}</strong> pada Pertemuan 4 ini:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center my-auto text-xs">
+                        <div class="lg:col-span-5 space-y-2.5">
+                            <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-start gap-3">
+                                <span class="px-2 py-1 rounded-lg bg-indigo-600 text-white font-extrabold shrink-0">LKM 03 • Persona</span>
+                                <div>
+                                    <div class="font-extrabold text-slate-900 dark:text-white">Sosok Pelanggan & Konteksnya</div>
+                                    <p class="text-slate-500 mt-0.5">Menjadi komponen <strong>[USER]</strong> pada kalimat Problem Statement.</p>
+                                </div>
+                            </div>
+                            <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-start gap-3">
+                                <span class="px-2 py-1 rounded-lg bg-emerald-600 text-white font-extrabold shrink-0">LKM 03 • Empathy & CJM</span>
+                                <div>
+                                    <div class="font-extrabold text-slate-900 dark:text-white">Goals, Gains, & Fase Emosi Terendah</div>
+                                    <p class="text-slate-500 mt-0.5">Menjadi komponen <strong>[USER NEED / KEBUTUHAN]</strong> yang harus dipenuhi.</p>
+                                </div>
+                            </div>
+                            <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-start gap-3">
+                                <span class="px-2 py-1 rounded-lg bg-amber-500 text-white font-extrabold shrink-0">LKM 03 • Affinity Insight</span>
+                                <div>
+                                    <div class="font-extrabold text-slate-900 dark:text-white">User Insight & Akar Masalah Klaster</div>
+                                    <p class="text-slate-500 mt-0.5">Menjadi komponen <strong>[INSIGHT / ALASAN "KARENA..."]</strong>.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-1 flex justify-center text-indigo-500 text-2xl">
+                            <i class="fa-solid fa-arrow-right hidden lg:inline"></i>
+                            <i class="fa-solid fa-arrow-down lg:hidden"></i>
+                        </div>
+
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-indigo-50/70 dark:bg-indigo-950/40 border-2 border-indigo-500/60 space-y-3">
+                            <span class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-extrabold text-[11px] inline-block">RUMUS OTOMATIS POINT OF VIEW (POV) DI LKM 04</span>
+                            <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2 text-xs sm:text-sm leading-relaxed">
+                                <div><span class="font-extrabold text-indigo-600 dark:text-indigo-400">[USER: Nama & Karakteristik Persona]</span></div>
+                                <div>membutuhkan cara untuk <span class="font-extrabold text-emerald-600 dark:text-emerald-400">[NEED: Kebutuhan Pengguna dalam Kata Kerja]</span></div>
+                                <div>karena <span class="font-extrabold text-amber-600 dark:text-amber-400">[INSIGHT: Akar Masalah Mengejutkan dari Bukti Wawancara/Observasi]</span>.</div>
+                            </div>
+                            <p class="text-[11px] text-slate-600 dark:text-slate-300">
+                                <i class="fa-solid fa-link text-indigo-600 mr-1"></i>Di <strong>Workspace LKM 04</strong> nanti, saat Anda memuat file <code>.json</code> dari LKM 03, seluruh daftar <em>Klaster Insight</em>, <em>Pain Points Persona</em>, dan <em>Fase Kritis Journey Map</em> Anda otomatis muncul di <strong>Dropdown</strong> untuk dirangkai menjadi Problem Statement!
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 4: Anatomi Rumus Point of View (POV) & Problem Statement
+        function renderSlide4() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Stanford d.school & Nielsen Norman Group</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Membedah 3 Komponen Rumus ${term('pov', 'Point of View (POV)')}</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Menurut Sarah Gibbons (Nielsen Norman Group), pernyataan kebutuhan pengguna (${term('problemstatement', 'Problem Statement')}) yang tajam wajib memenuhi 3 aturan penulisan komponen berikut:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-auto text-xs sm:text-sm">
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                            <div class="flex items-center justify-between">
+                                <span class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-xs font-extrabold">Komponen 1: USER</span>
+                                <i class="fa-solid fa-user-check text-lg text-indigo-600"></i>
+                            </div>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Siapa Pengguna Spesifiknya?</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Jangan hanya menulis kata umum <em>"Pelanggan"</em> atau <em>"Masyarakat"</em>. Sebutkan profil spesifik sesuai <strong>User Persona</strong> Anda beserta konteks situasinya.
+                            </p>
+                            <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs">
+                                <strong class="text-indigo-600">Contoh:</strong> "Mahasiswa indekos yang mencuci pakaian seminggu sekali di sela jadwal kuliah padat..."
+                            </div>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                            <div class="flex items-center justify-between">
+                                <span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-xs font-extrabold">Komponen 2: NEED</span>
+                                <i class="fa-solid fa-bullseye text-lg text-emerald-600"></i>
+                            </div>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Gunakan Kata Kerja (${term('userneed', 'Verbs')})!</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Kebutuhan harus ditulis menggunakan <strong>kata kerja tujuan pengguna</strong>, bukan kata benda berupa nama fitur atau aplikasi (<em>jangan menulis: "membutuhkan fitur chat/notifikasi"</em>).
+                            </p>
+                            <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs">
+                                <strong class="text-emerald-600">Contoh:</strong> "...membutuhkan cara untuk <u>mengetahui kepastian kapan cuciannya selesai dan siap diambil</u>..."
+                            </div>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                            <div class="flex items-center justify-between">
+                                <span class="px-2.5 py-1 rounded-lg bg-amber-500 text-white text-xs font-extrabold">Komponen 3: INSIGHT</span>
+                                <i class="fa-solid fa-lightbulb text-lg text-amber-500"></i>
+                            </div>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Akar Masalah dari Lapangan</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Jelaskan alasan psikologis atau hambatan nyata yang Anda temukan dari wawancara/observasi, bukan sekadar alasan dangkal.
+                            </p>
+                            <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs">
+                                <strong class="text-amber-600">Contoh:</strong> "...karena <u>nota kertas sering terselip dan ia pernah kecele datang ke toko ternyata pakaiannya belum disetrika [P1, P3]</u>."
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 5: Simulasi Interaktif: Jebakan Solution-First vs Rumusan Need-Based
+        function renderSlide5() {
+            const domains = [
+                {
+                    name: "Kasus 1: UMKM Katering Harian",
+                    badPov: "Karyawan kantor membutuhkan aplikasi pemesanan katering dengan fitur filter menu dan pembayaran otomatis karena ingin memesan makan siang dengan cepat.",
+                    badReason: "SALAH: Kalimat ini sudah mendikte solusi teknis ('aplikasi dengan fitur filter & pembayaran otomatis') dan alasannya terlalu dangkal ('ingin cepat'), sehingga menutup peluang solusi lain.",
+                    goodPov: "Karyawan kantor dengan waktu istirahat 45 menit [Persona] membutuhkan cara untuk memastikan ketersediaan menu makan siang dan memesannya sebelum pukul 11.00 [Need] karena saat jam istirahat tiba, menu favorit di katering sering sudah habis dan antrean balasan chat admin sangat lama [Insight P1, P2, OBS-1].",
+                    goodReason: "BENAR: Menyebutkan konteks waktu pengguna, menyatakan kebutuhan dalam kata kerja ('memastikan ketersediaan & memesan lebih awal'), serta memuat bukti akar masalah dari lapangan."
+                },
+                {
+                    name: "Kasus 2: UMKM Bengkel Servis Motor",
+                    badPov: "Pemilik motor membutuhkan website booking antrean bengkel dan fitur live tracker montir karena malas mengantre di bengkel.",
+                    badReason: "SALAH: Menyebutkan kata benda fitur ('website booking & live tracker') dan menghakimi pengguna ('malas mengantre') tanpa menjelaskan akar masalah sebenarnya.",
+                    goodPov: "Pekerja lapangan yang mengandalkan motor setiap hari [Persona] membutuhkan cara untuk memperkirakan durasi tunggu servis dan rincian biaya suku cadang sejak awal [Need] karena ia tidak bisa meninggalkan motornya seharian tanpa kepastian kapan selesai dan khawatir biaya servis melebihi uang yang dibawa [Insight P2, P3].",
+                    goodReason: "BENAR: Mengungkap akar kekhawatiran nyata pelanggan (ketidakpastian waktu selesai dan transparansi estimasi biaya suku cadang) tanpa mengunci fitur."
+                },
+                {
+                    name: "Kasus 3: Sisi Pengelola / Kasir UMKM",
+                    badPov: "Pemilik kedai kopi membutuhkan software ERP kasir dan dashboard laporan grafik penjualan karena pencatatan manual itu kuno.",
+                    badReason: "SALAH: Memaksakan software rumit ('ERP & dashboard grafik') yang justru memberatkan pemilik UMKM saat sedang sibuk meracik pesanan.",
+                    goodPov: "Pemilik kedai yang merangkap kasir sekaligus peracik minuman di jam sibuk [Persona Pengelola] membutuhkan cara untuk mencatat pesanan pelanggan dan menghitung kembalian dalam hitungan detik tanpa berpindah tempat [Need] karena tumpukan pesanan lisan saat antrean ramai membuatnya sering salah takaran gula dan lupa pesanan yang belum dibayar [Insight Pemilik, OBS-2].",
+                    goodReason: "BENAR: Memotret kondisi operasional nyata pengelola usaha (merangkap kasir & peracik di jam ramai) sehingga mengarahkan kita merancang antarmuka yang super ringkas."
+                }
+            ];
+
+            const cur = domains[s5DomainIdx];
+            const isBad = s5PovMode === 'bad_solution';
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="space-y-1">
+                            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Simulasi Interaktif Perumusan Masalah</span>
+                            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Jebakan "Menyisipkan Fitur" vs Rumusan Berbasis Kebutuhan</h2>
+                        </div>
+                        <div class="flex flex-wrap gap-1.5">
+                            ${domains.map((d, idx) => `
+                                <button type="button" onclick="setS5Domain(${idx})" class="px-3 py-1.5 rounded-xl text-xs font-extrabold transition ${s5DomainIdx === idx ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">${d.name}</button>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-4 my-auto">
+                        <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-200 dark:border-slate-700">
+                            <span class="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">${cur.name}</span>
+                            <div class="flex gap-1.5 bg-slate-200/80 dark:bg-slate-900 p-1 rounded-xl">
+                                <button type="button" onclick="setS5PovMode('bad_solution')" class="px-3 py-1.5 rounded-lg text-xs font-extrabold transition ${isBad ? 'bg-rose-600 text-white' : 'text-slate-600 dark:text-slate-300'}">1. Contoh SALAH (Menyebut Fitur)</button>
+                                <button type="button" onclick="setS5PovMode('good_need')" class="px-3 py-1.5 rounded-lg text-xs font-extrabold transition ${!isBad ? 'bg-emerald-600 text-white' : 'text-slate-600 dark:text-slate-300'}">2. Contoh BENAR (Berbasis Kebutuhan)</button>
+                            </div>
+                        </div>
+
+                        <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 ${isBad ? 'border-rose-400 dark:border-rose-700' : 'border-emerald-500 dark:border-emerald-600'} space-y-2.5">
+                            <span class="px-2.5 py-0.5 rounded text-[11px] font-extrabold ${isBad ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'}">
+                                ${isBad ? 'RUMUSAN POV YANG KELIRU (SOLUTION-FIRST)' : 'RUMUSAN POV YANG TEPAT (NEED-BASED & EVIDENCE-BASED)'}
+                            </span>
+                            <p class="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-relaxed">
+                                "${isBad ? cur.badPov : cur.goodPov}"
+                            </p>
+                        </div>
+
+                        <div class="p-4 rounded-2xl ${isBad ? 'bg-rose-50/80 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 text-rose-900 dark:text-rose-200' : 'bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200'} text-xs sm:text-sm leading-relaxed">
+                            <i class="fa-solid ${isBad ? 'fa-circle-xmark text-rose-600' : 'fa-circle-check text-emerald-600'} mr-1.5"></i>${isBad ? cur.badReason : cur.goodReason}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 6: 4 Daftar Periksa Kualitas Problem Statement
+        function renderSlide6() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Standar Evaluasi Tahap Define</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Empat Syarat ${term('problemstatement', 'Problem Statement')} yang Layak Lulus</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Sebelum Anda mengubah pernyataan masalah menjadi ide solusi pada LKM 04, periksa apakah rumusan masalah Anda sudah memenuhi keempat syarat berikut:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 my-auto text-xs sm:text-sm">
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <div class="flex items-center gap-2.5 font-extrabold text-indigo-600 dark:text-indigo-400">
+                                <span class="w-7 h-7 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-xs shrink-0">1</span>
+                                <span>Berpusat pada Manusia (Human-Centered)</span>
+                            </div>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Berfokus pada kesulitan yang dialami oleh pelanggan atau pengelola UMKM sebagai manusia, bukan sekadar pernyataan target keuangan perusahaan.
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <div class="flex items-center gap-2.5 font-extrabold text-emerald-600 dark:text-emerald-400">
+                                <span class="w-7 h-7 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-xs shrink-0">2</span>
+                                <span>Berbasis Bukti Kode Responden (${term('traceability', 'Traceable')})</span>
+                            </div>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Setiap alasan di belakang kata <em>"karena..."</em> wajib merujuk pada kode responden (<code>[P1, P2]</code>) atau observasi (<code>[OBS-1]</code>) dari LKM 03.
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <div class="flex items-center gap-2.5 font-extrabold text-amber-600 dark:text-amber-400">
+                                <span class="w-7 h-7 rounded-xl bg-amber-500 text-white flex items-center justify-center text-xs shrink-0">3</span>
+                                <span>Bebas dari Sebutan Fitur Teknis (${term('userneed', 'Verb-Based')})</span>
+                            </div>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Tidak menyisipkan kata <em>"aplikasi", "tombol", "notifikasi",</em> atau <em>"sistem database"</em> di dalam kalimat kebutuhan.
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <div class="flex items-center gap-2.5 font-extrabold text-rose-600 dark:text-rose-400">
+                                <span class="w-7 h-7 rounded-xl bg-rose-600 text-white flex items-center justify-center text-xs shrink-0">4</span>
+                                <span>Mengakomodasi Sisi Pelanggan & Pengelola UMKM</span>
+                            </div>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Pada LKM 04 nanti, Anda akan menyusun <strong>POV Utama (Sisi Pelanggan)</strong> sekaligus memperhatikan <strong>kendala operasional Sisi Pengelola UMKM</strong>.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 7: Mengubah Masalah Menjadi Peluang dengan Teknik How Might We (HMW)
+        function renderSlide7() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Jembatan Tahap Define ke Ideate</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Mengubah Masalah Menjadi Pertanyaan ${term('hmw', 'How Might We (HMW)')}</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Setelah memiliki <em>Problem Statement</em> yang tajam, bagaimana cara kita mulai mencari ide solusinya? Kita membingkai ulang masalah tersebut menjadi kalimat tanya <strong>"Bagaimana kita dapat..." (<em>How Might We / HMW</em>)</strong>:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-auto text-xs sm:text-sm">
+                        <div class="p-5 rounded-3xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 space-y-2">
+                            <span class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-extrabold text-xs">1. Kata "HOW" (Bagaimana)</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Sikap Optimis Mencari Solusi</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Mengajak otak kita berhenti mengeluhkan masalah dan mulai berasumsi bahwa pasti ada cara kreatif untuk menyelesaikannya.
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 space-y-2">
+                            <span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-extrabold text-xs">2. Kata "MIGHT" (Mungkin / Dapat)</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Membuka Banyak Alternatif Ide</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Kata <em>"mungkin"</em> menegaskan bahwa tidak hanya ada satu jawaban tunggal. Kita bebas mengeksplorasi berbagai alternatif solusi sebelum memilih yang terbaik.
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 space-y-2">
+                            <span class="px-2.5 py-1 rounded-lg bg-amber-500 text-white font-extrabold text-xs">3. Kata "WE" (Kita Bersama)</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Kolaborasi Bersama Mitra</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Menunjukkan bahwa solusi yang dirancang merupakan hasil kolaborasi yang mempertimbangkan pelanggan sekaligus pemilik UMKM.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800/80 text-xs sm:text-sm text-slate-700 dark:text-slate-200">
+                        <i class="fa-solid fa-wand-magic-sparkles text-indigo-600 dark:text-indigo-400 mr-1.5"></i><strong>Aturan Emas HMW:</strong> Pertanyaan HMW tidak boleh terlalu luas (kabur) dan tidak boleh terlalu sempit (sudah mendikte bentuk tombol/fitur). Mari kita uji pada simulator di slide berikutnya!
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 8: Simulasi Interaktif: Menguji Kualitas Pertanyaan HMW (Terlalu Luas vs Terlalu Sempit vs Tepat Sasaran)
+        function renderSlide8() {
+            const scopes = {
+                too_broad: {
+                    badge: "Kurang Tepat • Terlalu Luas (Too Broad)",
+                    colorClass: "border-amber-400 bg-amber-50/60 dark:bg-amber-950/20",
+                    hmwText: '"Bagaimana kita dapat membuat pengalaman pelanggan laundry menjadi sempurna dan paling memuaskan di kota ini?"',
+                    analysis: "MENGAPA KURANG TEPAT? Pertanyaan ini terlalu abstrak dan muluk-muluk ('menjadi sempurna'). Ketika dibawa ke sesi brainstorming, tim akan bingung harus mulai merancang dari mana karena fokus masalahnya kabur."
+                },
+                too_narrow: {
+                    badge: "Kurang Tepat • Terlalu Sempit / Mengunci Fitur (Too Narrow)",
+                    colorClass: "border-rose-400 bg-rose-50/60 dark:bg-rose-950/20",
+                    hmwText: '"Bagaimana kita dapat membuat tombol pop-up notifikasi WhatsApp otomatis berwarna hijau saat baju selesai disetrika?"',
+                    analysis: "MENGAPA KURANG TEPAT? Pertanyaan ini sudah mengunci satu fitur spesifik ('tombol pop-up WA berwarna hijau'). Akibatnya, ruang eksplorasi ide tertutup rapat sejak awal."
+                },
+                just_right: {
+                    badge: "Ideal • Tepat Sasaran & Terfokus (Just Right)",
+                    colorClass: "border-emerald-500 bg-emerald-50/60 dark:bg-emerald-950/20",
+                    hmwText: '"Bagaimana kita dapat membantu pelanggan mengetahui status pengerjaan cucian dan total tagihannya secara pasti sebelum mereka berangkat ke toko?"',
+                    analysis: "MENGAPA TEPAT SASARAN? Fokus masalahnya sangat jelas (kepastian status cucian & tagihan sebelum berangkat ke toko), namun tetap membuka ruang bagi beragam ide solusi (bisa lewat kode cek nota di web katalog, papan status antrean, atau tautan struk digital)."
+                }
+            };
+
+            const cur = scopes[s8HmwScope];
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Simulasi Interaktif Cakupan HMW</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Menguji Kualitas Pertanyaan ${term('hmw', 'How Might We')}</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Berdasarkan satu <em>Problem Statement</em> tentang <strong>ketidakpastian waktu selesai laundry dan hilangnya nota kertas</strong>, bandingkan ketiga rumusan HMW di bawah ini:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        <button type="button" onclick="setS8Scope('too_broad')" class="p-3 rounded-2xl border text-xs sm:text-sm font-extrabold transition ${s8HmwScope === 'too_broad' ? 'bg-amber-500 text-white border-amber-500 shadow-xs' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">1. Terlalu Luas (Kabur)</button>
+                        <button type="button" onclick="setS8Scope('too_narrow')" class="p-3 rounded-2xl border text-xs sm:text-sm font-extrabold transition ${s8HmwScope === 'too_narrow' ? 'bg-rose-600 text-white border-rose-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">2. Terlalu Sempit (Mengunci Fitur)</button>
+                        <button type="button" onclick="setS8Scope('just_right')" class="p-3 rounded-2xl border text-xs sm:text-sm font-extrabold transition ${s8HmwScope === 'just_right' ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">3. Tepat Sasaran (Ideal)</button>
+                    </div>
+
+                    <div class="p-5 sm:p-6 rounded-3xl border-2 ${cur.colorClass} space-y-4 my-auto">
+                        <span class="px-3 py-1 rounded-lg bg-slate-900 text-white text-xs font-extrabold inline-block">${cur.badge}</span>
+                        <h3 class="text-base sm:text-xl font-extrabold text-slate-900 dark:text-white leading-relaxed">${cur.hmwText}</h3>
+                        <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed pt-2 border-t border-slate-200/80 dark:border-slate-700/80">${cur.analysis}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 9: Menurunkan 1 Problem Statement Menjadi 3 Sudut Pandang HMW
+        function renderSlide9() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Teknik Eksplorasi Multi-Sudut Pandang</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Menurunkan 1 Problem Statement Menjadi 3 Pertanyaan HMW</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Pada LKM 04 nanti, dari 1 <em>Problem Statement</em> utama yang Anda rumuskan, Anda wajib menurunkannya menjadi <strong>minimal 3 pertanyaan ${term('hmw', 'How Might We')}</strong> dengan membedah 3 aspek berikut:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-auto text-xs sm:text-sm">
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                            <span class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-xs font-extrabold">Sudut Pandang HMW #1</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Kejelasan Informasi Awal</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Bagaimana kita dapat membantu pelanggan menemukan informasi produk, rincian harga, atau ketersediaan stok/jadwal secara transparan tanpa harus bertanya berulang kali?
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                            <span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-xs font-extrabold">Sudut Pandang HMW #2</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Penyederhanaan Langkah Transaksi</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Bagaimana kita dapat memangkas langkah pemesanan atau antrean yang berbelit-belit agar pelanggan dapat menyelesaikan transaksinya dengan usaha minimal?
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                            <span class="px-2.5 py-1 rounded-lg bg-amber-500 text-white text-xs font-extrabold">Sudut Pandang HMW #3</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Kemudahan Rekap bagi Pengelola UMKM</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Bagaimana kita dapat membantu pemilik/staf UMKM menerima dan memperbarui status pesanan dengan cepat tanpa mengganggu pekerjaan utama mereka di toko?
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-800/60 text-xs">
+                        <i class="fa-solid fa-circle-info text-indigo-600 dark:text-indigo-400 mr-1.5"></i>Dengan membagi HMW ke dalam 3 sudut pandang di atas, solusi yang Anda rancang pada tahap berikutnya akan utuh dari hulu ke hilir.
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 10: Kesiapan & Batasan Operasional Pengelola UMKM (Service Blueprint Ringkas)
+        function renderSlide10() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Realitas Lapangan Bisnis Digital (${term('serviceblueprint', 'Service Blueprint')})</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Mengapa Aplikasi Pelanggan yang Canggih Sering Gagal Dipakai UMKM?</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Banyak mahasiswa merancang aplikasi pelanggan (${term('frontstage', 'Frontstage')}) yang sangat canggih, tetapi lupa bahwa di balik layar (${term('backstage', 'Backstage')}), pemilik UMKM bekerja sendirian dengan keterbatasan waktu dan fisik:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-auto text-xs sm:text-sm">
+                        <div class="p-5 rounded-3xl bg-rose-50/60 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800 space-y-2">
+                            <div class="w-10 h-10 rounded-2xl bg-rose-600 text-white flex items-center justify-center"><i class="fa-solid fa-hands-bubbles"></i></div>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">1. Kondisi Fisik & Tangan Sibuk</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Pemilik warung makan sedang memegang spatula panas, staf laundry tangannya basah terkena deterjen, atau montir bengkel tangannya penuh oli. Mereka <strong>tidak mungkin mengetik panjang di layar HP setiap 2 menit</strong>!
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 space-y-2">
+                            <div class="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center"><i class="fa-solid fa-user-clock"></i></div>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">2. Keterbatasan Staf (Single Fighter)</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Mayoritas UMKM tidak memiliki admin khusus yang duduk di depan laptop seharian. Orang yang melayani pembeli di kasir adalah orang yang sama yang menyiapkan barang.
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 space-y-2">
+                            <div class="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center"><i class="fa-solid fa-mobile-screen"></i></div>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">3. Perangkat & Literasi Digital</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Pengelola UMKM umumnya hanya mengandalkan 1 ponsel Android di meja kasir. Jika alur konfirmasi pesanan membutuhkan 7 kali klik di menu yang tersembunyi, mereka akan kembali ke kertas nota!
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-800/60 text-xs sm:text-sm">
+                        <i class="fa-solid fa-check-double text-indigo-600 dark:text-indigo-400 mr-1.5"></i><strong>Kewajiban di LKM 04:</strong> Sebelum memilih fitur MVP, Anda wajib memetakan <strong>Batasan Operasional Pengelola UMKM</strong> agar solusi desain Anda benar-benar membumi dan sanggup dijalankan mitra.
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 11: Simulasi Interaktif Frontstage vs Backstage UMKM
+        function renderSlide11() {
+            const cases = [
+                {
+                    title: "Kasus A: UMKM Kuliner / Warung Makan Siang",
+                    frontstage: "Pelanggan ingin tahu apakah menu Ayam Bakar masih ada dan ingin memesan lebih dulu agar saat tiba di warung tidak perlu mengantre lama.",
+                    backstageProblem: "Pemilik warung sedang sibuk menggoreng dan membakar ayam di dapur yang panas antara pukul 11.30 - 13.30. Ia tidak sempat membalas chat satu per satu.",
+                    badDesign: "Merancang fitur Live Chat Negosiasi & Update Status 6 Tahap (Pesanan Diterima -> Sedang Dipotong -> Sedang Dibakar -> Sedang Dibungkus -> Siap) yang harus diklik pemilik setiap 3 menit.",
+                    goodDesign: "Merancang Katalog Menu dengan Tombol Saklar Cepat 'Stok Habis' (1x tap tombol besar oleh kasir) & Ringkasan Pesanan Otomatis yang langsung tampil jelas di layar HP kasir tanpa perlu mengetik balasan."
+                },
+                {
+                    title: "Kasus B: UMKM Jasa Laundry Kiloan",
+                    frontstage: "Pelanggan ingin tahu berapa kilogram berat cuciannya, berapa total biayanya, dan kapan pakaiannya selesai disetrika tanpa takut nota kertasnya hilang.",
+                    backstageProblem: "Staf laundry bekerja menimbang pakaian dengan tangan lembap dan harus menangani puluhan keranjang cucian milik pelanggan yang berbeda.",
+                    badDesign: "Mengharuskan staf laundry memotret setiap helai baju pelanggan satu per satu dan mengetik deskripsi warna pakaian secara manual di aplikasi.",
+                    goodDesign: "Form Input Kasir Super Ringkas (cukup pilih nama pelanggan, ketik angka berat Kg, dan pilih paket Layanan) yang otomatis menghasilkan Struk Digital & Status Selesai hanya dengan 1 tombol 'Selesai Dicuci'."
+                },
+                {
+                    title: "Kasus C: UMKM Pangkas Rambut / Barbershop",
+                    frontstage: "Pelanggan ingin tahu jam berapa kursi kapster kosong hari ini agar tidak perlu duduk menunggu 1 jam di lokasi.",
+                    backstageProblem: "Kapster sedang memegang gunting dan mencukur rambut pelanggan; kedua tangannya tidak bisa memegang HP untuk membalas tanya-jawab jadwal.",
+                    badDesign: "Formulir reservasi rumit yang mewajibkan kapster melakukan verifikasi manual dan mengetik pesan konfirmasi untuk setiap calon pelanggan.",
+                    goodDesign: "Tampilan Slot Jam Kosong Harian Otomatis (misal per 30 menit) di mana pelanggan tinggal memilih jam yang masih tersedia, dan kapster cukup melihat daftar urutan nama di layar meja cermin."
+                }
+            ];
+
+            const cur = cases[s11CaseIdx];
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="space-y-1">
+                            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Simulasi Service Blueprint Ringkas</span>
+                            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Menyelaraskan ${term('frontstage', 'Frontstage')} Pelanggan & ${term('backstage', 'Backstage')} UMKM</h2>
+                        </div>
+                        <div class="flex flex-wrap gap-1.5">
+                            ${cases.map((c, idx) => `
+                                <button type="button" onclick="setS11Case(${idx})" class="px-3 py-1.5 rounded-xl text-xs font-extrabold transition ${s11CaseIdx === idx ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">Kasus ${idx + 1}</button>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-4 my-auto text-xs sm:text-sm">
+                        <h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700 pb-2.5">${cur.title}</h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 space-y-1.5">
+                                <span class="text-[11px] font-extrabold uppercase text-indigo-600 dark:text-indigo-400"><i class="fa-solid fa-user mr-1"></i>Kebutuhan Layar Pelanggan (Frontstage)</span>
+                                <p class="text-slate-700 dark:text-slate-200 leading-relaxed">${cur.frontstage}</p>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-800 space-y-1.5">
+                                <span class="text-[11px] font-extrabold uppercase text-amber-600 dark:text-amber-400"><i class="fa-solid fa-store mr-1"></i>Batasan Kerja Nyata Pengelola (Backstage)</span>
+                                <p class="text-slate-700 dark:text-slate-200 leading-relaxed">${cur.backstageProblem}</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                            <div class="p-4 rounded-2xl bg-rose-50/80 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 space-y-1">
+                                <div class="font-extrabold text-rose-700 dark:text-rose-300"><i class="fa-solid fa-circle-xmark mr-1"></i>Desain yang Tidak Realistis bagi UMKM:</div>
+                                <p class="text-slate-700 dark:text-slate-300 leading-relaxed">${cur.badDesign}</p>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 space-y-1">
+                                <div class="font-extrabold text-emerald-700 dark:text-emerald-300"><i class="fa-solid fa-circle-check mr-1"></i>Solusi UI/UX yang Ramah Operasional UMKM:</div>
+                                <p class="text-slate-700 dark:text-slate-300 leading-relaxed">${cur.goodDesign}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 12: Dari HMW ke Ide Solusi & Bahaya Feature Creep
+        function renderSlide12() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Disiplin Manajemen Produk Digital</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Menyaring Ide Solusi & Menghindari Jebakan ${term('featurecreep', 'Feature Creep')}</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Saat menjawab pertanyaan <em>How Might We</em>, Anda mungkin menemukan 6 hingga 10 ide fitur. Namun dalam bisnis digital, memasukkan semua fitur sekaligus ke dalam aplikasi tahap awal adalah kesalahan fatal:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 my-auto text-xs sm:text-sm">
+                        <div class="p-5 rounded-3xl bg-rose-50/60 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="px-2.5 py-1 rounded-lg bg-rose-600 text-white text-xs font-extrabold">Bahaya Feature Creep</span>
+                                <i class="fa-solid fa-Triangle-exclamation text-rose-600 text-lg"></i>
+                            </div>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Aplikasi Gemuk, Membingungkan, & Gagal Selesai</h3>
+                            <ul class="space-y-2 text-slate-700 dark:text-slate-300">
+                                <li>• Menambahkan fitur <em>Poin Gamifikasi, Forum Komunitas, Live Tracking Kurir Peta GPS,</em> hingga <em>Multi-Bahasa</em> pada UMKM kecil yang sebenarnya hanya butuh kejelasan katalog dan pencatatan pesanan.</li>
+                                <li>• Akibatnya: Beban pikiran pengguna (<em>Cognitive Load</em>) melonjak dan waktu perancangan habis untuk halaman yang tidak penting.</li>
+                            </ul>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-xs font-extrabold">Fokus pada ${term('mvp', 'MVP (Minimum Viable Product)')}</span>
+                                <i class="fa-solid fa-rocket text-emerald-600 text-lg"></i>
+                            </div>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Pilih 3 - 4 Fitur Inti yang Paling Berdampak</h3>
+                            <ul class="space-y-2 text-slate-700 dark:text-slate-300">
+                                <li>• Pilihlah fitur yang <strong>langsung menyelesaikan akar masalah utama</strong> pada <em>Problem Statement</em> Anda dan <strong>paling mudah dijalankan oleh pemilik UMKM</strong>.</li>
+                                <li>• Fitur-fitur terpilih inilah yang akan Anda gambar alur <em>User Flow</em> dan <em>Wireframe</em>-nya pada Pertemuan 5 s/d 7.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 13: Simulasi Interaktif Matriks Prioritas Fitur 2x2 (Impact vs Effort Matrix)
+        function renderSlide13() {
+            const quads = {
+                q1: {
+                    badge: "Kuadran 1 • Dampak Tinggi & Penerapan Mudah (PRIORITAS UTAMA / MVP)",
+                    title: "Quick Wins / Fitur Inti MVP (Wajib Dibuat di Pertemuan 5 - 7)",
+                    desc: "Fitur yang langsung memecahkan masalah utama pelanggan dan sangat mudah dioperasikan oleh pengelola UMKM sehari-hari.",
+                    examples: [
+                        "Katalog produk/layanan dengan indikator stok 'Tersedia / Habis' yang jelas dan rincian harga transparan.",
+                        "Formulir pemesanan ringkas (tanpa wajib daftar akun rumit) yang langsung menghitung estimasi total biaya.",
+                        "Halaman tiket/struk pesanan digital bernomor antrean yang mudah dicek oleh pelanggan maupun kasir UMKM."
+                    ]
+                },
+                q2: {
+                    badge: "Kuadran 2 • Dampak Tinggi & Penerapan Sulit/Kompleks",
+                    title: "Major Projects / Pengembangan Tahap Lanjut (Fase Berikutnya)",
+                    desc: "Fitur yang bermanfaat bagi pengguna, namun membutuhkan kesiapan operasional atau integrasi teknis yang cukup berat bagi UMKM saat ini.",
+                    examples: [
+                        "Integrasi pembayaran otomatis multi-bank (Payment Gateway berbayar) dengan rekonsiliasi pembukuan otomatis.",
+                        "Sistem manajemen inventori bahan baku dapur yang otomatis memotong stok setiap gram bahan saat pesanan masuk."
+                    ]
+                },
+                q3: {
+                    badge: "Kuadran 3 • Dampak Rendah & Penerapan Mudah",
+                    title: "Fill-Ins / Fitur Pelengkap (Opsional Bila Waktu Tersisa)",
+                    desc: "Fitur tambahan yang mudah dibuat tetapi tidak secara langsung memecahkan akar masalah transaksi utama.",
+                    examples: [
+                        "Halaman profil sejarah berdirinya UMKM atau galeri foto dekorasi toko.",
+                        "Tombol bagikan (share) tautan menu ke media sosial."
+                    ]
+                },
+                q4: {
+                    badge: "Kuadran 4 • Dampak Rendah & Penerapan Sulit (HINDARI / CORET!)",
+                    title: "Thankless Tasks / Pemborosan Waktu (Jangan Masukkan ke Desain)",
+                    desc: "Fitur yang rumit dibuat, membebani kerja pemilik UMKM, dan tidak dibutuhkan oleh pelanggan sasaran.",
+                    examples: [
+                        "Fitur Live Tracking Peta GPS posisi kurir secara real-time untuk warung kecil yang pengantarannya dilakukan sendiri oleh pemilik.",
+                        "Fitur sosial media internal / kolom komentar antar-pembeli di dalam aplikasi pemesanan."
+                    ]
+                }
+            };
+
+            const cur = quads[s13ActiveQuad];
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Simulasi Interaktif Matriks Prioritas Fitur</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Menyaring Ide dengan ${term('impacteffort', 'Impact vs Effort Matrix')}</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Klik pada keempat kuadran matriks di bawah ini untuk memahami cara mengelompokkan ide fitur Anda pada LKM 04:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <div class="lg:col-span-5 grid grid-cols-2 gap-2.5 text-xs">
+                            <button type="button" onclick="setS13Quad('q1')" class="p-4 rounded-2xl border-2 text-left transition flex flex-col justify-between ${s13ActiveQuad === 'q1' ? 'bg-emerald-600 text-white border-emerald-600 shadow-md' : 'bg-emerald-50/70 dark:bg-emerald-950/30 text-slate-800 dark:text-slate-100 border-emerald-300 dark:border-emerald-800'}">
+                                <span class="text-[10px] font-extrabold uppercase opacity-80">Dampak Tinggi • Mudah</span>
+                                <div class="font-extrabold text-sm mt-1">1. MVP Utama (Quick Wins)</div>
+                                <span class="text-[10px] underline mt-2">Wajib Диrancang</span>
+                            </button>
+
+                            <button type="button" onclick="setS13Quad('q2')" class="p-4 rounded-2xl border-2 text-left transition flex flex-col justify-between ${s13ActiveQuad === 'q2' ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : 'bg-indigo-50/70 dark:bg-indigo-950/30 text-slate-800 dark:text-slate-100 border-indigo-300 dark:border-indigo-800'}">
+                                <span class="text-[10px] font-extrabold uppercase opacity-80">Dampak Tinggi • Sulit</span>
+                                <div class="font-extrabold text-sm mt-1">2. Proyek Besar (Tahap 2)</div>
+                                <span class="text-[10px] underline mt-2">Simpan untuk Nanti</span>
+                            </button>
+
+                            <button type="button" onclick="setS13Quad('q3')" class="p-4 rounded-2xl border-2 text-left transition flex flex-col justify-between ${s13ActiveQuad === 'q3' ? 'bg-amber-500 text-white border-amber-500 shadow-md' : 'bg-amber-50/70 dark:bg-amber-950/30 text-slate-800 dark:text-slate-100 border-amber-300 dark:border-amber-800'}">
+                                <span class="text-[10px] font-extrabold uppercase opacity-80">Dampak Rendah • Mudah</span>
+                                <div class="font-extrabold text-sm mt-1">3. Fitur Pelengkap</div>
+                                <span class="text-[10px] underline mt-2">Opsional</span>
+                            </button>
+
+                            <button type="button" onclick="setS13Quad('q4')" class="p-4 rounded-2xl border-2 text-left transition flex flex-col justify-between ${s13ActiveQuad === 'q4' ? 'bg-rose-600 text-white border-rose-600 shadow-md' : 'bg-rose-50/70 dark:bg-rose-950/30 text-slate-800 dark:text-slate-100 border-rose-300 dark:border-rose-800'}">
+                                <span class="text-[10px] font-extrabold uppercase opacity-80">Dampak Rendah • Sulit</span>
+                                <div class="font-extrabold text-sm mt-1">4. Hindari / Coret!</div>
+                                <span class="text-[10px] underline mt-2">Buang dari Rencana</span>
+                            </button>
+                        </div>
+
+                        <div class="lg:col-span-7 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-3">
+                            <div class="space-y-1.5">
+                                <span class="text-[11px] font-extrabold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">${cur.badge}</span>
+                                <h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">${cur.title}</h3>
+                                <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${cur.desc}</p>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 space-y-1.5 text-xs">
+                                <div class="font-extrabold text-slate-800 dark:text-slate-200">Contoh Ide Fitur pada Kuadran Ini:</div>
+                                <ul class="list-disc list-inside space-y-1 text-slate-600 dark:text-slate-300">
+                                    ${cur.examples.map(ex => `<li>${ex}</li>`).join('')}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 14: Anatomi Dokumen UX Design Brief (Kontrak Perancangan)
+        function renderSlide14() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Luaran Akhir Tahap 1</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Menyusun ${term('designbrief', 'UX Design Brief')} sebagai Kompas Perancangan</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Seluruh keputusan yang Anda ambil pada Pertemuan 4 ini akan dibukukan ke dalam dokumen <strong>UX Design Brief (LKM 04)</strong> yang memuat 5 komponen kunci:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 my-auto text-xs">
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1.5">
+                            <span class="w-7 h-7 rounded-lg bg-indigo-600 text-white font-extrabold flex items-center justify-center">1</span>
+                            <h4 class="font-extrabold text-sm text-slate-900 dark:text-white pt-1">Ringkasan Konteks & Persona</h4>
+                            <p class="text-slate-500 leading-relaxed">Profil UMKM mitra, sasaran pengguna utama, dan rujukan bukti responden dari LKM 03.</p>
+                        </div>
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1.5">
+                            <span class="w-7 h-7 rounded-lg bg-indigo-600 text-white font-extrabold flex items-center justify-center">2</span>
+                            <h4 class="font-extrabold text-sm text-slate-900 dark:text-white pt-1">POV & Problem Statement</h4>
+                            <p class="text-slate-500 leading-relaxed">Pernyataan masalah terstruktur (User + Need + Insight) yang bebas dari tebakan fitur.</p>
+                        </div>
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1.5">
+                            <span class="w-7 h-7 rounded-lg bg-indigo-600 text-white font-extrabold flex items-center justify-center">3</span>
+                            <h4 class="font-extrabold text-sm text-slate-900 dark:text-white pt-1">Pertanyaan HMW & Kesiapan UMKM</h4>
+                            <p class="text-slate-500 leading-relaxed">Minimal 3 pertanyaan HMW serta analisis batasan operasional pengelola UMKM (Backstage).</p>
+                        </div>
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1.5">
+                            <span class="w-7 h-7 rounded-lg bg-emerald-600 text-white font-extrabold flex items-center justify-center">4</span>
+                            <h4 class="font-extrabold text-sm text-slate-900 dark:text-white pt-1">Prioritas Fitur MVP & Platform</h4>
+                            <p class="text-slate-500 leading-relaxed">Daftar fitur inti (Kuadran 1 MVP) beserta pilihan platform layar (Mobile Web / App).</p>
+                        </div>
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1.5 sm:col-span-2 lg:col-span-1">
+                            <span class="w-7 h-7 rounded-lg bg-amber-500 text-white font-extrabold flex items-center justify-center">5</span>
+                            <h4 class="font-extrabold text-sm text-slate-900 dark:text-white pt-1">Tolok Ukur Sukses (Metrics)</h4>
+                            <p class="text-slate-500 leading-relaxed">Indikator keberhasilan pengalaman pengguna dan dampak bisnis yang akan diuji saat Usability Testing.</p>
+                        </div>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-xs sm:text-sm">
+                        <i class="fa-solid fa-compass text-emerald-600 mr-1.5"></i><strong>Fungsi Design Brief di Pertemuan 5 - 7:</strong> Setiap halaman dan alur yang Anda gambar pada Pertemuan 5 (Sitemap & User Flow) dan Pertemuan 6 (Wireframe Figma) <strong>wajib mengacu pada daftar Fitur MVP di Design Brief ini</strong>.
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 15: Menetapkan Tolok Ukur Keberhasilan (UX Metrics & Business Metrics) + Refleksi
+        function renderSlide15() {
+            const questions = [
+                {
+                    id: 1,
+                    title: "1. Mengapa bagian 'Need' pada POV wajib ditulis dengan kata kerja?",
+                    question: "Mengapa kita tidak boleh menulis 'Pelanggan membutuhkan fitur chat otomatis' pada bagian Need di dalam rumus Point of View?",
+                    answer: "Karena 'fitur chat otomatis' adalah salah satu bentuk solusi (kata benda), bukan kebutuhan manusia. Jika ditulis dengan kata kerja seperti 'membutuhkan cara untuk memastikan ketersediaan menu secara instan', kita bisa menemukan solusi yang jauh lebih praktis daripada sekadar chat."
+                },
+                {
+                    id: 2,
+                    title: "2. Mengapa Batasan Operasional UMKM (Backstage) wajib dipetakan?",
+                    question: "Apa yang terjadi jika desainer UI/UX hanya fokus mempercantik aplikasi pelanggan tanpa memikirkan siapa yang mengelola pesanan di sisi toko?",
+                    answer: "Solusi tersebut akan gagal diterapkan di dunia nyata karena pemilik UMKM yang sibuk bekerja (memasak, mencuci, atau melayani kasir sendirian) tidak memiliki waktu luang untuk mengoperasikan panel admin yang berbelit-belit."
+                },
+                {
+                    id: 3,
+                    title: "3. Apa fungsi utama Matriks Impact vs Effort bagi mahasiswa Bisnis Digital?",
+                    question: "Mengapa kita harus memisahkan fitur ke dalam kuadran MVP (Quick Wins) dan mencoret fitur berbiaya/berusaha tinggi yang berdampak rendah?",
+                    answer: "Untuk mencegah Feature Creep (aplikasi membengkak dan membingungkan) serta memastikan waktu perancangan difokuskan 100% pada 3-4 fitur inti yang benar-benar memecahkan masalah utama pelanggan dan UMKM."
+                }
+            ];
+
+            let cardsHtml = '';
+            for (let i = 0; i < questions.length; i++) {
+                const q = questions[i];
+                const isOpen = openReflectionKey[q.id];
+                cardsHtml += `
+                    <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-3">
+                        <div class="space-y-1.5">
+                            <div class="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">${q.title}</div>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">${q.question}</p>
+                        </div>
+                        <div class="pt-2 border-t border-slate-200/70 dark:border-slate-700/70">
+                            <button type="button" onclick="toggleReflectionAnswer(${q.id})" class="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1.5">
+                                <i class="fa-regular ${isOpen ? 'fa-eye-slash' : 'fa-lightbulb'}"></i>
+                                <span>${isOpen ? 'Sembunyikan Kunci Konsep' : 'Lihat Kunci Konsep'}</span>
+                            </button>
+                            ${isOpen ? `<div class="mt-2 p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">${q.answer}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Tolok Ukur Keberhasilan & Evaluasi Konsep</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Menentukan ${term('uxmetrics', 'UX Metrics & Business Metrics')} serta Refleksi</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                            Di akhir <em>Design Brief</em>, tetapkan cara mengukur keberhasilan desain Anda dari sisi pengguna dan sisi bisnis UMKM:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5 text-xs">
+                        <div class="p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800">
+                            <div class="font-extrabold text-indigo-700 dark:text-indigo-300"><i class="fa-solid fa-Stopwatch mr-1.5"></i>1. UX Metrics (Keberhasilan Pengalaman Pengguna)</div>
+                            <p class="text-slate-600 dark:text-slate-300 mt-1">Contoh: Tingkat keberhasilan menyelesaikan tugas pemesanan (<em>Task Success Rate</em> = 100%), waktu pemesanan di bawah 2 menit, dan skor kemudahan SUS di atas 75.</p>
+                        </div>
+                        <div class="p-3.5 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800">
+                            <div class="font-extrabold text-emerald-700 dark:text-emerald-300"><i class="fa-solid fa-chart-line mr-1.5"></i>2. Business Metrics (Dampak Operasional UMKM)</div>
+                            <p class="text-slate-600 dark:text-slate-300 mt-1">Contoh: Mengurangi kesalahan pencatatan pesanan di jam ramai, memangkas waktu tanya-jawab harga di WhatsApp, dan mempercepat rekap harian toko.</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2 my-auto">
+                        <div class="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">Pertanyaan Refleksi Pemahaman Materi Pertemuan 4</div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">${cardsHtml}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 16: Rangkuman Inti & Daftar Referensi Perkuliahan
+        function renderSlide16() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Penutup Pertemuan 4</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Rangkuman Inti & Persiapan Praktikum LKM 04</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">Ringkasan lima prinsip utama tahap <em>Define</em> yang akan langsung Anda praktikkan pada Lembar Kerja Mahasiswa (LKM 04):</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 my-auto">
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-3">
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider"><i class="fa-solid fa-list-check text-indigo-600 mr-1.5"></i>5 Poin Kunci Pertemuan 4</h3>
+                            <ol class="space-y-2.5 text-xs text-slate-700 dark:text-slate-300 list-decimal list-inside leading-relaxed">
+                                <li><strong>Rantai Konsistensi LKM 03 ke LKM 04:</strong> Rumusan masalah wajib ditarik langsung dari <em>Persona</em>, <em>User Insight</em>, dan <em>Pain Points Journey Map</em> hasil wawancara nyata.</li>
+                                <li><strong>Rumus Point of View (POV):</strong> Padukan <code>[User Spesifik] + [Need dalam Kata Kerja] + [Insight/Akar Masalah]</code> tanpa menyisipkan tebakan fitur aplikasi.</li>
+                                <li><strong>Pertanyaan How Might We (HMW):</strong> Turunkan Problem Statement menjadi minimal 3 pertanyaan terbuka yang memicu eksplorasi solusi dari sisi informasi, alur transaksi, dan pengelola.</li>
+                                <li><strong>Kesiapan Operasional UMKM (Backstage):</strong> Pastikan solusi yang dirancang selaras dengan waktu luang, jumlah staf, dan kondisi kerja nyata pemilik UMKM.</li>
+                                <li><strong>Matriks Prioritas MVP & Design Brief:</strong> Saring ide solusi menggunakan <em>Impact vs Effort Matrix</em> untuk mengunci fitur inti MVP yang akan dibuat pada Pertemuan 5–7.</li>
+                            </ol>
+                        </div>
+
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 space-y-3">
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider"><i class="fa-solid fa-book-open text-indigo-600 mr-1.5"></i>Daftar Referensi Utama</h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                                <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"><strong class="text-indigo-700 dark:text-indigo-300">Gibbons, S. (2019)</strong><br><em>User Need Statements: The 'Define' Stage in Design Thinking.</em> Nielsen Norman Group.</div>
+                                <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"><strong class="text-indigo-700 dark:text-indigo-300">Rosala, M. (2021)</strong><br><em>Problem Statements in UX Discovery.</em> Nielsen Norman Group.</div>
+                                <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"><strong class="text-indigo-700 dark:text-indigo-300">Gibbons, S. (2017)</strong><br><em>Service Blueprints: Definition & Components (Frontstage vs Backstage).</em> NN/g.</div>
+                                <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"><strong class="text-indigo-700 dark:text-indigo-300">Gibbons, S. (2018)</strong><br><em>Using Prioritization Matrices to Inform UX Decisions (Impact vs Effort).</em> NN/g.</div>
+                                <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"><strong class="text-indigo-700 dark:text-indigo-300">Stanford d.school (2018)</strong><br><em>Design Thinking Bootleg: Point of View Madlib & How Might We.</em> Stanford University.</div>
+                                <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"><strong class="text-indigo-700 dark:text-indigo-300">Gothelf, J., & Seiden, J. (2021)</strong><br><em>Lean UX: Designing Great Products with Agile Teams (3rd ed.).</em> O'Reilly.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-emerald-600 text-white text-center">
+                        <p class="text-xs sm:text-sm font-bold"><i class="fa-solid fa-laptop-file mr-1.5"></i>Selanjutnya: Buka Workspace Praktikum 4 (LKM 04), muat file .JSON dari LKM 03 Anda, dan susun Problem Statement hingga UX Design Brief!</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // =========================================================================
+        // DAFTAR 16 SLIDE PERTEMUAN 4
+        // =========================================================================
+        const SLIDES = [
+            { id: 1, category: "Pengantar", title: "Pengantar Pertemuan 4 & Capaian Pembelajaran (Sub-CPMK 1.2 & 2.1)", render: renderSlide1 },
+            { id: 2, category: "Double Diamond", title: "Posisi Pertemuan 4 sebagai Puncak Tahap Define", render: renderSlide2 },
+            { id: 3, category: "Rantai Bukti", title: "Rantai Relasional: Dari Artefak LKM 03 ke Problem Statement LKM 04", render: renderSlide3 },
+            { id: 4, category: "Konsep POV", title: "Membedah 3 Komponen Rumus Point of View (User + Need + Insight)", render: renderSlide4 },
+            { id: 5, category: "Simulasi POV", title: "Simulasi Interaktif: Jebakan Solution-First vs Rumusan Need-Based", render: renderSlide5 },
+            { id: 6, category: "Standar Mutu", title: "Empat Syarat Problem Statement yang Tajam & Terukur", render: renderSlide6 },
+            { id: 7, category: "Metode HMW", title: "Mengubah Masalah Menjadi Peluang dengan Teknik How Might We (HMW)", render: renderSlide7 },
+            { id: 8, category: "Simulasi HMW", title: "Simulasi Interaktif: Menguji Cakupan HMW (Terlalu Luas vs Sempit vs Ideal)", render: renderSlide8 },
+            { id: 9, category: "Strategi HMW", title: "Menurunkan 1 Problem Statement Menjadi 3 Sudut Pandang HMW", render: renderSlide9 },
+            { id: 10, category: "Operasional UMKM", title: "Kesiapan & Batasan Operasional Pengelola UMKM (Service Blueprint)", render: renderSlide10 },
+            { id: 11, category: "Simulasi UMKM", title: "Simulasi Interaktif: Menyelaraskan Frontstage Pelanggan & Backstage UMKM", render: renderSlide11 },
+            { id: 12, category: "Seleksi Fitur", title: "Menyaring Ide Solusi & Menghindari Jebakan Feature Creep", render: renderSlide12 },
+            { id: 13, category: "Matriks 2x2", title: "Simulasi Interaktif: Matriks Prioritas Fitur (Impact vs Effort) & MVP", render: renderSlide13 },
+            { id: 14, category: "Design Brief", title: "Anatomi Dokumen UX Design Brief sebagai Kompas Perancangan", render: renderSlide14 },
+            { id: 15, category: "Metrik & Refleksi", title: "Menetapkan UX Metrics, Business Metrics, & Refleksi Pemahaman", render: renderSlide15 },
+            { id: 16, category: "Penutup", title: "Rangkuman Inti Pertemuan 4 & Daftar Referensi Utama", render: renderSlide16 }
+        ];
+
+        // =========================================================================
+        // NAVIGASI UTAMA & HANDLER INTERAKSI
+        // =========================================================================
+        function renderCurrentSlide() {
+            const slide = SLIDES[currentSlideIndex];
+            const viewport = document.getElementById('slideViewport');
+            if (!viewport || !slide) return;
+            viewport.innerHTML = slide.render();
+
+            const pct = Math.round(((currentSlideIndex + 1) / TOTAL_SLIDES) * 100);
+            document.getElementById('topProgressBar').style.width = pct + '%';
+            document.getElementById('slideCounterBadge').textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES;
+            document.getElementById('mobileFooterCounter').textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES;
+            document.getElementById('slideCategoryPill').textContent = slide.category;
+            document.getElementById('headerSlideTitle').textContent = slide.title;
+
+            const prevBtn = document.getElementById('prevSlideBtn');
+            const nextBtn = document.getElementById('nextSlideBtn');
+            const nextBtnText = document.getElementById('nextBtnText');
+
+            prevBtn.disabled = currentSlideIndex === 0;
+            if (currentSlideIndex === TOTAL_SLIDES - 1) {
+                nextBtnText.textContent = "Selesai";
+                nextBtn.disabled = true;
+            } else {
+                nextBtnText.textContent = "Selanjutnya";
+                nextBtn.disabled = false;
+            }
+            renderDotsAndDrawer();
+        }
+
+        function renderDotsAndDrawer() {
+            const dotsContainer = document.getElementById('slideDotsContainer');
+            let dotsHtml = '';
+            let drawerHtml = '';
+            for (let idx = 0; idx < SLIDES.length; idx++) {
+                const s = SLIDES[idx];
+                const isActive = idx === currentSlideIndex;
+                const dotClass = isActive ? 'w-6 bg-indigo-600 dark:bg-indigo-400' : 'w-1.5 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400';
+                dotsHtml += `<button type="button" onclick="goToSlide(${idx})" title="${escapeHtml(s.title)}" class="h-2 rounded-full transition-all ${dotClass}"></button>`;
+
+                const itemClass = isActive ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 font-bold' : 'hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-300';
+                const badgeClass = isActive ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500';
+                drawerHtml += `<button type="button" onclick="selectSlideFromDrawer(${idx})" class="w-full text-left p-3 rounded-xl transition flex items-start gap-3 ${itemClass}"><span class="w-6 h-6 rounded-lg text-xs font-extrabold flex items-center justify-center shrink-0 mt-0.5 ${badgeClass}">${s.id}</span><div class="min-w-0 flex-1"><div class="text-[10px] uppercase tracking-wider opacity-75">${escapeHtml(s.category)}</div><div class="text-xs sm:text-sm leading-snug break-words">${escapeHtml(s.title)}</div></div></button>`;
+            }
+            if (dotsContainer) dotsContainer.innerHTML = dotsHtml;
+            const drawerList = document.getElementById('drawerSlideList');
+            if (drawerList) drawerList.innerHTML = drawerHtml;
+        }
+
+        function selectSlideFromDrawer(index) {
+            goToSlide(index);
+            toggleSlideDrawer();
+        }
+
+        function changeSlide(direction) {
+            const nextIdx = currentSlideIndex + direction;
+            if (nextIdx >= 0 && nextIdx < TOTAL_SLIDES) {
+                currentSlideIndex = nextIdx;
+                renderCurrentSlide();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function goToSlide(index) {
+            if (index >= 0 && index < TOTAL_SLIDES) {
+                currentSlideIndex = index;
+                renderCurrentSlide();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function toggleSlideDrawer() {
+            const drawer = document.getElementById('slideDrawer');
+            const backdrop = document.getElementById('slideDrawerBackdrop');
+            const isClosed = drawer.classList.contains('-translate-x-full');
+            if (isClosed) {
+                backdrop.classList.remove('hidden');
+                setTimeout(function () { backdrop.classList.remove('opacity-0'); }, 10);
+                drawer.classList.remove('-translate-x-full');
+            } else {
+                backdrop.classList.add('opacity-0');
+                drawer.classList.add('-translate-x-full');
+                setTimeout(function () { backdrop.classList.add('hidden'); }, 200);
+            }
+        }
+
+        function setS5PovMode(mode) { s5PovMode = mode; renderCurrentSlide(); }
+        function setS5Domain(idx) { s5DomainIdx = idx; renderCurrentSlide(); }
+        function setS8Scope(scopeKey) { s8HmwScope = scopeKey; renderCurrentSlide(); }
+        function setS11Case(idx) { s11CaseIdx = idx; renderCurrentSlide(); }
+        function setS13Quad(qKey) { s13ActiveQuad = qKey; renderCurrentSlide(); }
+        function toggleReflectionAnswer(id) { openReflectionKey[id] = !openReflectionKey[id]; renderCurrentSlide(); }
+
+        // =========================================================================
+        // MODAL PENJELASAN ISTILAH & KAMUS
+        // =========================================================================
+        function showTerm(key) {
+            const item = GLOSSARY_DB[key];
+            if (!item) return;
+            document.getElementById('termCategoryBadge').textContent = item.category;
+            document.getElementById('termTitle').textContent = item.title;
+            document.getElementById('termMainDesc').textContent = item.main;
+            document.getElementById('termDetailDesc').textContent = item.detail;
+            document.getElementById('termSourceName').textContent = "Sumber: " + item.source;
+            document.getElementById('termSourceUrl').href = item.url;
+            const modal = document.getElementById('termModalBackdrop');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeTermModal() {
+            const modal = document.getElementById('termModalBackdrop');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function openGlossaryIndex() {
+            document.getElementById('glossarySearchInput').value = '';
+            renderGlossaryList('');
+            const modal = document.getElementById('glossaryModalBackdrop');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeGlossaryIndex() {
+            const modal = document.getElementById('glossaryModalBackdrop');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function selectGlossaryTerm(key) {
+            closeGlossaryIndex();
+            showTerm(key);
+        }
+
+        function renderGlossaryList(query) {
+            const q = String(query || '').trim().toLowerCase();
+            const allKeys = Object.keys(GLOSSARY_DB);
+            const matchedKeys = [];
+            for (let i = 0; i < allKeys.length; i++) {
+                const k = allKeys[i];
+                const item = GLOSSARY_DB[k];
+                if (item.title.toLowerCase().indexOf(q) !== -1 || item.category.toLowerCase().indexOf(q) !== -1 || item.main.toLowerCase().indexOf(q) !== -1) {
+                    matchedKeys.push(k);
+                }
+            }
+            const container = document.getElementById('glossaryListGrid');
+            if (matchedKeys.length === 0) {
+                container.innerHTML = '<div class="col-span-2 text-center py-8 text-xs text-slate-500">Istilah tidak ditemukan.</div>';
+                return;
+            }
+            let html = '';
+            for (let i = 0; i < matchedKeys.length; i++) {
+                const k = matchedKeys[i];
+                const item = GLOSSARY_DB[k];
+                html += `<button type="button" onclick="selectGlossaryTerm('${k}')" class="text-left p-4 rounded-2xl bg-slate-50 hover:bg-indigo-50/60 dark:bg-slate-800/50 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800 transition space-y-1"><div class="flex items-center justify-between"><span class="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">${escapeHtml(item.category)}</span><span class="text-[10px] text-slate-400">${escapeHtml(item.source)}</span></div><div class="text-sm font-extrabold text-slate-900 dark:text-white leading-snug">${escapeHtml(item.title)}</div><p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">${escapeHtml(item.main)}</p></button>`;
+            }
+            container.innerHTML = html;
+        }
+
+        function toggleTheme() {
+            const htmlEl = document.documentElement;
+            const icon = document.getElementById('themeIcon');
+            htmlEl.classList.toggle('dark');
+            const isDark = htmlEl.classList.contains('dark');
+            icon.className = isDark ? 'fa-solid fa-sun text-amber-400 text-sm' : 'fa-solid fa-moon text-sm';
+        }
+
+        document.addEventListener('keydown', function (e) {
+            const activeTag = document.activeElement && document.activeElement.tagName ? document.activeElement.tagName.toLowerCase() : '';
+            if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') return;
+            if (e.key === 'ArrowRight') changeSlide(1);
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+            if (e.key === 'Escape') { closeTermModal(); closeGlossaryIndex(); }
+        });
+
+        renderCurrentSlide();
+    </script>
+</body>
+</html>
