@@ -72,6 +72,17 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        @keyframes shakeError {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .input-error {
+            border-color: #e11d48 !important;
+            box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.18) !important;
+            animation: shakeError 0.3s ease-in-out;
+        }
+
         textarea.auto-expand {
             resize: vertical;
             min-height: 115px;
@@ -149,13 +160,25 @@
 </head>
 <body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col justify-between transition-colors duration-200">
 
+    <!-- Input File Tersembunyi untuk Muat Data Proyek (.json) -->
+    <input type="file" id="jsonFileInput" accept=".json,application/json" class="hidden" onchange="handleJsonFileImport(event)">
+
+    <!-- Toast Peringatan Validasi & Status File -->
+    <div id="toastBanner" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 hidden max-w-md w-[92%] sm:w-full px-4 py-3.5 rounded-2xl shadow-2xl border flex items-start gap-3 transition-all duration-200 no-print">
+        <i id="toastIcon" class="fa-solid fa-circle-exclamation text-lg mt-0.5 shrink-0"></i>
+        <div class="flex-1 text-xs sm:text-sm font-bold leading-snug" id="toastMessage">Pesan notifikasi</div>
+        <button type="button" onclick="hideToast()" class="text-current opacity-70 hover:opacity-100 shrink-0">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+
     <!-- Header Navigasi Atas -->
     <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 no-print">
         <div class="w-full h-1 bg-slate-100 dark:bg-slate-800">
             <div id="topProgressBar" class="h-full bg-indigo-600 dark:bg-indigo-500 transition-all duration-300" style="width: 8%;"></div>
         </div>
 
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-2 sm:gap-3">
+        <div class="max-w-5xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-2">
             <div class="flex items-center gap-2 sm:gap-3 min-w-0">
                 <button type="button" onclick="toggleSlideDrawer()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition flex items-center gap-2 text-xs sm:text-sm font-bold shrink-0">
                     <i class="fa-solid fa-list-ul text-indigo-600 dark:text-indigo-400"></i>
@@ -163,29 +186,40 @@
                     <span id="slideCounterBadge" class="px-2 py-0.5 text-xs rounded-lg bg-indigo-600 text-white font-bold">1 / 13</span>
                 </button>
 
-                <div class="hidden md:flex items-center gap-2.5 min-w-0">
+                <div class="hidden lg:flex items-center gap-2 min-w-0">
                     <span id="slideCategoryPill" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 shrink-0">
                         Pengantar
                     </span>
-                    <h1 id="headerSlideTitle" class="text-sm font-bold text-slate-800 dark:text-slate-100 line-clamp-1">
+                    <h1 id="headerSlideTitle" class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 truncate">
                         Panduan & Lembar Kerja Praktikum 2 (LKM 02)
                     </h1>
                 </div>
             </div>
 
-            <div class="flex items-center gap-2 shrink-0">
-                <span id="saveBadge" class="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 text-xs font-bold">
-                    <i class="fa-solid fa-cloud-arrow-up"></i> Tersimpan Otomatis
+            <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                <span id="saveBadge" class="hidden xl:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Tersimpan
                 </span>
 
-                <button type="button" onclick="openGlossaryIndex()" class="px-3 sm:px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 text-xs sm:text-sm font-bold flex items-center gap-2 transition">
-                    <i class="fa-solid fa-book-open text-indigo-600 dark:text-indigo-400"></i>
-                    <span>Kamus Istilah</span>
+                <!-- Tombol Simpan & Muat File Data (.json) -->
+                <button type="button" onclick="exportJsonData()" class="px-2.5 sm:px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:hover:bg-emerald-900 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-extrabold flex items-center gap-1.5 transition" title="Simpan File Data Proyek (.json) untuk dibawa ke perangkat lain">
+                    <i class="fa-solid fa-download"></i>
+                    <span class="hidden sm:inline">Simpan .JSON</span>
                 </button>
 
-                <button type="button" onclick="goToSlide(12)" class="hidden sm:flex px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-extrabold items-center gap-2 transition shadow-xs">
+                <button type="button" onclick="triggerImportJson()" class="px-2.5 sm:px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:hover:bg-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-800 text-xs font-extrabold flex items-center gap-1.5 transition" title="Muat File Data Proyek (.json) dari LKM 01 atau LKM 02">
+                    <i class="fa-solid fa-upload"></i>
+                    <span class="hidden sm:inline">Muat .JSON</span>
+                </button>
+
+                <button type="button" onclick="openGlossaryIndex()" class="px-2.5 sm:px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 text-xs font-bold flex items-center gap-1.5 transition" title="Buka Kamus Istilah">
+                    <i class="fa-solid fa-book-open text-indigo-600 dark:text-indigo-400"></i>
+                    <span class="hidden md:inline">Kamus</span>
+                </button>
+
+                <button type="button" onclick="goToSlide(12)" class="hidden sm:flex px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold items-center gap-1.5 transition shadow-xs">
                     <i class="fa-solid fa-file-pdf"></i>
-                    <span>Unduh Field Kit PDF</span>
+                    <span>PDF</span>
                 </button>
 
                 <button type="button" onclick="toggleTheme()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center transition" title="Ganti Tema Layar">
@@ -209,7 +243,7 @@
         </div>
         <div id="drawerSlideList" class="p-3.5 overflow-y-auto space-y-1.5 flex-1"></div>
         <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 flex items-center justify-between">
-            <span>Gunakan panah Kiri / Kanan</span>
+            <span>Semua Form Wajib Diisi Berurutan</span>
             <span class="font-bold">13 Slide</span>
         </div>
     </aside>
@@ -363,7 +397,7 @@
                 title: "Field Notes (Lembar Catatan Lapangan)",
                 category: "Dokumentasi Riset",
                 main: "Lembar kerja cetak yang dibawa peneliti ke lokasi UMKM untuk mencatat kutipan jawaban wawancara (verbatim) serta hasil pengamatan perilaku secara langsung.",
-                detail: "Catatan lapangan ini menjadi bahan mentah utama yang akan dipindahkan ke dalam Sticky Notes di FigJam pada Pertemuan 3.",
+                detail: "Catatan lapangan ini menjadi bahan mentah utama yang akan diolah pada tahap Sintesis Pertemuan 3.",
                 source: "Nielsen Norman Group",
                 url: "https://www.nngroup.com/articles/field-studies/"
             },
@@ -407,7 +441,54 @@
         }
 
         // =========================================================================
-        // STATE DATA FORMULIR LKM 02 (100% NETRAL & KOSONG DARI AWAL)
+        // NOTIFIKASI TOAST & HIGHLIGHT VALIDASI
+        // =========================================================================
+        let toastTimer = null;
+        function showToast(message, type) {
+            clearTimeout(toastTimer);
+            const banner = document.getElementById('toastBanner');
+            const icon = document.getElementById('toastIcon');
+            const msgEl = document.getElementById('toastMessage');
+            if (!banner || !msgEl) return;
+
+            msgEl.textContent = message;
+            banner.className = 'fixed top-20 left-1/2 transform -translate-x-1/2 z-50 max-w-lg w-[92%] sm:w-full px-4 py-3.5 rounded-2xl shadow-2xl border flex items-start gap-3 transition-all duration-200 no-print slide-enter ';
+
+            if (type === 'success') {
+                banner.className += 'bg-emerald-600 text-white border-emerald-500';
+                icon.className = 'fa-solid fa-circle-check text-lg mt-0.5 shrink-0';
+            } else {
+                banner.className += 'bg-rose-600 text-white border-rose-500';
+                icon.className = 'fa-solid fa-triangle-exclamation text-lg mt-0.5 shrink-0';
+            }
+
+            banner.classList.remove('hidden');
+            toastTimer = setTimeout(hideToast, 4500);
+        }
+
+        function hideToast() {
+            const banner = document.getElementById('toastBanner');
+            if (banner) banner.classList.add('hidden');
+        }
+
+        function highlightEmptyInput(inputId, message) {
+            showToast(message, 'error');
+            setTimeout(function () {
+                const el = document.getElementById(inputId);
+                if (el) {
+                    el.classList.add('input-error');
+                    el.focus();
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    el.addEventListener('input', function removeErr() {
+                        el.classList.remove('input-error');
+                        el.removeEventListener('input', removeErr);
+                    });
+                }
+            }, 60);
+        }
+
+        // =========================================================================
+        // STATE DATA FORMULIR LKM 02 (100% NETRAL & WAJIB ISI)
         // =========================================================================
         const STORAGE_KEY = 'upertis_lkm02_neutral_v2';
         let currentSlideIndex = 0;
@@ -544,6 +625,138 @@
             }
         ];
 
+        // =========================================================================
+        // FUNGSI VALIDASI KETAT (SEMUA FIELD WAJIB DIISI SEBELUM LANJUT)
+        // =========================================================================
+        function isInfoPartComplete(partNum) {
+            if (partNum === 1) {
+                return !!(formState.nama.trim() && formState.nim.trim() && formState.kelas.trim() && formState.tgl.trim() && formState.umkm.trim() && formState.bidang.trim());
+            }
+            return !!(formState.kriteria_pemilik.trim() && formState.kriteria_pelanggan.trim() && formState.target_jumlah.trim() && formState.rencana_lokasi.trim());
+        }
+
+        function isQuestionComplete(idx) {
+            const qObj = formState.questions[idx];
+            return !!(qObj && qObj.q.trim() && qObj.p.trim());
+        }
+
+        function isObsItemComplete(num) {
+            const keys = { 1: 'obs_activities', 2: 'obs_env', 3: 'obs_nonverbal', 4: 'obs_workaround' };
+            const val = formState[keys[num]] || '';
+            return val.trim() !== '';
+        }
+
+        function isIcPartComplete(num) {
+            if (num === 1) {
+                return !!(formState.ic_tujuan.trim() && formState.ic_durasi.trim());
+            }
+            return !!(formState.ic_privasi.trim() && formState.ic_sukarela.trim());
+        }
+
+        function syncSavedStatesFromData() {
+            uiWizard.infoSaved[1] = isInfoPartComplete(1);
+            uiWizard.infoSaved[2] = isInfoPartComplete(2);
+            if (!uiWizard.infoSaved[1]) uiWizard.infoActive = 1;
+            else if (!uiWizard.infoSaved[2]) uiWizard.infoActive = 2;
+            else uiWizard.infoActive = 0;
+
+            for (let i = 0; i <= 4; i++) uiWizard.b12Saved[i] = isQuestionComplete(i);
+            for (let i = 5; i <= 8; i++) uiWizard.b3Saved[i] = isQuestionComplete(i);
+            for (let i = 9; i <= 11; i++) uiWizard.b4Saved[i] = isQuestionComplete(i);
+
+            for (let n = 1; n <= 4; n++) uiWizard.obsSaved[n] = isObsItemComplete(n);
+
+            uiWizard.icSaved[1] = isIcPartComplete(1);
+            uiWizard.icSaved[2] = isIcPartComplete(2);
+        }
+
+        function validateFormSlide(slideIdx) {
+            // Slide 3 (idx 2): Identitas & Kriteria Narasumber
+            if (slideIdx === 2) {
+                if (!formState.nama.trim()) { uiWizard.infoActive = 1; renderCurrentSlide(); highlightEmptyInput('inp_nama', 'Nama Lengkap Mahasiswa (Bagian 1A) wajib diisi.'); return false; }
+                if (!formState.nim.trim()) { uiWizard.infoActive = 1; renderCurrentSlide(); highlightEmptyInput('inp_nim', 'Nomor Induk Mahasiswa (Bagian 1A) wajib diisi.'); return false; }
+                if (!formState.kelas.trim()) { uiWizard.infoActive = 1; renderCurrentSlide(); highlightEmptyInput('inp_kelas', 'Kelas / Semester (Bagian 1A) wajib diisi.'); return false; }
+                if (!formState.tgl.trim()) { uiWizard.infoActive = 1; renderCurrentSlide(); highlightEmptyInput('inp_tgl', 'Tanggal Penyusunan (Bagian 1A) wajib diisi.'); return false; }
+                if (!formState.umkm.trim()) { uiWizard.infoActive = 1; renderCurrentSlide(); highlightEmptyInput('inp_umkm', 'Nama Usaha UMKM Mitra (Bagian 1A) wajib diisi.'); return false; }
+                if (!formState.bidang.trim()) { uiWizard.infoActive = 1; renderCurrentSlide(); highlightEmptyInput('inp_bidang', 'Bidang / Jenis Usaha (Bagian 1A) wajib diisi.'); return false; }
+                uiWizard.infoSaved[1] = true;
+
+                if (!formState.kriteria_pemilik.trim()) { uiWizard.infoActive = 2; renderCurrentSlide(); highlightEmptyInput('inp_kriteria_pemilik', 'Kriteria Narasumber Pengelola UMKM (Bagian 1B) wajib diisi.'); return false; }
+                if (!formState.kriteria_pelanggan.trim()) { uiWizard.infoActive = 2; renderCurrentSlide(); highlightEmptyInput('inp_kriteria_pelanggan', 'Kriteria Narasumber Pelanggan Sasaran (Bagian 1B) wajib diisi.'); return false; }
+                if (!formState.target_jumlah.trim()) { uiWizard.infoActive = 2; renderCurrentSlide(); highlightEmptyInput('inp_target_jumlah', 'Target Jumlah Responden (Bagian 1B) wajib diisi.'); return false; }
+                if (!formState.rencana_lokasi.trim()) { uiWizard.infoActive = 2; renderCurrentSlide(); highlightEmptyInput('inp_rencana_lokasi', 'Rencana Tempat / Cara Wawancara (Bagian 1B) wajib diisi.'); return false; }
+                uiWizard.infoSaved[2] = true;
+                uiWizard.infoActive = 0;
+                return true;
+            }
+
+            // Slide 5 (idx 4): Pertanyaan #1 s/d #5
+            if (slideIdx === 4) {
+                for (let i = 0; i <= 4; i++) {
+                    const qObj = formState.questions[i];
+                    if (!qObj.q.trim()) { uiWizard.b12Active = i; renderCurrentSlide(); highlightEmptyInput('inp_q_' + i, 'Kalimat Pertanyaan Wawancara Utama #' + (i + 1) + ' wajib diisi.'); return false; }
+                    if (!qObj.p.trim()) { uiWizard.b12Active = i; renderCurrentSlide(); highlightEmptyInput('inp_p_' + i, 'Pertanyaan Lanjutan (Probing) & Tujuan #' + (i + 1) + ' wajib diisi.'); return false; }
+                    uiWizard.b12Saved[i] = true;
+                }
+                uiWizard.b12Active = -1;
+                return true;
+            }
+
+            // Slide 7 (idx 6): Pertanyaan #6 s/d #9
+            if (slideIdx === 6) {
+                for (let i = 5; i <= 8; i++) {
+                    const qObj = formState.questions[i];
+                    if (!qObj.q.trim()) { uiWizard.b3Active = i; renderCurrentSlide(); highlightEmptyInput('inp_q_' + i, 'Kalimat Pertanyaan Wawancara Utama #' + (i + 1) + ' wajib diisi.'); return false; }
+                    if (!qObj.p.trim()) { uiWizard.b3Active = i; renderCurrentSlide(); highlightEmptyInput('inp_p_' + i, 'Pertanyaan Lanjutan (Probing) & Tujuan #' + (i + 1) + ' wajib diisi.'); return false; }
+                    uiWizard.b3Saved[i] = true;
+                }
+                uiWizard.b3Active = -1;
+                return true;
+            }
+
+            // Slide 8 (idx 7): Pertanyaan #10 s/d #12
+            if (slideIdx === 7) {
+                for (let i = 9; i <= 11; i++) {
+                    const qObj = formState.questions[i];
+                    if (!qObj.q.trim()) { uiWizard.b4Active = i; renderCurrentSlide(); highlightEmptyInput('inp_q_' + i, 'Kalimat Pertanyaan Wawancara Utama #' + (i + 1) + ' wajib diisi.'); return false; }
+                    if (!qObj.p.trim()) { uiWizard.b4Active = i; renderCurrentSlide(); highlightEmptyInput('inp_p_' + i, 'Pertanyaan Lanjutan (Probing) & Tujuan #' + (i + 1) + ' wajib diisi.'); return false; }
+                    uiWizard.b4Saved[i] = true;
+                }
+                uiWizard.b4Active = -1;
+                return true;
+            }
+
+            // Slide 10 (idx 9): 4 Fokus Observasi Lapangan
+            if (slideIdx === 9) {
+                for (let n = 1; n <= 4; n++) {
+                    if (!isObsItemComplete(n)) {
+                        uiWizard.obsActive = n;
+                        renderCurrentSlide();
+                        highlightEmptyInput('inp_obs_' + n, 'Rencana Fokus Observasi ' + n + ' dari 4 wajib diisi sebelum melanjutkan.');
+                        return false;
+                    }
+                    uiWizard.obsSaved[n] = true;
+                }
+                uiWizard.obsActive = 0;
+                return true;
+            }
+
+            // Slide 11 (idx 10): Klausul Informed Consent
+            if (slideIdx === 10) {
+                if (!formState.ic_tujuan.trim()) { uiWizard.icActive = 1; renderCurrentSlide(); highlightEmptyInput('inp_ic_tujuan', 'Kalimat Penjelasan Tujuan Riset (Informed Consent 1) wajib diisi.'); return false; }
+                if (!formState.ic_durasi.trim()) { uiWizard.icActive = 1; renderCurrentSlide(); highlightEmptyInput('inp_ic_durasi', 'Estimasi Durasi & Prosedur Wawancara (Informed Consent 1) wajib diisi.'); return false; }
+                uiWizard.icSaved[1] = true;
+
+                if (!formState.ic_privasi.trim()) { uiWizard.icActive = 2; renderCurrentSlide(); highlightEmptyInput('inp_ic_privasi', 'Pernyataan Jaminan Kerahasiaan & Anonimisasi (Informed Consent 2) wajib diisi.'); return false; }
+                if (!formState.ic_sukarela.trim()) { uiWizard.icActive = 2; renderCurrentSlide(); highlightEmptyInput('inp_ic_sukarela', 'Pernyataan Hak Kesukarelaan Narasumber (Informed Consent 2) wajib diisi.'); return false; }
+                uiWizard.icSaved[2] = true;
+                uiWizard.icActive = 0;
+                return true;
+            }
+
+            return true;
+        }
+
         function updateField(fieldKey, val) {
             formState[fieldKey] = val;
             triggerAutoSave();
@@ -555,6 +768,9 @@
             triggerAutoSave();
         }
 
+        // =========================================================================
+        // SIMPAN & MUAT FILE DATA PROYEK (.JSON) LINTAS PERANGKAT & LINTAS LKM
+        // =========================================================================
         let saveTimer = null;
         function triggerAutoSave() {
             clearTimeout(saveTimer);
@@ -564,7 +780,7 @@
                 try {
                     localStorage.setItem(STORAGE_KEY, JSON.stringify({ form: formState, ui: uiWizard }));
                 } catch (e) {}
-                if (badge) badge.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Tersimpan Otomatis';
+                if (badge) badge.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Tersimpan';
             }, 350);
         }
 
@@ -582,6 +798,7 @@
                     if (parsed.ui) {
                         uiWizard = Object.assign(uiWizard, parsed.ui);
                     }
+                    syncSavedStatesFromData();
                 } else {
                     const rawLkm1 = localStorage.getItem('upertis_lkm01_neutral_v5');
                     if (rawLkm1) {
@@ -592,10 +809,121 @@
                             formState.kelas = p1.form.kelas || '';
                             formState.umkm = p1.form.un || '';
                             formState.bidang = p1.form.ub || '';
+                            syncSavedStatesFromData();
                         }
                     }
                 }
             } catch (e) {}
+        }
+
+        function exportJsonData() {
+            triggerAutoSave();
+            const cleanNim = (formState.nim || 'NIM').replace(/[^a-zA-Z0-9_-]/g, '');
+            const cleanNama = (formState.nama || 'Mahasiswa').trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '');
+            const filename = 'Data_Proyek_UIUX_LKM02_' + cleanNim + '_' + cleanNama + '.json';
+
+            let lkm01Backup = null;
+            try {
+                const raw1 = localStorage.getItem('upertis_lkm01_neutral_v5');
+                if (raw1) lkm01Backup = JSON.parse(raw1);
+            } catch (e) {}
+
+            const payload = {
+                app: 'UPERTIS_UIUX_WORKSPACE',
+                version: '1.0',
+                exportedAt: new Date().toISOString(),
+                lkm01: lkm01Backup,
+                lkm02: {
+                    form: formState,
+                    ui: uiWizard
+                }
+            };
+
+            const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showToast('File data proyek LKM 02 (.json) berhasil diunduh! Simpan file ini untuk dilanjutkan di perangkat lain atau pertemuan berikutnya.', 'success');
+        }
+
+        function triggerImportJson() {
+            const inp = document.getElementById('jsonFileInput');
+            if (inp) {
+                inp.value = '';
+                inp.click();
+            }
+        }
+
+        function handleJsonFileImport(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+
+                    // Kasus 1: File memiliki data LKM 02 lengkap
+                    if (parsed && parsed.lkm02 && parsed.lkm02.form) {
+                        formState = Object.assign(formState, parsed.lkm02.form);
+                        if (!Array.isArray(formState.questions) || formState.questions.length !== 12) {
+                            formState.questions = createEmptyQuestions();
+                        }
+                        if (parsed.lkm02.ui) {
+                            uiWizard = Object.assign(uiWizard, parsed.lkm02.ui);
+                        }
+                        if (parsed.lkm01) {
+                            try { localStorage.setItem('upertis_lkm01_neutral_v5', JSON.stringify(parsed.lkm01)); } catch (e) {}
+                        }
+                        syncSavedStatesFromData();
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify({ form: formState, ui: uiWizard }));
+                        renderCurrentSlide();
+                        showToast('Data proyek LKM 02 berhasil dimuat sepenuhnya dari file .json!', 'success');
+                        return;
+                    }
+
+                    // Kasus 2: Mahasiswa memuat file .json dari LKM 01 untuk meneruskan identitas & nama UMKM
+                    if (parsed && parsed.lkm01 && parsed.lkm01.form) {
+                        const f1 = parsed.lkm01.form;
+                        formState.nama = f1.nama || formState.nama;
+                        formState.nim = f1.nim || formState.nim;
+                        formState.kelas = f1.kelas || formState.kelas;
+                        formState.umkm = f1.un || formState.umkm;
+                        formState.bidang = f1.ub || formState.bidang;
+                        if (f1.rn && !formState.target_jumlah) formState.target_jumlah = f1.rn;
+                        if (f1.rt && !formState.ic_tujuan) formState.ic_tujuan = f1.rt;
+
+                        try { localStorage.setItem('upertis_lkm01_neutral_v5', JSON.stringify(parsed.lkm01)); } catch (e) {}
+                        syncSavedStatesFromData();
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify({ form: formState, ui: uiWizard }));
+                        renderCurrentSlide();
+                        showToast('Identitas Mahasiswa & Profil UMKM dari file LKM 01 berhasil dimuat! Silakan lengkapi panduan wawancara LKM 02.', 'success');
+                        return;
+                    }
+
+                    // Kasus 3: Format langsung { form, ui }
+                    if (parsed && parsed.form && Array.isArray(parsed.form.questions)) {
+                        formState = Object.assign(formState, parsed.form);
+                        if (parsed.ui) uiWizard = Object.assign(uiWizard, parsed.ui);
+                        syncSavedStatesFromData();
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify({ form: formState, ui: uiWizard }));
+                        renderCurrentSlide();
+                        showToast('Data proyek LKM 02 berhasil dimuat!', 'success');
+                        return;
+                    }
+
+                    showToast('Format file .json tidak dikenali untuk LKM 02.', 'error');
+                } catch (err) {
+                    showToast('Gagal membaca file .json. Pastikan file tidak rusak.', 'error');
+                }
+            };
+            reader.readAsText(file);
         }
 
         // =========================================================================
@@ -607,7 +935,7 @@
                 statusHtml = `
                     <div class="flex flex-wrap items-center gap-2 shrink-0">
                         <span class="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 text-xs font-extrabold flex items-center gap-1">
-                            <i class="fa-solid fa-circle-check"></i> Tersimpan
+                            <i class="fa-solid fa-circle-check"></i> Lengkap
                         </span>
                         <button type="button" onclick="${onToggleMinClick}" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center gap-1.5">
                             <i class="fa-solid ${isMinimized ? 'fa-expand' : 'fa-compress'}"></i>
@@ -622,13 +950,13 @@
             } else if (isEditing) {
                 statusHtml = `
                     <span class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-xs font-extrabold shrink-0">
-                        <i class="fa-solid fa-pen-nib mr-1"></i>Mode Menulis
+                        <i class="fa-solid fa-pen-nib mr-1"></i>Wajib Diisi (*)
                     </span>
                 `;
             } else {
                 statusHtml = `
-                    <button type="button" onclick="${onEditClick}" class="px-3.5 py-1.5 rounded-xl bg-slate-200/80 hover:bg-indigo-600 hover:text-white dark:bg-slate-800 dark:hover:bg-indigo-600 text-slate-700 dark:text-slate-300 text-xs font-extrabold transition shrink-0">
-                        Buka & Isi Bagian Ini
+                    <button type="button" onclick="${onEditClick}" class="px-3.5 py-1.5 rounded-xl bg-amber-100 hover:bg-indigo-600 hover:text-white dark:bg-amber-950/80 dark:hover:bg-indigo-600 text-amber-800 dark:text-amber-300 text-xs font-extrabold transition shrink-0">
+                        Belum Diisi • Buka Bagian Ini
                     </button>
                 `;
             }
@@ -646,7 +974,6 @@
 
         function renderQuestionWizardList(startIdx, endIdx, groupKey) {
             const activeProp = groupKey + 'Active';
-            const savedProp = groupKey + 'Saved';
             const minProp = groupKey + 'Min';
 
             let html = '';
@@ -654,7 +981,7 @@
                 const meta = QUESTION_META[i];
                 const qObj = formState.questions[i] || { q: '', p: '' };
                 const isEditing = uiWizard[activeProp] === i;
-                const isSaved = uiWizard[savedProp][i] || !!(qObj.q.trim() || qObj.p.trim());
+                const isSaved = isQuestionComplete(i);
                 const isMin = !!uiWizard[minProp][i];
 
                 if (isEditing) {
@@ -671,19 +998,19 @@
                                     <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">
                                         1. Kalimat Pertanyaan Wawancara Utama #${meta.num} (Gunakan Pertanyaan Terbuka & Netral) *
                                     </label>
-                                    <textarea rows="4" oninput="autoResizeTextarea(this); updateQuestionField(${i}, 'q', this.value)" placeholder="Tuliskan kalimat pertanyaan terbuka yang akan Anda ajukan kepada narasumber..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(qObj.q)}</textarea>
+                                    <textarea id="inp_q_${i}" rows="4" oninput="autoResizeTextarea(this); updateQuestionField(${i}, 'q', this.value)" placeholder="Tuliskan kalimat pertanyaan terbuka yang akan Anda ajukan kepada narasumber (wajib diisi)..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(qObj.q)}</textarea>
                                 </div>
 
                                 <div>
                                     <label class="text-xs sm:text-sm font-bold text-indigo-700 dark:text-indigo-300 block mb-1.5">
                                         2. Pertanyaan Lanjutan (Probing) & Tujuan Informasi yang Ingin Digali dari Pertanyaan #${meta.num} *
                                     </label>
-                                    <textarea rows="3" oninput="autoResizeTextarea(this); updateQuestionField(${i}, 'p', this.value)" placeholder="Tuliskan pertanyaan tindak lanjut (probing) jika narasumber menjawab singkat, serta informasi apa yang ingin Anda ketahui..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(qObj.p)}</textarea>
+                                    <textarea id="inp_p_${i}" rows="3" oninput="autoResizeTextarea(this); updateQuestionField(${i}, 'p', this.value)" placeholder="Tuliskan pertanyaan tindak lanjut (probing) jika narasumber menjawab singkat, serta informasi apa yang ingin Anda ketahui (wajib diisi)..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(qObj.p)}</textarea>
                                 </div>
                             </div>
 
                             <div class="flex items-center justify-between gap-3 pt-1">
-                                <span class="text-xs text-slate-400">Pertanyaan ${meta.num} dari 12 (Otomatis masuk ke Lembar Catatan Lapangan PDF)</span>
+                                <span class="text-xs text-slate-400">Pertanyaan ${meta.num} dari 12 (Wajib Lengkap)</span>
                                 <button type="button" onclick="saveQuestionCard('${groupKey}', ${i}, ${endIdx})" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-extrabold transition flex items-center gap-2 shadow-sm shrink-0">
                                     <i class="fa-solid fa-check"></i>
                                     <span>${i < endIdx ? 'Simpan & Lanjut ke Pertanyaan #' + (meta.num + 1) : 'Simpan Pertanyaan #' + meta.num}</span>
@@ -701,11 +1028,11 @@
                                 <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 text-sm sm:text-base leading-relaxed">
                                     <div>
                                         <span class="text-xs font-bold uppercase text-indigo-600 dark:text-indigo-400 block mb-0.5">Pertanyaan Utama #${meta.num}:</span>
-                                        <div class="font-bold text-slate-900 dark:text-white whitespace-pre-line">${escapeHtml(qObj.q) || '-'}</div>
+                                        <div class="font-bold text-slate-900 dark:text-white whitespace-pre-line">${escapeHtml(qObj.q)}</div>
                                     </div>
                                     <div class="pt-2.5 border-t border-slate-100 dark:border-slate-800">
                                         <span class="text-xs font-bold uppercase text-emerald-600 dark:text-emerald-400 block mb-0.5">Probing & Tujuan Penggalian:</span>
-                                        <div class="text-slate-700 dark:text-slate-200 whitespace-pre-line">${escapeHtml(qObj.p) || '-'}</div>
+                                        <div class="text-slate-700 dark:text-slate-200 whitespace-pre-line">${escapeHtml(qObj.p)}</div>
                                     </div>
                                 </div>
                             `}
@@ -723,7 +1050,7 @@
         }
 
         // =========================================================================
-        // RENDER 13 SLIDE PRAKTIKUM 2 (INSTRUKSI JELAS + FIELD KIT PDF 4 BAGIAN)
+        // RENDER 13 SLIDE PRAKTIKUM 2 (WAJIB ISI + FIELD KIT PDF 4 BAGIAN)
         // =========================================================================
 
         // SLIDE 1: Pengantar Praktikum 2 & Alur Kerja Kelas ke Lapangan
@@ -742,17 +1069,21 @@
                             </h2>
 
                             <p class="text-xs sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
-                                Pada Praktikum 2 ini, Anda akan menyiapkan seluruh perangkat riset sebelum terjun mewawancarai pemilik dan pelanggan UMKM mitra. Setelah Anda selesai mengetik <strong>12 pertanyaan wawancara</strong>, <strong>4 fokus observasi</strong>, dan <strong>klausul ${term('informedconsent', 'Informed Consent')}</strong> di halaman ini, sistem akan menghasilkan <strong>PDF Field Kit 4 Bagian</strong> yang sudah dilengkapi <strong>Lembar Catatan Lapangan (${term('fieldnotes', 'Field Notes')}) bergaris</strong> untuk tempat Anda mencatat jawaban narasumber di lapangan.
+                                Pada Praktikum 2 ini, Anda wajib menyusun <strong>12 pertanyaan wawancara terbuka</strong>, <strong>4 fokus observasi</strong>, dan <strong>klausul ${term('informedconsent', 'Informed Consent')}</strong> secara berurutan sebelum dapat mengunduh <strong>PDF Field Kit 4 Bagian</strong>. Jika Anda membawa file data <code>.json</code> dari LKM 01 atau perangkat lain, klik tombol <strong>Muat File Data Proyek (.json)</strong> di bawah ini.
                             </p>
 
-                            <div class="flex flex-wrap items-center gap-3 pt-2">
+                            <div class="flex flex-wrap items-center gap-2.5 pt-2">
                                 <button type="button" onclick="changeSlide(1)" class="px-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-extrabold transition flex items-center gap-2 shadow-sm">
                                     <span>Mulai Langkah 1</span>
                                     <i class="fa-solid fa-arrow-right"></i>
                                 </button>
+                                <button type="button" onclick="triggerImportJson()" class="px-4 py-3 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:hover:bg-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-800 text-xs sm:text-sm font-extrabold transition flex items-center gap-2">
+                                    <i class="fa-solid fa-upload"></i>
+                                    <span>Muat Data Proyek (.json)</span>
+                                </button>
                                 <button type="button" onclick="clearAllData()" class="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 text-xs sm:text-sm font-bold transition flex items-center gap-2">
                                     <i class="fa-solid fa-rotate-left"></i>
-                                    <span>Reset Semua Isian</span>
+                                    <span>Reset</span>
                                 </button>
                             </div>
                         </div>
@@ -767,8 +1098,8 @@
                                     <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 flex items-start gap-3">
                                         <span class="w-7 h-7 rounded-lg bg-indigo-600 text-white font-extrabold flex items-center justify-center shrink-0 mt-0.5">1</span>
                                         <div>
-                                            <strong class="text-slate-900 dark:text-white block">Di Kelas Hari Ini: Susun & Unduh PDF</strong>
-                                            <span class="text-slate-500 leading-relaxed">Ketik 12 pertanyaan terbuka, rencana observasi, dan draf Informed Consent di modul ini, lalu unduh PDF-nya untuk dikumpulkan ke LMS dan dicetak.</span>
+                                            <strong class="text-slate-900 dark:text-white block">Di Kelas Hari Ini: Susun Lengkap & Unduh PDF</strong>
+                                            <span class="text-slate-500 leading-relaxed">Lengkapi seluruh form wajib di modul ini, simpan cadangan <code>.json</code>, lalu unduh PDF-nya untuk dikumpulkan ke LMS dan dicetak.</span>
                                         </div>
                                     </div>
                                     <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 flex items-start gap-3">
@@ -781,8 +1112,8 @@
                                     <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 flex items-start gap-3">
                                         <span class="w-7 h-7 rounded-lg bg-emerald-600 text-white font-extrabold flex items-center justify-center shrink-0 mt-0.5">3</span>
                                         <div>
-                                            <strong class="text-slate-900 dark:text-white block">Minggu Depan (Pertemuan 3): Sintesis FigJam</strong>
-                                            <span class="text-slate-500 leading-relaxed">Bawa kertas catatan lapangan yang sudah terisi penuh ke laboratorium untuk dipindahkan ke Sticky Notes di FigJam.</span>
+                                            <strong class="text-slate-900 dark:text-white block">Minggu Depan (Pertemuan 3): Sintesis LKM 03</strong>
+                                            <span class="text-slate-500 leading-relaxed">Bawa kertas catatan lapangan yang sudah terisi penuh ke kelas untuk diolah menjadi 4 artefak sintesis pada LKM 03.</span>
                                         </div>
                                     </div>
                                 </div>
@@ -830,18 +1161,18 @@
                     </div>
 
                     <div class="p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-800/60 text-xs leading-relaxed">
-                        <i class="fa-solid fa-list-check text-indigo-600 dark:text-indigo-400 mr-1.5"></i><strong>Instruksi Slide Berikutnya:</strong> Pada Slide 3, tuliskan identitas Anda, nama UMKM mitra, serta syarat/kriteria spesifik siapa pemilik dan pelanggan yang akan Anda temui di lapangan.
+                        <i class="fa-solid fa-list-check text-indigo-600 dark:text-indigo-400 mr-1.5"></i><strong>Instruksi Slide Berikutnya:</strong> Pada Slide 3, lengkapi Bagian 1A (Identitas & UMKM) serta Bagian 1B (Kriteria Pengelola & Pelanggan) secara lengkap sebelum masuk ke penyusunan pertanyaan.
                     </div>
                 </div>
             `;
         }
 
-        // SLIDE 3 [FORM ISIAN 1]: Wizard Identitas & Kriteria Narasumber
+        // SLIDE 3 [FORM ISIAN 1]: Wizard Identitas & Kriteria Narasumber (Semua Wajib)
         function renderSlide3() {
             const p1Editing = uiWizard.infoActive === 1;
             const p2Editing = uiWizard.infoActive === 2;
-            const p1Saved = uiWizard.infoSaved[1] || !!(formState.nama.trim() || formState.umkm.trim());
-            const p2Saved = uiWizard.infoSaved[2] || !!(formState.kriteria_pemilik.trim() || formState.kriteria_pelanggan.trim());
+            const p1Saved = isInfoPartComplete(1);
+            const p2Saved = isInfoPartComplete(2);
             const p1Min = !!uiWizard.infoMin[1];
             const p2Min = !!uiWizard.infoMin[2];
 
@@ -853,27 +1184,27 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100 dark:border-slate-800">
                             <div>
                                 <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Nama Lengkap Mahasiswa *</label>
-                                <input type="text" value="${escapeHtml(formState.nama)}" oninput="updateField('nama', this.value)" placeholder="Ketik nama lengkap Anda..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <input type="text" id="inp_nama" value="${escapeHtml(formState.nama)}" oninput="updateField('nama', this.value)" placeholder="Ketik nama lengkap Anda..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
                             </div>
                             <div>
                                 <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Nomor Induk Mahasiswa (NIM) *</label>
-                                <input type="text" value="${escapeHtml(formState.nim)}" oninput="updateField('nim', this.value)" placeholder="Ketik NIM Anda..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base font-mono font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <input type="text" id="inp_nim" value="${escapeHtml(formState.nim)}" oninput="updateField('nim', this.value)" placeholder="Ketik NIM Anda..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base font-mono font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
                             </div>
                             <div>
                                 <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Kelas / Semester *</label>
-                                <input type="text" value="${escapeHtml(formState.kelas)}" oninput="updateField('kelas', this.value)" placeholder="Ketik kelas dan semester..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <input type="text" id="inp_kelas" value="${escapeHtml(formState.kelas)}" oninput="updateField('kelas', this.value)" placeholder="Ketik kelas dan semester..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
                             </div>
                             <div>
                                 <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Tanggal Penyusunan Instrumen *</label>
-                                <input type="date" value="${escapeHtml(formState.tgl)}" oninput="updateField('tgl', this.value)" class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <input type="date" id="inp_tgl" value="${escapeHtml(formState.tgl)}" oninput="updateField('tgl', this.value)" class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500">
                             </div>
                             <div>
                                 <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Nama Usaha UMKM Mitra *</label>
-                                <input type="text" value="${escapeHtml(formState.umkm)}" oninput="updateField('umkm', this.value)" placeholder="Ketik nama UMKM mitra Anda..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <input type="text" id="inp_umkm" value="${escapeHtml(formState.umkm)}" oninput="updateField('umkm', this.value)" placeholder="Ketik nama UMKM mitra Anda..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
                             </div>
                             <div>
                                 <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Bidang / Jenis Usaha *</label>
-                                <input type="text" value="${escapeHtml(formState.bidang)}" oninput="updateField('bidang', this.value)" placeholder="Ketik bidang usaha mitra..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <input type="text" id="inp_bidang" value="${escapeHtml(formState.bidang)}" oninput="updateField('bidang', this.value)" placeholder="Ketik bidang usaha mitra..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
                             </div>
                         </div>
                         <div class="flex justify-end pt-1">
@@ -887,12 +1218,12 @@
             } else if (p1Saved) {
                 card1Html = `
                     <div class="p-4 sm:p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-emerald-300 dark:border-emerald-800/70 space-y-3">
-                        ${renderWizardCardHeader('Bagian 1A', (formState.nama || 'Mahasiswa') + ' • Mitra: ' + (formState.umkm || '-'), true, false, p1Min, 'openInfoPart(1)', 'toggleMinInfoPart(1)')}
+                        ${renderWizardCardHeader('Bagian 1A', formState.nama + ' • Mitra: ' + formState.umkm, true, false, p1Min, 'openInfoPart(1)', 'toggleMinInfoPart(1)')}
                         ${!p1Min ? `
                             <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm sm:text-base">
-                                <div><span class="text-xs font-bold uppercase text-slate-400 block">Mahasiswa</span><span class="font-extrabold text-slate-900 dark:text-white">${escapeHtml(formState.nama) || '-'} (${escapeHtml(formState.nim) || '-'})</span></div>
-                                <div><span class="text-xs font-bold uppercase text-slate-400 block">Kelas & Tanggal</span><span>${escapeHtml(formState.kelas) || '-'} • ${escapeHtml(formState.tgl) || '-'}</span></div>
-                                <div class="sm:col-span-2"><span class="text-xs font-bold uppercase text-slate-400 block">UMKM Mitra</span><span class="font-bold text-indigo-600 dark:text-indigo-400">${escapeHtml(formState.umkm) || '-'} (${escapeHtml(formState.bidang) || '-'})</span></div>
+                                <div><span class="text-xs font-bold uppercase text-slate-400 block">Mahasiswa</span><span class="font-extrabold text-slate-900 dark:text-white">${escapeHtml(formState.nama)} (${escapeHtml(formState.nim)})</span></div>
+                                <div><span class="text-xs font-bold uppercase text-slate-400 block">Kelas & Tanggal</span><span>${escapeHtml(formState.kelas)} • ${escapeHtml(formState.tgl)}</span></div>
+                                <div class="sm:col-span-2"><span class="text-xs font-bold uppercase text-slate-400 block">UMKM Mitra</span><span class="font-bold text-indigo-600 dark:text-indigo-400">${escapeHtml(formState.umkm)} (${escapeHtml(formState.bidang)})</span></div>
                             </div>
                         ` : ''}
                     </div>
@@ -909,20 +1240,20 @@
                         <div class="space-y-4 pt-2 border-t border-slate-100 dark:border-slate-800">
                             <div>
                                 <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Kriteria Narasumber dari Sisi Pengelola / Pemilik UMKM *</label>
-                                <textarea rows="3" oninput="autoResizeTextarea(this); updateField('kriteria_pemilik', this.value)" placeholder="Tuliskan siapa pihak pengelola/staf UMKM yang akan Anda wawancarai beserta peran mereka sehari-hari..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(formState.kriteria_pemilik)}</textarea>
+                                <textarea id="inp_kriteria_pemilik" rows="3" oninput="autoResizeTextarea(this); updateField('kriteria_pemilik', this.value)" placeholder="Tuliskan siapa pihak pengelola/staf UMKM yang akan Anda wawancarai beserta peran mereka sehari-hari..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(formState.kriteria_pemilik)}</textarea>
                             </div>
                             <div>
                                 <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Kriteria Narasumber dari Sisi Pelanggan Sasaran (Target ~5, Minimal 3 Orang) *</label>
-                                <textarea rows="3" oninput="autoResizeTextarea(this); updateField('kriteria_pelanggan', this.value)" placeholder="Tuliskan kriteria pelanggan yang akan Anda wawancarai agar mewakili pengguna nyata UMKM tersebut..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(formState.kriteria_pelanggan)}</textarea>
+                                <textarea id="inp_kriteria_pelanggan" rows="3" oninput="autoResizeTextarea(this); updateField('kriteria_pelanggan', this.value)" placeholder="Tuliskan kriteria pelanggan yang akan Anda wawancarai agar mewakili pengguna nyata UMKM tersebut..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(formState.kriteria_pelanggan)}</textarea>
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Target Jumlah Responden *</label>
-                                    <input type="text" value="${escapeHtml(formState.target_jumlah)}" oninput="updateField('target_jumlah', this.value)" placeholder="Ketik jumlah target pemilik & pelanggan..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <input type="text" id="inp_target_jumlah" value="${escapeHtml(formState.target_jumlah)}" oninput="updateField('target_jumlah', this.value)" placeholder="Ketik jumlah target pemilik & pelanggan..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
                                 </div>
                                 <div>
                                     <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Rencana Tempat / Cara Wawancara *</label>
-                                    <input type="text" value="${escapeHtml(formState.rencana_lokasi)}" oninput="updateField('rencana_lokasi', this.value)" placeholder="Ketik lokasi atau metode pelaksanaan wawancara..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <input type="text" id="inp_rencana_lokasi" value="${escapeHtml(formState.rencana_lokasi)}" oninput="updateField('rencana_lokasi', this.value)" placeholder="Ketik lokasi atau metode pelaksanaan wawancara..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
                                 </div>
                             </div>
                         </div>
@@ -940,11 +1271,11 @@
                         ${renderWizardCardHeader('Bagian 1B', 'Kriteria Narasumber & Lokasi Pelaksanaan Riset', true, false, p2Min, 'openInfoPart(2)', 'toggleMinInfoPart(2)')}
                         ${!p2Min ? `
                             <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 text-sm sm:text-base leading-relaxed">
-                                <div><span class="text-xs font-bold uppercase text-indigo-600 dark:text-indigo-400 block">Narasumber Pengelola UMKM:</span><div class="whitespace-pre-line">${escapeHtml(formState.kriteria_pemilik) || '-'}</div></div>
-                                <div class="pt-2 border-t border-slate-100 dark:border-slate-800"><span class="text-xs font-bold uppercase text-emerald-600 dark:text-emerald-400 block">Narasumber Pelanggan Sasaran:</span><div class="whitespace-pre-line">${escapeHtml(formState.kriteria_pelanggan) || '-'}</div></div>
+                                <div><span class="text-xs font-bold uppercase text-indigo-600 dark:text-indigo-400 block">Narasumber Pengelola UMKM:</span><div class="whitespace-pre-line">${escapeHtml(formState.kriteria_pemilik)}</div></div>
+                                <div class="pt-2 border-t border-slate-100 dark:border-slate-800"><span class="text-xs font-bold uppercase text-emerald-600 dark:text-emerald-400 block">Narasumber Pelanggan Sasaran:</span><div class="whitespace-pre-line">${escapeHtml(formState.kriteria_pelanggan)}</div></div>
                                 <div class="pt-2 border-t border-slate-100 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm">
-                                    <div><strong>Target Jumlah:</strong> ${escapeHtml(formState.target_jumlah) || '-'}</div>
-                                    <div><strong>Lokasi / Metode:</strong> ${escapeHtml(formState.rencana_lokasi) || '-'}</div>
+                                    <div><strong>Target Jumlah:</strong> ${escapeHtml(formState.target_jumlah)}</div>
+                                    <div><strong>Lokasi / Metode:</strong> ${escapeHtml(formState.rencana_lokasi)}</div>
                                 </div>
                             </div>
                         ` : `<p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 line-clamp-1 px-1">${escapeHtml(formState.kriteria_pelanggan)}</p>`}
@@ -957,7 +1288,7 @@
             return `
                 <div class="slide-enter flex flex-col justify-between h-full gap-5">
                     <div class="space-y-1">
-                        <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-pen-to-square mr-1"></i>Tahap 1 • Wizard Identitas & Kriteria Narasumber</span>
+                        <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-pen-to-square mr-1"></i>Tahap 1 • Wizard Identitas & Kriteria Narasumber (Wajib Lengkap)</span>
                         <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Data Mahasiswa, Mitra, & Kriteria Responden</h2>
                     </div>
                     <div class="space-y-4 my-auto">
@@ -999,7 +1330,7 @@
                     </div>
 
                     <div class="p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-800/60 text-xs leading-relaxed">
-                        <i class="fa-solid fa-list-check text-indigo-600 dark:text-indigo-400 mr-1.5"></i><strong>Instruksi Slide Berikutnya:</strong> Pada Slide 5, susunlah kalimat <strong>Pertanyaan Utama #1 s/d #5</strong> menggunakan ${term('openquestion', 'pertanyaan terbuka')}, lalu tuliskan pula rencana ${term('probing', 'probing (pertanyaan lanjutan)')} untuk mengantisipasi jika narasumber hanya menjawab singkat.
+                        <i class="fa-solid fa-list-check text-indigo-600 dark:text-indigo-400 mr-1.5"></i><strong>Instruksi Slide Berikutnya:</strong> Pada Slide 5, Anda wajib menyusun kalimat <strong>Pertanyaan Utama #1 s/d #5</strong> menggunakan ${term('openquestion', 'pertanyaan terbuka')} beserta rencana ${term('probing', 'probing (pertanyaan lanjutan)')}-nya.
                     </div>
                 </div>
             `;
@@ -1011,7 +1342,7 @@
                 <div class="slide-enter flex flex-col justify-between h-full gap-5">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <div class="space-y-1">
-                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-pen-to-square mr-1"></i>Tahap 2 • Wizard Panduan Wawancara (No. 1 - 5)</span>
+                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-pen-to-square mr-1"></i>Tahap 2 • Wizard Panduan Wawancara (No. 1 - 5 Wajib Diisi)</span>
                             <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Pertanyaan Babak 1 (Pemanasan) & Babak 2 (Alur Saat Ini)</h2>
                         </div>
                         <div class="flex items-center gap-2 shrink-0">
@@ -1058,7 +1389,7 @@
                     </div>
 
                     <div class="p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-800/60 text-xs leading-relaxed">
-                        <i class="fa-solid fa-list-check text-indigo-600 dark:text-indigo-400 mr-1.5"></i><strong>Instruksi Slide Berikutnya:</strong> Lengkapi <strong>Pertanyaan #6 s/d #9 pada Slide 7</strong> dan <strong>Pertanyaan #10 s/d #12 pada Slide 8</strong>. Ingat: jangan menyisipkan kata sifat yang menghakimi ("sulit", "lambat", "ribet") di dalam kalimat tanya Anda.
+                        <i class="fa-solid fa-list-check text-indigo-600 dark:text-indigo-400 mr-1.5"></i><strong>Instruksi Slide Berikutnya:</strong> Lengkapi <strong>Pertanyaan #6 s/d #9 pada Slide 7</strong> dan <strong>Pertanyaan #10 s/d #12 pada Slide 8</strong>.
                     </div>
                 </div>
             `;
@@ -1070,7 +1401,7 @@
                 <div class="slide-enter flex flex-col justify-between h-full gap-5">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <div class="space-y-1">
-                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-pen-to-square mr-1"></i>Tahap 3A • Wizard Panduan Wawancara (No. 6 - 9)</span>
+                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-pen-to-square mr-1"></i>Tahap 3A • Wizard Panduan Wawancara (No. 6 - 9 Wajib Diisi)</span>
                             <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Pertanyaan Babak 3: Penggalian Kesulitan & Pain Points</h2>
                         </div>
                         <div class="flex items-center gap-2 shrink-0">
@@ -1092,7 +1423,7 @@
                 <div class="slide-enter flex flex-col justify-between h-full gap-5">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <div class="space-y-1">
-                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-pen-to-square mr-1"></i>Tahap 3B • Wizard Panduan Wawancara (No. 10 - 12)</span>
+                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-pen-to-square mr-1"></i>Tahap 3B • Wizard Panduan Wawancara (No. 10 - 12 Wajib Diisi)</span>
                             <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Pertanyaan Babak 4: Pengelola UMKM, Harapan, & Penutup</h2>
                         </div>
                         <div class="flex items-center gap-2 shrink-0">
@@ -1140,7 +1471,7 @@
                     </div>
 
                     <div class="p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-800/60 text-xs leading-relaxed">
-                        <i class="fa-solid fa-list-check text-indigo-600 dark:text-indigo-400 mr-1.5"></i><strong>Instruksi Slide Berikutnya:</strong> Tuliskan rencana pengamatan Anda pada Slide 10. Rencana ini akan dicetak bersama kotak catatan observasi kosong di bagian akhir PDF agar Anda tinggal menuliskan hasilnya saat berada di lokasi UMKM.
+                        <i class="fa-solid fa-list-check text-indigo-600 dark:text-indigo-400 mr-1.5"></i><strong>Instruksi Slide Berikutnya:</strong> Tuliskan keempat rencana pengamatan Anda pada Slide 10 secara lengkap.
                     </div>
                 </div>
             `;
@@ -1149,10 +1480,10 @@
         // SLIDE 10 [FORM ISIAN 4]: Wizard Rencana Observasi Lapangan
         function renderSlide10() {
             const obsItems = [
-                { num: 1, key: 'obs_activities', title: 'Fokus 1: Urutan Aktivitas & Langkah Transaksi yang Akan Diamati', prompt: 'Tuliskan aktivitas spesifik dari pelanggan maupun pengelola UMKM yang akan Anda amati secara langsung dari awal hingga selesai.' },
-                { num: 2, key: 'obs_env', title: 'Fokus 2: Kondisi Lingkungan Fisik / Media & Waktu Pengamatan', prompt: 'Tuliskan di mana dan pada situasi/jam seperti apa Anda akan melakukan pengamatan agar melihat kondisi transaksi yang sebenarnya.' },
-                { num: 3, key: 'obs_nonverbal', title: 'Fokus 3: Petunjuk Bahasa Tubuh, Hambatan Waktu, & Kontradiksi Perilaku', prompt: 'Tuliskan reaksi non-verbal atau potensi perbedaan antara ucapan dan tindakan nyata (Say vs Do) yang ingin Anda perhatikan.' },
-                { num: 4, key: 'obs_workaround', title: 'Fokus 4: Alat Bantu Manual atau Jalan Pintas (Workarounds) yang Diamati', prompt: 'Tuliskan benda, catatan manual, atau kebiasaan darurat di lokasi/media UMKM yang akan Anda perhatikan.' }
+                { num: 1, key: 'obs_activities', title: 'Fokus 1: Urutan Aktivitas & Langkah Transaksi yang Akan Diamati *', prompt: 'Tuliskan aktivitas spesifik dari pelanggan maupun pengelola UMKM yang akan Anda amati secara langsung dari awal hingga selesai.' },
+                { num: 2, key: 'obs_env', title: 'Fokus 2: Kondisi Lingkungan Fisik / Media & Waktu Pengamatan *', prompt: 'Tuliskan di mana dan pada situasi/jam seperti apa Anda akan melakukan pengamatan agar melihat kondisi transaksi yang sebenarnya.' },
+                { num: 3, key: 'obs_nonverbal', title: 'Fokus 3: Petunjuk Bahasa Tubuh, Hambatan Waktu, & Kontradiksi Perilaku *', prompt: 'Tuliskan reaksi non-verbal atau potensi perbedaan antara ucapan dan tindakan nyata (Say vs Do) yang ingin Anda perhatikan.' },
+                { num: 4, key: 'obs_workaround', title: 'Fokus 4: Alat Bantu Manual atau Jalan Pintas (Workarounds) yang Diamati *', prompt: 'Tuliskan benda, catatan manual, atau kebiasaan darurat di lokasi/media UMKM yang akan Anda perhatikan.' }
             ];
 
             let cardsHtml = '';
@@ -1160,7 +1491,7 @@
                 const it = obsItems[i];
                 const val = formState[it.key] || '';
                 const isEditing = uiWizard.obsActive === it.num;
-                const isSaved = uiWizard.obsSaved[it.num] || val.trim() !== '';
+                const isSaved = isObsItemComplete(it.num);
                 const isMin = !!uiWizard.obsMin[it.num];
 
                 if (isEditing) {
@@ -1168,7 +1499,7 @@
                         <div class="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border-2 border-indigo-600 dark:border-indigo-400 shadow-md space-y-4">
                             ${renderWizardCardHeader('Observasi ' + it.num + ' / 4', it.title, isSaved, true, false, '', '')}
                             <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed pt-1 border-t border-slate-100 dark:border-slate-800">${it.prompt}</p>
-                            <textarea rows="4" oninput="autoResizeTextarea(this); updateField('${it.key}', this.value)" placeholder="Tuliskan rencana pengamatan Anda secara lengkap di sini..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(val)}</textarea>
+                            <textarea id="inp_obs_${it.num}" rows="4" oninput="autoResizeTextarea(this); updateField('${it.key}', this.value)" placeholder="Tuliskan rencana pengamatan Anda secara lengkap di sini (wajib diisi)..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(val)}</textarea>
                             <div class="flex justify-end pt-1">
                                 <button type="button" onclick="saveObsCard(${it.num})" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-extrabold transition flex items-center gap-2 shadow-sm">
                                     <i class="fa-solid fa-check"></i>
@@ -1197,7 +1528,7 @@
                 <div class="slide-enter flex flex-col justify-between h-full gap-5">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <div class="space-y-1">
-                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-pen-to-square mr-1"></i>Tahap 4 • Wizard Rencana Observasi Lapangan</span>
+                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-pen-to-square mr-1"></i>Tahap 4 • Wizard Rencana Observasi Lapangan (4 Fokus Wajib)</span>
                             <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Empat Fokus Pengamatan Perilaku di Lapangan</h2>
                         </div>
                         <div class="flex items-center gap-2 shrink-0">
@@ -1217,8 +1548,8 @@
         function renderSlide11() {
             const c1Editing = uiWizard.icActive === 1;
             const c2Editing = uiWizard.icActive === 2;
-            const c1Saved = uiWizard.icSaved[1] || !!(formState.ic_tujuan.trim() || formState.ic_durasi.trim());
-            const c2Saved = uiWizard.icSaved[2] || !!(formState.ic_privasi.trim() || formState.ic_sukarela.trim());
+            const c1Saved = isIcPartComplete(1);
+            const c2Saved = isIcPartComplete(2);
             const c1Min = !!uiWizard.icMin[1];
             const c2Min = !!uiWizard.icMin[2];
 
@@ -1230,11 +1561,11 @@
                         <div class="space-y-4 pt-2 border-t border-slate-100 dark:border-slate-800">
                             <div>
                                 <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">1. Kalimat Penjelasan Tujuan Riset kepada Narasumber *</label>
-                                <textarea rows="3" oninput="autoResizeTextarea(this); updateField('ic_tujuan', this.value)" placeholder="Tuliskan kalimat yang menjelaskan tujuan akademik wawancara ini dengan bahasa yang sopan dan mudah dipahami oleh narasumber..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(formState.ic_tujuan)}</textarea>
+                                <textarea id="inp_ic_tujuan" rows="3" oninput="autoResizeTextarea(this); updateField('ic_tujuan', this.value)" placeholder="Tuliskan kalimat yang menjelaskan tujuan akademik wawancara ini dengan bahasa yang sopan dan mudah dipahami oleh narasumber..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(formState.ic_tujuan)}</textarea>
                             </div>
                             <div>
                                 <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">2. Estimasi Durasi & Prosedur Kegiatan Wawancara/Observasi *</label>
-                                <input type="text" value="${escapeHtml(formState.ic_durasi)}" oninput="updateField('ic_durasi', this.value)" placeholder="Tuliskan perkiraan durasi waktu wawancara dan aktivitas yang dilakukan..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <input type="text" id="inp_ic_durasi" value="${escapeHtml(formState.ic_durasi)}" oninput="updateField('ic_durasi', this.value)" placeholder="Tuliskan perkiraan durasi waktu wawancara dan aktivitas yang dilakukan..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
                             </div>
                         </div>
                         <div class="flex justify-end pt-1">
@@ -1251,8 +1582,8 @@
                         ${renderWizardCardHeader('Informed Consent 1', 'Penjelasan Tujuan Riset & Durasi Wawancara', true, false, c1Min, 'openIcCard(1)', 'toggleMinIcCard(1)')}
                         ${!c1Min ? `
                             <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2.5 text-sm sm:text-base leading-relaxed">
-                                <div><span class="text-xs font-bold uppercase text-indigo-600 dark:text-indigo-400 block">Tujuan Riset:</span><div class="whitespace-pre-line">${escapeHtml(formState.ic_tujuan) || '-'}</div></div>
-                                <div class="pt-2 border-t border-slate-100 dark:border-slate-800"><span class="text-xs font-bold uppercase text-slate-400 block">Durasi & Prosedur:</span><span class="font-semibold">${escapeHtml(formState.ic_durasi) || '-'}</span></div>
+                                <div><span class="text-xs font-bold uppercase text-indigo-600 dark:text-indigo-400 block">Tujuan Riset:</span><div class="whitespace-pre-line">${escapeHtml(formState.ic_tujuan)}</div></div>
+                                <div class="pt-2 border-t border-slate-100 dark:border-slate-800"><span class="text-xs font-bold uppercase text-slate-400 block">Durasi & Prosedur:</span><span class="font-semibold">${escapeHtml(formState.ic_durasi)}</span></div>
                             </div>
                         ` : `<p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 line-clamp-1 px-1">${escapeHtml(formState.ic_tujuan)}</p>`}
                     </div>
@@ -1269,11 +1600,11 @@
                         <div class="space-y-4 pt-2 border-t border-slate-100 dark:border-slate-800">
                             <div>
                                 <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">3. Pernyataan Jaminan Kerahasiaan & Anonimisasi Identitas Narasumber *</label>
-                                <textarea rows="3" oninput="autoResizeTextarea(this); updateField('ic_privasi', this.value)" placeholder="Tuliskan komitmen Anda dalam menjaga kerahasiaan rekaman/catatan dan menyamarkan identitas pribadi narasumber pada laporan..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(formState.ic_privasi)}</textarea>
+                                <textarea id="inp_ic_privasi" rows="3" oninput="autoResizeTextarea(this); updateField('ic_privasi', this.value)" placeholder="Tuliskan komitmen Anda dalam menjaga kerahasiaan rekaman/catatan dan menyamarkan identitas pribadi narasumber pada laporan..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(formState.ic_privasi)}</textarea>
                             </div>
                             <div>
                                 <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">4. Pernyataan Hak Kesukarelaan Narasumber (Hak Menolak / Berhenti) *</label>
-                                <textarea rows="3" oninput="autoResizeTextarea(this); updateField('ic_sukarela', this.value)" placeholder="Tuliskan klausul yang menegaskan bahwa partisipasi bersifat sukarela dan narasumber bebas menolak perekaman atau menghentikan sesi kapan saja..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(formState.ic_sukarela)}</textarea>
+                                <textarea id="inp_ic_sukarela" rows="3" oninput="autoResizeTextarea(this); updateField('ic_sukarela', this.value)" placeholder="Tuliskan klausul yang menegaskan bahwa partisipasi bersifat sukarela dan narasumber bebas menolak perekaman atau menghentikan sesi kapan saja..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(formState.ic_sukarela)}</textarea>
                             </div>
                         </div>
                         <div class="flex justify-end pt-1">
@@ -1290,8 +1621,8 @@
                         ${renderWizardCardHeader('Informed Consent 2', 'Jaminan Kerahasiaan Data & Hak Kesukarelaan', true, false, c2Min, 'openIcCard(2)', 'toggleMinIcCard(2)')}
                         ${!c2Min ? `
                             <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2.5 text-sm sm:text-base leading-relaxed">
-                                <div><span class="text-xs font-bold uppercase text-indigo-600 dark:text-indigo-400 block">Jaminan Privasi & Anonimisasi:</span><div class="whitespace-pre-line">${escapeHtml(formState.ic_privasi) || '-'}</div></div>
-                                <div class="pt-2 border-t border-slate-100 dark:border-slate-800"><span class="text-xs font-bold uppercase text-emerald-600 dark:text-emerald-400 block">Hak Kesukarelaan Narasumber:</span><div class="whitespace-pre-line">${escapeHtml(formState.ic_sukarela) || '-'}</div></div>
+                                <div><span class="text-xs font-bold uppercase text-indigo-600 dark:text-indigo-400 block">Jaminan Privasi & Anonimisasi:</span><div class="whitespace-pre-line">${escapeHtml(formState.ic_privasi)}</div></div>
+                                <div class="pt-2 border-t border-slate-100 dark:border-slate-800"><span class="text-xs font-bold uppercase text-emerald-600 dark:text-emerald-400 block">Hak Kesukarelaan Narasumber:</span><div class="whitespace-pre-line">${escapeHtml(formState.ic_sukarela)}</div></div>
                             </div>
                         ` : `<p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 line-clamp-1 px-1">${escapeHtml(formState.ic_privasi)}</p>`}
                     </div>
@@ -1303,10 +1634,10 @@
             return `
                 <div class="slide-enter flex flex-col justify-between h-full gap-5">
                     <div class="space-y-1">
-                        <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-pen-to-square mr-1"></i>Tahap 5 • Wizard Lembar Persetujuan (Sub-CPMK 4.1)</span>
+                        <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-pen-to-square mr-1"></i>Tahap 5 • Wizard Lembar Persetujuan (Wajib Lengkap)</span>
                         <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Penyusunan Dokumen ${term('informedconsent', 'Informed Consent')}</h2>
                         <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
-                            Rumuskan isi pernyataan persetujuan di bawah ini. Isian ini akan otomatis disusun menjadi halaman formulir persetujuan siap tanda tangan pada PDF Anda.
+                            Rumuskan keempat klausul persetujuan di bawah ini secara lengkap sebelum membuka pratinjau Field Kit PDF.
                         </p>
                     </div>
 
@@ -1318,7 +1649,7 @@
             `;
         }
 
-        // SLIDE 12 [PENJELASAN 5 - BARU]: Instruksi Cara Mencatat Jawaban di Lapangan (Field Kit)
+        // SLIDE 12 [PENJELASAN 5]: Instruksi Cara Mencatat Jawaban di Lapangan (Field Kit)
         function renderSlide12() {
             return `
                 <div class="slide-enter flex flex-col justify-between h-full gap-5">
@@ -1388,14 +1719,18 @@
                 <div class="slide-enter space-y-5">
                     <div class="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4 no-print">
                         <div>
-                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Tahap Akhir • Paket Field Kit 4-in-1 Siap Cetak</span>
+                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-circle-check mr-1"></i>Seluruh Instrumen Telah Lengkap • Paket Field Kit 4-in-1</span>
                             <h2 class="text-lg sm:text-2xl font-extrabold text-slate-900 dark:text-white">Pratinjau LKM 02, Informed Consent, & Lembar Catatan Lapangan</h2>
-                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Unduh PDF ini untuk dikumpulkan ke LMS sekaligus dicetak sebagai lembar kerja tulis tangan saat mewawancarai di lokasi UMKM.</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Unduh <strong>File Data (.JSON)</strong> untuk cadangan ke Pertemuan 3, dan klik <strong>Generate & Unduh Field Kit PDF</strong> untuk dikumpulkan ke LMS dan dicetak.</p>
                         </div>
 
                         <div class="flex flex-wrap items-center gap-2 shrink-0">
+                            <button type="button" onclick="exportJsonData()" class="px-3.5 py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 text-xs font-extrabold transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-download"></i>
+                                <span>Simpan Data (.JSON)</span>
+                            </button>
                             <button type="button" onclick="window.print()" class="px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition">
-                                <i class="fa-solid fa-print mr-1"></i>Cetak / Save PDF Browser
+                                <i class="fa-solid fa-print mr-1"></i>Cetak Browser
                             </button>
                             <button type="button" id="btnDownloadPdf" onclick="downloadPdf()" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-extrabold transition shadow-md flex items-center gap-2">
                                 <i class="fa-solid fa-file-pdf"></i>
@@ -1691,7 +2026,7 @@
                                 LEMBAR CATATAN OBSERVASI NYATA & RINGKASAN EMPATHY MAP
                             </div>
                             <div style="font-size: 10.5px; color: #475569; margin-top: 1px;">
-                                <strong>Instruksi:</strong> Catat temuan pengamatan perilaku nyata Anda di lokasi UMKM, lalu rangkum ke dalam 4 kotak di bawah untuk bahan FigJam Pertemuan 3.
+                                <strong>Instruksi:</strong> Catat temuan pengamatan perilaku nyata Anda di lokasi UMKM, lalu rangkum ke dalam 4 kotak di bawah untuk bahan LKM 03 Pertemuan 3.
                             </div>
                         </div>
                         <div style="text-align: right; font-size: 10px; color: #475569; background: #f8fafc; padding: 6px 10px; border-radius: 8px; border: 1px solid #cbd5e1;">
@@ -1731,7 +2066,7 @@
                     </table>
 
                     <div style="font-size: 11px; font-weight: 800; color: #0f172a; margin-bottom: 5px; text-transform: uppercase;">
-                        B. Ringkasan 4 Dimensi Empati Responden (Bahan Sticky Notes FigJam Pertemuan 3)
+                        B. Ringkasan 4 Dimensi Empati Responden (Bahan Sintesis LKM 03 Pertemuan 3)
                     </div>
                     <table class="pdf-table">
                         <tbody>
@@ -1762,12 +2097,26 @@
         }
 
         // =========================================================================
-        // HANDLER IN-FORM WIZARD (SIMPAN, BACA, MINIMIZE, EDIT)
+        // HANDLER IN-FORM WIZARD DENGAN VALIDASI WAJIB ISI
         // =========================================================================
         function saveInfoPart(partNum) {
+            if (partNum === 1) {
+                if (!formState.nama.trim()) { highlightEmptyInput('inp_nama', 'Nama Lengkap Mahasiswa wajib diisi.'); return; }
+                if (!formState.nim.trim()) { highlightEmptyInput('inp_nim', 'Nomor Induk Mahasiswa (NIM) wajib diisi.'); return; }
+                if (!formState.kelas.trim()) { highlightEmptyInput('inp_kelas', 'Kelas / Semester wajib diisi.'); return; }
+                if (!formState.tgl.trim()) { highlightEmptyInput('inp_tgl', 'Tanggal Penyusunan Instrumen wajib diisi.'); return; }
+                if (!formState.umkm.trim()) { highlightEmptyInput('inp_umkm', 'Nama Usaha UMKM Mitra wajib diisi.'); return; }
+                if (!formState.bidang.trim()) { highlightEmptyInput('inp_bidang', 'Bidang / Jenis Usaha wajib diisi.'); return; }
+            } else {
+                if (!formState.kriteria_pemilik.trim()) { highlightEmptyInput('inp_kriteria_pemilik', 'Kriteria Narasumber Pengelola UMKM wajib diisi.'); return; }
+                if (!formState.kriteria_pelanggan.trim()) { highlightEmptyInput('inp_kriteria_pelanggan', 'Kriteria Narasumber Pelanggan Sasaran wajib diisi.'); return; }
+                if (!formState.target_jumlah.trim()) { highlightEmptyInput('inp_target_jumlah', 'Target Jumlah Responden wajib diisi.'); return; }
+                if (!formState.rencana_lokasi.trim()) { highlightEmptyInput('inp_rencana_lokasi', 'Rencana Tempat / Cara Wawancara wajib diisi.'); return; }
+            }
+
             uiWizard.infoSaved[partNum] = true;
             uiWizard.infoMin[partNum] = false;
-            if (partNum === 1 && !uiWizard.infoSaved[2]) {
+            if (partNum === 1 && !isInfoPartComplete(2)) {
                 uiWizard.infoActive = 2;
             } else {
                 uiWizard.infoActive = 0;
@@ -1785,13 +2134,23 @@
         }
 
         function saveQuestionCard(groupKey, idx, maxIdx) {
+            const qObj = formState.questions[idx];
+            if (!qObj || !qObj.q.trim()) {
+                highlightEmptyInput('inp_q_' + idx, 'Kalimat Pertanyaan Wawancara Utama #' + (idx + 1) + ' wajib diisi.');
+                return;
+            }
+            if (!qObj.p.trim()) {
+                highlightEmptyInput('inp_p_' + idx, 'Pertanyaan Lanjutan (Probing) & Tujuan #' + (idx + 1) + ' wajib diisi.');
+                return;
+            }
+
             const activeProp = groupKey + 'Active';
             const savedProp = groupKey + 'Saved';
             const minProp = groupKey + 'Min';
 
             uiWizard[savedProp][idx] = true;
             uiWizard[minProp][idx] = true;
-            if (idx < maxIdx && !uiWizard[savedProp][idx + 1]) {
+            if (idx < maxIdx && !isQuestionComplete(idx + 1)) {
                 uiWizard[activeProp] = idx + 1;
             } else {
                 uiWizard[activeProp] = -1;
@@ -1810,18 +2169,22 @@
             renderCurrentSlide();
         }
         function setAllGroupMin(groupKey, startIdx, endIdx, flag) {
-            uiWizard[groupKey + 'Active'] = -1;
             for (let i = startIdx; i <= endIdx; i++) {
-                uiWizard[groupKey + 'Saved'][i] = true;
-                uiWizard[groupKey + 'Min'][i] = flag;
+                if (isQuestionComplete(i)) {
+                    uiWizard[groupKey + 'Min'][i] = flag;
+                }
             }
             renderCurrentSlide();
         }
 
         function saveObsCard(num) {
+            if (!isObsItemComplete(num)) {
+                highlightEmptyInput('inp_obs_' + num, 'Rencana Fokus Observasi ' + num + ' wajib diisi terlebih dahulu.');
+                return;
+            }
             uiWizard.obsSaved[num] = true;
             uiWizard.obsMin[num] = false;
-            if (num < 4 && !uiWizard.obsSaved[num + 1]) {
+            if (num < 4 && !isObsItemComplete(num + 1)) {
                 uiWizard.obsActive = num + 1;
             } else {
                 uiWizard.obsActive = 0;
@@ -1838,18 +2201,26 @@
             renderCurrentSlide();
         }
         function setAllObsMin(flag) {
-            uiWizard.obsActive = 0;
             for (let i = 1; i <= 4; i++) {
-                uiWizard.obsSaved[i] = true;
-                uiWizard.obsMin[i] = flag;
+                if (isObsItemComplete(i)) {
+                    uiWizard.obsMin[i] = flag;
+                }
             }
             renderCurrentSlide();
         }
 
         function saveIcCard(num) {
+            if (num === 1) {
+                if (!formState.ic_tujuan.trim()) { highlightEmptyInput('inp_ic_tujuan', 'Kalimat Penjelasan Tujuan Riset wajib diisi.'); return; }
+                if (!formState.ic_durasi.trim()) { highlightEmptyInput('inp_ic_durasi', 'Estimasi Durasi & Prosedur Wawancara wajib diisi.'); return; }
+            } else {
+                if (!formState.ic_privasi.trim()) { highlightEmptyInput('inp_ic_privasi', 'Pernyataan Jaminan Kerahasiaan & Anonimisasi wajib diisi.'); return; }
+                if (!formState.ic_sukarela.trim()) { highlightEmptyInput('inp_ic_sukarela', 'Pernyataan Hak Kesukarelaan Narasumber wajib diisi.'); return; }
+            }
+
             uiWizard.icSaved[num] = true;
             uiWizard.icMin[num] = false;
-            if (num === 1 && !uiWizard.icSaved[2]) {
+            if (num === 1 && !isIcPartComplete(2)) {
                 uiWizard.icActive = 2;
             } else {
                 uiWizard.icActive = 0;
@@ -1963,25 +2334,34 @@
         }
 
         function selectSlideFromDrawer(index) {
-            goToSlide(index);
             toggleSlideDrawer();
+            goToSlide(index);
         }
 
         function changeSlide(direction) {
             const nextIdx = currentSlideIndex + direction;
             if (nextIdx >= 0 && nextIdx < TOTAL_SLIDES) {
-                currentSlideIndex = nextIdx;
-                renderCurrentSlide();
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                goToSlide(nextIdx);
             }
         }
 
-        function goToSlide(index) {
-            if (index >= 0 && index < TOTAL_SLIDES) {
-                currentSlideIndex = index;
-                renderCurrentSlide();
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+        function goToSlide(targetIdx) {
+            if (targetIdx < 0 || targetIdx >= TOTAL_SLIDES) return;
+
+            if (targetIdx > currentSlideIndex) {
+                for (let checkIdx = currentSlideIndex; checkIdx < targetIdx; checkIdx++) {
+                    if ([2, 4, 6, 7, 9, 10].indexOf(checkIdx) !== -1) {
+                        currentSlideIndex = checkIdx;
+                        if (!validateFormSlide(checkIdx)) {
+                            return;
+                        }
+                    }
+                }
             }
+
+            currentSlideIndex = targetIdx;
+            renderCurrentSlide();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function toggleSlideDrawer() {
@@ -2020,13 +2400,27 @@
                 icActive: 1, icSaved: { 1: false, 2: false }, icMin: { 1: false, 2: false }
             };
             try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+            currentSlideIndex = 0;
             renderCurrentSlide();
+            showToast('Seluruh isian telah dikosongkan.', 'success');
         }
 
         function downloadPdf() {
-            if (currentSlideIndex !== TOTAL_SLIDES - 1) {
-                goToSlide(TOTAL_SLIDES - 1);
+            for (let i = 0; i < TOTAL_SLIDES - 1; i++) {
+                if ([2, 4, 6, 7, 9, 10].indexOf(i) !== -1) {
+                    if (!validateFormSlide(i)) {
+                        currentSlideIndex = i;
+                        renderCurrentSlide();
+                        return;
+                    }
+                }
             }
+
+            if (currentSlideIndex !== TOTAL_SLIDES - 1) {
+                currentSlideIndex = TOTAL_SLIDES - 1;
+                renderCurrentSlide();
+            }
+
             const el = document.getElementById('pdfPrintArea');
             const d = formState;
             const cleanNim = (d.nim || 'NIM').replace(/[^a-zA-Z0-9_-]/g, '');
@@ -2148,7 +2542,7 @@
             const activeTag = document.activeElement && document.activeElement.tagName
                 ? document.activeElement.tagName.toLowerCase()
                 : '';
-            if (activeTag === 'input' || activeTag === 'textarea') return;
+            if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') return;
             if (e.key === 'ArrowRight') changeSlide(1);
             if (e.key === 'ArrowLeft') changeSlide(-1);
             if (e.key === 'Escape') {
