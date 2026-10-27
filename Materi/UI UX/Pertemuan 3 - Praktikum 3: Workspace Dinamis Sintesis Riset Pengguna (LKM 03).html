@@ -83,6 +83,7 @@
             animation: shakeError 0.3s ease-in-out;
         }
 
+        .dup-warn { border-color: #f59e0b !important; border-style: dashed !important; box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.25); }
         textarea.auto-expand {
             resize: vertical;
             min-height: 95px;
@@ -118,6 +119,11 @@
             color: #1e293b;
             text-align: left;
         }
+        /* Pengaman: cegah baris tabel terpotong di tengah saat berganti halaman PDF */
+        .pdf-table tr {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
         .pdf-page-break {
             page-break-before: always;
             break-before: page;
@@ -146,7 +152,12 @@
     <input type="file" id="jsonFileInput" accept=".json,application/json" class="hidden" onchange="handleJsonFileImport(event)">
 
     <!-- Toast Peringatan Validasi & Status File -->
-    <div id="toastBanner" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 hidden max-w-md w-[92%] sm:w-full px-4 py-3.5 rounded-2xl shadow-2xl border flex items-start gap-3 transition-all duration-200 no-print">
+    <div id="undoBar" class="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-[60] hidden items-center gap-3 px-4 py-2.5 rounded-2xl bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 text-xs sm:text-sm font-bold shadow-2xl no-print">
+        <span>Seluruh isian dikosongkan.</span>
+        <button type="button" onclick="undoReset()" class="px-3 py-1 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-900 font-extrabold">Batalkan (<span id="undoCountdown">10</span>)</button>
+    </div>
+
+    <div id="toastBanner" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-[60] hidden max-w-md w-[92%] sm:w-full px-4 py-3.5 rounded-2xl shadow-2xl border flex items-start gap-3 transition-all duration-200 no-print">
         <i id="toastIcon" class="fa-solid fa-circle-exclamation text-lg mt-0.5 shrink-0"></i>
         <div class="flex-1 text-xs sm:text-sm font-bold leading-snug" id="toastMessage">Pesan notifikasi</div>
         <button type="button" onclick="hideToast()" class="text-current opacity-70 hover:opacity-100 shrink-0">
@@ -172,6 +183,7 @@
                     <span id="slideCategoryPill" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 shrink-0">
                         Pengantar
                     </span>
+                    <span id="slideProgressPill" class="hidden"></span>
                     <h1 id="headerSlideTitle" class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 truncate">
                         Panduan & Lembar Kerja Praktikum 3 (LKM 03)
                     </h1>
@@ -225,8 +237,13 @@
         </div>
         <div id="drawerSlideList" class="p-3.5 overflow-y-auto space-y-1.5 flex-1"></div>
         <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 flex items-center justify-between">
-            <span>Semua Form Wajib Diisi Berurutan</span>
-            <span class="font-bold">12 Slide</span>
+            <div class="w-full space-y-1">
+                <div class="flex items-center justify-between">
+                    <span id="drawerOverallProgress">Form lengkap: 0 / 5</span>
+                    <span id="drawerRemainingTime" class="font-bold">Sisa isian</span>
+                </div>
+                <div class="text-[11px] leading-snug opacity-80">Waktu hanya perkiraan. Boleh berhenti dan lanjut di sesi lain lewat tombol Simpan .JSON lalu Muat .JSON.</div>
+            </div>
         </div>
     </aside>
 
@@ -259,6 +276,25 @@
     </footer>
 
     <!-- Modal Penjelasan Istilah (Clickable Terms) -->
+    <div id="resetModalBackdrop" onclick="closeResetModal()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4 no-print">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-md w-full p-5 sm:p-7 shadow-2xl slide-enter space-y-4">
+            <div class="flex items-start gap-3">
+                <div class="w-10 h-10 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                <div class="space-y-1">
+                    <h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">Kosongkan seluruh isian?</h3>
+                    <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">Semua data yang sudah Anda isi, termasuk salinan otomatis di browser, akan dihapus dan <strong>tidak bisa dikembalikan</strong>. Unduh dulu data proyek (.json) bila masih dibutuhkan.</p>
+                </div>
+            </div>
+            <button type="button" onclick="exportJsonData()" class="w-full px-4 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:hover:bg-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-800 text-xs sm:text-sm font-extrabold transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-download"></i><span>Unduh Data Proyek (.json) Dulu</span>
+            </button>
+            <div class="flex justify-end gap-2.5 pt-1">
+                <button type="button" onclick="closeResetModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-bold transition">Batal</button>
+                <button type="button" onclick="confirmResetAll()" class="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs sm:text-sm font-extrabold transition flex items-center gap-2"><i class="fa-solid fa-trash-can"></i><span>Ya, Kosongkan</span></button>
+            </div>
+        </div>
+    </div>
+
     <div id="termModalBackdrop" onclick="closeTermModal()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4 no-print">
         <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-lg w-full p-5 sm:p-7 shadow-2xl slide-enter max-h-[90vh] overflow-y-auto">
             <div class="flex items-start justify-between gap-4 mb-4">
@@ -401,6 +437,11 @@
             }
         };
 
+        // Contoh isian (ghost text) pada butir pertama tiap bagian; butir lain memakai petunjuk biasa
+        function exPh(example, base) {
+            return escapeHtml(example ? 'Contoh: ' + example : base);
+        }
+
         function escapeHtml(str) {
             return String(str || '')
                 .replace(/&/g, '&amp;')
@@ -434,7 +475,7 @@
             if (!banner || !msgEl) return;
 
             msgEl.textContent = message;
-            banner.className = 'fixed top-20 left-1/2 transform -translate-x-1/2 z-50 max-w-lg w-[92%] sm:w-full px-4 py-3.5 rounded-2xl shadow-2xl border flex items-start gap-3 transition-all duration-200 no-print slide-enter ';
+            banner.className = 'fixed top-20 left-1/2 transform -translate-x-1/2 z-[60] max-w-lg w-[92%] sm:w-full px-4 py-3.5 rounded-2xl shadow-2xl border flex items-start gap-3 transition-all duration-200 no-print slide-enter ';
 
             if (type === 'success') {
                 banner.className += 'bg-emerald-600 text-white border-emerald-500';
@@ -480,6 +521,7 @@
         const MIN_OBSERVATIONS = 3;     // Minimal 3 Catatan Observasi Lapangan
         const MIN_CLUSTERS = 3;         // Minimal 3 Klaster Tema Affinity Diagram
         const MIN_NOTES_PER_CLUSTER = 3;// Minimal 3 Kartu Kutipan per Klaster
+        const MAX_EXTRA_CONTRADICTIONS = 3;  // Maks. pasangan kontradiksi tambahan (opsional)
         const MIN_EMPATHY_ITEMS = 2;    // Minimal 2 Butir per Kuadran Empathy Map
         const MIN_PERSONA_LIST = 2;     // Minimal 2 Butir Goals & 2 Butir Pain Points
         const MIN_JOURNEY_PHASES = 5;   // Minimal 5 Fase Customer Journey Map
@@ -540,7 +582,11 @@
                 does: [{ source: 'OBS-1', text: '' }, { source: 'OBS-2', text: '' }],
                 feels: [{ source: 'P1', text: '' }, { source: 'Pemilik', text: '' }],
                 pains: ['', ''],
-                gains: ['', '']
+                gains: ['', ''],
+                contradictionSaysIdx: 0,
+                contradictionDoesIdx: 0,
+                contradiction: '',
+                extraContradictions: []
             };
         }
 
@@ -554,6 +600,8 @@
                 quote: '',
                 goals: ['', ''],
                 pains: ['', ''],
+                goalRefs: [-1, -1],
+                painRefs: [-1, -1],
                 behaviors: '',
                 skenario: ''
             };
@@ -632,9 +680,109 @@
             return false;
         }
 
+        // I-Statement: judul tema wajib diawali kata sudut pandang pengguna ("Saya..." atau "Kami...")
+        function normText(x) {
+            return (x || '').toLowerCase().replace(/[^a-z0-9\u00C0-\u024F\s]/g, ' ').replace(/\s+/g, ' ').trim();
+        }
+        function isSimilarText(a, b) {
+            const na = normText(a), nb = normText(b);
+            if (!na || !nb) return false;
+            if (na === nb) return true;
+            const wa = na.split(' '), wb = nb.split(' ');
+            if (wa.length < 4 || wb.length < 4) return false;
+            const sa = new Set(wa), sb = new Set(wb);
+            let inter = 0;
+            sa.forEach(function (w) { if (sb.has(w)) inter++; });
+            const union = sa.size + sb.size - inter;
+            return union > 0 && (inter / union) >= 0.85;
+        }
+        function getDuplicateIdSet(items) {
+            const set = new Set();
+            for (let a = 0; a < items.length; a++) {
+                for (let b = a + 1; b < items.length; b++) {
+                    if (isSimilarText(items[a].text, items[b].text)) { set.add(items[a].id); set.add(items[b].id); }
+                }
+            }
+            return set;
+        }
+        function refreshDuplicateMarks() {
+            const viewport = document.getElementById('slideViewport');
+            if (!viewport) return;
+            const items = [];
+            if (currentSlideIndex === 4) {
+                formState.clusters.forEach(function (c, i) {
+                    c.notes.forEach(function (n, k) { items.push({ id: 'inp_aff_note_' + i + '_' + k, text: n.text }); });
+                });
+            } else if (currentSlideIndex === 6) {
+                ['says', 'thinks', 'does', 'feels'].forEach(function (q) {
+                    formState.empathy[q].forEach(function (it, i) { items.push({ id: 'inp_em_' + q + '_' + i, text: it.text }); });
+                });
+            }
+            const dupIds = getDuplicateIdSet(items);
+            items.forEach(function (it) {
+                const el = document.getElementById(it.id);
+                if (!el) return;
+                const isDup = dupIds.has(it.id);
+                el.classList.toggle('dup-warn', isDup);
+                if (isDup) el.setAttribute('title', 'Isi mirip dengan butir lain'); else el.removeAttribute('title');
+            });
+            let notice = document.getElementById('dupNotice');
+            if (dupIds.size === 0) { if (notice) notice.remove(); return; }
+            if (!notice) {
+                notice = document.createElement('div');
+                notice.id = 'dupNotice';
+                notice.className = 'p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-800 text-[11px] sm:text-xs font-semibold text-amber-800 dark:text-amber-300 no-print';
+                const root = viewport.firstElementChild;
+                if (root) root.insertBefore(notice, root.firstChild);
+            }
+            notice.innerHTML = '<i class="fa-solid fa-lightbulb mr-1"></i>' + dupIds.size + ' butir tampak sama atau sangat mirip dengan butir lain (ditandai kuning). Pastikan tiap butir berasal dari temuan yang berbeda.';
+        }
+        document.addEventListener('input', function (e) {
+            const vp = document.getElementById('slideViewport');
+            if (vp && vp.contains(e.target)) refreshDuplicateMarks();
+        });
+
+        function isValidIStatement(label) {
+            return /^[\s"'\u201C\u2018]*(saya|kami)(?![a-z0-9\u00C0-\u024F])/i.test(label || '');
+        }
+        function iStatementHintHtml(label) {
+            const t = (label || '').trim();
+            if (!t || isValidIStatement(t)) return '';
+            return '<i class="fa-solid fa-lightbulb mr-1"></i>Awali judul dengan "Saya…" atau "Kami…" (sudut pandang pengguna).';
+        }
+        function refreshIStatementHint(idx) {
+            const el = document.getElementById('iStmtHint_' + idx);
+            if (el) el.innerHTML = iStatementHintHtml(formState.clusters[idx] ? formState.clusters[idx].label : '');
+        }
+        function buildInsightHint(label, insight) {
+            const t = (insight || '').trim();
+            if (!t) return '';
+            let msg = '';
+            if (isSimilarText(t, label)) {
+                msg = 'Insight tampak hanya mengulang judul tema. Jelaskan kebutuhan atau alasan di baliknya.';
+            } else {
+                const wc = t.split(/\s+/).length;
+                if (wc < 6) {
+                    msg = 'Insight baru ' + wc + ' kata. Jelaskan kebutuhan pengguna dan alasannya (satu kalimat lengkap).';
+                } else if (!/\b(karena|sebab|sehingga|agar|supaya|butuh|membutuhkan|perlu|ingin|menginginkan|mengharapkan|akibat|membuat)\b/i.test(t)) {
+                    msg = 'Coba tambahkan alasan atau kebutuhan di balik temuan, misalnya dengan kata "karena" atau "butuh".';
+                }
+            }
+            return msg ? '<i class="fa-solid fa-lightbulb mr-1"></i>' + escapeHtml(msg) : '';
+        }
+        function refreshInsightHint(idx) {
+            const el = document.getElementById('insightHint_' + idx);
+            const c = formState.clusters[idx];
+            if (el && c) el.innerHTML = buildInsightHint(c.label, c.insight);
+        }
+        function iStatementErrorMsg(idx) {
+            return 'FORMAT I-STATEMENT: Judul Tema Klaster #' + (idx + 1) + ' wajib menggunakan kata sudut pandang pengguna ("Saya…" atau "Kami…").';
+        }
+
         function isClusterComplete(cIdx) {
             const c = formState.clusters[cIdx];
             if (!c || !c.label.trim() || !c.insight.trim()) return false;
+            if (!isValidIStatement(c.label)) return false;
             if (!Array.isArray(c.notes) || c.notes.length < MIN_NOTES_PER_CLUSTER) return false;
             for (let n = 0; n < c.notes.length; n++) {
                 if (!c.notes[n].text.trim()) return false;
@@ -660,6 +808,7 @@
                 if (em.pains.length < MIN_EMPATHY_ITEMS || em.gains.length < MIN_EMPATHY_ITEMS) return false;
                 for (let i = 0; i < em.pains.length; i++) if (!em.pains[i].trim()) return false;
                 for (let i = 0; i < em.gains.length; i++) if (!em.gains[i].trim()) return false;
+                if (!(em.contradiction || '').trim()) return false;
                 return true;
             }
             return false;
@@ -687,7 +836,26 @@
             return !!(ph && ph.phaseTitle.trim() && ph.action.trim() && ph.touchpoint.trim() && ph.pain.trim() && ph.opportunity.trim());
         }
 
+        function normalizeFormState() {
+            const em = formState.empathy;
+            if (em) {
+                if (typeof em.contradiction !== 'string') em.contradiction = '';
+                if (typeof em.contradictionSaysIdx !== 'number') em.contradictionSaysIdx = 0;
+                if (typeof em.contradictionDoesIdx !== 'number') em.contradictionDoesIdx = 0;
+                if (!Array.isArray(em.extraContradictions)) em.extraContradictions = [];
+            }
+            const p = formState.persona;
+            if (p && Array.isArray(p.goals) && Array.isArray(p.pains)) {
+                [['goals', 'goalRefs'], ['pains', 'painRefs']].forEach(function (pair) {
+                    if (!Array.isArray(p[pair[1]])) p[pair[1]] = [];
+                    while (p[pair[1]].length < p[pair[0]].length) p[pair[1]].push(-1);
+                    if (p[pair[1]].length > p[pair[0]].length) p[pair[1]].length = p[pair[0]].length;
+                });
+            }
+        }
+
         function syncSavedStatesFromData() {
+            normalizeFormState();
             for (let k = 1; k <= 3; k++) uiWizard.infoSaved[k] = isInfoPartComplete(k);
             if (!uiWizard.infoSaved[1]) uiWizard.infoActive = 1;
             else if (!uiWizard.infoSaved[2]) uiWizard.infoActive = 2;
@@ -751,6 +919,12 @@
                         highlightEmptyInput('inp_aff_label_' + i, 'Judul Tema (I-Statement) pada Klaster #' + (i + 1) + ' wajib diisi.');
                         return false;
                     }
+                    if (!isValidIStatement(c.label)) {
+                        uiWizard.affActive = i;
+                        renderCurrentSlide();
+                        highlightEmptyInput('inp_aff_label_' + i, iStatementErrorMsg(i));
+                        return false;
+                    }
                     if (!c.insight.trim()) {
                         uiWizard.affActive = i;
                         renderCurrentSlide();
@@ -788,6 +962,7 @@
                 for (let i = 0; i < em.gains.length; i++) {
                     if (!em.gains[i].trim()) { uiWizard.emActive = 3; renderCurrentSlide(); highlightEmptyInput('inp_em_gains_' + i, 'Butir GAINS (Harapan) #' + (i + 1) + ' pada Empathy Map wajib diisi.'); return false; }
                 }
+                if (!(em.contradiction || '').trim()) { uiWizard.emActive = 3; renderCurrentSlide(); highlightEmptyInput('inp_em_contradiction', 'Analisis Kontradiksi SAYS vs DOES (nomor 7) wajib diisi.'); return false; }
                 uiWizard.emSaved[3] = true;
                 uiWizard.emActive = 0;
                 return true;
@@ -994,6 +1169,91 @@
             triggerAutoSave();
             renderCurrentSlide();
         }
+        function clampIdx(arr, idx) {
+            return Math.min(idx || 0, Math.max((arr || []).length - 1, 0));
+        }
+        function buildContraHints(sIdx, dIdx, text, isOptional) {
+            const em = formState.empathy;
+            const t = (text || '').trim();
+            if (isOptional && !t) return [];
+            const hints = [];
+            const sObj = em.says[clampIdx(em.says, sIdx)];
+            const dObj = em.does[clampIdx(em.does, dIdx)];
+            const norm = function (x) { return (x || '').toLowerCase().replace(/\s+/g, ' ').trim(); };
+            if (sObj && !norm(sObj.text)) hints.push('Butir SAYS yang dipilih masih kosong. Lengkapi dulu di Empathy Map 1/3.');
+            if (dObj && !norm(dObj.text)) hints.push('Butir DOES yang dipilih masih kosong. Lengkapi dulu di Empathy Map 2/3.');
+            if (sObj && dObj && norm(sObj.text) && norm(sObj.text) === norm(dObj.text)) {
+                hints.push('Isi SAYS dan DOES yang dipilih sama persis. Kontradiksi butuh ucapan dan tindakan yang berbeda.');
+            }
+            if (t) {
+                const wc = t.split(/\s+/).length;
+                if (wc < 15) hints.push('Analisis baru ' + wc + ' kata. Jelaskan mengapa ucapan dan tindakannya berbeda serta apa artinya bagi desain (sekitar 15 kata atau lebih).');
+            }
+            return hints.slice(0, 1);
+        }
+        function contraHintInner(hints) {
+            return hints.map(function (h) {
+                return '<div class="flex items-start gap-1.5"><i class="fa-solid fa-lightbulb mt-0.5"></i><span>' + escapeHtml(h) + '</span></div>';
+            }).join('');
+        }
+        function refreshContraHints() {
+            const em = formState.empathy;
+            const main = document.getElementById('contraHint_main');
+            if (main) main.innerHTML = contraHintInner(buildContraHints(em.contradictionSaysIdx, em.contradictionDoesIdx, em.contradiction, false));
+            (em.extraContradictions || []).forEach(function (ex, i) {
+                const el = document.getElementById('contraHint_' + i);
+                if (el) el.innerHTML = contraHintInner(buildContraHints(ex.saysIdx, ex.doesIdx, ex.text, true));
+            });
+        }
+        function updateEmpathyContradiction(val) {
+            formState.empathy.contradiction = val;
+            refreshContraHints();
+            triggerAutoSave();
+        }
+        function updateEmpathyContraPair(field, idxVal) {
+            formState.empathy[field] = parseInt(idxVal, 10) || 0;
+            refreshContraHints();
+            triggerAutoSave();
+        }
+        function getContraSummaryFor(sIdx, dIdx) {
+            const em = formState.empathy;
+            const sObj = (em.says && em.says[sIdx || 0]) ? em.says[sIdx || 0] : (em.says && em.says[0] ? em.says[0] : { source: 'P1', text: '-' });
+            const dObj = (em.does && em.does[dIdx || 0]) ? em.does[dIdx || 0] : (em.does && em.does[0] ? em.does[0] : { source: 'OBS-1', text: '-' });
+            return {
+                saysLabel: '[' + sObj.source + '] "' + (sObj.text || '-') + '"',
+                doesLabel: '[' + dObj.source + '] ' + (dObj.text || '-')
+            };
+        }
+        function getSelectedContraSummary() {
+            const em = formState.empathy;
+            return getContraSummaryFor(em.contradictionSaysIdx, em.contradictionDoesIdx);
+        }
+        function addExtraContradiction() {
+            const list = formState.empathy.extraContradictions;
+            if (list.length >= MAX_EXTRA_CONTRADICTIONS) return;
+            list.push({ saysIdx: 0, doesIdx: 0, text: '' });
+            triggerAutoSave();
+            renderCurrentSlide();
+        }
+        function removeExtraContradiction(i) {
+            formState.empathy.extraContradictions.splice(i, 1);
+            triggerAutoSave();
+            renderCurrentSlide();
+        }
+        function updateExtraContraPair(i, field, idxVal) {
+            const it = formState.empathy.extraContradictions[i];
+            if (!it) return;
+            it[field] = parseInt(idxVal, 10) || 0;
+            refreshContraHints();
+            triggerAutoSave();
+        }
+        function updateExtraContraText(i, val) {
+            const it = formState.empathy.extraContradictions[i];
+            if (!it) return;
+            it.text = val;
+            refreshContraHints();
+            triggerAutoSave();
+        }
         function updateEmpathySimpleList(listKey, idx, val) {
             formState.empathy[listKey][idx] = val;
             triggerAutoSave();
@@ -1006,6 +1266,12 @@
         function removeEmpathySimpleList(listKey, idx) {
             if (formState.empathy[listKey].length <= MIN_EMPATHY_ITEMS) return;
             formState.empathy[listKey].splice(idx, 1);
+            const refsKey = listKey === 'gains' ? 'goalRefs' : (listKey === 'pains' ? 'painRefs' : null);
+            if (refsKey && Array.isArray(formState.persona[refsKey])) {
+                formState.persona[refsKey] = formState.persona[refsKey].map(function (r) {
+                    return r === idx ? -1 : (r > idx ? r - 1 : r);
+                });
+            }
             triggerAutoSave();
             renderCurrentSlide();
         }
@@ -1026,18 +1292,41 @@
             triggerAutoSave();
             renderCurrentSlide();
         }
+        function updatePersonaRef(listKey, idx, val) {
+            normalizeFormState();
+            const refsKey = listKey === 'goals' ? 'goalRefs' : 'painRefs';
+            formState.persona[refsKey][idx] = parseInt(val, 10);
+            if (isNaN(formState.persona[refsKey][idx])) formState.persona[refsKey][idx] = -1;
+            triggerAutoSave();
+        }
+        function renderPersonaRefSelect(listKey, idx) {
+            normalizeFormState();
+            const isGoal = listKey === 'goals';
+            const src = isGoal ? formState.empathy.gains : formState.empathy.pains;
+            const tag = isGoal ? 'Gain' : 'Pain';
+            const refs = formState.persona[isGoal ? 'goalRefs' : 'painRefs'];
+            const cur = (refs[idx] >= 0 && refs[idx] < src.length) ? refs[idx] : -1;
+            const opts = ['<option value="-1"' + (cur === -1 ? ' selected' : '') + '>Tanpa rujukan (opsional)</option>'].concat(src.map(function (tx, k) {
+                return '<option value="' + k + '"' + (cur === k ? ' selected' : '') + '>Turunan ' + tag + ' Empathy #' + (k + 1) + ': ' + escapeHtml((tx || '(belum diisi)').substring(0, 34)) + '</option>';
+            })).join('');
+            return '<div class="pl-8"><select onchange="updatePersonaRef(\'' + listKey + '\', ' + idx + ', this.value)" class="w-full px-2.5 py-1 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[11px] text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-400">' + opts + '</select></div>';
+        }
         function updatePersonaListItem(listKey, idx, val) {
             formState.persona[listKey][idx] = val;
             triggerAutoSave();
         }
         function addPersonaListItem(listKey) {
             formState.persona[listKey].push('');
+            normalizeFormState();
             triggerAutoSave();
             renderCurrentSlide();
         }
         function removePersonaListItem(listKey, idx) {
             if (formState.persona[listKey].length <= MIN_PERSONA_LIST) return;
             formState.persona[listKey].splice(idx, 1);
+            const refsKey = listKey === 'goals' ? 'goalRefs' : 'painRefs';
+            if (Array.isArray(formState.persona[refsKey])) formState.persona[refsKey].splice(idx, 1);
+            normalizeFormState();
             triggerAutoSave();
             renderCurrentSlide();
         }
@@ -1074,17 +1363,58 @@
         // SIMPAN & MUAT LOCALSTORAGE SERTA FILE PROYEK (.JSON)
         // =========================================================================
         let saveTimer = null;
+        let hasUnexportedChanges = false;
+        let storageWarned = false;
+        const SAVE_BADGE_OK_CLASS = 'hidden xl:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold';
+        const SAVE_BADGE_FAIL_CLASS = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-100 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300 text-[11px] font-bold cursor-pointer';
+        function writeAutoSave() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify({ form: formState, ui: uiWizard }));
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+        function setSaveBadge(ok) {
+            const badge = document.getElementById('saveBadge');
+            if (!badge) return;
+            if (ok) {
+                badge.className = SAVE_BADGE_OK_CLASS;
+                badge.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Tersimpan';
+                badge.onclick = null;
+                badge.removeAttribute('title');
+            } else {
+                badge.className = SAVE_BADGE_FAIL_CLASS;
+                badge.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Tidak tersimpan \u2022 Unduh .JSON';
+                badge.onclick = exportJsonData;
+                badge.title = 'Penyimpanan otomatis di browser gagal. Klik untuk mengunduh data (.JSON).';
+            }
+        }
+        function warnStorageFailure() {
+            if (storageWarned) return;
+            storageWarned = true;
+            showToast('Penyimpanan otomatis di browser tidak berfungsi (mungkin mode privat atau penyimpanan penuh). Data bisa hilang saat tab ditutup, jadi unduh file .JSON secara berkala.', 'error');
+        }
         function triggerAutoSave() {
+            hasUnexportedChanges = true;
             clearTimeout(saveTimer);
             const badge = document.getElementById('saveBadge');
             if (badge) badge.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
             saveTimer = setTimeout(function () {
-                try {
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify({ form: formState, ui: uiWizard }));
-                } catch (e) {}
-                if (badge) badge.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Tersimpan';
+                const ok = writeAutoSave();
+                setSaveBadge(ok);
+                if (!ok) warnStorageFailure(); else storageWarned = false;
+                renderDotsAndDrawer();
             }, 350);
         }
+
+        window.addEventListener('beforeunload', function (e) {
+            if (hasUnexportedChanges) {
+                e.preventDefault();
+                e.returnValue = '';
+                return '';
+            }
+        });
 
         function loadSavedState() {
             try {
@@ -1105,6 +1435,10 @@
                         if (!formState.empathy || !Array.isArray(formState.empathy.says)) {
                             formState.empathy = createDefaultEmpathy();
                         }
+                        if (typeof formState.empathy.contradiction !== 'string') formState.empathy.contradiction = '';
+                        if (typeof formState.empathy.contradictionSaysIdx !== 'number') formState.empathy.contradictionSaysIdx = 0;
+                        if (typeof formState.empathy.contradictionDoesIdx !== 'number') formState.empathy.contradictionDoesIdx = 0;
+                        if (!Array.isArray(formState.empathy.extraContradictions)) formState.empathy.extraContradictions = [];
                         if (!formState.persona || !Array.isArray(formState.persona.goals)) {
                             formState.persona = createDefaultPersona();
                         }
@@ -1181,6 +1515,8 @@
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
 
+            hasUnexportedChanges = false;
+            refreshSelfCheckPanel();
             showToast('File data proyek LKM 03 (.json) berhasil diunduh! Simpan file ini untuk dilanjutkan di perangkat lain atau pada Pertemuan 4.', 'success');
         }
 
@@ -1216,6 +1552,7 @@
                         }
                         syncSavedStatesFromData();
                         localStorage.setItem(STORAGE_KEY, JSON.stringify({ form: formState, ui: uiWizard }));
+                        hasUnexportedChanges = false;
                         renderCurrentSlide();
                         showToast('Data proyek LKM 03 berhasil dimuat sepenuhnya dari file .json!', 'success');
                         return;
@@ -1242,6 +1579,7 @@
 
                         syncSavedStatesFromData();
                         localStorage.setItem(STORAGE_KEY, JSON.stringify({ form: formState, ui: uiWizard }));
+                        hasUnexportedChanges = false;
                         renderCurrentSlide();
                         showToast('Identitas Mahasiswa & Profil UMKM dari pertemuan sebelumnya berhasil dimuat! Silakan lengkapi sintesis LKM 03.', 'success');
                         return;
@@ -1253,6 +1591,7 @@
                         if (parsed.ui) uiWizard = Object.assign(uiWizard, parsed.ui);
                         syncSavedStatesFromData();
                         localStorage.setItem(STORAGE_KEY, JSON.stringify({ form: formState, ui: uiWizard }));
+                        hasUnexportedChanges = false;
                         renderCurrentSlide();
                         showToast('Data proyek LKM 03 berhasil dimuat!', 'success');
                         return;
@@ -1351,7 +1690,7 @@
                                     <i class="fa-solid fa-upload"></i>
                                     <span>Muat Data Proyek (.json)</span>
                                 </button>
-                                <button type="button" onclick="clearAllData()" class="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 text-xs sm:text-sm font-bold transition flex items-center gap-2">
+                                <button type="button" onclick="openResetModal()" class="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 text-xs sm:text-sm font-bold transition flex items-center gap-2">
                                     <i class="fa-solid fa-rotate-left"></i>
                                     <span>Reset</span>
                                 </button>
@@ -1375,7 +1714,7 @@
                                     </div>
                                     <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 flex items-center gap-3">
                                         <span class="w-7 h-7 rounded-lg bg-indigo-600 text-white font-extrabold flex items-center justify-center shrink-0">3</span>
-                                        <div><strong class="text-slate-900 dark:text-white block">Minimal 2 Butir per Kuadran Empathy Map (Slide 7)</strong><span class="text-slate-500">Wajib mengisi Says, Thinks, Does, Feels, Pains, & Gains.</span></div>
+                                        <div><strong class="text-slate-900 dark:text-white block">Minimal 2 Butir per Kuadran Empathy Map (Slide 7)</strong><span class="text-slate-500">Wajib mengisi Says, Thinks, Does, Feels, Pains, Gains, & analisis kontradiksi Says vs Does.</span></div>
                                     </div>
                                     <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 flex items-center gap-3">
                                         <span class="w-7 h-7 rounded-lg bg-indigo-600 text-white font-extrabold flex items-center justify-center shrink-0">4</span>
@@ -1530,7 +1869,7 @@
                             </div>
                             <div class="sm:col-span-6">
                                 <label class="text-[11px] font-bold text-slate-600 dark:text-slate-300 block mb-1">Profil Singkat Anonim (Usia, Pekerjaan, & Frekuensi Transaksi) *</label>
-                                <input type="text" id="inp_resp_profile_${i}" value="${escapeHtml(r.profile)}" oninput="updateRespondent(${i}, 'profile', this.value)" placeholder="Tuliskan usia, pekerjaan singkat, dan seberapa sering bertransaksi (wajib diisi)..." class="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <input type="text" id="inp_resp_profile_${i}" value="${escapeHtml(r.profile)}" oninput="updateRespondent(${i}, 'profile', this.value)" placeholder="${exPh(i === 0 ? 'pemilik usaha sejak 2018, usia 45 tahun, menerima pesanan setiap hari' : (i === 1 ? 'usia 28 tahun, karyawan swasta, memesan 3-4 kali per bulan' : ''), 'Tuliskan usia, pekerjaan singkat, dan seberapa sering bertransaksi (wajib diisi)...')}" class="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                             </div>
                             <div class="sm:col-span-1 flex sm:justify-end pt-0 sm:pt-5">
                                 <button type="button" onclick="removeRespondent(${i})" ${!canDeleteResp ? 'disabled title="Wajib minimal 4 narasumber"' : 'title="Hapus baris ini"'} class="px-2.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 text-xs font-bold transition disabled:opacity-30 disabled:pointer-events-none">
@@ -1597,7 +1936,7 @@
                             </div>
                             <div class="sm:col-span-6">
                                 <label class="text-[11px] font-bold text-slate-600 dark:text-slate-300 block mb-1">Uraian Fakta Perilaku Nyata yang Terlihat di Lapangan *</label>
-                                <input type="text" id="inp_obs_note_${j}" value="${escapeHtml(ob.note)}" oninput="updateObservation(${j}, 'note', this.value)" placeholder="Tuliskan fakta perilaku atau situasi nyata yang Anda lihat langsung (wajib diisi)..." class="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                <input type="text" id="inp_obs_note_${j}" value="${escapeHtml(ob.note)}" oninput="updateObservation(${j}, 'note', this.value)" placeholder="${exPh(j === 0 ? 'Pelanggan membuka chat, menggulir lama mencari daftar harga, lalu bertanya ulang ke penjual' : '', 'Tuliskan fakta perilaku atau situasi nyata yang Anda lihat langsung (wajib diisi)...')}" class="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                             </div>
                             <div class="sm:col-span-1 flex sm:justify-end pt-0 sm:pt-5">
                                 <button type="button" onclick="removeObservation(${j})" ${!canDeleteObs ? 'disabled title="Wajib minimal 3 catatan observasi"' : 'title="Hapus baris ini"'} class="px-2.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 text-xs font-bold transition disabled:opacity-30 disabled:pointer-events-none">
@@ -1733,7 +2072,7 @@
                                 </div>
                                 <div class="sm:col-span-7">
                                     <label class="text-[11px] font-bold text-slate-700 dark:text-slate-200 block mb-1">Isi Kutipan Responden / Fakta Temuan (1 Kartu = 1 Masalah) *</label>
-                                    <input type="text" id="inp_aff_note_${i}_${n}" value="${escapeHtml(noteObj.text)}" oninput="updateClusterNote(${i}, ${n}, 'text', this.value)" placeholder="Ketik kutipan langsung atau fakta temuan dari sumber tersebut (wajib diisi)..." class="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <input type="text" id="inp_aff_note_${i}_${n}" value="${escapeHtml(noteObj.text)}" oninput="updateClusterNote(${i}, ${n}, 'text', this.value)" placeholder="${exPh((i === 0 && n === 0) ? 'Saya biasanya tanya harga dulu lewat chat karena daftar harga tidak jelas' : '', 'Ketik kutipan langsung atau fakta temuan dari sumber tersebut (wajib diisi)...')}" class="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                                 </div>
                                 <div class="sm:col-span-1 flex sm:justify-end pt-0 sm:pt-5">
                                     <button type="button" onclick="removeClusterNote(${i}, ${n})" ${!canDeleteNote ? 'disabled title="Wajib minimal 3 kartu per klaster"' : 'title="Hapus kartu ini"'} class="px-2.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 text-xs font-bold transition disabled:opacity-30 disabled:pointer-events-none">
@@ -1761,16 +2100,18 @@
                             <div class="space-y-4 pt-2 border-t border-slate-100 dark:border-slate-800">
                                 <div>
                                     <label class="text-xs sm:text-sm font-bold text-indigo-700 dark:text-indigo-300 block mb-1.5">
-                                        2. Judul Tema Klaster #${i + 1} (Gunakan Kalimat Sudut Pandang Pengguna / I-Statement: "Saya...") *
+                                        2. Judul Tema Klaster #${i + 1} (Gunakan Kalimat Sudut Pandang Pengguna / I-Statement: "Saya..." atau "Kami...") *
                                     </label>
-                                    <input type="text" id="inp_aff_label_${i}" value="${escapeHtml(c.label)}" oninput="updateClusterMeta(${i}, 'label', this.value)" placeholder="Tuliskan judul tema klaster dengan diawali kata 'Saya...'..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <input type="text" id="inp_aff_label_${i}" value="${escapeHtml(c.label)}" oninput="updateClusterMeta(${i}, 'label', this.value); refreshIStatementHint(${i}); refreshInsightHint(${i})" placeholder="${exPh(i === 0 ? 'Saya kesulitan mengetahui harga tanpa bertanya lebih dulu' : '', 'Tuliskan judul tema klaster dengan diawali kata \'Saya...\' atau \'Kami...\'')}" class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <div id="iStmtHint_${i}" class="text-[11px] font-semibold text-amber-700 dark:text-amber-400 mt-1">${iStatementHintHtml(c.label)}</div>
                                 </div>
 
                                 <div>
                                     <label class="text-xs sm:text-sm font-bold text-emerald-700 dark:text-emerald-300 block mb-1.5">
                                         3. Rumusan User Insight dari Klaster #${i + 1} (Mengapa Masalah Ini Terjadi & Apa Kebutuhan Mendasarnya?) *
                                     </label>
-                                    <textarea id="inp_aff_insight_${i}" rows="3" oninput="autoResizeTextarea(this); updateClusterMeta(${i}, 'insight', this.value)" placeholder="Tuliskan kesimpulan wawasan pengguna (User Insight) yang ditarik dari klaster ini..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500">${escapeHtml(c.insight)}</textarea>
+                                    <textarea id="inp_aff_insight_${i}" rows="3" oninput="autoResizeTextarea(this); updateClusterMeta(${i}, 'insight', this.value); refreshInsightHint(${i})" placeholder="${exPh(i === 0 ? 'Pelanggan butuh informasi harga yang bisa dilihat sendiri, karena bertanya satu per satu terasa merepotkan dan memperlambat keputusan membeli' : '', 'Tuliskan kesimpulan wawasan pengguna (User Insight) yang ditarik dari klaster ini...')}" class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500">${escapeHtml(c.insight)}</textarea>
+                                    <div id="insightHint_${i}" class="text-[11px] font-semibold text-amber-700 dark:text-amber-400 mt-1">${buildInsightHint(c.label, c.insight)}</div>
                                 </div>
                             </div>
 
@@ -1891,7 +2232,7 @@
                             </select>
                         </div>
                         <div class="sm:col-span-7">
-                            <input type="text" id="inp_em_${quadKey}_${i}" value="${escapeHtml(it.text)}" oninput="updateEmpathyQuadItem('${quadKey}', ${i}, 'text', this.value)" placeholder="Ketik butir temuan untuk kuadran ini (wajib diisi)..." class="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <input type="text" id="inp_em_${quadKey}_${i}" value="${escapeHtml(it.text)}" oninput="updateEmpathyQuadItem('${quadKey}', ${i}, 'text', this.value)" placeholder="${exPh(i === 0 ? ({ says: 'Saya biasa pesan lewat WA, lebih cepat', thinks: 'Takut salah pesan kalau tidak ada konfirmasi', does: 'Bolak-balik membuka katalog sebelum memutuskan memesan', feels: 'Cemas karena tidak yakin pesanan sudah diterima' }[quadKey] || '') : '', 'Ketik butir temuan untuk kuadran ini (wajib diisi)...')}" class="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                         </div>
                         <div class="sm:col-span-1 flex justify-end">
                             <button type="button" onclick="removeEmpathyQuadItem('${quadKey}', ${i})" ${!canDel ? 'disabled title="Minimal 2 butir"' : ''} class="px-2.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 text-xs font-bold transition disabled:opacity-30 disabled:pointer-events-none">
@@ -2005,15 +2346,46 @@
                 const painsInputs = formState.empathy.pains.map((val, idx) => `
                     <div class="flex items-center gap-2">
                         <span class="w-6 h-6 rounded-lg bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 text-xs font-extrabold flex items-center justify-center shrink-0">${idx + 1}</span>
-                        <input type="text" id="inp_em_pains_${idx}" value="${escapeHtml(val)}" oninput="updateEmpathySimpleList('pains', ${idx}, this.value)" placeholder="Tuliskan hambatan / kesulitan utama pengguna (wajib diisi)..." class="flex-1 px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-rose-500">
+                        <input type="text" id="inp_em_pains_${idx}" value="${escapeHtml(val)}" oninput="updateEmpathySimpleList('pains', ${idx}, this.value)" placeholder="${exPh(idx === 0 ? 'Menunggu balasan penjual terlalu lama untuk tahu stok dan harga' : '', 'Tuliskan hambatan / kesulitan utama pengguna (wajib diisi)...')}" class="flex-1 px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-rose-500">
                         <button type="button" onclick="removeEmpathySimpleList('pains', ${idx})" ${!canDelPain ? 'disabled' : ''} class="px-2.5 py-2 rounded-xl bg-rose-50 text-rose-600 text-xs font-bold disabled:opacity-30"><i class="fa-solid fa-trash-can"></i></button>
                     </div>
                 `).join('');
 
+                const emC = formState.empathy;
+                const cSaysIdx = Math.min(emC.contradictionSaysIdx || 0, Math.max(emC.says.length - 1, 0));
+                const cDoesIdx = Math.min(emC.contradictionDoesIdx || 0, Math.max(emC.does.length - 1, 0));
+
+                const extraContraHtml = emC.extraContradictions.map((ex, i) => {
+                    const xs = Math.min(ex.saysIdx || 0, Math.max(emC.says.length - 1, 0));
+                    const xd = Math.min(ex.doesIdx || 0, Math.max(emC.does.length - 1, 0));
+                    return `
+                        <div class="p-4 rounded-2xl bg-amber-50/40 dark:bg-amber-950/10 border border-dashed border-amber-300 dark:border-amber-800 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs sm:text-sm font-extrabold text-amber-900 dark:text-amber-300">7.${i + 2} Pasangan Kontradiksi Tambahan (Opsional)</span>
+                                <button type="button" onclick="removeExtraContradiction(${i})" class="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 text-xs font-bold transition"><i class="fa-solid fa-trash-can"></i></button>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <select onchange="updateExtraContraPair(${i}, 'saysIdx', this.value)" class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-amber-500">
+                                    ${emC.says.map((it, idx) => `<option value="${idx}" ${xs === idx ? 'selected' : ''}>[SAYS #${idx + 1} • ${escapeHtml(it.source)}] ${escapeHtml((it.text || '(Belum diisi)').substring(0, 48))}</option>`).join('')}
+                                </select>
+                                <select onchange="updateExtraContraPair(${i}, 'doesIdx', this.value)" class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-amber-500">
+                                    ${emC.does.map((it, idx) => `<option value="${idx}" ${xd === idx ? 'selected' : ''}>[DOES #${idx + 1} • ${escapeHtml(it.source)}] ${escapeHtml((it.text || '(Belum diisi)').substring(0, 48))}</option>`).join('')}
+                                </select>
+                            </div>
+                            <textarea id="inp_em_extra_contra_${i}" rows="2" oninput="autoResizeTextarea(this); updateExtraContraText(${i}, this.value)" placeholder="Jelaskan kesenjangan pada pasangan ini (opsional, boleh dikosongkan)..." class="auto-expand w-full p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">${escapeHtml(ex.text || '')}</textarea>
+                            <div id="contraHint_${i}" class="text-[11px] font-semibold text-amber-700 dark:text-amber-400 space-y-1">${contraHintInner(buildContraHints(ex.saysIdx, ex.doesIdx, ex.text, true))}</div>
+                        </div>`;
+                }).join('');
+                const canAddExtra = emC.extraContradictions.length < MAX_EXTRA_CONTRADICTIONS;
+                const extraAddBtn = `
+                        <div class="flex justify-start">
+                            <button type="button" onclick="addExtraContradiction()" ${!canAddExtra ? 'disabled' : ''} class="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-amber-300 text-xs font-bold text-amber-800 dark:text-amber-300 hover:bg-amber-50 transition disabled:opacity-40 disabled:pointer-events-none"><i class="fa-solid fa-plus mr-1"></i>Tambah Pasangan Kontradiksi Lain (Opsional${canAddExtra ? '' : ', maks. ' + MAX_EXTRA_CONTRADICTIONS}) </button>
+                        </div>`;
+
                 const gainsInputs = formState.empathy.gains.map((val, idx) => `
                     <div class="flex items-center gap-2">
                         <span class="w-6 h-6 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-xs font-extrabold flex items-center justify-center shrink-0">${idx + 1}</span>
-                        <input type="text" id="inp_em_gains_${idx}" value="${escapeHtml(val)}" oninput="updateEmpathySimpleList('gains', ${idx}, this.value)" placeholder="Tuliskan harapan / manfaat utama yang diinginkan pengguna (wajib diisi)..." class="flex-1 px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <input type="text" id="inp_em_gains_${idx}" value="${escapeHtml(val)}" oninput="updateEmpathySimpleList('gains', ${idx}, this.value)" placeholder="${exPh(idx === 0 ? 'Ingin bisa memesan sendiri tanpa menunggu balasan' : '', 'Tuliskan harapan / manfaat utama yang diinginkan pengguna (wajib diisi)...')}" class="flex-1 px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                         <button type="button" onclick="removeEmpathySimpleList('gains', ${idx})" ${!canDelGain ? 'disabled' : ''} class="px-2.5 py-2 rounded-xl bg-rose-50 text-rose-600 text-xs font-bold disabled:opacity-30"><i class="fa-solid fa-trash-can"></i></button>
                     </div>
                 `).join('');
@@ -2037,6 +2409,29 @@
                                 <div class="space-y-2">${gainsInputs}</div>
                             </div>
                         </div>
+                        <div class="p-4 rounded-2xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-300 dark:border-amber-800 space-y-3">
+                            <label class="text-xs sm:text-sm font-extrabold text-amber-900 dark:text-amber-300 block">
+                                7. Analisis Kesenjangan / Kontradiksi antara Ucapan (SAYS) vs Tindakan Nyata (DOES) *
+                            </label>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div>
+                                    <span class="text-[11px] font-bold text-indigo-700 dark:text-indigo-300 block mb-1">Pilih Ucapan Responden (Dari Kuadran SAYS) *</span>
+                                    <select onchange="updateEmpathyContraPair('contradictionSaysIdx', this.value)" class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-amber-500">
+                                        ${emC.says.map((it, idx) => `<option value="${idx}" ${cSaysIdx === idx ? 'selected' : ''}>[SAYS #${idx + 1} • ${escapeHtml(it.source)}] ${escapeHtml((it.text || '(Belum diisi)').substring(0, 48))}</option>`).join('')}
+                                    </select>
+                                </div>
+                                <div>
+                                    <span class="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 block mb-1">Bandingkan dengan Perilaku Nyata (Dari Kuadran DOES) *</span>
+                                    <select onchange="updateEmpathyContraPair('contradictionDoesIdx', this.value)" class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-amber-500">
+                                        ${emC.does.map((it, idx) => `<option value="${idx}" ${cDoesIdx === idx ? 'selected' : ''}>[DOES #${idx + 1} • ${escapeHtml(it.source)}] ${escapeHtml((it.text || '(Belum diisi)').substring(0, 48))}</option>`).join('')}
+                                    </select>
+                                </div>
+                            </div>
+                            <textarea id="inp_em_contradiction" rows="2" oninput="autoResizeTextarea(this); updateEmpathyContradiction(this.value)" placeholder="${exPh('Ia bilang WA itu praktis, tetapi nyatanya bolak-balik membuka katalog dulu. Artinya info menu belum terbaca jelas, jadi desain perlu menampilkan menu lebih ringkas', 'Jelaskan mengapa terjadi perbedaan antara ucapan (SAYS) dan tindakan nyata (DOES) yang Anda pilih di atas, serta apa artinya bagi desain...')}" class="auto-expand w-full p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">${escapeHtml(emC.contradiction || '')}</textarea>
+                            <div id="contraHint_main" class="text-[11px] font-semibold text-amber-700 dark:text-amber-400 space-y-1">${contraHintInner(buildContraHints(emC.contradictionSaysIdx, emC.contradictionDoesIdx, emC.contradiction, false))}</div>
+                        </div>
+                        ${extraContraHtml}
+                        ${extraAddBtn}
                         <div class="flex justify-end pt-1">
                             <button type="button" onclick="saveEmPart(3)" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-extrabold transition flex items-center gap-2 shadow-sm">
                                 <i class="fa-solid fa-check"></i><span>Simpan Seluruh Empathy Map</span>
@@ -2052,6 +2447,15 @@
                             <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs sm:text-sm">
                                 <div><span class="font-extrabold text-rose-600 block mb-1">PAINS:</span><ul class="list-disc list-inside space-y-1">${formState.empathy.pains.map(p => `<li>${escapeHtml(p)}</li>`).join('')}</ul></div>
                                 <div><span class="font-extrabold text-emerald-600 block mb-1">GAINS:</span><ul class="list-disc list-inside space-y-1">${formState.empathy.gains.map(g => `<li>${escapeHtml(g)}</li>`).join('')}</ul></div>
+                                <div class="md:col-span-2 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 space-y-1">
+                                    <span class="font-extrabold text-amber-700 dark:text-amber-300 block">7. KONTRADIKSI SAYS vs DOES:</span>
+                                    <div class="text-[11px] text-slate-600 dark:text-slate-300"><strong>SAYS:</strong> ${escapeHtml(getSelectedContraSummary().saysLabel)} &harr; <strong>DOES:</strong> ${escapeHtml(getSelectedContraSummary().doesLabel)}</div>
+                                    <div>${escapeHtml(formState.empathy.contradiction || '-')}</div>
+                                    ${formState.empathy.extraContradictions.filter(x => (x.text || '').trim()).map((x, k) => {
+                                        const sm = getContraSummaryFor(x.saysIdx, x.doesIdx);
+                                        return `<div class="pt-2 mt-2 border-t border-amber-200 dark:border-amber-800"><div class="text-[11px] text-slate-600 dark:text-slate-300"><strong>SAYS:</strong> ${escapeHtml(sm.saysLabel)} &harr; <strong>DOES:</strong> ${escapeHtml(sm.doesLabel)}</div><div>${escapeHtml(x.text)}</div></div>`;
+                                    }).join('')}
+                                </div>
                             </div>
                         ` : ''}
                     </div>
@@ -2164,11 +2568,11 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100 dark:border-slate-800">
                             <div>
                                 <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Nama Samaran Persona & Rentang Usia *</label>
-                                <input type="text" id="inp_p_nama" value="${escapeHtml(p.nama)}" oninput="updatePersonaField('nama', this.value)" placeholder="Ketik nama representatif & usia..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <input type="text" id="inp_p_nama" value="${escapeHtml(p.nama)}" oninput="updatePersonaField('nama', this.value)" placeholder="${exPh('Rina, 28 tahun', 'Ketik nama representatif & usia...')}" class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
                             </div>
                             <div>
                                 <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Pekerjaan / Peran Keseharian Persona *</label>
-                                <input type="text" id="inp_p_peran" value="${escapeHtml(p.peran)}" oninput="updatePersonaField('peran', this.value)" placeholder="Ketik pekerjaan atau aktivitas utama Persona..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <input type="text" id="inp_p_peran" value="${escapeHtml(p.peran)}" oninput="updatePersonaField('peran', this.value)" placeholder="${exPh('Karyawan swasta yang sering memesan produk lewat chat di sela jam kerja', 'Ketik pekerjaan atau aktivitas utama Persona...')}" class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
                             </div>
                         </div>
 
@@ -2179,7 +2583,7 @@
 
                         <div>
                             <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Latar Belakang Kontekstual Persona *</label>
-                            <textarea id="inp_p_konteks" rows="3" oninput="autoResizeTextarea(this); updatePersonaField('konteks', this.value)" placeholder="Uraikan keseharian dan konteks mengapa Persona ini membutuhkan layanan UMKM mitra..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(p.konteks)}</textarea>
+                            <textarea id="inp_p_konteks" rows="3" oninput="autoResizeTextarea(this); updatePersonaField('konteks', this.value)" placeholder="${exPh('Rina sibuk di kantor dan jarang sempat datang langsung, jadi ia memesan lewat chat di sela pekerjaan', 'Uraikan keseharian dan konteks mengapa Persona ini membutuhkan layanan UMKM mitra...')}" class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(p.konteks)}</textarea>
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
@@ -2191,7 +2595,7 @@
                             </div>
                             <div class="sm:col-span-8">
                                 <label class="text-xs font-bold text-indigo-700 dark:text-indigo-300 block mb-1.5">Kalimat Kutipan Utama (Verbatim Quote) *</label>
-                                <input type="text" id="inp_p_quote" value="${escapeHtml(p.quote)}" oninput="updatePersonaField('quote', this.value)" placeholder="Tuliskan satu kalimat kutipan yang paling mewakili suara Persona ini..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base italic focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <input type="text" id="inp_p_quote" value="${escapeHtml(p.quote)}" oninput="updatePersonaField('quote', this.value)" placeholder="${exPh('Saya cuma mau tahu harga dan stoknya tanpa harus tanya satu-satu', 'Tuliskan satu kalimat kutipan yang paling mewakili suara Persona ini...')}" class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base italic focus:outline-none focus:ring-2 focus:ring-indigo-500">
                             </div>
                         </div>
 
@@ -2225,19 +2629,19 @@
                 const canDelPain = p.pains.length > MIN_PERSONA_LIST;
 
                 const goalsHtml = p.goals.map((g, idx) => `
-                    <div class="flex items-center gap-2">
+                    <div class="space-y-1"><div class="flex items-center gap-2">
                         <span class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-800 text-xs font-extrabold flex items-center justify-center shrink-0">${idx + 1}</span>
-                        <input type="text" id="inp_p_goals_${idx}" value="${escapeHtml(g)}" oninput="updatePersonaListItem('goals', ${idx}, this.value)" placeholder="Tuliskan tujuan atau kebutuhan Persona (wajib diisi)..." class="flex-1 px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <input type="text" id="inp_p_goals_${idx}" value="${escapeHtml(g)}" oninput="updatePersonaListItem('goals', ${idx}, this.value)" placeholder="${exPh(idx === 0 ? 'Memesan dengan cepat tanpa harus bertanya berulang' : '', 'Tuliskan tujuan atau kebutuhan Persona (wajib diisi)...')}" class="flex-1 px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                         <button type="button" onclick="removePersonaListItem('goals', ${idx})" ${!canDelGoal ? 'disabled' : ''} class="px-2.5 py-2 rounded-xl bg-rose-50 text-rose-600 text-xs font-bold disabled:opacity-30"><i class="fa-solid fa-trash-can"></i></button>
-                    </div>
+                    </div>${renderPersonaRefSelect('goals', idx)}</div>
                 `).join('');
 
                 const painsHtml = p.pains.map((pn, idx) => `
-                    <div class="flex items-center gap-2">
+                    <div class="space-y-1"><div class="flex items-center gap-2">
                         <span class="w-6 h-6 rounded-lg bg-rose-100 text-rose-800 text-xs font-extrabold flex items-center justify-center shrink-0">${idx + 1}</span>
-                        <input type="text" id="inp_p_pains_${idx}" value="${escapeHtml(pn)}" oninput="updatePersonaListItem('pains', ${idx}, this.value)" placeholder="Tuliskan titik frustrasi / hambatan utama Persona (wajib diisi)..." class="flex-1 px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-rose-500">
+                        <input type="text" id="inp_p_pains_${idx}" value="${escapeHtml(pn)}" oninput="updatePersonaListItem('pains', ${idx}, this.value)" placeholder="${exPh(idx === 0 ? 'Harus menunggu balasan penjual untuk tahu stok dan harga' : '', 'Tuliskan titik frustrasi / hambatan utama Persona (wajib diisi)...')}" class="flex-1 px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-rose-500">
                         <button type="button" onclick="removePersonaListItem('pains', ${idx})" ${!canDelPain ? 'disabled' : ''} class="px-2.5 py-2 rounded-xl bg-rose-50 text-rose-600 text-xs font-bold disabled:opacity-30"><i class="fa-solid fa-trash-can"></i></button>
-                    </div>
+                    </div>${renderPersonaRefSelect('pains', idx)}</div>
                 `).join('');
 
                 c2Html = `
@@ -2290,11 +2694,11 @@
                         <div class="space-y-4 pt-2 border-t border-slate-100 dark:border-slate-800">
                             <div>
                                 <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Behaviors (Kebiasaan Bertransaksi, Komunikasi, & Penggunaan Perangkat) *</label>
-                                <textarea id="inp_p_behaviors" rows="3" oninput="autoResizeTextarea(this); updatePersonaField('behaviors', this.value)" placeholder="Tuliskan kebiasaan nyata Persona ini saat mencari informasi, memesan, membayar, serta perangkat yang digunakan..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(p.behaviors)}</textarea>
+                                <textarea id="inp_p_behaviors" rows="3" oninput="autoResizeTextarea(this); updatePersonaField('behaviors', this.value)" placeholder="${exPh('Mencari di Instagram, bertanya lewat WhatsApp, membayar dengan transfer bank, memakai ponsel', 'Tuliskan kebiasaan nyata Persona ini saat mencari informasi, memesan, membayar, serta perangkat yang digunakan...')}" class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(p.behaviors)}</textarea>
                             </div>
                             <div>
                                 <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Trigger Scenario (Situasi Nyata Apa yang Memicu Persona Ini Membutuhkan Layanan UMKM?) *</label>
-                                <textarea id="inp_p_skenario" rows="3" oninput="autoResizeTextarea(this); updatePersonaField('skenario', this.value)" placeholder="Ceritakan situasi spesifik dalam keseharian yang mendorong Persona ini memulai transaksi di UMKM mitra..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(p.skenario)}</textarea>
+                                <textarea id="inp_p_skenario" rows="3" oninput="autoResizeTextarea(this); updatePersonaField('skenario', this.value)" placeholder="${exPh('Saat jam istirahat kantor, Rina perlu memesan produk untuk acara akhir pekan dan harus memastikan stok serta harga dengan cepat', 'Ceritakan situasi spesifik dalam keseharian yang mendorong Persona ini memulai transaksi di UMKM mitra...')}" class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(p.skenario)}</textarea>
                             </div>
                         </div>
                         <div class="flex justify-end pt-1">
@@ -2430,22 +2834,22 @@
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">1. Tindakan Pengguna (User Action) pada Fase Ini *</label>
-                                    <textarea id="inp_cjm_action_${i}" rows="3" oninput="autoResizeTextarea(this); updateJourneyField(${i}, 'action', this.value)" placeholder="Tuliskan langkah nyata yang dilakukan pelanggan pada tahap ini..." class="auto-expand w-full p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(ph.action)}</textarea>
+                                    <textarea id="inp_cjm_action_${i}" rows="3" oninput="autoResizeTextarea(this); updateJourneyField(${i}, 'action', this.value)" placeholder="${exPh(i === 0 ? 'Membuka akun Instagram usaha, mencari informasi harga, lalu mengirim pesan untuk bertanya' : '', 'Tuliskan langkah nyata yang dilakukan pelanggan pada tahap ini...')}" class="auto-expand w-full p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(ph.action)}</textarea>
                                 </div>
                                 <div>
                                     <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">2. Titik Kontak (Touchpoint) & Pikiran Pengguna *</label>
-                                    <textarea id="inp_cjm_tp_${i}" rows="3" oninput="autoResizeTextarea(this); updateJourneyField(${i}, 'touchpoint', this.value)" placeholder="Sebutkan media/tempat interaksinya (Touchpoint) serta apa yang dipikirkan pelanggan..." class="auto-expand w-full p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(ph.touchpoint)}</textarea>
+                                    <textarea id="inp_cjm_tp_${i}" rows="3" oninput="autoResizeTextarea(this); updateJourneyField(${i}, 'touchpoint', this.value)" placeholder="${exPh(i === 0 ? 'Instagram dan WhatsApp; pelanggan berpikir apakah harga sudah sesuai' : '', 'Sebutkan media/tempat interaksinya (Touchpoint) serta apa yang dipikirkan pelanggan...')}" class="auto-expand w-full p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(ph.touchpoint)}</textarea>
                                 </div>
                             </div>
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label class="text-xs sm:text-sm font-bold text-rose-700 dark:text-rose-300 block mb-1.5">3. Titik Masalah / Hambatan (Pain Point) pada Fase Ini *</label>
-                                    <textarea id="inp_cjm_pain_${i}" rows="3" oninput="autoResizeTextarea(this); updateJourneyField(${i}, 'pain', this.value)" placeholder="Tuliskan kesulitan atau hambatan yang dialami pelanggan pada tahap ini..." class="auto-expand w-full p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-rose-500">${escapeHtml(ph.pain)}</textarea>
+                                    <textarea id="inp_cjm_pain_${i}" rows="3" oninput="autoResizeTextarea(this); updateJourneyField(${i}, 'pain', this.value)" placeholder="${exPh(i === 0 ? 'Harga tidak tercantum sehingga harus menunggu balasan' : '', 'Tuliskan kesulitan atau hambatan yang dialami pelanggan pada tahap ini...')}" class="auto-expand w-full p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-rose-500">${escapeHtml(ph.pain)}</textarea>
                                 </div>
                                 <div>
                                     <label class="text-xs sm:text-sm font-bold text-emerald-700 dark:text-emerald-300 block mb-1.5">4. Peluang Perbaikan Desain (Design Opportunity) *</label>
-                                    <textarea id="inp_cjm_opp_${i}" rows="3" oninput="autoResizeTextarea(this); updateJourneyField(${i}, 'opportunity', this.value)" placeholder="Tuliskan peluang solusi atau perbaikan informasi untuk mengatasi hambatan di tahap ini..." class="auto-expand w-full p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-emerald-500">${escapeHtml(ph.opportunity)}</textarea>
+                                    <textarea id="inp_cjm_opp_${i}" rows="3" oninput="autoResizeTextarea(this); updateJourneyField(${i}, 'opportunity', this.value)" placeholder="${exPh(i === 0 ? 'Menampilkan daftar harga di profil atau katalog yang mudah dibaca' : '', 'Tuliskan peluang solusi atau perbaikan informasi untuk mengatasi hambatan di tahap ini...')}" class="auto-expand w-full p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-emerald-500">${escapeHtml(ph.opportunity)}</textarea>
                                 </div>
                             </div>
 
@@ -2507,6 +2911,127 @@
         }
 
         // SLIDE 12 [PRATINJAU & UNDUH PDF]: Dokumen Resmi LKM 03 (4 Artefak Sintesis Visual)
+        function getSourceStats() {
+            const counts = {};
+            const add = function (c) { c = (c || '').trim(); if (c) counts[c] = (counts[c] || 0) + 1; };
+            formState.clusters.forEach(function (c) { c.notes.forEach(function (n) { if ((n.text || '').trim()) add(n.source); }); });
+            ['says', 'thinks', 'does', 'feels'].forEach(function (q) {
+                formState.empathy[q].forEach(function (it) { if ((it.text || '').trim()) add(it.source); });
+            });
+            formState.journey.forEach(function (ph) { if ((ph.action || '').trim() || (ph.pain || '').trim()) add(ph.source); });
+            if ((formState.persona.quote || '').trim()) add(formState.persona.quoteSource);
+            const entries = Object.keys(counts).map(function (k) { return [k, counts[k]]; }).sort(function (a, b) { return b[1] - a[1]; });
+            const total = entries.reduce(function (sum, e) { return sum + e[1]; }, 0);
+            const registered = [];
+            formState.respondents.forEach(function (r) { if ((r.code || '').trim()) registered.push(r.code.trim()); });
+            formState.observations.forEach(function (o) { if ((o.code || '').trim()) registered.push(o.code.trim()); });
+            return { counts: counts, entries: entries, total: total, unused: registered.filter(function (c) { return !counts[c]; }) };
+        }
+
+        function computeSelfCheck() {
+            const checks = [];
+            const badStmt = [];
+            const badInsight = [];
+            formState.clusters.forEach(function (c, i) {
+                if (!isValidIStatement(c.label)) badStmt.push('#' + (i + 1));
+                if (buildInsightHint(c.label, c.insight)) badInsight.push('#' + (i + 1));
+            });
+            checks.push({ ok: badStmt.length === 0, label: 'Judul klaster diawali "Saya" atau "Kami"', detail: 'Periksa klaster ' + badStmt.join(', ') });
+            checks.push({ ok: badInsight.length === 0, label: 'User Insight menjelaskan kebutuhan dan alasan', detail: 'Perkuat insight klaster ' + badInsight.join(', ') });
+
+            const affItems = [];
+            formState.clusters.forEach(function (c, i) { c.notes.forEach(function (n, k) { affItems.push({ id: 'a' + i + '_' + k, text: n.text }); }); });
+            const emItems = [];
+            ['says', 'thinks', 'does', 'feels'].forEach(function (q) { formState.empathy[q].forEach(function (it, i) { emItems.push({ id: q + i, text: it.text }); }); });
+            const dupCount = getDuplicateIdSet(affItems).size + getDuplicateIdSet(emItems).size;
+            checks.push({ ok: dupCount === 0, label: 'Tidak ada butir yang sama atau sangat mirip', detail: dupCount + ' butir ditandai kuning di Affinity atau Empathy Map' });
+
+            const em = formState.empathy;
+            const contraHints = buildContraHints(em.contradictionSaysIdx, em.contradictionDoesIdx, em.contradiction, false);
+            checks.push({ ok: contraHints.length === 0 && (em.contradiction || '').trim() !== '', label: 'Analisis kontradiksi SAYS vs DOES memadai', detail: 'Lihat saran di Empathy Map bagian 7' });
+
+            const st = getSourceStats();
+            let srcOk = st.total > 0 && st.entries.length > 1 && (st.entries[0][1] / st.total) <= 0.5 && st.unused.length === 0;
+            let srcDetail = '';
+            if (st.total === 0) srcDetail = 'Belum ada bukti';
+            else if (st.entries.length === 1) srcDetail = 'Bukti hanya dari ' + st.entries[0][0];
+            else if (st.entries[0][1] / st.total > 0.5) srcDetail = 'Lebih dari separuh bukti dari ' + st.entries[0][0];
+            else if (st.unused.length) srcDetail = 'Belum dipakai: ' + st.unused.join(', ');
+            checks.push({ ok: srcOk, label: 'Bukti tersebar dari beberapa narasumber', detail: srcDetail });
+
+            checks.push({ ok: !hasUnexportedChanges, label: 'Data sudah diunduh sebagai file .JSON', detail: 'Klik Simpan Data (.JSON) di atas' });
+            return checks;
+        }
+        function renderSelfCheckInner() {
+            const checks = computeSelfCheck();
+            const issues = checks.filter(function (c) { return !c.ok; }).length;
+            const summary = 'Cek mandiri sebelum kumpul \u2022 ' + (issues === 0
+                ? '<span class="text-emerald-600 dark:text-emerald-400">semua aman</span>'
+                : '<span class="text-amber-700 dark:text-amber-400">' + issues + ' catatan</span>');
+            const body = checks.map(function (c) {
+                return c.ok
+                    ? '<div class="text-[11px] sm:text-xs text-slate-600 dark:text-slate-300"><i class="fa-solid fa-circle-check text-emerald-600 mr-1.5"></i>' + escapeHtml(c.label) + '</div>'
+                    : '<div class="text-[11px] sm:text-xs font-semibold text-amber-800 dark:text-amber-300"><i class="fa-solid fa-circle-exclamation mr-1.5"></i>' + escapeHtml(c.label) + ' <span class="font-normal">\u2014 ' + escapeHtml(c.detail) + '</span></div>';
+            }).join('') + '<div class="pt-1 text-[11px] text-slate-500 dark:text-slate-400">Semua catatan hanya saran dan tidak menghalangi unduh PDF.</div>';
+            return { summary: summary, body: body };
+        }
+        function renderSelfCheckPanelHtml() {
+            const r = renderSelfCheckInner();
+            return `
+                <details id="selfCheckPanel" class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 no-print">
+                    <summary id="selfCheckSummary" class="cursor-pointer select-none px-4 py-3 text-xs font-extrabold text-slate-800 dark:text-slate-100">${r.summary}</summary>
+                    <div id="selfCheckBody" class="px-4 pb-4 space-y-1.5">${r.body}</div>
+                </details>`;
+        }
+        function refreshSelfCheckPanel() {
+            const sum = document.getElementById('selfCheckSummary');
+            const body = document.getElementById('selfCheckBody');
+            if (!sum || !body) return;
+            const r = renderSelfCheckInner();
+            sum.innerHTML = r.summary;
+            body.innerHTML = r.body;
+        }
+
+        function renderSourceDistributionHtml() {
+            const st = getSourceStats();
+            const counts = st.counts;
+            const entries = st.entries;
+            const total = st.total;
+            if (total === 0) return '';
+
+            const palette = ['#4f46e5', '#0ea5e9', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#14b8a6', '#f97316'];
+            const bar = entries.map(function (e, i) {
+                return '<div title="' + escapeHtml(e[0]) + ': ' + e[1] + '" style="width:' + (e[1] / total * 100).toFixed(1) + '%; background:' + palette[i % palette.length] + ';"></div>';
+            }).join('');
+            const chips = entries.map(function (e, i) {
+                return '<span class="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-700 dark:text-slate-200"><span class="w-2.5 h-2.5 rounded-sm" style="background:' + palette[i % palette.length] + '"></span>' + escapeHtml(e[0]) + ' \u00B7 ' + e[1] + ' (' + Math.round(e[1] / total * 100) + '%)</span>';
+            }).join('');
+
+            const unused = st.unused;
+
+            const notes = [];
+            if (entries[0][1] / total > 0.5 && entries.length > 1) {
+                notes.push('Lebih dari separuh bukti berasal dari ' + entries[0][0] + '. Pertimbangkan menambah bukti dari narasumber lain.');
+            }
+            if (entries.length === 1) {
+                notes.push('Seluruh bukti hanya berasal dari ' + entries[0][0] + '. Sintesis yang kuat memadukan beberapa sumber.');
+            }
+            if (unused.length > 0) {
+                notes.push('Belum dipakai sebagai bukti: ' + unused.join(', ') + '.');
+            }
+            const notesHtml = notes.map(function (n) {
+                return '<div class="text-[11px] font-semibold text-amber-700 dark:text-amber-400"><i class="fa-solid fa-lightbulb mr-1"></i>' + escapeHtml(n) + '</div>';
+            }).join('');
+
+            return `
+                <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2.5 no-print">
+                    <div class="text-xs font-extrabold text-slate-800 dark:text-slate-100">Sebaran Sumber Bukti <span class="font-semibold text-slate-500 dark:text-slate-400">(${total} butir dari Affinity, Empathy Map, Persona & Journey Map)</span></div>
+                    <div class="flex h-2.5 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800">${bar}</div>
+                    <div class="flex flex-wrap gap-x-4 gap-y-1">${chips}</div>
+                    ${notesHtml}
+                </div>`;
+        }
+
         function renderSlide12() {
             return `
                 <div class="slide-enter space-y-5">
@@ -2531,6 +3056,9 @@
                             </button>
                         </div>
                     </div>
+
+                    ${renderSourceDistributionHtml()}
+                    ${renderSelfCheckPanelHtml()}
 
                     <div id="pdfWrapper" class="max-w-4xl mx-auto bg-white rounded-2xl shadow-md border border-slate-300 overflow-hidden">
                         <div id="pdfPrintArea" class="p-6 sm:p-10 space-y-5">
@@ -2568,6 +3096,12 @@
 
             const formatQuadPdf = arr => arr.map(it => `<div>• <strong>[${escapeHtml(it.source)}]:</strong> ${dash(it.text)}</div>`).join('');
             const formatSimplePdf = arr => arr.map(tx => `<div>• ${dash(tx)}</div>`).join('');
+            normalizeFormState();
+            const formatPersonaListPdf = (arr, refs, tag, src) => arr.map((tx, i) => {
+                const r = refs && refs[i] !== undefined ? refs[i] : -1;
+                const refTxt = (r >= 0 && r < src.length) ? ` <span style="font-size:9px; color:#6366f1;">(turunan ${tag} Empathy #${r + 1})</span>` : '';
+                return `<div>• ${dash(tx)}${refTxt}</div>`;
+            }).join('');
 
             let journeyRowsHtml = '';
             for (let i = 0; i < d.journey.length; i++) {
@@ -2694,6 +3228,24 @@
                                     ${formatSimplePdf(d.empathy.gains)}
                                 </td>
                             </tr>
+                            <tr>
+                                <td colspan="2" style="background: #fffbeb;">
+                                    <div style="font-weight: 800; color: #92400e; margin-bottom: 3px;">7. ANALISIS KONTRADIKSI SAYS vs DOES (Kesenjangan Ucapan vs Tindakan Nyata):</div>
+                                    <div style="font-size: 9.5px; color: #475569; margin-bottom: 3px;">
+                                        <strong>Ucapan (SAYS):</strong> ${escapeHtml(getSelectedContraSummary().saysLabel)} &nbsp;&leftrightarrow;&nbsp;
+                                        <strong>Tindakan (DOES):</strong> ${escapeHtml(getSelectedContraSummary().doesLabel)}
+                                    </div>
+                                    <div style="font-weight: 600; color: #0f172a;"><strong>Makna / Kesenjangan:</strong> ${dash(d.empathy.contradiction)}</div>
+                                    ${(d.empathy.extraContradictions || []).filter(x => (x.text || '').trim()).map((x, k) => {
+                                        const sm = getContraSummaryFor(x.saysIdx, x.doesIdx);
+                                        return `<div style="margin-top: 6px; padding-top: 5px; border-top: 1px dashed #fcd34d;">
+                                            <div style="font-weight: 800; color: #92400e; margin-bottom: 2px;">7.${k + 2} Pasangan Tambahan:</div>
+                                            <div style="font-size: 9.5px; color: #475569; margin-bottom: 3px;"><strong>Ucapan (SAYS):</strong> ${escapeHtml(sm.saysLabel)} &nbsp;&leftrightarrow;&nbsp; <strong>Tindakan (DOES):</strong> ${escapeHtml(sm.doesLabel)}</div>
+                                            <div style="font-weight: 600; color: #0f172a;"><strong>Makna / Kesenjangan:</strong> ${escapeHtml(x.text)}</div>
+                                        </div>`;
+                                    }).join('')}
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -2723,11 +3275,11 @@
                             <tr>
                                 <td colspan="2" style="width: 50%;">
                                     <div style="font-weight: 800; color: #047857; margin-bottom: 3px;">GOALS & NEEDS (${p.goals.length} Poin):</div>
-                                    ${formatSimplePdf(p.goals)}
+                                    ${formatPersonaListPdf(p.goals, p.goalRefs, 'Gain', d.empathy.gains)}
                                 </td>
                                 <td colspan="2" style="width: 50%;">
                                     <div style="font-weight: 800; color: #be123c; margin-bottom: 3px;">PAIN POINTS (${p.pains.length} Poin):</div>
-                                    ${formatSimplePdf(p.pains)}
+                                    ${formatPersonaListPdf(p.pains, p.painRefs, 'Pain', d.empathy.pains)}
                                 </td>
                             </tr>
                             <tr>
@@ -2835,6 +3387,10 @@
                 highlightEmptyInput('inp_aff_label_' + idx, 'Judul Tema (I-Statement) pada Klaster #' + (idx + 1) + ' wajib diisi.');
                 return;
             }
+            if (!isValidIStatement(c.label)) {
+                highlightEmptyInput('inp_aff_label_' + idx, iStatementErrorMsg(idx));
+                return;
+            }
             if (!c.insight.trim()) {
                 highlightEmptyInput('inp_aff_insight_' + idx, 'Rumusan User Insight pada Klaster #' + (idx + 1) + ' wajib diisi.');
                 return;
@@ -2890,6 +3446,7 @@
                 for (let i = 0; i < em.gains.length; i++) {
                     if (!em.gains[i].trim()) { highlightEmptyInput('inp_em_gains_' + i, 'Butir GAINS (Harapan) #' + (i + 1) + ' wajib diisi.'); return; }
                 }
+                if (!(em.contradiction || '').trim()) { highlightEmptyInput('inp_em_contradiction', 'Analisis Kontradiksi SAYS vs DOES (nomor 7) wajib diisi.'); return; }
             }
 
             uiWizard.emSaved[num] = true;
@@ -3023,6 +3580,7 @@
             const slide = SLIDES[currentSlideIndex];
             const viewport = document.getElementById('slideViewport');
             if (!viewport || !slide) return;
+            normalizeFormState();
             viewport.innerHTML = slide.render();
 
             const pct = Math.round(((currentSlideIndex + 1) / TOTAL_SLIDES) * 100);
@@ -3051,6 +3609,71 @@
             for (let i = 0; i < textareas.length; i++) {
                 autoResizeTextarea(textareas[i]);
             }
+            refreshDuplicateMarks();
+        }
+
+        const FORM_SLIDE_INDEXES = [2, 4, 6, 8, 10];
+        // Perkiraan waktu pengerjaan per slide (menit), untuk membantu perencanaan; bukan hasil pengukuran
+        const SLIDE_MINUTES = [3, 3, 15, 3, 25, 3, 15, 3, 12, 3, 20, 5];
+        function getRemainingMinutesForSlide(idx) {
+            const c = getSlideCompletion(idx);
+            if (!c) return 0;
+            return Math.ceil(SLIDE_MINUTES[idx] * (1 - Math.min(c.done / c.total, 1)));
+        }
+        function getSlideCompletion(idx) {
+            let done = 0, total = 0, unit = 'bagian';
+            if (idx === 2) {
+                total = 3;
+                for (let k = 1; k <= 3; k++) if (isInfoPartComplete(k)) done++;
+            } else if (idx === 4) {
+                unit = 'klaster';
+                total = Math.max(formState.clusters.length, MIN_CLUSTERS);
+                for (let i = 0; i < formState.clusters.length; i++) if (isClusterComplete(i)) done++;
+            } else if (idx === 6) {
+                total = 3;
+                for (let k = 1; k <= 3; k++) if (isEmpathyPartComplete(k)) done++;
+            } else if (idx === 8) {
+                total = 3;
+                for (let k = 1; k <= 3; k++) if (isPersonaPartComplete(k)) done++;
+            } else if (idx === 10) {
+                unit = 'fase';
+                total = Math.max(formState.journey.length, MIN_JOURNEY_PHASES);
+                for (let i = 0; i < formState.journey.length; i++) if (isJourneyPhaseComplete(i)) done++;
+            } else {
+                return null;
+            }
+            return { done: Math.min(done, total), total: total, unit: unit };
+        }
+
+        function updateProgressChrome() {
+            const comp = getSlideCompletion(currentSlideIndex);
+            const pill = document.getElementById('slideProgressPill');
+            if (pill) {
+                if (comp) {
+                    const full = comp.done >= comp.total;
+                    pill.className = 'text-xs font-bold px-2.5 py-1 rounded-lg shrink-0 ' + (full
+                        ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
+                        : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300');
+                    const rem = getRemainingMinutesForSlide(currentSlideIndex);
+                    pill.textContent = (full ? 'Lengkap ' : 'Terisi ') + comp.done + '/' + comp.total + ' ' + comp.unit + (full ? '' : ' \u2022 sisa \u00B1' + rem + ' mnt');
+                } else {
+                    pill.className = 'hidden';
+                    pill.textContent = '';
+                }
+            }
+            const mob = document.getElementById('mobileFooterCounter');
+            if (mob) mob.textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES + (comp ? ' • ' + comp.done + '/' + comp.total : '');
+            let fullForms = 0;
+            for (let i = 0; i < FORM_SLIDE_INDEXES.length; i++) {
+                const c = getSlideCompletion(FORM_SLIDE_INDEXES[i]);
+                if (c && c.done >= c.total) fullForms++;
+            }
+            let remainTotal = 0;
+            for (let i = 0; i < FORM_SLIDE_INDEXES.length; i++) remainTotal += getRemainingMinutesForSlide(FORM_SLIDE_INDEXES[i]);
+            const remEl = document.getElementById('drawerRemainingTime');
+            if (remEl) remEl.textContent = remainTotal > 0 ? 'Sisa isian \u00B1' + remainTotal + ' menit' : 'Semua isian lengkap';
+            const overall = document.getElementById('drawerOverallProgress');
+            if (overall) overall.textContent = 'Form lengkap: ' + fullForms + ' / ' + FORM_SLIDE_INDEXES.length;
         }
 
         function renderDotsAndDrawer() {
@@ -3063,13 +3686,21 @@
                 const isActive = idx === currentSlideIndex;
                 const isForm = s.category.indexOf('Form') !== -1;
 
+                const comp = getSlideCompletion(idx);
+                const compFull = !!comp && comp.done >= comp.total;
+                const compPartial = !!comp && comp.done > 0 && !compFull;
                 const dotClass = isActive
                     ? 'w-7 bg-indigo-600 dark:bg-indigo-400'
+                    : compFull
+                    ? 'w-4 bg-emerald-600 dark:bg-emerald-500 hover:bg-emerald-700'
+                    : compPartial
+                    ? 'w-3 bg-amber-400 dark:bg-amber-500 hover:bg-amber-500'
                     : isForm
-                    ? 'w-2 bg-emerald-400/70 dark:bg-emerald-600 hover:bg-emerald-500'
+                    ? 'w-2 bg-emerald-300/60 dark:bg-emerald-900 hover:bg-emerald-400'
                     : 'w-2 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400';
+                const dotTitle = s.title + (comp ? ' (' + comp.done + '/' + comp.total + ' ' + comp.unit + (compFull ? ', lengkap' : '') + ')' : '');
 
-                dotsHtml += `<button type="button" onclick="goToSlide(${idx})" title="${escapeHtml(s.title)}" class="h-2 rounded-full transition-all ${dotClass}"></button>`;
+                dotsHtml += `<button type="button" onclick="goToSlide(${idx})" title="${escapeHtml(dotTitle)}" aria-label="${escapeHtml('Slide ' + s.id + ': ' + dotTitle)}" ${isActive ? 'aria-current="step"' : ''} class="h-2 rounded-full transition-all ${dotClass}"></button>`;
 
                 const itemClass = isActive
                     ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 font-bold'
@@ -3084,9 +3715,10 @@
                     <button type="button" onclick="selectSlideFromDrawer(${idx})" class="w-full text-left p-3 rounded-xl transition flex items-start gap-3 ${itemClass}">
                         <span class="w-6 h-6 rounded-lg text-xs font-extrabold flex items-center justify-center shrink-0 mt-0.5 ${badgeClass}">${s.id}</span>
                         <div class="min-w-0 flex-1">
-                            <div class="text-[10px] uppercase tracking-wider opacity-75">${escapeHtml(s.category)}</div>
+                            <div class="text-[10px] uppercase tracking-wider opacity-75">${escapeHtml(s.category)} \u2022 \u00B1${SLIDE_MINUTES[idx]} mnt</div>
                             <div class="text-xs sm:text-sm leading-snug break-words">${escapeHtml(s.title)}</div>
                         </div>
+                        ${comp ? `<span class="shrink-0 mt-0.5 text-[10px] font-extrabold px-2 py-0.5 rounded-md ${compFull ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'}">${compFull ? '<i class="fa-solid fa-check"></i> ' : ''}${comp.done}/${comp.total}</span>` : ''}
                     </button>
                 `;
             }
@@ -3094,6 +3726,7 @@
             if (dotsContainer) dotsContainer.innerHTML = dotsHtml;
             const drawerList = document.getElementById('drawerSlideList');
             if (drawerList) drawerList.innerHTML = drawerHtml;
+            updateProgressChrome();
         }
 
         function selectSlideFromDrawer(index) {
@@ -3143,7 +3776,63 @@
             }
         }
 
-        function clearAllData() {
+        function openResetModal() {
+            const m = document.getElementById('resetModalBackdrop');
+            m.classList.remove('hidden');
+            m.classList.add('flex');
+        }
+        function closeResetModal() {
+            const m = document.getElementById('resetModalBackdrop');
+            m.classList.add('hidden');
+            m.classList.remove('flex');
+        }
+        let undoSnapshot = null;
+        let undoTick = null;
+        function showUndoBar(snap) {
+            undoSnapshot = snap;
+            clearInterval(undoTick);
+            let left = 10;
+            const bar = document.getElementById('undoBar');
+            const cd = document.getElementById('undoCountdown');
+            if (!bar || !cd) return;
+            cd.textContent = left;
+            bar.classList.remove('hidden');
+            bar.classList.add('flex');
+            undoTick = setInterval(function () {
+                left--;
+                cd.textContent = Math.max(left, 0);
+                if (left <= 0) hideUndoBar(true);
+            }, 1000);
+        }
+        function hideUndoBar(dropSnapshot) {
+            clearInterval(undoTick);
+            const bar = document.getElementById('undoBar');
+            if (bar) { bar.classList.add('hidden'); bar.classList.remove('flex'); }
+            if (dropSnapshot) undoSnapshot = null;
+        }
+        function undoReset() {
+            if (!undoSnapshot) return;
+            try {
+                const snap = JSON.parse(undoSnapshot);
+                formState = snap.form;
+                uiWizard = snap.ui;
+                currentSlideIndex = snap.slide || 0;
+                normalizeFormState();
+                writeAutoSave();
+                hasUnexportedChanges = true;
+            } catch (e) {}
+            hideUndoBar(true);
+            renderCurrentSlide();
+            showToast('Isian berhasil dipulihkan.', 'success');
+        }
+        function confirmResetAll() {
+            closeResetModal();
+            const snap = JSON.stringify({ form: formState, ui: uiWizard, slide: currentSlideIndex });
+            clearAllData(true);
+            showUndoBar(snap);
+        }
+
+        function clearAllData(silent) {
             const today = new Date().toISOString().split('T')[0];
             formState = {
                 nama: "", nim: "", kelas: "", tgl: today,
@@ -3163,9 +3852,10 @@
                 cjmActive: 0, cjmSaved: {}, cjmMin: {}
             };
             try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+            hasUnexportedChanges = false;
             currentSlideIndex = 0;
             renderCurrentSlide();
-            showToast('Seluruh isian telah dikosongkan.', 'success');
+            if (!silent) showToast('Seluruh isian telah dikosongkan.', 'success');
         }
 
         function downloadPdf() {
@@ -3203,7 +3893,8 @@
                     filename: fn,
                     image: { type: 'jpeg', quality: 0.98 },
                     html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
-                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                    pagebreak: { mode: ['css', 'legacy'] }
                 }).from(el).save().then(function () {
                     if (btn) { btn.innerHTML = orig; btn.disabled = false; }
                 }).catch(function () {
@@ -3305,17 +3996,29 @@
             const activeTag = document.activeElement && document.activeElement.tagName
                 ? document.activeElement.tagName.toLowerCase()
                 : '';
-            if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') return;
-            if (e.key === 'ArrowRight') changeSlide(1);
-            if (e.key === 'ArrowLeft') changeSlide(-1);
             if (e.key === 'Escape') {
                 closeTermModal();
                 closeGlossaryIndex();
+                closeResetModal();
             }
+            if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') return;
+            const resetOpen = document.getElementById('resetModalBackdrop') && !document.getElementById('resetModalBackdrop').classList.contains('hidden');
+            if (resetOpen) return;
+            if (e.key === 'ArrowRight') changeSlide(1);
+            if (e.key === 'ArrowLeft') changeSlide(-1);
         });
 
         loadSavedState();
         renderCurrentSlide();
+        (function checkStorageAtStartup() {
+            try {
+                localStorage.setItem('__lkm03_probe', '1');
+                localStorage.removeItem('__lkm03_probe');
+            } catch (e) {
+                setSaveBadge(false);
+                warnStorageFailure();
+            }
+        })();
     </script>
 </body>
 </html>
