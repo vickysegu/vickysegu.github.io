@@ -118,6 +118,11 @@
             color: #1e293b;
             text-align: left;
         }
+        /* Pengaman: cegah baris tabel terpotong di tengah saat berganti halaman PDF */
+        .pdf-table tr {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
         .pdf-page-break {
             page-break-before: always;
             break-before: page;
@@ -164,7 +169,31 @@
     <input type="file" id="jsonFileInput" accept=".json,application/json" class="hidden" onchange="handleJsonFileImport(event)">
 
     <!-- Toast Peringatan Validasi & Status File -->
-    <div id="toastBanner" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 hidden max-w-md w-[92%] sm:w-full px-4 py-3.5 rounded-2xl shadow-2xl border flex items-start gap-3 transition-all duration-200 no-print">
+    <div id="resetModalBackdrop" onclick="closeResetModal()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4 no-print">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-md w-full p-5 sm:p-7 shadow-2xl space-y-4">
+            <div class="flex items-start gap-3">
+                <div class="w-10 h-10 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                <div class="space-y-1">
+                    <h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">Kosongkan seluruh isian?</h3>
+                    <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">Semua data yang sudah Anda isi, termasuk salinan otomatis di browser, akan dihapus. Unduh dulu data proyek (.json) bila masih dibutuhkan. Setelah dikosongkan, Anda punya 10 detik untuk membatalkan.</p>
+                </div>
+            </div>
+            <button type="button" onclick="exportJsonData()" class="w-full px-4 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:hover:bg-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-800 text-xs sm:text-sm font-extrabold transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-download"></i><span>Unduh Data Proyek (.json) Dulu</span>
+            </button>
+            <div class="flex justify-end gap-2.5 pt-1">
+                <button type="button" onclick="closeResetModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-bold transition">Batal</button>
+                <button type="button" onclick="confirmResetAll()" class="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs sm:text-sm font-extrabold transition flex items-center gap-2"><i class="fa-solid fa-trash-can"></i><span>Ya, Kosongkan</span></button>
+            </div>
+        </div>
+    </div>
+
+    <div id="undoBar" class="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-[60] hidden items-center gap-3 px-4 py-2.5 rounded-2xl bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 text-xs sm:text-sm font-bold shadow-2xl no-print">
+        <span id="undoMessage">Perubahan diterapkan.</span>
+        <button type="button" onclick="undoLastChange()" class="px-3 py-1 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-900 font-extrabold">Batalkan (<span id="undoCountdown">10</span>)</button>
+    </div>
+
+    <div id="toastBanner" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-[60] hidden max-w-md w-[92%] sm:w-full px-4 py-3.5 rounded-2xl shadow-2xl border flex items-start gap-3 transition-all duration-200 no-print">
         <i id="toastIcon" class="fa-solid fa-circle-exclamation text-lg mt-0.5 shrink-0"></i>
         <div class="flex-1 text-xs sm:text-sm font-bold leading-snug" id="toastMessage">Pesan notifikasi</div>
         <button type="button" onclick="hideToast()" class="text-current opacity-70 hover:opacity-100 shrink-0">
@@ -190,6 +219,7 @@
                     <span id="slideCategoryPill" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 shrink-0">
                         Pengantar
                     </span>
+                    <span id="slideProgressPill" class="hidden"></span>
                     <h1 id="headerSlideTitle" class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 truncate">
                         Panduan & Lembar Kerja Praktikum 2 (LKM 02)
                     </h1>
@@ -243,8 +273,13 @@
         </div>
         <div id="drawerSlideList" class="p-3.5 overflow-y-auto space-y-1.5 flex-1"></div>
         <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 flex items-center justify-between">
-            <span>Semua Form Wajib Diisi Berurutan</span>
-            <span class="font-bold">13 Slide</span>
+            <div class="w-full space-y-1">
+                <div class="flex items-center justify-between">
+                    <span id="drawerOverallProgress">Form lengkap: 0 / 6</span>
+                    <span id="drawerRemainingTime" class="font-bold">Sisa isian</span>
+                </div>
+                <div class="text-[11px] leading-snug opacity-80">Waktu hanya perkiraan. Boleh berhenti dan lanjut di sesi lain lewat tombol Simpan .JSON lalu Muat .JSON.</div>
+            </div>
         </div>
     </aside>
 
@@ -452,7 +487,7 @@
             if (!banner || !msgEl) return;
 
             msgEl.textContent = message;
-            banner.className = 'fixed top-20 left-1/2 transform -translate-x-1/2 z-50 max-w-lg w-[92%] sm:w-full px-4 py-3.5 rounded-2xl shadow-2xl border flex items-start gap-3 transition-all duration-200 no-print slide-enter ';
+            banner.className = 'fixed top-20 left-1/2 transform -translate-x-1/2 z-[60] max-w-lg w-[92%] sm:w-full px-4 py-3.5 rounded-2xl shadow-2xl border flex items-start gap-3 transition-all duration-200 no-print slide-enter ';
 
             if (type === 'success') {
                 banner.className += 'bg-emerald-600 text-white border-emerald-500';
@@ -757,6 +792,42 @@
             return true;
         }
 
+        // Contoh isian (ghost text): hanya butir pertama tiap bagian
+        function exPh(example, base) {
+            return escapeHtml(example ? 'Contoh: ' + example : base);
+        }
+        const EXAMPLE_Q = {
+            0: 'Boleh ceritakan sedikit tentang kegiatan Anda sehari-hari?',
+            2: 'Biasanya bagaimana cara Anda mencari tahu harga dan produk yang tersedia?',
+            5: 'Ceritakan pengalaman terakhir Anda mencari informasi sebelum memesan. Apa saja yang Anda lakukan?',
+            9: 'Di jam ramai, bagaimana Bapak/Ibu biasanya melayani pesanan yang masuk bersamaan?'
+        };
+        const EXAMPLE_P = {
+            0: 'Jika jawabannya singkat: "Biasanya mulai jam berapa?" Tujuan: mengenal rutinitas dan membangun rapport'
+        };
+        function questionIssue(idx, text) {
+            const t = (text || '').trim();
+            if (!t) return null;
+            if (/\b(bukankah|benar kan|betul kan|tentu saja)\b|\b(kan|bukan)\s*\?/i.test(t)) return { type: 'leading' };
+            if (/^\s*(apakah|pernahkah|bisakah|dapatkah|sudahkah|benarkah|maukah|sukakah|setujukah)\b/i.test(t)) return { type: 'closed' };
+            if (idx >= 5) {
+                const m = t.match(/\b(aplikasi|fitur|website|situs|dashboard|notifikasi|chatbot|sistem|tombol)\b/i);
+                if (m) return { type: 'feature', word: m[1].toLowerCase() };
+            }
+            return null;
+        }
+        function questionHintMsg(idx, text) {
+            const is = questionIssue(idx, text);
+            if (!is) return '';
+            if (is.type === 'leading') return 'Pertanyaan ini terasa mengarahkan jawaban. Buat lebih netral, misalnya "Bagaimana pengalaman Anda...?".';
+            if (is.type === 'closed') return 'Pertanyaan tertutup hanya dijawab ya atau tidak. Coba awali dengan "Ceritakan...", "Bagaimana...", atau "Apa yang...".';
+            return 'Hindari menyebut solusi atau fitur ("' + is.word + '"). Tanyakan pengalaman dan harapan, bukan pendapat tentang fitur.';
+        }
+        function refreshLiveHint(id, msg) {
+            const el = document.getElementById(id);
+            if (el) el.innerHTML = msg ? '<i class="fa-solid fa-lightbulb mr-1"></i>' + escapeHtml(msg) : '';
+        }
+
         function updateField(fieldKey, val) {
             formState[fieldKey] = val;
             triggerAutoSave();
@@ -772,15 +843,48 @@
         // SIMPAN & MUAT FILE DATA PROYEK (.JSON) LINTAS PERANGKAT & LINTAS LKM
         // =========================================================================
         let saveTimer = null;
+        let hasUnexportedChanges = false;
+        let storageWarned = false;
+        let saveBadgeOkClass = null;
+        function writeAutoSave() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify({ form: formState, ui: uiWizard }));
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+        function setSaveBadge(ok) {
+            const badge = document.getElementById('saveBadge');
+            if (!badge) return;
+            if (saveBadgeOkClass === null) saveBadgeOkClass = badge.className;
+            if (ok) {
+                badge.className = saveBadgeOkClass;
+                badge.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Tersimpan';
+                badge.onclick = null;
+                badge.removeAttribute('title');
+            } else {
+                badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-100 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300 text-[11px] font-bold cursor-pointer';
+                badge.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Tidak tersimpan \u2022 Unduh .JSON';
+                badge.onclick = exportJsonData;
+                badge.title = 'Penyimpanan otomatis di browser gagal. Klik untuk mengunduh data (.JSON).';
+            }
+        }
+        function warnStorageFailure() {
+            if (storageWarned) return;
+            storageWarned = true;
+            showToast('Penyimpanan otomatis di browser tidak berfungsi (mungkin mode privat atau penyimpanan penuh). Data bisa hilang saat tab ditutup, jadi unduh file .JSON secara berkala.', 'error');
+        }
         function triggerAutoSave() {
+            hasUnexportedChanges = true;
             clearTimeout(saveTimer);
             const badge = document.getElementById('saveBadge');
             if (badge) badge.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
             saveTimer = setTimeout(function () {
-                try {
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify({ form: formState, ui: uiWizard }));
-                } catch (e) {}
-                if (badge) badge.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Tersimpan';
+                const ok = writeAutoSave();
+                setSaveBadge(ok);
+                if (!ok) warnStorageFailure(); else storageWarned = false;
+                renderDotsAndDrawer();
             }, 350);
         }
 
@@ -849,6 +953,8 @@
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
 
+            hasUnexportedChanges = false;
+            refreshSelfCheckPanel();
             showToast('File data proyek LKM 02 (.json) berhasil diunduh! Simpan file ini untuk dilanjutkan di perangkat lain atau pertemuan berikutnya.', 'success');
         }
 
@@ -882,7 +988,8 @@
                             try { localStorage.setItem('upertis_lkm01_neutral_v5', JSON.stringify(parsed.lkm01)); } catch (e) {}
                         }
                         syncSavedStatesFromData();
-                        localStorage.setItem(STORAGE_KEY, JSON.stringify({ form: formState, ui: uiWizard }));
+                        if (!writeAutoSave()) warnStorageFailure();
+                        hasUnexportedChanges = false;
                         renderCurrentSlide();
                         showToast('Data proyek LKM 02 berhasil dimuat sepenuhnya dari file .json!', 'success');
                         return;
@@ -901,7 +1008,8 @@
 
                         try { localStorage.setItem('upertis_lkm01_neutral_v5', JSON.stringify(parsed.lkm01)); } catch (e) {}
                         syncSavedStatesFromData();
-                        localStorage.setItem(STORAGE_KEY, JSON.stringify({ form: formState, ui: uiWizard }));
+                        if (!writeAutoSave()) warnStorageFailure();
+                        hasUnexportedChanges = false;
                         renderCurrentSlide();
                         showToast('Identitas Mahasiswa & Profil UMKM dari file LKM 01 berhasil dimuat! Silakan lengkapi panduan wawancara LKM 02.', 'success');
                         return;
@@ -912,7 +1020,8 @@
                         formState = Object.assign(formState, parsed.form);
                         if (parsed.ui) uiWizard = Object.assign(uiWizard, parsed.ui);
                         syncSavedStatesFromData();
-                        localStorage.setItem(STORAGE_KEY, JSON.stringify({ form: formState, ui: uiWizard }));
+                        if (!writeAutoSave()) warnStorageFailure();
+                        hasUnexportedChanges = false;
                         renderCurrentSlide();
                         showToast('Data proyek LKM 02 berhasil dimuat!', 'success');
                         return;
@@ -998,14 +1107,15 @@
                                     <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">
                                         1. Kalimat Pertanyaan Wawancara Utama #${meta.num} (Gunakan Pertanyaan Terbuka & Netral) *
                                     </label>
-                                    <textarea id="inp_q_${i}" rows="4" oninput="autoResizeTextarea(this); updateQuestionField(${i}, 'q', this.value)" placeholder="Tuliskan kalimat pertanyaan terbuka yang akan Anda ajukan kepada narasumber (wajib diisi)..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(qObj.q)}</textarea>
+                                    <textarea id="inp_q_${i}" rows="4" oninput="autoResizeTextarea(this); updateQuestionField(${i}, 'q', this.value); refreshLiveHint('qHint_${i}', questionHintMsg(${i}, this.value))" placeholder="${exPh(EXAMPLE_Q[i] || '', 'Tuliskan kalimat pertanyaan terbuka yang akan Anda ajukan kepada narasumber (wajib diisi)...')}" class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(qObj.q)}</textarea>
+                                    <div id="qHint_${i}" class="text-[11px] font-semibold text-amber-700 dark:text-amber-400 mt-1">${questionHintMsg(i, qObj.q) ? '<i class="fa-solid fa-lightbulb mr-1"></i>' + escapeHtml(questionHintMsg(i, qObj.q)) : ''}</div>
                                 </div>
 
                                 <div>
                                     <label class="text-xs sm:text-sm font-bold text-indigo-700 dark:text-indigo-300 block mb-1.5">
                                         2. Pertanyaan Lanjutan (Probing) & Tujuan Informasi yang Ingin Digali dari Pertanyaan #${meta.num} *
                                     </label>
-                                    <textarea id="inp_p_${i}" rows="3" oninput="autoResizeTextarea(this); updateQuestionField(${i}, 'p', this.value)" placeholder="Tuliskan pertanyaan tindak lanjut (probing) jika narasumber menjawab singkat, serta informasi apa yang ingin Anda ketahui (wajib diisi)..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(qObj.p)}</textarea>
+                                    <textarea id="inp_p_${i}" rows="3" oninput="autoResizeTextarea(this); updateQuestionField(${i}, 'p', this.value)" placeholder="${exPh(EXAMPLE_P[i] || '', 'Tuliskan pertanyaan tindak lanjut (probing) jika narasumber menjawab singkat, serta informasi apa yang ingin Anda ketahui (wajib diisi)...')}" class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(qObj.p)}</textarea>
                                 </div>
                             </div>
 
@@ -1081,7 +1191,7 @@
                                     <i class="fa-solid fa-upload"></i>
                                     <span>Muat Data Proyek (.json)</span>
                                 </button>
-                                <button type="button" onclick="clearAllData()" class="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 text-xs sm:text-sm font-bold transition flex items-center gap-2">
+                                <button type="button" onclick="openResetModal()" class="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 text-xs sm:text-sm font-bold transition flex items-center gap-2">
                                     <i class="fa-solid fa-rotate-left"></i>
                                     <span>Reset</span>
                                 </button>
@@ -1240,20 +1350,20 @@
                         <div class="space-y-4 pt-2 border-t border-slate-100 dark:border-slate-800">
                             <div>
                                 <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Kriteria Narasumber dari Sisi Pengelola / Pemilik UMKM *</label>
-                                <textarea id="inp_kriteria_pemilik" rows="3" oninput="autoResizeTextarea(this); updateField('kriteria_pemilik', this.value)" placeholder="Tuliskan siapa pihak pengelola/staf UMKM yang akan Anda wawancarai beserta peran mereka sehari-hari..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(formState.kriteria_pemilik)}</textarea>
+                                <textarea id="inp_kriteria_pemilik" rows="3" oninput="autoResizeTextarea(this); updateField('kriteria_pemilik', this.value)" placeholder="${exPh('Pemilik sekaligus pengelola harian yang menangani pesanan dan melayani pelanggan', 'Tuliskan siapa pihak pengelola/staf UMKM yang akan Anda wawancarai beserta peran mereka sehari-hari...')}" class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(formState.kriteria_pemilik)}</textarea>
                             </div>
                             <div>
                                 <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Kriteria Narasumber dari Sisi Pelanggan Sasaran (Target ~5, Minimal 3 Orang) *</label>
-                                <textarea id="inp_kriteria_pelanggan" rows="3" oninput="autoResizeTextarea(this); updateField('kriteria_pelanggan', this.value)" placeholder="Tuliskan kriteria pelanggan yang akan Anda wawancarai agar mewakili pengguna nyata UMKM tersebut..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(formState.kriteria_pelanggan)}</textarea>
+                                <textarea id="inp_kriteria_pelanggan" rows="3" oninput="autoResizeTextarea(this); updateField('kriteria_pelanggan', this.value)" placeholder="${exPh('Pelanggan yang memesan minimal 2 kali dalam sebulan terakhir, usia 18-35 tahun', 'Tuliskan kriteria pelanggan yang akan Anda wawancarai agar mewakili pengguna nyata UMKM tersebut...')}" class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(formState.kriteria_pelanggan)}</textarea>
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Target Jumlah Responden *</label>
-                                    <input type="text" id="inp_target_jumlah" value="${escapeHtml(formState.target_jumlah)}" oninput="updateField('target_jumlah', this.value)" placeholder="Ketik jumlah target pemilik & pelanggan..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <input type="text" id="inp_target_jumlah" value="${escapeHtml(formState.target_jumlah)}" oninput="updateField('target_jumlah', this.value)" placeholder="${exPh('1 pemilik dan 3 pelanggan', 'Ketik jumlah target pemilik & pelanggan...')}" class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
                                 </div>
                                 <div>
                                     <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Rencana Tempat / Cara Wawancara *</label>
-                                    <input type="text" id="inp_rencana_lokasi" value="${escapeHtml(formState.rencana_lokasi)}" oninput="updateField('rencana_lokasi', this.value)" placeholder="Ketik lokasi atau metode pelaksanaan wawancara..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <input type="text" id="inp_rencana_lokasi" value="${escapeHtml(formState.rencana_lokasi)}" oninput="updateField('rencana_lokasi', this.value)" placeholder="${exPh('Langsung di lokasi usaha pada jam sepi (14.00-16.00), dengan izin pemilik', 'Ketik lokasi atau metode pelaksanaan wawancara...')}" class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
                                 </div>
                             </div>
                         </div>
@@ -1561,11 +1671,11 @@
                         <div class="space-y-4 pt-2 border-t border-slate-100 dark:border-slate-800">
                             <div>
                                 <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">1. Kalimat Penjelasan Tujuan Riset kepada Narasumber *</label>
-                                <textarea id="inp_ic_tujuan" rows="3" oninput="autoResizeTextarea(this); updateField('ic_tujuan', this.value)" placeholder="Tuliskan kalimat yang menjelaskan tujuan akademik wawancara ini dengan bahasa yang sopan dan mudah dipahami oleh narasumber..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(formState.ic_tujuan)}</textarea>
+                                <textarea id="inp_ic_tujuan" rows="3" oninput="autoResizeTextarea(this); updateField('ic_tujuan', this.value)" placeholder="${exPh('Wawancara ini bertujuan memahami pengalaman Bapak/Ibu saat memesan di [nama usaha] untuk tugas kuliah Desain UI/UX. Tidak ada jawaban benar atau salah.', 'Tuliskan kalimat yang menjelaskan tujuan akademik wawancara ini dengan bahasa yang sopan dan mudah dipahami oleh narasumber...')}" class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(formState.ic_tujuan)}</textarea>
                             </div>
                             <div>
                                 <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">2. Estimasi Durasi & Prosedur Kegiatan Wawancara/Observasi *</label>
-                                <input type="text" id="inp_ic_durasi" value="${escapeHtml(formState.ic_durasi)}" oninput="updateField('ic_durasi', this.value)" placeholder="Tuliskan perkiraan durasi waktu wawancara dan aktivitas yang dilakukan..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <input type="text" id="inp_ic_durasi" value="${escapeHtml(formState.ic_durasi)}" oninput="updateField('ic_durasi', this.value)" placeholder="${exPh('Sekitar 20-30 menit, berupa tanya jawab santai dan, jika diizinkan, direkam suara', 'Tuliskan perkiraan durasi waktu wawancara dan aktivitas yang dilakukan...')}" class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
                             </div>
                         </div>
                         <div class="flex justify-end pt-1">
@@ -1600,11 +1710,11 @@
                         <div class="space-y-4 pt-2 border-t border-slate-100 dark:border-slate-800">
                             <div>
                                 <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">3. Pernyataan Jaminan Kerahasiaan & Anonimisasi Identitas Narasumber *</label>
-                                <textarea id="inp_ic_privasi" rows="3" oninput="autoResizeTextarea(this); updateField('ic_privasi', this.value)" placeholder="Tuliskan komitmen Anda dalam menjaga kerahasiaan rekaman/catatan dan menyamarkan identitas pribadi narasumber pada laporan..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(formState.ic_privasi)}</textarea>
+                                <textarea id="inp_ic_privasi" rows="3" oninput="autoResizeTextarea(this); updateField('ic_privasi', this.value)" placeholder="${exPh('Nama dan rekaman Anda hanya dipakai untuk tugas ini dan disamarkan menjadi kode (P1, P2) pada laporan', 'Tuliskan komitmen Anda dalam menjaga kerahasiaan rekaman/catatan dan menyamarkan identitas pribadi narasumber pada laporan...')}" class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(formState.ic_privasi)}</textarea>
                             </div>
                             <div>
                                 <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">4. Pernyataan Hak Kesukarelaan Narasumber (Hak Menolak / Berhenti) *</label>
-                                <textarea id="inp_ic_sukarela" rows="3" oninput="autoResizeTextarea(this); updateField('ic_sukarela', this.value)" placeholder="Tuliskan klausul yang menegaskan bahwa partisipasi bersifat sukarela dan narasumber bebas menolak perekaman atau menghentikan sesi kapan saja..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(formState.ic_sukarela)}</textarea>
+                                <textarea id="inp_ic_sukarela" rows="3" oninput="autoResizeTextarea(this); updateField('ic_sukarela', this.value)" placeholder="${exPh('Keikutsertaan bersifat sukarela. Anda boleh menolak menjawab atau menghentikan wawancara kapan saja tanpa konsekuensi', 'Tuliskan klausul yang menegaskan bahwa partisipasi bersifat sukarela dan narasumber bebas menolak perekaman atau menghentikan sesi kapan saja...')}" class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(formState.ic_sukarela)}</textarea>
                             </div>
                         </div>
                         <div class="flex justify-end pt-1">
@@ -1714,6 +1824,52 @@
         }
 
         // SLIDE 13 [PRATINJAU & UNDUH PDF]: Dokumen Field Kit 4 Bagian Siap Cetak
+        function computeSelfCheck() {
+            const checks = [];
+            const badQ = [], featQ = [];
+            for (let i = 0; i < 12; i++) {
+                const is = questionIssue(i, (formState.questions[i] || {}).q);
+                if (!is) continue;
+                if (is.type === 'feature') featQ.push('#' + (i + 1)); else badQ.push('#' + (i + 1));
+            }
+            checks.push({ ok: badQ.length === 0, label: 'Pertanyaan utama terbuka dan netral (tidak tertutup atau mengarahkan)', detail: 'Periksa pertanyaan ' + badQ.join(', ') });
+            checks.push({ ok: featQ.length === 0, label: 'Pertanyaan #6 sampai #12 tidak menyebut solusi atau fitur', detail: 'Periksa pertanyaan ' + featQ.join(', ') });
+            checks.push({ ok: /\d/.test(formState.target_jumlah || ''), label: 'Target jumlah responden memuat angka', detail: 'Tulis jumlah pemilik dan pelanggan, misal 1 dan 3' });
+            checks.push({ ok: /(anonim|samar|inisial|kode|rahasia)/i.test(formState.ic_privasi || ''), label: 'Informed consent menyebut penyamaran identitas narasumber', detail: 'Sebutkan anonimisasi atau penggunaan kode' });
+            checks.push({ ok: /sukarela/i.test(formState.ic_sukarela || '') && /(menolak|berhenti|mundur)/i.test(formState.ic_sukarela || ''), label: 'Informed consent menyebut sifat sukarela dan hak menolak atau berhenti', detail: 'Tegaskan narasumber boleh menolak atau berhenti kapan saja' });
+            checks.push({ ok: !hasUnexportedChanges, label: 'Data sudah diunduh sebagai file .JSON', detail: 'Klik Simpan Data (.JSON) di atas' });
+            return checks;
+        }
+        function renderSelfCheckInner() {
+            const checks = computeSelfCheck();
+            const issues = checks.filter(function (c) { return !c.ok; }).length;
+            const summary = 'Saran kualitas sebelum ke lapangan \u2022 ' + (issues === 0
+                ? '<span class="text-emerald-600 dark:text-emerald-400">semua baik</span>'
+                : '<span class="text-amber-700 dark:text-amber-400">' + issues + ' catatan</span>');
+            const body = checks.map(function (c) {
+                return c.ok
+                    ? '<div class="text-[11px] sm:text-xs text-slate-600 dark:text-slate-300"><i class="fa-solid fa-circle-check text-emerald-600 mr-1.5"></i>' + escapeHtml(c.label) + '</div>'
+                    : '<div class="text-[11px] sm:text-xs font-semibold text-amber-800 dark:text-amber-300"><i class="fa-solid fa-circle-exclamation mr-1.5"></i>' + escapeHtml(c.label) + ' <span class="font-normal">\u2014 ' + escapeHtml(c.detail) + '</span></div>';
+            }).join('') + '<div class="pt-1 text-[11px] text-slate-500 dark:text-slate-400">Semua catatan hanya saran, tidak menghalangi unduh PDF.</div>';
+            return { summary: summary, body: body };
+        }
+        function renderSelfCheckPanelHtml() {
+            const r = renderSelfCheckInner();
+            return `
+                <details id="selfCheckPanel" class="max-w-4xl mx-auto rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 no-print">
+                    <summary id="selfCheckSummary" class="cursor-pointer select-none px-4 py-3 text-xs font-extrabold text-slate-800 dark:text-slate-100">${r.summary}</summary>
+                    <div id="selfCheckBody" class="px-4 pb-4 space-y-1.5">${r.body}</div>
+                </details>`;
+        }
+        function refreshSelfCheckPanel() {
+            const sum = document.getElementById('selfCheckSummary');
+            const body = document.getElementById('selfCheckBody');
+            if (!sum || !body) return;
+            const r = renderSelfCheckInner();
+            sum.innerHTML = r.summary;
+            body.innerHTML = r.body;
+        }
+
         function renderSlide13() {
             return `
                 <div class="slide-enter space-y-5">
@@ -1738,6 +1894,8 @@
                             </button>
                         </div>
                     </div>
+
+                    ${renderSelfCheckPanelHtml()}
 
                     <div id="pdfWrapper" class="max-w-4xl mx-auto bg-white rounded-2xl shadow-md border border-slate-300 overflow-hidden">
                         <div id="pdfPrintArea" class="p-6 sm:p-10 space-y-6">
@@ -2290,6 +2448,55 @@
             }
         }
 
+        const FORM_SLIDE_INDEXES = [2, 4, 6, 7, 9, 10];
+        // Perkiraan waktu pengerjaan per slide (menit); bukan hasil pengukuran
+        const SLIDE_MINUTES = [3, 3, 8, 3, 20, 3, 15, 10, 3, 12, 10, 3, 5];
+        function getSlideCompletion(idx) {
+            let done = 0, total = 0, unit = 'bagian';
+            const countQ = function (a, b) { let n = 0; for (let i = a; i <= b; i++) if (isQuestionComplete(i)) n++; return n; };
+            if (idx === 2) { total = 2; done = (isInfoPartComplete(1) ? 1 : 0) + (isInfoPartComplete(2) ? 1 : 0); }
+            else if (idx === 4) { unit = 'pertanyaan'; total = 5; done = countQ(0, 4); }
+            else if (idx === 6) { unit = 'pertanyaan'; total = 4; done = countQ(5, 8); }
+            else if (idx === 7) { unit = 'pertanyaan'; total = 3; done = countQ(9, 11); }
+            else if (idx === 9) { unit = 'fokus'; total = 4; for (let n = 1; n <= 4; n++) if (isObsItemComplete(n)) done++; }
+            else if (idx === 10) { total = 2; done = (isIcPartComplete(1) ? 1 : 0) + (isIcPartComplete(2) ? 1 : 0); }
+            else return null;
+            return { done: Math.min(done, total), total: total, unit: unit };
+        }
+        function getRemainingMinutesForSlide(idx) {
+            const c = getSlideCompletion(idx);
+            if (!c) return 0;
+            return Math.ceil(SLIDE_MINUTES[idx] * (1 - Math.min(c.done / c.total, 1)));
+        }
+        function updateProgressChrome() {
+            const comp = getSlideCompletion(currentSlideIndex);
+            const pill = document.getElementById('slideProgressPill');
+            if (pill) {
+                if (comp) {
+                    const full = comp.done >= comp.total;
+                    pill.className = 'text-xs font-bold px-2.5 py-1 rounded-lg shrink-0 ' + (full
+                        ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
+                        : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300');
+                    pill.textContent = (full ? 'Lengkap ' : 'Terisi ') + comp.done + '/' + comp.total + ' ' + comp.unit + (full ? '' : ' \u2022 sisa \u00B1' + getRemainingMinutesForSlide(currentSlideIndex) + ' mnt');
+                } else {
+                    pill.className = 'hidden';
+                    pill.textContent = '';
+                }
+            }
+            const mob = document.getElementById('mobileFooterCounter');
+            if (mob) mob.textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES + (comp ? ' \u2022 ' + comp.done + '/' + comp.total : '');
+            let fullForms = 0, remainTotal = 0;
+            for (let i = 0; i < FORM_SLIDE_INDEXES.length; i++) {
+                const c = getSlideCompletion(FORM_SLIDE_INDEXES[i]);
+                if (c && c.done >= c.total) fullForms++;
+                remainTotal += getRemainingMinutesForSlide(FORM_SLIDE_INDEXES[i]);
+            }
+            const overall = document.getElementById('drawerOverallProgress');
+            if (overall) overall.textContent = 'Form lengkap: ' + fullForms + ' / ' + FORM_SLIDE_INDEXES.length;
+            const remEl = document.getElementById('drawerRemainingTime');
+            if (remEl) remEl.textContent = remainTotal > 0 ? 'Sisa isian \u00B1' + remainTotal + ' menit' : 'Semua isian lengkap';
+        }
+
         function renderDotsAndDrawer() {
             const dotsContainer = document.getElementById('slideDotsContainer');
             let dotsHtml = '';
@@ -2300,13 +2507,21 @@
                 const isActive = idx === currentSlideIndex;
                 const isForm = s.category.indexOf('Form') !== -1;
 
+                const comp = getSlideCompletion(idx);
+                const compFull = !!comp && comp.done >= comp.total;
+                const compPartial = !!comp && comp.done > 0 && !compFull;
                 const dotClass = isActive
                     ? 'w-7 bg-indigo-600 dark:bg-indigo-400'
+                    : compFull
+                    ? 'w-4 bg-emerald-600 dark:bg-emerald-500 hover:bg-emerald-700'
+                    : compPartial
+                    ? 'w-3 bg-amber-400 dark:bg-amber-500 hover:bg-amber-500'
                     : isForm
-                    ? 'w-2 bg-emerald-400/70 dark:bg-emerald-600 hover:bg-emerald-500'
+                    ? 'w-2 bg-emerald-300/60 dark:bg-emerald-900 hover:bg-emerald-400'
                     : 'w-2 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400';
+                const dotTitle = s.title + (comp ? ' (' + comp.done + '/' + comp.total + ' ' + comp.unit + (compFull ? ', lengkap' : '') + ')' : '');
 
-                dotsHtml += `<button type="button" onclick="goToSlide(${idx})" title="${escapeHtml(s.title)}" class="h-2 rounded-full transition-all ${dotClass}"></button>`;
+                dotsHtml += `<button type="button" onclick="goToSlide(${idx})" title="${escapeHtml(dotTitle)}" aria-label="${escapeHtml('Slide ' + s.id + ': ' + dotTitle)}" ${isActive ? 'aria-current="step"' : ''} class="h-2 rounded-full transition-all ${dotClass}"></button>`;
 
                 const itemClass = isActive
                     ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 font-bold'
@@ -2321,9 +2536,10 @@
                     <button type="button" onclick="selectSlideFromDrawer(${idx})" class="w-full text-left p-3 rounded-xl transition flex items-start gap-3 ${itemClass}">
                         <span class="w-6 h-6 rounded-lg text-xs font-extrabold flex items-center justify-center shrink-0 mt-0.5 ${badgeClass}">${s.id}</span>
                         <div class="min-w-0 flex-1">
-                            <div class="text-[10px] uppercase tracking-wider opacity-75">${escapeHtml(s.category)}</div>
+                            <div class="text-[10px] uppercase tracking-wider opacity-75">${escapeHtml(s.category)} \u2022 \u00B1${SLIDE_MINUTES[idx]} mnt</div>
                             <div class="text-xs sm:text-sm leading-snug break-words">${escapeHtml(s.title)}</div>
                         </div>
+                        ${comp ? `<span class="shrink-0 mt-0.5 text-[10px] font-extrabold px-2 py-0.5 rounded-md ${compFull ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'}">${compFull ? '<i class="fa-solid fa-check"></i> ' : ''}${comp.done}/${comp.total}</span>` : ''}
                     </button>
                 `;
             }
@@ -2331,6 +2547,7 @@
             if (dotsContainer) dotsContainer.innerHTML = dotsHtml;
             const drawerList = document.getElementById('drawerSlideList');
             if (drawerList) drawerList.innerHTML = drawerHtml;
+            updateProgressChrome();
         }
 
         function selectSlideFromDrawer(index) {
@@ -2380,7 +2597,64 @@
             }
         }
 
-        function clearAllData() {
+        function openResetModal() {
+            const m = document.getElementById('resetModalBackdrop');
+            m.classList.remove('hidden');
+            m.classList.add('flex');
+        }
+        function closeResetModal() {
+            const m = document.getElementById('resetModalBackdrop');
+            m.classList.add('hidden');
+            m.classList.remove('flex');
+        }
+        let undoSnapshot = null;
+        let undoTick = null;
+        function showUndoBar(snap, message) {
+            undoSnapshot = snap;
+            clearInterval(undoTick);
+            let left = 10;
+            const bar = document.getElementById('undoBar');
+            const cd = document.getElementById('undoCountdown');
+            const msg = document.getElementById('undoMessage');
+            if (!bar || !cd) return;
+            if (msg) msg.textContent = message || 'Perubahan diterapkan.';
+            cd.textContent = left;
+            bar.classList.remove('hidden');
+            bar.classList.add('flex');
+            undoTick = setInterval(function () {
+                left--;
+                cd.textContent = Math.max(left, 0);
+                if (left <= 0) hideUndoBar(true);
+            }, 1000);
+        }
+        function hideUndoBar(dropSnapshot) {
+            clearInterval(undoTick);
+            const bar = document.getElementById('undoBar');
+            if (bar) { bar.classList.add('hidden'); bar.classList.remove('flex'); }
+            if (dropSnapshot) undoSnapshot = null;
+        }
+        function undoLastChange() {
+            if (!undoSnapshot) return;
+            try {
+                const snap = JSON.parse(undoSnapshot);
+                formState = snap.form;
+                uiWizard = snap.ui;
+                currentSlideIndex = snap.slide || 0;
+                syncSavedStatesFromData();
+                triggerAutoSave();
+            } catch (e) {}
+            hideUndoBar(true);
+            renderCurrentSlide();
+            showToast('Isian berhasil dipulihkan.', 'success');
+        }
+        function confirmResetAll() {
+            const snap = JSON.stringify({ form: formState, ui: uiWizard, slide: currentSlideIndex });
+            closeResetModal();
+            clearAllData(true);
+            showUndoBar(snap, 'Seluruh isian dikosongkan.');
+        }
+
+        function clearAllData(silent) {
             const today = new Date().toISOString().split('T')[0];
             formState = {
                 nama: "", nim: "", kelas: "", tgl: today,
@@ -2400,9 +2674,10 @@
                 icActive: 1, icSaved: { 1: false, 2: false }, icMin: { 1: false, 2: false }
             };
             try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+            hasUnexportedChanges = false;
             currentSlideIndex = 0;
             renderCurrentSlide();
-            showToast('Seluruh isian telah dikosongkan.', 'success');
+            if (!silent) showToast('Seluruh isian telah dikosongkan.', 'success');
         }
 
         function downloadPdf() {
@@ -2440,7 +2715,8 @@
                     filename: fn,
                     image: { type: 'jpeg', quality: 0.98 },
                     html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
-                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                    pagebreak: { mode: ['css', 'legacy'] }
                 }).from(el).save().then(function () {
                     if (btn) { btn.innerHTML = orig; btn.disabled = false; }
                 }).catch(function () {
@@ -2542,17 +2818,37 @@
             const activeTag = document.activeElement && document.activeElement.tagName
                 ? document.activeElement.tagName.toLowerCase()
                 : '';
-            if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') return;
-            if (e.key === 'ArrowRight') changeSlide(1);
-            if (e.key === 'ArrowLeft') changeSlide(-1);
             if (e.key === 'Escape') {
                 closeTermModal();
                 closeGlossaryIndex();
+                closeResetModal();
+            }
+            if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') return;
+            const resetModal = document.getElementById('resetModalBackdrop');
+            if (resetModal && !resetModal.classList.contains('hidden')) return;
+            if (e.key === 'ArrowRight') changeSlide(1);
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+        });
+
+        window.addEventListener('beforeunload', function (e) {
+            if (hasUnexportedChanges) {
+                e.preventDefault();
+                e.returnValue = '';
+                return '';
             }
         });
 
         loadSavedState();
         renderCurrentSlide();
+        (function checkStorageAtStartup() {
+            try {
+                localStorage.setItem('__lkm02_probe', '1');
+                localStorage.removeItem('__lkm02_probe');
+            } catch (e) {
+                setSaveBadge(false);
+                warnStorageFailure();
+            }
+        })();
     </script>
 </body>
 </html>
