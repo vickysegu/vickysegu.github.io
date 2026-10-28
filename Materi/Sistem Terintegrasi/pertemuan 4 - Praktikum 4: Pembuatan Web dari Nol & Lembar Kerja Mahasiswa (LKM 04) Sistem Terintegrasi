@@ -1,0 +1,1842 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Praktikum 4: Pembuatan Web dari Nol & Lembar Kerja Mahasiswa (LKM 04) Sistem Terintegrasi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" defer></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script>
+        if (typeof tailwind !== 'undefined') {
+            tailwind.config = {
+                darkMode: 'class',
+                theme: { extend: { fontFamily: {
+                    sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    mono: ['"JetBrains Mono"', 'monospace']
+                } } }
+            };
+        }
+    </script>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+        .tech-term { display: inline-block; color: #065f46; background-color: #ecfdf5; border: 1px solid #a7f3d0; padding: 0.05rem 0.45rem; border-radius: 0.4rem; font-weight: 700; cursor: pointer; transition: all 0.15s ease; line-height: 1.35; }
+        .dark .tech-term { color: #d1fae5; background-color: rgba(5, 150, 105, 0.35); border-color: rgba(52, 211, 153, 0.45); }
+        .tech-term:hover { background-color: #d1fae5; border-color: #34d399; color: #064e3b; transform: translateY(-1px); }
+        .dark .tech-term:hover { background-color: rgba(16, 185, 129, 0.55); color: #ffffff; }
+        #slideViewport, #slideViewport p, #slideViewport span, #slideViewport div, #slideViewport h2, #slideViewport h3, #slideViewport h4, #slideViewport button { overflow-wrap: break-word; word-wrap: break-word; }
+        .slide-enter { animation: fadeSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes fadeSlide { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes shakeError { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+        .input-error { border-color: #e11d48 !important; box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.18) !important; animation: shakeError 0.3s ease-in-out; }
+        textarea.auto-expand { resize: vertical; min-height: 60px; line-height: 1.6; }
+        pre.code-box { background: #0b0b10; color: #e4e4e7; border-radius: 1rem; padding: 1rem 1.2rem; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; line-height: 1.55; overflow-x: auto; position: relative; border: 1px solid #1f1f2e; margin: 0; max-height: 310px; }
+        pre.code-box code { font-family: inherit; display: block; min-width: fit-content; white-space: pre; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+        .dark ::-webkit-scrollbar-thumb { background: #334155; }
+        #pdfPrintArea { background: #ffffff; color: #0f172a; font-family: 'Plus Jakarta Sans', sans-serif; }
+        .pdf-table { width: 100%; border-collapse: collapse; }
+        .pdf-table th, .pdf-table td { border: 1px solid #cbd5e1; padding: 7px 9px; vertical-align: top; font-size: 10.5px; line-height: 1.45; white-space: pre-line; }
+        .pdf-table th { background-color: #f1f5f9; font-weight: 700; color: #1e293b; text-align: left; }
+        @media print {
+            body * { visibility: hidden; }
+            #pdfWrapper, #pdfWrapper * { visibility: visible; }
+            #pdfWrapper { position: absolute; left: 0; top: 0; width: 100%; margin: 0 !important; padding: 0 !important; box-shadow: none !important; border: none !important; }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col justify-between transition-colors duration-200">
+
+    <input type="file" id="jsonFileInput" accept=".json,application/json" class="hidden" onchange="handleJsonFileImport(event)">
+
+    <div id="toastBanner" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 hidden max-w-md w-[92%] sm:w-full px-4 py-3.5 rounded-2xl shadow-2xl border flex items-start gap-3 transition-all duration-200 no-print">
+        <i id="toastIcon" class="fa-solid fa-circle-exclamation text-lg mt-0.5 shrink-0"></i>
+        <div class="flex-1 text-xs sm:text-sm font-bold leading-snug" id="toastMessage">Pesan notifikasi</div>
+        <button type="button" onclick="hideToast()" class="text-current opacity-70 hover:opacity-100 shrink-0"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 no-print">
+        <div class="w-full h-1 bg-slate-100 dark:bg-slate-800">
+            <div id="topProgressBar" class="h-full bg-emerald-600 dark:bg-emerald-500 transition-all duration-300" style="width: 5%;"></div>
+        </div>
+        <div class="max-w-5xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+                <button type="button" onclick="toggleSlideDrawer()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition flex items-center gap-2 text-xs sm:text-sm font-bold shrink-0">
+                    <i class="fa-solid fa-list-ul text-emerald-600 dark:text-emerald-400"></i>
+                    <span class="hidden sm:inline">Daftar Slide</span>
+                    <span id="slideCounterBadge" class="px-2 py-0.5 text-xs rounded-lg bg-emerald-600 text-white font-bold">1 / 21</span>
+                </button>
+                <div class="hidden lg:flex items-center gap-2 min-w-0">
+                    <span id="slideCategoryPill" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 shrink-0">LKM 04</span>
+                    <h1 id="headerSlideTitle" class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 truncate">Panduan Praktikum dari Nol &amp; Lembar Kerja LKM 04</h1>
+                </div>
+            </div>
+            <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                <span id="saveBadge" class="hidden xl:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Tersimpan
+                </span>
+                <button type="button" onclick="exportJsonData()" class="px-2.5 sm:px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:hover:bg-emerald-900 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-extrabold flex items-center gap-1.5 transition" title="Simpan File Data Proyek (.json)">
+                    <i class="fa-solid fa-download"></i><span class="hidden sm:inline">Simpan .JSON</span>
+                </button>
+                <button type="button" onclick="triggerImportJson()" class="px-2.5 sm:px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:hover:bg-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-800 text-xs font-extrabold flex items-center gap-1.5 transition" title="Muat File Data Proyek (.json)">
+                    <i class="fa-solid fa-upload"></i><span class="hidden sm:inline">Muat .JSON</span>
+                </button>
+                <button type="button" onclick="openGlossaryIndex()" class="px-2.5 sm:px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 text-xs font-bold flex items-center gap-1.5 transition" title="Buka Kamus Bantuan">
+                    <i class="fa-solid fa-book-open text-emerald-600 dark:text-emerald-400"></i>
+                    <span class="hidden md:inline">Kamus</span>
+                </button>
+                <button type="button" onclick="goToSlide(20)" class="hidden sm:flex px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold items-center gap-1.5 transition shadow-xs">
+                    <i class="fa-solid fa-file-pdf"></i><span>PDF</span>
+                </button>
+                <button type="button" onclick="toggleTheme()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center transition" title="Ganti Tema Layar">
+                    <i id="themeIcon" class="fa-solid fa-moon text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div id="slideDrawerBackdrop" onclick="toggleSlideDrawer()" class="fixed inset-0 bg-slate-950/50 backdrop-blur-xs z-40 hidden opacity-0 transition-opacity duration-200 no-print"></div>
+    <aside id="slideDrawer" class="fixed top-0 left-0 bottom-0 w-80 sm:w-96 bg-white dark:bg-slate-900 z-50 shadow-2xl border-r border-slate-200 dark:border-slate-800 transform -translate-x-full transition-transform duration-200 flex flex-col no-print">
+        <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Praktikum 4 • LKM 04</span>
+                <h2 class="text-base font-extrabold text-slate-900 dark:text-white mt-0.5">Daftar Langkah &amp; Form LKM</h2>
+            </div>
+            <button type="button" onclick="toggleSlideDrawer()" class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="drawerSlideList" class="p-3.5 overflow-y-auto space-y-1 flex-1"></div>
+        <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 flex items-center justify-between">
+            <span>Semua Form Wajib Diisi Mandiri</span>
+            <span class="font-bold">21 Slide</span>
+        </div>
+    </aside>
+
+    <main class="flex-1 max-w-5xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-6 flex flex-col justify-center">
+        <div id="slideViewport" class="bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl shadow-xs border border-slate-200/80 dark:border-slate-800 p-4 sm:p-8 lg:p-10 min-h-[500px] flex flex-col justify-between relative">
+            <div class="py-12 text-center text-sm text-slate-500">Memuat tampilan slide praktikum 4...</div>
+        </div>
+    </main>
+
+    <footer class="sticky bottom-0 z-20 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 py-3 px-4 sm:px-6 no-print">
+        <div class="max-w-5xl mx-auto flex items-center justify-between gap-4">
+            <button type="button" id="prevSlideBtn" onclick="changeSlide(-1)" class="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                <i class="fa-solid fa-arrow-left text-xs"></i><span>Sebelumnya</span>
+            </button>
+            <div id="slideDotsContainer" class="hidden md:flex items-center gap-1.5 flex-wrap justify-center"></div>
+            <div class="md:hidden text-xs font-bold text-slate-500 dark:text-slate-400" id="mobileFooterCounter">1 / 21</div>
+            <button type="button" id="nextSlideBtn" onclick="changeSlide(1)" class="px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-emerald-600 hover:bg-emerald-700 text-white transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                <span id="nextBtnText">Selanjutnya</span><i class="fa-solid fa-arrow-right text-xs"></i>
+            </button>
+        </div>
+    </footer>
+
+    <div id="termModalBackdrop" onclick="closeTermModal()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4 no-print">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl slide-enter">
+            <div class="flex items-start justify-between gap-4 mb-4">
+                <div>
+                    <span id="termCategoryBadge" class="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">Kategori</span>
+                    <h3 id="termTitle" class="text-xl font-extrabold text-slate-900 dark:text-white mt-1.5">Nama Istilah</h3>
+                </div>
+                <button type="button" onclick="closeTermModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center shrink-0"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="space-y-4">
+                <p id="termMainDesc" class="text-sm text-slate-700 dark:text-slate-200 leading-relaxed bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200/70 dark:border-slate-700/70"></p>
+                <p id="termDetailDesc" class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed px-1"></p>
+                <div class="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800 text-xs px-1">
+                    <span id="termSourceName" class="font-semibold text-slate-400">Referensi</span>
+                    <button type="button" onclick="closeTermModal(); openGlossaryIndex();" class="font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1.5">
+                        <span>Buka Daftar Kamus</span><i class="fa-solid fa-book-open text-[10px]"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="glossaryModalBackdrop" onclick="closeGlossaryIndex()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4 no-print">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-4xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden slide-enter">
+            <div class="p-5 sm:p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white">Kamus Bantuan Praktikum 4 (LKM 04)</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Penjelasan praktis untuk pembuatan web dari nol, Kartu Stok, Saklar Cabang, dan cara mengisi LKM.</p>
+                </div>
+                <button type="button" onclick="closeGlossaryIndex()" class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-sm"></i>
+                    <input id="glossarySearchInput" oninput="renderGlossaryList(this.value)" type="text" placeholder="Cari bantuan tentang htdocs, koneksi.php, log_stok, api_keys, Peer Review..." class="w-full pl-10 pr-4 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+            </div>
+            <div id="glossaryListGrid" class="p-5 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+        </div>
+    </div>
+
+    <script>
+        /* ================= KUMPULAN KODE WEB (DARI NOL + RESET SQL) ================= */
+        const RAW_CODES = {
+            sql_1_barang_log: [
+                "-- ==========================================================",
+                "-- SKRIP SQL 1 (DARI NOL): DATABASE db_gudang, TABEL barang & log_stok",
+                "-- Jalankan di tab SQL pada http://localhost/phpmyadmin",
+                "-- ==========================================================",
+                "",
+                "CREATE DATABASE IF NOT EXISTS db_gudang",
+                "  CHARACTER SET utf8mb4",
+                "  COLLATE utf8mb4_unicode_ci;",
+                "",
+                "USE db_gudang;",
+                "",
+                "CREATE TABLE IF NOT EXISTS barang (",
+                "  id    INT AUTO_INCREMENT PRIMARY KEY,",
+                "  kode  VARCHAR(10)   NOT NULL UNIQUE,",
+                "  nama  VARCHAR(100)  NOT NULL,",
+                "  harga DECIMAL(12,2) NOT NULL,",
+                "  stok  INT           NOT NULL DEFAULT 0",
+                ") ENGINE=InnoDB;",
+                "",
+                "INSERT IGNORE INTO barang (id, kode, nama, harga, stok) VALUES",
+                "(1,  'SP001', 'Sneakers Pro',    450000.00,  8),",
+                "(2,  'SP002', 'Formal Classic',  380000.00,  6),",
+                "(3,  'SP003', 'Boots Adventure', 520000.00,  5),",
+                "(4,  'SP004', 'Running Lite',    320000.00, 12),",
+                "(5,  'SP005', 'Casual Canvas',   275000.00, 15);",
+                "",
+                "CREATE TABLE IF NOT EXISTS log_stok (",
+                "  id           INT AUTO_INCREMENT PRIMARY KEY,",
+                "  barang_id    INT          NOT NULL,",
+                "  kode_barang  VARCHAR(10)  NOT NULL,",
+                "  jenis        ENUM('masuk', 'keluar') NOT NULL,",
+                "  qty          INT          NOT NULL,",
+                "  stok_akhir   INT          NOT NULL,",
+                "  no_referensi VARCHAR(30)  NOT NULL,",
+                "  keterangan   VARCHAR(255) DEFAULT NULL,",
+                "  tanggal      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,",
+                "  INDEX idx_barang_id (barang_id),",
+                "  INDEX idx_no_referensi (no_referensi),",
+                "  CONSTRAINT fk_log_barang",
+                "    FOREIGN KEY (barang_id) REFERENCES barang(id)",
+                "    ON DELETE CASCADE ON UPDATE CASCADE",
+                ") ENGINE=InnoDB;"
+            ].join("\n"),
+
+            sql_2_api_keys: [
+                "-- ==========================================================",
+                "-- SKRIP SQL 2 (DARI NOL): TABEL KUNCI CABANG (api_keys)",
+                "-- Jalankan di tab SQL pada http://localhost/phpmyadmin",
+                "-- ==========================================================",
+                "",
+                "USE db_gudang;",
+                "",
+                "CREATE TABLE IF NOT EXISTS api_keys (",
+                "  id            INT AUTO_INCREMENT PRIMARY KEY,",
+                "  nama_aplikasi VARCHAR(100) NOT NULL,",
+                "  api_key       VARCHAR(64)  NOT NULL UNIQUE,",
+                "  status_aktif  TINYINT(1)   NOT NULL DEFAULT 1,",
+                "  dibuat_pada   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP",
+                ") ENGINE=InnoDB;",
+                "",
+                "INSERT IGNORE INTO api_keys (id, nama_aplikasi, api_key, status_aktif) VALUES",
+                "(1, 'Aplikasi Kasir Toko Pusat',    'GDG-KEY-UTAMA-001', 1),",
+                "(2, 'Aplikasi Kasir Cabang Padang', 'GDG-KEY-CABANG-002', 1);"
+            ].join("\n"),
+
+            sql_reset_gudang: [
+                "-- ==========================================================",
+                "-- SKRIP RESET GUDANG (jalankan jika data praktikum kacau)",
+                "-- Mengembalikan stok awal, mengosongkan log_stok, & menyalakan semua kunci.",
+                "-- ==========================================================",
+                "",
+                "USE db_gudang;",
+                "",
+                "-- 1. Matikan FK sementara supaya log_stok bisa di-TRUNCATE",
+                "SET FOREIGN_KEY_CHECKS = 0;",
+                "TRUNCATE TABLE log_stok;",
+                "SET FOREIGN_KEY_CHECKS = 1;",
+                "",
+                "-- 2. Kembalikan stok awal setiap barang",
+                "UPDATE barang SET stok = 8  WHERE kode = 'SP001';",
+                "UPDATE barang SET stok = 6  WHERE kode = 'SP002';",
+                "UPDATE barang SET stok = 5  WHERE kode = 'SP003';",
+                "UPDATE barang SET stok = 12 WHERE kode = 'SP004';",
+                "UPDATE barang SET stok = 15 WHERE kode = 'SP005';",
+                "",
+                "-- 3. Catat saldo awal baru ke log_stok",
+                "INSERT INTO log_stok (barang_id, kode_barang, jenis, qty, stok_akhir, no_referensi, keterangan)",
+                "SELECT id, kode, 'masuk', stok, stok, 'SALDO-AWAL-RESET', 'Stok awal setelah reset'",
+                "FROM barang;",
+                "",
+                "-- 4. Nyalakan semua saklar kunci cabang",
+                "UPDATE api_keys SET status_aktif = 1;",
+                "",
+                "-- 5. Verifikasi",
+                "SELECT kode, nama, stok FROM barang ORDER BY id;",
+                "SELECT id, nama_aplikasi, api_key, status_aktif FROM api_keys;"
+            ].join("\n"),
+
+            php_1_koneksi: [
+                "<?php",
+                "// FILE WEB 1/6: C:/xampp/htdocs/sistem_gudang/config/koneksi.php",
+                "",
+                "$host    = 'localhost';",
+                "$db      = 'db_gudang';",
+                "$user    = 'root';",
+                "$pass    = '';",
+                "$charset = 'utf8mb4';",
+                "",
+                "$dsn = \"mysql:host=$host;dbname=$db;charset=$charset\";",
+                "$options = [",
+                "    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,",
+                "    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,",
+                "    PDO::ATTR_EMULATE_PREPARES   => false,",
+                "];",
+                "",
+                "try {",
+                "    $pdo = new PDO($dsn, $user, $pass, $options);",
+                "} catch (PDOException $e) {",
+                "    die('Koneksi database gagal (Pastikan Skrip SQL 1 & 2 sudah dijalankan): ' . htmlspecialchars($e->getMessage()));",
+                "}"
+            ].join("\n"),
+
+            php_2_gudang_index: [
+                "<?php",
+                "// FILE WEB 2/6: C:/xampp/htdocs/sistem_gudang/index.php",
+                "require_once __DIR__ . '/config/koneksi.php';",
+                "/** @var PDO $pdo */",
+                "",
+                "$pesan = '';",
+                "$error = '';",
+                "",
+                "if (isset($_POST['aksi']) && $_POST['aksi'] === 'tambah_key') {",
+                "    $namaApp  = trim((string)($_POST['nama_aplikasi'] ?? 'Kasir Cabang Baru'));",
+                "    $kodeBaru = 'GDG-KEY-' . strtoupper(substr(md5(uniqid((string)mt_rand(), true)), 0, 6));",
+                "    $st = $pdo->prepare('INSERT INTO api_keys (nama_aplikasi, api_key, status_aktif) VALUES (:nm, :ky, 1)');",
+                "    $st->execute([':nm' => $namaApp, ':ky' => $kodeBaru]);",
+                "    $pesan = '🔑 Kunci cabang baru (' . $kodeBaru . ') berhasil diterbitkan!';",
+                "}",
+                "",
+                "if (isset($_GET['toggle_key'])) {",
+                "    $idKey = (int)$_GET['toggle_key'];",
+                "    $pdo->prepare('UPDATE api_keys SET status_aktif = IF(status_aktif = 1, 0, 1) WHERE id = :id')->execute([':id' => $idKey]);",
+                "    $pesan = '🔄 Posisi saklar izin cabang berhasil diubah!';",
+                "}",
+                "",
+                "if (isset($_POST['aksi']) && $_POST['aksi'] === 'mutasi_stok') {",
+                "    $kode  = trim((string)($_POST['kode'] ?? ''));",
+                "    $jenis = ($_POST['jenis'] ?? 'masuk') === 'keluar' ? 'keluar' : 'masuk';",
+                "    $qty   = max(1, (int)($_POST['qty'] ?? 1));",
+                "    $ref   = trim((string)($_POST['no_referensi'] ?? ('REF-' . date('His'))));",
+                "    $ket   = trim((string)($_POST['keterangan'] ?? 'Mutasi langsung di Gudang'));",
+                "",
+                "    $st = $pdo->prepare('SELECT * FROM barang WHERE kode = :k');",
+                "    $st->execute([':k' => $kode]);",
+                "    $brg = $st->fetch();",
+                "",
+                "    if (!$brg) {",
+                "        $error = '⚠️ Produk tidak ditemukan!';",
+                "    } elseif ($jenis === 'keluar' && (int)$brg['stok'] < $qty) {",
+                "        $error = '⚠️ Stok tidak cukup!';",
+                "    } else {",
+                "        $stokAkhir = ($jenis === 'masuk') ? ((int)$brg['stok'] + $qty) : ((int)$brg['stok'] - $qty);",
+                "        $pdo->prepare('UPDATE barang SET stok = :s WHERE id = :id')->execute([':s' => $stokAkhir, ':id' => $brg['id']]);",
+                "        $pdo->prepare('INSERT INTO log_stok (barang_id, kode_barang, jenis, qty, stok_akhir, no_referensi, keterangan) VALUES (:bid, :kd, :jn, :qt, :sa, :rf, :kt)')",
+                "            ->execute([':bid' => $brg['id'], ':kd' => $brg['kode'], ':jn' => $jenis, ':qt' => $qty, ':sa' => $stokAkhir, ':rf' => $ref, ':kt' => $ket]);",
+                "        $pesan = '📋 Mutasi tercatat di Kartu Stok!';",
+                "    }",
+                "}",
+                "",
+                "$daftarBarang = $pdo->query('SELECT * FROM barang ORDER BY id')->fetchAll();",
+                "$daftarKeys   = $pdo->query('SELECT * FROM api_keys ORDER BY id DESC')->fetchAll();",
+                "$daftarLogs   = $pdo->query('SELECT l.*, b.nama FROM log_stok l LEFT JOIN barang b ON l.barang_id = b.id ORDER BY l.id DESC LIMIT 12')->fetchAll();",
+                "?>",
+                "<!DOCTYPE html>",
+                "<html lang=\"id\">",
+                "<head>",
+                "<meta charset=\"UTF-8\">",
+                "<title>Web Aplikasi 1: Sistem Gudang</title>",
+                "<style>",
+                "  body { font-family: system-ui, sans-serif; background: #ecfdf5; padding: 20px; margin: 0; }",
+                "  .box { max-width: 1100px; margin: 0 auto; background: #fff; padding: 24px; border-radius: 16px; border: 2px solid #059669; }",
+                "  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 16px; }",
+                "  .card { padding: 16px; border-radius: 12px; background: #f8fafc; border: 1px solid #cbd5e1; }",
+                "  label { display: block; font-size: 12px; font-weight: bold; margin: 6px 0 3px; }",
+                "  input, select { width: 100%; padding: 7px 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }",
+                "  .btn { display: inline-block; padding: 7px 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; color: #fff; text-decoration: none; font-size: 12px; }",
+                "  .btn-green { background: #059669; } .btn-orange { background: #ea580c; } .btn-indigo { background: #4f46e5; } .btn-red { background: #dc2626; }",
+                "  table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 8px; }",
+                "  th, td { border: 1px solid #e2e8f0; padding: 7px 9px; text-align: left; }",
+                "  th { background: #d1fae5; color: #065f46; }",
+                "  .alert { padding: 12px; background: #dcfce7; border-left: 4px solid #059669; margin: 12px 0; font-weight: bold; border-radius: 6px; }",
+                "  .err { padding: 12px; background: #fef2f2; border-left: 4px solid #dc2626; margin: 12px 0; font-weight: bold; border-radius: 6px; }",
+                "  @media (max-width: 860px) { .grid-2 { grid-template-columns: 1fr; } }",
+                "</style>",
+                "</head>",
+                "<body>",
+                "<div class=\"box\">",
+                "  <div style=\"display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;border-bottom:2px solid #e2e8f0;padding-bottom:12px\">",
+                "    <div><h2 style=\"margin:0;color:#065f46\">📦 WEB 1: SISTEM GUDANG</h2><p style=\"margin:4px 0 0;color:#475569;font-size:13px\">Saklar Izin Cabang &amp; Audit Kartu Stok</p></div>",
+                "    <a href=\"../sistem_penjualan/index.php\" target=\"_blank\" class=\"btn btn-indigo\">🧪 Buka Web Penguji Kasir &rarr;</a>",
+                "  </div>",
+                "  <?php if ($pesan): ?><div class=\"alert\"><?= $pesan ?></div><?php endif; ?>",
+                "  <?php if ($error): ?><div class=\"err\"><?= $error ?></div><?php endif; ?>",
+                "  <div class=\"grid-2\">",
+                "    <div class=\"card\">",
+                "      <h3 style=\"margin:0 0 8px;color:#3730a3;font-size:15px\">🔑 Daftar Izin Akses Cabang (api_keys)</h3>",
+                "      <form method=\"post\" style=\"display:flex;gap:8px;margin-bottom:10px\">",
+                "        <input type=\"hidden\" name=\"aksi\" value=\"tambah_key\">",
+                "        <input type=\"text\" name=\"nama_aplikasi\" required placeholder=\"Nama Cabang Baru\">",
+                "        <button type=\"submit\" class=\"btn btn-orange\">➕ Terbitkan</button>",
+                "      </form>",
+                "      <table>",
+                "        <tr><th>Nama Cabang</th><th>Kode Kunci</th><th>Saklar</th><th>Aksi</th></tr>",
+                "        <?php foreach ($daftarKeys as $k): ?>",
+                "        <tr><td><?= htmlspecialchars($k['nama_aplikasi']) ?></td>",
+                "          <td><code style=\"background:#ffedd5;color:#c2410c;padding:2px 6px;border-radius:4px;font-weight:bold\"><?= htmlspecialchars($k['api_key']) ?></code></td>",
+                "          <td><strong style=\"color:<?= $k['status_aktif'] ? '#059669' : '#dc2626' ?>\"><?= $k['status_aktif'] ? '1 · AKTIF' : '0 · MATI' ?></strong></td>",
+                "          <td><a href=\"?toggle_key=<?= (int)$k['id'] ?>\" class=\"btn <?= $k['status_aktif'] ? 'btn-red' : 'btn-green' ?>\"><?= $k['status_aktif'] ? 'Matikan' : 'Nyalakan' ?></a></td></tr>",
+                "        <?php endforeach; ?>",
+                "      </table>",
+                "    </div>",
+                "    <div class=\"card\">",
+                "      <h3 style=\"margin:0 0 8px;color:#065f46;font-size:15px\">📋 Input Mutasi Stok</h3>",
+                "      <form method=\"post\">",
+                "        <input type=\"hidden\" name=\"aksi\" value=\"mutasi_stok\">",
+                "        <div style=\"display:grid;grid-template-columns:1fr 1fr;gap:8px\">",
+                "          <div><label>Produk</label><select name=\"kode\"><?php foreach ($daftarBarang as $b): ?><option value=\"<?= htmlspecialchars($b['kode']) ?>\"><?= htmlspecialchars($b['kode'] . ' - ' . $b['nama'] . ' (Stok: ' . $b['stok'] . ')') ?></option><?php endforeach; ?></select></div>",
+                "          <div><label>Jenis</label><select name=\"jenis\"><option value=\"masuk\">➕ MASUK</option><option value=\"keluar\">➖ KELUAR</option></select></div>",
+                "          <div><label>Qty</label><input type=\"number\" name=\"qty\" value=\"3\" min=\"1\" required></div>",
+                "          <div><label>No Referensi</label><input type=\"text\" name=\"no_referensi\" value=\"PO-<?= date('Ymd-His') ?>\" required></div>",
+                "        </div>",
+                "        <label>Keterangan</label><input type=\"text\" name=\"keterangan\" value=\"Kiriman supplier\">",
+                "        <button type=\"submit\" class=\"btn btn-green\" style=\"width:100%;margin-top:10px;padding:9px\">💾 Simpan Mutasi</button>",
+                "      </form>",
+                "    </div>",
+                "  </div>",
+                "  <div class=\"grid-2\">",
+                "    <div><h3 style=\"margin:0 0 4px;font-size:15px\">📦 Sisa Stok (barang)</h3>",
+                "      <table><tr><th>Kode</th><th>Nama</th><th>Harga</th><th>Stok</th></tr>",
+                "        <?php foreach ($daftarBarang as $b): ?>",
+                "        <tr><td><strong><?= htmlspecialchars($b['kode']) ?></strong></td><td><?= htmlspecialchars($b['nama']) ?></td><td>Rp <?= number_format($b['harga'],0,',','.') ?></td><td><strong style=\"color:#059669\"><?= (int)$b['stok'] ?></strong></td></tr>",
+                "        <?php endforeach; ?></table></div>",
+                "    <div><h3 style=\"margin:0 0 4px;font-size:15px\">📋 Kartu Stok (log_stok)</h3>",
+                "      <table><tr><th>Waktu</th><th>Kode</th><th>Jenis</th><th>Qty</th><th>Sisa</th><th>Referensi</th></tr>",
+                "        <?php foreach ($daftarLogs as $l): ?>",
+                "        <tr><td style=\"font-size:11px\"><?= htmlspecialchars($l['tanggal']) ?></td><td><strong><?= htmlspecialchars($l['kode_barang']) ?></strong></td><td><strong style=\"color:<?= $l['jenis']==='masuk'?'#059669':'#ea580c' ?>\"><?= strtoupper($l['jenis']) ?></strong></td><td><?= $l['jenis']==='masuk'?'+':'-' ?><?= (int)$l['qty'] ?></td><td><strong><?= (int)$l['stok_akhir'] ?></strong></td><td><code><?= htmlspecialchars($l['no_referensi']) ?></code></td></tr>",
+                "        <?php endforeach; ?></table></div>",
+                "  </div>",
+                "</div></body></html>"
+            ].join("\n"),
+
+            php_3_api_barang: [
+                "<?php",
+                "// FILE WEB 3/6: C:/xampp/htdocs/sistem_gudang/api/barang.php",
+                "header('Content-Type: application/json; charset=utf-8');",
+                "require_once __DIR__ . '/../config/koneksi.php';",
+                "/** @var PDO $pdo */",
+                "",
+                "$kunciKiriman = trim((string)($_SERVER['HTTP_X_API_KEY'] ?? ($_GET['api_key'] ?? '')));",
+                "$stKey = $pdo->prepare('SELECT * FROM api_keys WHERE api_key = :k AND status_aktif = 1 LIMIT 1');",
+                "$stKey->execute([':k' => $kunciKiriman]);",
+                "$mitra = $stKey->fetch();",
+                "",
+                "if (!$mitra) {",
+                "    http_response_code(401);",
+                "    echo json_encode(['status'=>'error','kode_error'=>'UNAUTHORIZED','pesan'=>'401 Ditolak: Kunci API tidak sah atau saklar mati!'], JSON_UNESCAPED_UNICODE);",
+                "    exit;",
+                "}",
+                "",
+                "$kode = isset($_GET['kode']) ? trim((string)$_GET['kode']) : '';",
+                "if ($kode !== '') {",
+                "    $stmt = $pdo->prepare('SELECT id, kode, nama, harga, stok FROM barang WHERE kode = :kode');",
+                "    $stmt->execute([':kode' => $kode]);",
+                "    $barang = $stmt->fetch();",
+                "    if (!$barang) {",
+                "        http_response_code(404);",
+                "        echo json_encode(['status'=>'error','kode_error'=>'BARANG_TIDAK_TERDAFTAR','pesan'=>'404: Produk ' . $kode . ' tidak terdaftar!'], JSON_UNESCAPED_UNICODE);",
+                "        exit;",
+                "    }",
+                "    echo json_encode(['status'=>'sukses','pesan'=>'Produk ditemukan','data'=>$barang], JSON_UNESCAPED_UNICODE);",
+                "    exit;",
+                "}",
+                "",
+                "$daftar = $pdo->query('SELECT id, kode, nama, harga, stok FROM barang ORDER BY id')->fetchAll();",
+                "echo json_encode(['status'=>'sukses','cabang_peminta'=>$mitra['nama_aplikasi'],'data'=>$daftar], JSON_UNESCAPED_UNICODE);"
+            ].join("\n"),
+
+            php_4_api_stok_keluar: [
+                "<?php",
+                "// FILE WEB 4/6: C:/xampp/htdocs/sistem_gudang/api/stok-keluar.php",
+                "header('Content-Type: application/json; charset=utf-8');",
+                "require_once __DIR__ . '/../config/koneksi.php';",
+                "/** @var PDO $pdo */",
+                "",
+                "if ($_SERVER['REQUEST_METHOD'] !== 'POST') {",
+                "    http_response_code(405);",
+                "    echo json_encode(['status'=>'error','pesan'=>'Layanan ini wajib POST!'], JSON_UNESCAPED_UNICODE);",
+                "    exit;",
+                "}",
+                "",
+                "$kunciKiriman = trim((string)($_SERVER['HTTP_X_API_KEY'] ?? ($_GET['api_key'] ?? ($_POST['api_key'] ?? ''))));",
+                "$stKey = $pdo->prepare('SELECT * FROM api_keys WHERE api_key = :k AND status_aktif = 1 LIMIT 1');",
+                "$stKey->execute([':k' => $kunciKiriman]);",
+                "$mitra = $stKey->fetch();",
+                "",
+                "if (!$mitra) {",
+                "    http_response_code(401);",
+                "    echo json_encode(['status'=>'error','kode_error'=>'UNAUTHORIZED','pesan'=>'401: Kunci API tidak sah atau saklar mati!'], JSON_UNESCAPED_UNICODE);",
+                "    exit;",
+                "}",
+                "",
+                "$rawInput  = file_get_contents('php://input');",
+                "$bodyJson  = $rawInput ? json_decode($rawInput, true) : null;",
+                "$dataInput = is_array($bodyJson) ? $bodyJson : $_POST;",
+                "",
+                "$kode  = strtoupper(trim((string)($dataInput['kode'] ?? '')));",
+                "$qty   = (int)($dataInput['qty'] ?? 0);",
+                "$noRef = trim((string)($dataInput['no_referensi'] ?? ''));",
+                "$ket   = trim((string)($dataInput['keterangan'] ?? ('Terjual di ' . $mitra['nama_aplikasi'])));",
+                "",
+                "if ($kode === '' || $qty <= 0 || $noRef === '') {",
+                "    http_response_code(400);",
+                "    echo json_encode(['status'=>'error','kode_error'=>'INPUT_TIDAK_LENGKAP','pesan'=>'400: Kode, qty > 0, dan no_referensi wajib diisi!'], JSON_UNESCAPED_UNICODE);",
+                "    exit;",
+                "}",
+                "",
+                "$stDup = $pdo->prepare(\"SELECT id FROM log_stok WHERE no_referensi = :ref AND kode_barang = :kd AND jenis = 'keluar' LIMIT 1\");",
+                "$stDup->execute([':ref' => $noRef, ':kd' => $kode]);",
+                "if ($stDup->fetch()) {",
+                "    http_response_code(409);",
+                "    echo json_encode(['status'=>'error','kode_error'=>'STRUK_KEMBAR_DUPLIKAT','pesan'=>'409: Nomor referensi ' . $noRef . ' sudah dipakai! Stok aman.'], JSON_UNESCAPED_UNICODE);",
+                "    exit;",
+                "}",
+                "",
+                "$stBrg = $pdo->prepare('SELECT * FROM barang WHERE kode = :kd LIMIT 1');",
+                "$stBrg->execute([':kd' => $kode]);",
+                "$brg = $stBrg->fetch();",
+                "",
+                "if (!$brg) {",
+                "    http_response_code(404);",
+                "    echo json_encode(['status'=>'error','kode_error'=>'BARANG_TIDAK_TERDAFTAR','pesan'=>'404: Produk ' . $kode . ' tidak terdaftar!'], JSON_UNESCAPED_UNICODE);",
+                "    exit;",
+                "}",
+                "if ((int)$brg['stok'] < $qty) {",
+                "    http_response_code(400);",
+                "    echo json_encode(['status'=>'error','kode_error'=>'STOK_TIDAK_CUKUP','pesan'=>'400: Stok tidak cukup! (Sisa: ' . $brg['stok'] . ', Diminta: ' . $qty . ')'], JSON_UNESCAPED_UNICODE);",
+                "    exit;",
+                "}",
+                "",
+                "$stokAkhir = (int)$brg['stok'] - $qty;",
+                "$pdo->prepare('UPDATE barang SET stok = :s WHERE id = :id')->execute([':s' => $stokAkhir, ':id' => $brg['id']]);",
+                "$pdo->prepare(\"INSERT INTO log_stok (barang_id, kode_barang, jenis, qty, stok_akhir, no_referensi, keterangan) VALUES (:bid, :kd, 'keluar', :qt, :sa, :rf, :kt)\")",
+                "    ->execute([':bid' => $brg['id'], ':kd' => $kode, ':qt' => $qty, ':sa' => $stokAkhir, ':rf' => $noRef, ':kt' => $ket]);",
+                "",
+                "echo json_encode([",
+                "    'status' => 'sukses',",
+                "    'pesan'  => 'Stok ' . $kode . ' berhasil dikurangi ' . $qty . ' pasang',",
+                "    'data'   => ['kode' => $kode, 'qty_keluar' => $qty, 'sisa_stok' => $stokAkhir, 'no_referensi' => $noRef]",
+                "], JSON_UNESCAPED_UNICODE);"
+            ].join("\n"),
+
+            php_5_api_stok_masuk: [
+                "<?php",
+                "// FILE WEB 5/6: C:/xampp/htdocs/sistem_gudang/api/stok-masuk.php",
+                "header('Content-Type: application/json; charset=utf-8');",
+                "require_once __DIR__ . '/../config/koneksi.php';",
+                "/** @var PDO $pdo */",
+                "",
+                "if ($_SERVER['REQUEST_METHOD'] !== 'POST') {",
+                "    http_response_code(405);",
+                "    echo json_encode(['status'=>'error','pesan'=>'Layanan ini wajib POST!'], JSON_UNESCAPED_UNICODE);",
+                "    exit;",
+                "}",
+                "",
+                "$kunciKiriman = trim((string)($_SERVER['HTTP_X_API_KEY'] ?? ($_GET['api_key'] ?? ($_POST['api_key'] ?? ''))));",
+                "$stKey = $pdo->prepare('SELECT * FROM api_keys WHERE api_key = :k AND status_aktif = 1 LIMIT 1');",
+                "$stKey->execute([':k' => $kunciKiriman]);",
+                "$mitra = $stKey->fetch();",
+                "",
+                "if (!$mitra) {",
+                "    http_response_code(401);",
+                "    echo json_encode(['status'=>'error','kode_error'=>'UNAUTHORIZED','pesan'=>'401: Kunci API tidak sah atau saklar mati!'], JSON_UNESCAPED_UNICODE);",
+                "    exit;",
+                "}",
+                "",
+                "$rawInput  = file_get_contents('php://input');",
+                "$bodyJson  = $rawInput ? json_decode($rawInput, true) : null;",
+                "$dataInput = is_array($bodyJson) ? $bodyJson : $_POST;",
+                "",
+                "$kode  = strtoupper(trim((string)($dataInput['kode'] ?? '')));",
+                "$qty   = (int)($dataInput['qty'] ?? 0);",
+                "$noRef = trim((string)($dataInput['no_referensi'] ?? ''));",
+                "$ket   = trim((string)($dataInput['keterangan'] ?? ('Barang masuk via ' . $mitra['nama_aplikasi'])));",
+                "",
+                "if ($kode === '' || $qty <= 0 || $noRef === '') {",
+                "    http_response_code(400);",
+                "    echo json_encode(['status'=>'error','kode_error'=>'INPUT_TIDAK_LENGKAP','pesan'=>'400: Kode, qty > 0, dan no_referensi wajib diisi!'], JSON_UNESCAPED_UNICODE);",
+                "    exit;",
+                "}",
+                "",
+                "$stBrg = $pdo->prepare('SELECT * FROM barang WHERE kode = :kd LIMIT 1');",
+                "$stBrg->execute([':kd' => $kode]);",
+                "$brg = $stBrg->fetch();",
+                "",
+                "if (!$brg) {",
+                "    http_response_code(404);",
+                "    echo json_encode(['status'=>'error','kode_error'=>'BARANG_TIDAK_TERDAFTAR','pesan'=>'404: Produk ' . $kode . ' tidak terdaftar!'], JSON_UNESCAPED_UNICODE);",
+                "    exit;",
+                "}",
+                "",
+                "$stokAkhir = (int)$brg['stok'] + $qty;",
+                "$pdo->prepare('UPDATE barang SET stok = :s WHERE id = :id')->execute([':s' => $stokAkhir, ':id' => $brg['id']]);",
+                "$pdo->prepare(\"INSERT INTO log_stok (barang_id, kode_barang, jenis, qty, stok_akhir, no_referensi, keterangan) VALUES (:bid, :kd, 'masuk', :qt, :sa, :rf, :kt)\")",
+                "    ->execute([':bid' => $brg['id'], ':kd' => $kode, ':qt' => $qty, ':sa' => $stokAkhir, ':rf' => $noRef, ':kt' => $ket]);",
+                "",
+                "echo json_encode([",
+                "    'status' => 'sukses',",
+                "    'pesan'  => 'Stok ' . $kode . ' berhasil ditambah ' . $qty . ' pasang',",
+                "    'data'   => ['kode' => $kode, 'qty_masuk' => $qty, 'sisa_stok' => $stokAkhir, 'no_referensi' => $noRef]",
+                "], JSON_UNESCAPED_UNICODE);"
+            ].join("\n"),
+
+            php_6_kasir_tester: [
+                "<?php",
+                "// FILE WEB 6/6: C:/xampp/htdocs/sistem_penjualan/index.php",
+                "$fileKeyKasir = __DIR__ . '/kode_api_tersimpan.txt';",
+                "if (isset($_POST['simpan_kunci'])) {",
+                "    file_put_contents($fileKeyKasir, trim((string)$_POST['kode_api']));",
+                "}",
+                "$kodeApiKasir = file_exists($fileKeyKasir) ? trim((string)file_get_contents($fileKeyKasir)) : 'GDG-KEY-UTAMA-001';",
+                "if ($kodeApiKasir === '') { $kodeApiKasir = 'GDG-KEY-UTAMA-001'; }",
+                "",
+                "$protokol   = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';",
+                "$host       = $_SERVER['HTTP_HOST'];",
+                "$baseApiUrl = $protokol . '://' . $host . '/sistem_gudang/api/';",
+                "",
+                "$hasilUjiJson = '';",
+                "$urlYangDiuji = '';",
+                "$methodYangDiuji = '';",
+                "",
+                "if (isset($_POST['uji_endpoint'])) {",
+                "    $pilihan = $_POST['pilihan_ep'] ?? 'ep1';",
+                "    $kodeUji = strtoupper(trim((string)($_POST['kode_uji'] ?? 'SP001')));",
+                "    $qtyUji  = (int)($_POST['qty_uji'] ?? 2);",
+                "    $refUji  = trim((string)($_POST['ref_uji'] ?? 'TRX-UJI-001'));",
+                "",
+                "    if ($pilihan === 'ep1') {",
+                "        $methodYangDiuji = 'GET';",
+                "        $urlYangDiuji    = $baseApiUrl . 'barang.php';",
+                "        $ctx = stream_context_create(['http' => ['method' => 'GET', 'header' => \"X-API-KEY: $kodeApiKasir\\r\\n\", 'ignore_errors' => true]]);",
+                "        $hasilUjiJson = (string)@file_get_contents($urlYangDiuji, false, $ctx);",
+                "    } elseif ($pilihan === 'ep2') {",
+                "        $methodYangDiuji = 'GET';",
+                "        $urlYangDiuji    = $baseApiUrl . 'barang.php?kode=' . urlencode($kodeUji);",
+                "        $ctx = stream_context_create(['http' => ['method' => 'GET', 'header' => \"X-API-KEY: $kodeApiKasir\\r\\n\", 'ignore_errors' => true]]);",
+                "        $hasilUjiJson = (string)@file_get_contents($urlYangDiuji, false, $ctx);",
+                "    } elseif ($pilihan === 'ep3') {",
+                "        $methodYangDiuji = 'POST';",
+                "        $urlYangDiuji    = $baseApiUrl . 'stok-keluar.php';",
+                "        $bodyJson = json_encode(['no_referensi' => $refUji, 'kode' => $kodeUji, 'qty' => $qtyUji, 'keterangan' => 'Uji dari Web Kasir']);",
+                "        $ctx = stream_context_create(['http' => ['method' => 'POST', 'header' => \"Content-Type: application/json\\r\\nX-API-KEY: $kodeApiKasir\\r\\n\", 'content' => $bodyJson, 'ignore_errors' => true]]);",
+                "        $hasilUjiJson = (string)@file_get_contents($urlYangDiuji, false, $ctx);",
+                "    } elseif ($pilihan === 'ep4') {",
+                "        $methodYangDiuji = 'POST';",
+                "        $urlYangDiuji    = $baseApiUrl . 'stok-masuk.php';",
+                "        $bodyJson = json_encode(['no_referensi' => $refUji, 'kode' => $kodeUji, 'qty' => $qtyUji, 'keterangan' => 'Restock dari Web Kasir']);",
+                "        $ctx = stream_context_create(['http' => ['method' => 'POST', 'header' => \"Content-Type: application/json\\r\\nX-API-KEY: $kodeApiKasir\\r\\n\", 'content' => $bodyJson, 'ignore_errors' => true]]);",
+                "        $hasilUjiJson = (string)@file_get_contents($urlYangDiuji, false, $ctx);",
+                "    }",
+                "}",
+                "?>",
+                "<!DOCTYPE html>",
+                "<html lang=\"id\"><head><meta charset=\"UTF-8\"><title>Web Aplikasi 2: Penguji Kasir</title>",
+                "<style>",
+                "  body { font-family: system-ui, sans-serif; background: #eef2ff; padding: 20px; margin: 0; }",
+                "  .box { max-width: 1080px; margin: 0 auto; background: #fff; padding: 24px; border-radius: 16px; border: 2px solid #4f46e5; }",
+                "  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }",
+                "  .card { padding: 16px; border-radius: 12px; background: #f8fafc; border: 1px solid #cbd5e1; }",
+                "  label { display: block; font-size: 12px; font-weight: bold; margin: 8px 0 4px; }",
+                "  input, select { width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }",
+                "  pre { background: #0b0b10; color: #34d399; padding: 14px; border-radius: 10px; overflow-x: auto; font-size: 12.5px; line-height: 1.5; }",
+                "  @media (max-width: 820px) { .grid-2 { grid-template-columns: 1fr; } }",
+                "</style></head><body>",
+                "<div class=\"box\">",
+                "  <div style=\"display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;border-bottom:2px solid #e2e8f0;padding-bottom:12px;margin-bottom:14px\">",
+                "    <div><h2 style=\"margin:0;color:#3730a3\">💻 WEB 2: PENGUJI 4 LAYANAN KASIR</h2><p style=\"margin:4px 0 0;color:#475569;font-size:13px\">Uji Permintaan Kasir ke Gudang</p></div>",
+                "    <a href=\"../sistem_gudang/index.php\" target=\"_blank\" style=\"padding:8px 14px;background:#059669;color:#fff;text-decoration:none;border-radius:8px;font-weight:bold;font-size:12.5px\">📦 Buka Web Gudang &rarr;</a>",
+                "  </div>",
+                "  <form method=\"post\" style=\"padding:12px;background:#fff7ed;border:1px solid #fdba74;border-radius:10px;margin-bottom:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap\">",
+                "    <strong>🔑 Kunci Akses (X-API-KEY):</strong>",
+                "    <input type=\"text\" name=\"kode_api\" value=\"<?= htmlspecialchars($kodeApiKasir) ?>\" style=\"width:240px;font-family:monospace;font-weight:bold\">",
+                "    <button type=\"submit\" name=\"simpan_kunci\" value=\"1\" style=\"padding:8px 14px;background:#ea580c;color:#fff;border:none;border-radius:6px;font-weight:bold;cursor:pointer\">💾 Pasang Kunci</button>",
+                "  </form>",
+                "  <div class=\"grid-2\">",
+                "    <div class=\"card\">",
+                "      <h3 style=\"margin:0 0 10px;font-size:15px\">📤 Pilih Layanan:</h3>",
+                "      <form method=\"post\">",
+                "        <label>Layanan (1-4)</label>",
+                "        <select name=\"pilihan_ep\">",
+                "          <option value=\"ep1\">1. GET /api/barang.php (Katalog)</option>",
+                "          <option value=\"ep2\">2. GET /api/barang.php?kode= (Detail)</option>",
+                "          <option value=\"ep3\">3. POST /api/stok-keluar.php (Stok Keluar)</option>",
+                "          <option value=\"ep4\">4. POST /api/stok-masuk.php (Stok Masuk)</option>",
+                "        </select>",
+                "        <label>Kode Sepatu</label><input type=\"text\" name=\"kode_uji\" value=\"SP001\">",
+                "        <label>Qty</label><input type=\"number\" name=\"qty_uji\" value=\"2\">",
+                "        <label>Nomor Referensi</label><input type=\"text\" name=\"ref_uji\" value=\"TRX-UJI-001\">",
+                "        <button type=\"submit\" name=\"uji_endpoint\" value=\"1\" style=\"width:100%;margin-top:12px;padding:10px;background:#4f46e5;color:#fff;border:none;border-radius:8px;font-weight:bold;cursor:pointer\">🚀 Kirim Permintaan</button>",
+                "      </form>",
+                "    </div>",
+                "    <div class=\"card\">",
+                "      <h3 style=\"margin:0 0 10px;font-size:15px\">📥 Balasan dari Gudang:</h3>",
+                "      <?php if ($hasilUjiJson !== ''): ?>",
+                "        <div style=\"font-size:12px;margin-bottom:6px;font-family:monospace\"><strong><?= htmlspecialchars($methodYangDiuji) ?></strong> <?= htmlspecialchars($urlYangDiuji) ?></div>",
+                "        <pre><?= htmlspecialchars(json_encode(json_decode($hasilUjiJson), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) ?: $hasilUjiJson) ?></pre>",
+                "      <?php else: ?>",
+                "        <pre>// Klik 'Kirim Permintaan' untuk melihat balasan.</pre>",
+                "      <?php endif; ?>",
+                "    </div>",
+                "  </div>",
+                "</div></body></html>"
+            ].join("\n")
+        };
+
+        const GLOSSARY_DB = {
+            htdocs: { title: "Folder htdocs (C:\\xampp\\htdocs)", category: "Lokasi Proyek Web", main: "Folder utama di dalam XAMPP tempat menyimpan folder aplikasi web agar dapat dibuka di browser via http://localhost/.", detail: "Pada praktikum ini kita membuat struktur foldernya dari awal.", source: "Slide 4" },
+            log_stok: { title: "Kartu Stok Digital (log_stok)", category: "Audit & Kontrol Internal", main: "Tabel di db_gudang yang merekam setiap kejadian barang masuk/keluar lengkap dengan jam, jumlah, sisa stok, dan nomor bukti struknya.", detail: "Berfungsi untuk audit stok dan menolak nomor bukti yang dikirim dua kali (Anti-Duplikat).", source: "Slide 5" },
+            api_keys_tbl: { title: "Kunci Akses Cabang (api_keys)", category: "Tata Kelola Cabang", main: "Tabel di db_gudang yang menyimpan kode kunci (X-API-KEY) milik setiap cabang beserta saklar status_aktif (1 = Aktif, 0 = Mati).", detail: "Memudahkan manajer memblokir akses 1 cabang tanpa mengganggu cabang lain.", source: "Slide 6" },
+            kontrak_api: { title: "SOP Kontrak Layanan API (API Spec)", category: "Desain Integrasi Bisnis", main: "Kesepakatan tertulis mengenai 5 komponen: Nama Layanan, Aksi & Alamat Pintu, Syarat Data Kiriman, Balasan Sukses, dan Aturan Penolakan Bisnis.", detail: "Dirumuskan secara mandiri pada Form Isian 3 (Slide 16).", source: "Slide 15" },
+            peer_review: { title: "Evaluasi Silang (Peer Review)", category: "Kolaborasi Tim", main: "Kegiatan saling memeriksa rancangan Kontrak Layanan API bersama teman pasangan lab untuk menemukan celah aturan bisnis.", detail: "Dicatat pada Form Isian 4 (Slide 18).", source: "Slide 17" }
+        };
+
+        function escapeHtml(str) {
+            return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        function term(key, label) {
+            const item = GLOSSARY_DB[key];
+            if (!item) return label || key;
+            const text = label || item.title.split(' (')[0];
+            return '<span class="tech-term" data-term="' + escapeHtml(key) + '" onclick="showTerm(this.dataset.term)">' + escapeHtml(text) + '</span>';
+        }
+
+        function renderCodeBox(codeKey, buttonLabel) {
+            const raw = RAW_CODES[codeKey] || '';
+            return `<pre class="code-box"><button type="button" onclick="copyCodeByKey('${codeKey}', this)" class="sticky top-2 float-right z-10 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-xs font-sans font-extrabold text-white shadow-sm transition">${escapeHtml(buttonLabel)}</button><code>${escapeHtml(raw)}</code></pre>`;
+        }
+
+        function autoResizeTextarea(el) {
+            if (!el) return;
+            el.style.height = 'auto';
+            el.style.height = Math.max(60, el.scrollHeight) + 'px';
+        }
+
+        let toastTimer = null;
+        function showToast(message, type) {
+            clearTimeout(toastTimer);
+            const banner = document.getElementById('toastBanner');
+            const icon = document.getElementById('toastIcon');
+            const msgEl = document.getElementById('toastMessage');
+            if (!banner || !msgEl) return;
+            msgEl.textContent = message;
+            banner.className = 'fixed top-20 left-1/2 transform -translate-x-1/2 z-50 max-w-lg w-[92%] sm:w-full px-4 py-3.5 rounded-2xl shadow-2xl border flex items-start gap-3 transition-all duration-200 no-print slide-enter ';
+            if (type === 'success') {
+                banner.className += 'bg-emerald-600 text-white border-emerald-500';
+                icon.className = 'fa-solid fa-circle-check text-lg mt-0.5 shrink-0';
+            } else {
+                banner.className += 'bg-rose-600 text-white border-rose-500';
+                icon.className = 'fa-solid fa-triangle-exclamation text-lg mt-0.5 shrink-0';
+            }
+            banner.classList.remove('hidden');
+            toastTimer = setTimeout(hideToast, 4200);
+        }
+        function hideToast() { const b = document.getElementById('toastBanner'); if (b) b.classList.add('hidden'); }
+
+        function highlightEmptyInput(inputId, message) {
+            showToast(message, 'error');
+            setTimeout(function () {
+                const el = document.getElementById(inputId);
+                if (el) {
+                    el.classList.add('input-error');
+                    el.focus();
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    el.addEventListener('input', function removeErr() {
+                        el.classList.remove('input-error');
+                        el.removeEventListener('input', removeErr);
+                    });
+                }
+            }, 60);
+        }
+
+        const STORAGE_KEY = 'upertis_lkm04_mandiri_v3';
+        let currentSlideIndex = 0;
+        const TOTAL_SLIDES = 21;
+        let activeMissionTab = 0;
+        let activeContractColTab = 0;
+
+        let formState = {
+            nama: '', nim: '', kelas: '', tgl: new Date().toISOString().split('T')[0], pasangan_nama: '', pasangan_nim: '',
+            header_umum: 'GDG-KEY-UTAMA-001',
+            exp_1_sebelum: '', exp_1_sesudah: '', exp_1_mengapa: '',
+            exp_2_sebelum: '', exp_2_sesudah: '', exp_2_mengapa: '',
+            exp_3_sebelum: '', exp_3_sesudah: '', exp_3_mengapa: '',
+            img_erd: '', img_sim: '',
+            ep: [
+                { nama: '', method: 'GET',  filename: 'barang.php',     body: '', sukses: '', e400_on: false, e400_ket: '', e401_on: true,  e401_ket: 'Kunci API tidak dikirim / saklar mati', e404_on: false, e404_ket: '', e409_on: false, e409_ket: '' },
+                { nama: '', method: 'GET',  filename: 'barang.php',     body: '', sukses: '', e400_on: false, e400_ket: '', e401_on: true,  e401_ket: 'Kunci API tidak dikirim / saklar mati', e404_on: true,  e404_ket: 'Kode barang tidak terdaftar', e409_on: false, e409_ket: '' },
+                { nama: '', method: 'POST', filename: 'stok-keluar.php', body: '', sukses: '', e400_on: true,  e400_ket: 'Stok tidak cukup / qty <= 0',          e401_on: true,  e401_ket: 'Kunci API tidak dikirim / saklar mati', e404_on: true,  e404_ket: 'Kode barang tidak terdaftar', e409_on: true,  e409_ket: 'Nomor referensi sudah dipakai' },
+                { nama: '', method: 'POST', filename: 'stok-masuk.php',  body: '', sukses: '', e400_on: true,  e400_ket: 'Qty <= 0 atau kode barang kosong',      e401_on: true,  e401_ket: 'Kunci API tidak dikirim / saklar mati', e404_on: true,  e404_ket: 'Kode barang tidak terdaftar', e409_on: false, e409_ket: '' }
+            ],
+            pr_1_status: '', pr_1_catatan: '', pr_2_status: '', pr_2_catatan: '',
+            pr_3_status: '', pr_3_catatan: '', pr_4_status: '', pr_4_catatan: '',
+            umkm_nama: '', umkm_bidang: '', umkm_masalah: '',
+            umkm_ep1_nama: '', umkm_ep1_url: '', umkm_ep1_aturan: '',
+            umkm_ep2_nama: '', umkm_ep2_url: '', umkm_ep2_aturan: ''
+        };
+
+        let uiWizard = {
+            identitasEditing: true, identitasMinimized: false,
+            expEditing: true, expMinimized: false,
+            epActive: 0, epSaved: { 0: false, 1: false, 2: false, 3: false }, epMinimized: { 0: false, 1: false, 2: false, 3: false },
+            peerEditing: true, peerMinimized: false,
+            umkmEditing: true, umkmMinimized: false
+        };
+
+        function isIdentitasComplete() { return !!(formState.nama.trim() && formState.nim.trim() && formState.kelas.trim() && formState.tgl.trim() && formState.pasangan_nama.trim()); }
+
+        function isExpComplete() {
+            return !!(formState.exp_1_sebelum.trim() && formState.exp_1_sesudah.trim() && formState.exp_1_mengapa.trim() &&
+                     formState.exp_2_sebelum.trim() && formState.exp_2_sesudah.trim() && formState.exp_2_mengapa.trim() &&
+                     formState.exp_3_sebelum.trim() && formState.exp_3_sesudah.trim() && formState.exp_3_mengapa.trim());
+        }
+
+        function isEpItemComplete(idx) {
+            const it = formState.ep[idx];
+            if (!it) return false;
+            if (!it.nama.trim() || !it.method || !it.filename.trim() || !it.body.trim() || !it.sukses.trim()) return false;
+            return !!((it.e400_on && it.e400_ket.trim()) || (it.e401_on && it.e401_ket.trim()) || (it.e404_on && it.e404_ket.trim()) || (it.e409_on && it.e409_ket.trim()));
+        }
+
+        function isPeerComplete() {
+            const st = [formState.pr_1_status, formState.pr_2_status, formState.pr_3_status, formState.pr_4_status];
+            return st.every(function (s) { return s === 'Ya' || s === 'Revisi'; });
+        }
+
+        function isUmkmComplete() { return true; }
+
+        function getEpCompletedCount() {
+            let n = 0;
+            for (let i = 0; i < 4; i++) { if (isEpItemComplete(i)) n++; }
+            return n;
+        }
+
+        function syncSavedStatesFromData() {
+            uiWizard.identitasEditing = !isIdentitasComplete();
+            uiWizard.expEditing = !isExpComplete();
+            for (let i = 0; i < 4; i++) uiWizard.epSaved[i] = isEpItemComplete(i);
+            uiWizard.peerEditing = !isPeerComplete();
+            uiWizard.umkmEditing = !isUmkmComplete();
+        }
+
+        function validateFormSlide(slideIdx) {
+            if (slideIdx === 2) {
+                if (!formState.nama.trim()) { uiWizard.identitasEditing = true; renderCurrentSlide(); highlightEmptyInput('inp_nama', 'Nama Lengkap wajib diisi.'); return false; }
+                if (!formState.nim.trim()) { uiWizard.identitasEditing = true; renderCurrentSlide(); highlightEmptyInput('inp_nim', 'NIM wajib diisi.'); return false; }
+                if (!formState.kelas.trim()) { uiWizard.identitasEditing = true; renderCurrentSlide(); highlightEmptyInput('inp_kelas', 'Kelas wajib diisi.'); return false; }
+                if (!formState.pasangan_nama.trim()) { uiWizard.identitasEditing = true; renderCurrentSlide(); highlightEmptyInput('inp_pasangan_nama', 'Nama Pasangan wajib diisi.'); return false; }
+                uiWizard.identitasEditing = false;
+                return true;
+            }
+            if (slideIdx === 13) {
+                const fields = [
+                    { key: 'exp_1_sebelum', label: 'Misi 1 "Sebelum"' }, { key: 'exp_1_sesudah', label: 'Misi 1 "Sesudah"' }, { key: 'exp_1_mengapa', label: 'Misi 1 "Mengapa"' },
+                    { key: 'exp_2_sebelum', label: 'Misi 2 "Sebelum"' }, { key: 'exp_2_sesudah', label: 'Misi 2 "Sesudah"' }, { key: 'exp_2_mengapa', label: 'Misi 2 "Mengapa"' },
+                    { key: 'exp_3_sebelum', label: 'Misi 3 "Sebelum"' }, { key: 'exp_3_sesudah', label: 'Misi 3 "Sesudah"' }, { key: 'exp_3_mengapa', label: 'Misi 3 "Mengapa"' }
+                ];
+                for (let i = 0; i < fields.length; i++) {
+                    if (!formState[fields[i].key].trim()) {
+                        uiWizard.expEditing = true;
+                        renderCurrentSlide();
+                        highlightEmptyInput('inp_' + fields[i].key, fields[i].label + ' wajib diisi (minimal 1 kalimat).');
+                        return false;
+                    }
+                }
+                uiWizard.expEditing = false;
+                return true;
+            }
+            if (slideIdx === 15) {
+                if (!formState.header_umum.trim()) { highlightEmptyInput('inp_header_umum', 'Header umum wajib diisi.'); return false; }
+                for (let i = 0; i < 4; i++) {
+                    const it = formState.ep[i];
+                    if (!it.nama.trim()) { uiWizard.epActive = i; renderCurrentSlide(); highlightEmptyInput('inp_ep_nama_' + i, 'Nama Layanan #' + (i + 1) + ' wajib diisi.'); return false; }
+                    if (!it.filename.trim()) { uiWizard.epActive = i; renderCurrentSlide(); highlightEmptyInput('inp_ep_filename_' + i, 'Nama File Endpoint Layanan #' + (i + 1) + ' wajib diisi.'); return false; }
+                    if (!it.body.trim()) { uiWizard.epActive = i; renderCurrentSlide(); highlightEmptyInput('inp_ep_body_' + i, 'Request Body Layanan #' + (i + 1) + ' wajib diisi (atau "-").'); return false; }
+                    if (!it.sukses.trim()) { uiWizard.epActive = i; renderCurrentSlide(); highlightEmptyInput('inp_ep_sukses_' + i, 'Response Sukses Layanan #' + (i + 1) + ' wajib diisi.'); return false; }
+                    const anyErr = (it.e400_on && it.e400_ket.trim()) || (it.e401_on && it.e401_ket.trim()) || (it.e404_on && it.e404_ket.trim()) || (it.e409_on && it.e409_ket.trim());
+                    if (!anyErr) { uiWizard.epActive = i; renderCurrentSlide(); showToast('Layanan #' + (i + 1) + ': centang minimal 1 aturan penolakan dan isi kondisinya.', 'error'); return false; }
+                    uiWizard.epSaved[i] = true;
+                }
+                uiWizard.epActive = -1;
+                return true;
+            }
+            if (slideIdx === 17) {
+                const items = [
+                    { sKey: 'pr_1_status', cKey: 'pr_1_catatan', no: 1 },
+                    { sKey: 'pr_2_status', cKey: 'pr_2_catatan', no: 2 },
+                    { sKey: 'pr_3_status', cKey: 'pr_3_catatan', no: 3 },
+                    { sKey: 'pr_4_status', cKey: 'pr_4_catatan', no: 4 }
+                ];
+                for (let i = 0; i < items.length; i++) {
+                    const st = formState[items[i].sKey];
+                    if (st !== 'Ya' && st !== 'Revisi') {
+                        uiWizard.peerEditing = true;
+                        renderCurrentSlide();
+                        showToast('Peer Review poin ' + items[i].no + ': pilih status "Ya" atau "Revisi".', 'error');
+                        return false;
+                    }
+                    if (st === 'Revisi' && !formState[items[i].cKey].trim()) {
+                        uiWizard.peerEditing = true;
+                        renderCurrentSlide();
+                        highlightEmptyInput('inp_' + items[i].cKey, 'Peer Review poin ' + items[i].no + ': catatan wajib diisi karena status Revisi.');
+                        return false;
+                    }
+                }
+                uiWizard.peerEditing = false;
+                return true;
+            }
+            return true;
+        }
+
+        function updateField(fieldKey, val) { formState[fieldKey] = val; triggerAutoSave(); }
+        function updateEpField(idx, subKey, val) {
+            if (!formState.ep[idx]) return;
+            formState.ep[idx][subKey] = val;
+            triggerAutoSave();
+        }
+
+        function handleImageUpload(event, stateKey) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const img = new Image();
+                img.onload = function () {
+                    const canvas = document.createElement('canvas');
+                    const maxW = 800;
+                    const scale = img.width > maxW ? (maxW / img.width) : 1;
+                    canvas.width = Math.round(img.width * scale);
+                    canvas.height = Math.round(img.height * scale);
+                    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                    formState[stateKey] = canvas.toDataURL('image/jpeg', 0.82);
+                    triggerAutoSave();
+                    renderCurrentSlide();
+                    showToast('Gambar bukti berhasil dilampirkan!', 'success');
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        let saveTimer = null;
+        function triggerAutoSave() {
+            clearTimeout(saveTimer);
+            const badge = document.getElementById('saveBadge');
+            if (badge) badge.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
+            saveTimer = setTimeout(function () {
+                try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ form: formState, ui: uiWizard })); } catch (e) {}
+                if (badge) badge.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Tersimpan';
+            }, 350);
+        }
+
+        function loadSavedState() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (parsed.form) formState = Object.assign(formState, parsed.form);
+                    if (parsed.ui) uiWizard = Object.assign(uiWizard, parsed.ui);
+                    syncSavedStatesFromData();
+                }
+            } catch (e) {}
+        }
+
+        function exportJsonData() {
+            triggerAutoSave();
+            const cleanNim = (formState.nim || 'NIM').replace(/[^a-zA-Z0-9_-]/g, '');
+            const cleanNama = (formState.nama || 'Mahasiswa').trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '');
+            const filename = 'Data_LKM04_Mandiri_' + cleanNim + '_' + cleanNama + '.json';
+            const payload = { app: 'UPERTIS_INTEGRATED_SYSTEMS_LKM04', version: '3.0', exportedAt: new Date().toISOString(), lkm04: { form: formState, ui: uiWizard } };
+            const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('File data proyek (.json) berhasil diunduh!', 'success');
+        }
+
+        function triggerImportJson() { const inp = document.getElementById('jsonFileInput'); if (inp) { inp.value = ''; inp.click(); } }
+
+        function handleJsonFileImport(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    const target = (parsed && parsed.lkm04) ? parsed.lkm04 : parsed;
+                    if (!target || !target.form) { showToast('Format file .json tidak dikenali.', 'error'); return; }
+                    formState = Object.assign(formState, target.form);
+                    if (target.ui) uiWizard = Object.assign(uiWizard, target.ui);
+                    syncSavedStatesFromData();
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify({ form: formState, ui: uiWizard }));
+                    renderCurrentSlide();
+                    showToast('Data LKM 04 berhasil dimuat!', 'success');
+                } catch (err) { showToast('Gagal membaca file .json.', 'error'); }
+            };
+            reader.readAsText(file);
+        }
+
+        function renderWizardCardHeader(stepBadge, title, isSaved, isEditing, isMinimized, onEditClick, onToggleMinClick) {
+            let statusHtml = '';
+            if (isSaved && !isEditing) {
+                statusHtml = `
+                    <div class="flex items-center gap-2 shrink-0">
+                        <span class="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 text-xs font-extrabold flex items-center gap-1"><i class="fa-solid fa-circle-check"></i> Lengkap</span>
+                        <button type="button" onclick="${onToggleMinClick}" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold transition">${isMinimized ? 'Baca' : 'Lipat'}</button>
+                        <button type="button" onclick="${onEditClick}" class="px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 border border-indigo-200 text-xs font-extrabold transition"><i class="fa-solid fa-pen mr-1"></i>Edit</button>
+                    </div>`;
+            } else if (isEditing) {
+                statusHtml = `<span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-xs font-extrabold shrink-0">Wajib Diisi Mandiri (*)</span>`;
+            } else {
+                statusHtml = `<button type="button" onclick="${onEditClick}" class="px-3.5 py-1.5 rounded-xl bg-amber-100 hover:bg-emerald-600 hover:text-white text-amber-800 text-xs font-extrabold transition shrink-0">Buka &amp; Isi Bagian Ini</button>`;
+            }
+            return `
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <span class="px-2.5 py-1 rounded-lg bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-extrabold shrink-0">${escapeHtml(stepBadge)}</span>
+                        <h3 class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white leading-snug">${escapeHtml(title)}</h3>
+                    </div>
+                    ${statusHtml}
+                </div>`;
+        }
+
+        /* ================= RENDER SLIDES 1-21 ================= */
+
+        function renderSlide1() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center my-auto">
+                        <div class="lg:col-span-7 space-y-4">
+                            <div class="inline-flex flex-wrap items-center gap-2">
+                                <span class="px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 text-xs font-bold border border-emerald-200/60">Praktikum Pertemuan 4 • Mulai 100% dari Nol</span>
+                                <span class="px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 text-xs font-bold border border-indigo-200/60">Sub-CPMK 1.2 (Bobot 3%)</span>
+                            </div>
+                            <h2 class="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white leading-tight">Pembuatan Web dari Nol, Investigasi Sistem &amp; LKM 04 Mandiri</h2>
+                            <p class="text-xs sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">Modul ini memandu Anda membangun <strong>Web Gudang &amp; Web Penguji Kasir 100% dari awal</strong>. Setelah web menyala, Anda akan melakukan <strong>investigasi mandiri</strong> dan merumuskan sendiri <strong>Kontrak Layanan API</strong> di dalam formulir LKM 04 untuk diunduh menjadi <strong>PDF A4 Resmi</strong>.</p>
+                            <div class="flex flex-wrap items-center gap-2.5 pt-2">
+                                <button type="button" onclick="changeSlide(1)" class="px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-extrabold transition flex items-center gap-2 shadow-sm"><span>Mulai Praktikum Sekarang</span><i class="fa-solid fa-arrow-right"></i></button>
+                                <button type="button" onclick="triggerImportJson()" class="px-4 py-3 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 dark:bg-amber-950/80 border border-amber-200 text-xs sm:text-sm font-extrabold transition flex items-center gap-2"><i class="fa-solid fa-upload"></i><span>Muat Data (.json)</span></button>
+                                <button type="button" onclick="clearAllData()" class="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300 text-xs sm:text-sm font-bold transition flex items-center gap-2"><i class="fa-solid fa-rotate-left"></i><span>Reset</span></button>
+                            </div>
+                        </div>
+                        <div class="lg:col-span-5">
+                            <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 space-y-3.5">
+                                <div><span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Pola Belajar Problem Solving</span><h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white mt-0.5">Tahapan Praktikum Hari Ini</h3></div>
+                                <div class="space-y-2.5 text-xs">
+                                    <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 flex items-center gap-3"><span class="w-7 h-7 rounded-lg bg-emerald-600 text-white font-extrabold flex items-center justify-center shrink-0">1</span><div><strong class="text-slate-900 dark:text-white block">Peran Tim &amp; Identitas (Slide 2–3)</strong><span class="text-slate-500">Pahami peran kolaborasi lalu isi Form 1.</span></div></div>
+                                    <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 flex items-center gap-3"><span class="w-7 h-7 rounded-lg bg-emerald-600 text-white font-extrabold flex items-center justify-center shrink-0">2</span><div><strong class="text-slate-900 dark:text-white block">Bangun Web Gudang &amp; Kasir (Slide 4–12)</strong><span class="text-slate-500">Buat folder, jalankan 2 SQL, buat 6 file web.</span></div></div>
+                                    <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 flex items-center gap-3"><span class="w-7 h-7 rounded-lg bg-emerald-600 text-white font-extrabold flex items-center justify-center shrink-0">3</span><div><strong class="text-slate-900 dark:text-white block">Misi Investigasi &amp; Desain Kontrak (Slide 13–18)</strong><span class="text-slate-500">Form 2, 3, &amp; 4 dengan panduan di slide sebelum.</span></div></div>
+                                    <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 flex items-center gap-3"><span class="w-7 h-7 rounded-lg bg-indigo-600 text-white font-extrabold flex items-center justify-center shrink-0">4</span><div><strong class="text-slate-900 dark:text-white block">Solusi UMKM &amp; Berkas Pengumpulan (Slide 19–21)</strong><span class="text-slate-500">Form 5 (opsional) &amp; unduh semua berkas.</span></div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+        }
+
+        function renderSlide2() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-6">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Penjelasan Sebelum Mengisi Form 1</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Mengapa Perancangan Kontrak API Wajib Berpasangan?</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">Integrasi sistem selalu melibatkan <strong>dua pihak yang bekerja sama</strong>. Karena itu, pada Form 1 Anda wajib mencantumkan identitas Anda sekaligus identitas <strong>Pasangan Kolaborasi (${term('peer_review', 'Peer Reviewer')})</strong>:</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-auto">
+                        <div class="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-t-4 border-emerald-600 border-x border-b border-slate-200 dark:border-slate-800 space-y-2.5">
+                            <span class="px-2.5 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-xs font-extrabold">PERAN 1 · PERANCANG UTAMA (ANDA)</span>
+                            <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Menyusun Aturan Layanan Gudang</h3>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">Anda bertugas membangun simulasi web, melakukan investigasi, lalu merumuskan 4 Kontrak Layanan API versi Anda sendiri.</p>
+                        </div>
+                        <div class="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-t-4 border-indigo-600 border-x border-b border-slate-200 dark:border-slate-800 space-y-2.5">
+                            <span class="px-2.5 py-1 rounded-lg bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 text-xs font-extrabold">PERAN 2 · PENGUJI KRITIS (PASANGAN LAB)</span>
+                            <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Mencari Celah pada Rancangan Anda</h3>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">Pasangan di sebelah Anda berperan sebagai perwakilan tim Kasir yang akan menguji dan mengkritisi rancangan Kontrak API Anda.</p>
+                        </div>
+                    </div>
+                    <div class="p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 text-xs"><i class="fa-solid fa-arrow-right text-indigo-600 mr-1.5"></i>Klik <strong>Selanjutnya</strong> untuk mengisi Form 1.</div>
+                </div>`;
+        }
+
+        function renderSlide3() {
+            const isSaved = isIdentitasComplete();
+            const isEditing = uiWizard.identitasEditing || !isSaved;
+            const isMin = uiWizard.identitasMinimized;
+            let bodyHtml = '';
+            if (isEditing) {
+                bodyHtml = `
+                    <div class="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border-2 border-emerald-600 shadow-md space-y-4">
+                        ${renderWizardCardHeader('Form 1', 'Identitas Mahasiswa & Pasangan Kolaborasi', isSaved, true, false, '', '')}
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100 dark:border-slate-800">
+                            <div><label class="text-xs font-bold block mb-1">Nama Lengkap Anda *</label><input type="text" id="inp_nama" value="${escapeHtml(formState.nama)}" oninput="updateField('nama', this.value)" placeholder="Ketik nama lengkap..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm font-semibold"></div>
+                            <div><label class="text-xs font-bold block mb-1">NIM *</label><input type="text" id="inp_nim" value="${escapeHtml(formState.nim)}" oninput="updateField('nim', this.value)" placeholder="Ketik NIM..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm font-mono font-semibold"></div>
+                            <div><label class="text-xs font-bold block mb-1">Kelas / Semester *</label><input type="text" id="inp_kelas" value="${escapeHtml(formState.kelas)}" oninput="updateField('kelas', this.value)" placeholder="Ketik kelas..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm"></div>
+                            <div><label class="text-xs font-bold block mb-1">Tanggal Praktikum *</label><input type="date" id="inp_tgl" value="${escapeHtml(formState.tgl)}" oninput="updateField('tgl', this.value)" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm font-mono"></div>
+                            <div><label class="text-xs font-bold text-indigo-700 block mb-1">Nama Rekan Pasangan *</label><input type="text" id="inp_pasangan_nama" value="${escapeHtml(formState.pasangan_nama)}" oninput="updateField('pasangan_nama', this.value)" placeholder="Ketik nama rekan..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm font-semibold"></div>
+                            <div><label class="text-xs font-bold text-indigo-700 block mb-1">NIM Rekan (Opsional)</label><input type="text" id="inp_pasangan_nim" value="${escapeHtml(formState.pasangan_nim)}" oninput="updateField('pasangan_nim', this.value)" placeholder="Ketik NIM rekan..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm font-mono"></div>
+                        </div>
+                        <div class="flex justify-end pt-1"><button type="button" onclick="saveIdentitasLkm4()" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-extrabold transition flex items-center gap-2 shadow-sm"><i class="fa-solid fa-check"></i><span>Simpan Identitas</span></button></div>
+                    </div>`;
+            } else {
+                bodyHtml = `
+                    <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-emerald-300 dark:border-emerald-800 space-y-3">
+                        ${renderWizardCardHeader('Form 1', formState.nama + ' (' + formState.nim + ') • Rekan: ' + formState.pasangan_nama, true, false, isMin, 'uiWizard.identitasEditing=true;renderCurrentSlide();', 'uiWizard.identitasMinimized=!uiWizard.identitasMinimized;renderCurrentSlide();')}
+                        ${!isMin ? `<div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs sm:text-sm"><div><span class="text-slate-400 font-bold block">Mahasiswa:</span><strong>${escapeHtml(formState.nama)} (${escapeHtml(formState.nim)})</strong></div><div><span class="text-slate-400 font-bold block">Kelas:</span><span>${escapeHtml(formState.kelas)} • ${escapeHtml(formState.tgl)}</span></div><div><span class="text-slate-400 font-bold block">Reviewer:</span><strong>${escapeHtml(formState.pasangan_nama)}</strong></div></div>` : ''}
+                    </div>`;
+            }
+            return `<div class="slide-enter flex flex-col justify-between h-full gap-5"><div class="space-y-1"><span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-pen-to-square mr-1"></i>Form Isian 1 (Wajib Lengkap)</span><h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Data Diri Mahasiswa &amp; Rekan Reviewer</h2></div><div class="my-auto">${bodyHtml}</div></div>`;
+        }
+
+        function renderSlide4() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Langkah Web 1 · Menyiapkan Folder Web</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Nyalakan XAMPP &amp; Buat 4 Folder di <code class="font-mono">C:\\xampp\\htdocs</code></h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">Pastikan modul <strong>Apache</strong> &amp; <strong>MySQL</strong> di XAMPP Control Panel berstatus <strong>Hijau (Running)</strong>. Lalu buat folder berikut:</p>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 my-auto">
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border space-y-3">
+                            <span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-mono text-xs font-extrabold">1. FOLDER WEB GUDANG</span>
+                            <div class="p-4 rounded-2xl bg-slate-900 text-slate-100 font-mono text-xs leading-relaxed">📁 C:/xampp/htdocs/<br>└── 📁 <strong class="text-emerald-400">sistem_gudang/</strong><br>&nbsp;&nbsp;&nbsp;&nbsp;├── 📁 <strong class="text-amber-300">config/</strong><br>&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└── 📄 koneksi.php <span class="text-slate-400">(Slide 7)</span><br>&nbsp;&nbsp;&nbsp;&nbsp;├── 📄 index.php <span class="text-slate-400">(Slide 8)</span><br>&nbsp;&nbsp;&nbsp;&nbsp;└── 📁 <strong class="text-amber-300">api/</strong><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── 📄 barang.php <span class="text-slate-400">(Slide 9)</span><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── 📄 stok-keluar.php <span class="text-slate-400">(Slide 10)</span><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── 📄 stok-masuk.php <span class="text-slate-400">(Slide 11)</span></div>
+                        </div>
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border space-y-3">
+                            <span class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-mono text-xs font-extrabold">2. FOLDER WEB KASIR</span>
+                            <div class="p-4 rounded-2xl bg-slate-900 text-slate-100 font-mono text-xs leading-relaxed">📁 C:/xampp/htdocs/<br>└── 📁 <strong class="text-indigo-400">sistem_penjualan/</strong><br>&nbsp;&nbsp;&nbsp;&nbsp;└── 📄 index.php <span class="text-slate-400">(Slide 12)</span></div>
+                            <div class="p-3.5 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-xs text-slate-700 dark:text-slate-200">💡 <strong>Tips Cepat:</strong> Buka VS Code → <strong>File → Open Folder...</strong> → pilih <code class="font-mono font-bold">C:\\xampp\\htdocs</code>.</div>
+                        </div>
+                    </div>
+                </div>`;
+        }
+
+        function renderSlide5() {
+            return `<div class="slide-enter flex flex-col justify-between h-full gap-4">
+                <div class="space-y-1"><span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Langkah Web 2 · Database &amp; Kartu Stok</span><h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Salin &amp; Jalankan Skrip SQL 1: Buat <code class="font-mono">db_gudang</code>, <code class="font-mono">barang</code>, &amp; <code class="font-mono">${term('log_stok', 'log_stok')}</code></h2><p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">Buka <a href="http://localhost/phpmyadmin" target="_blank" class="font-mono font-bold underline text-indigo-600">http://localhost/phpmyadmin</a> → tab <strong>SQL</strong> → salin skrip → klik <strong>Go</strong>:</p></div>
+                <div class="my-auto">${renderCodeBox('sql_1_barang_log', '📋 Salin Skrip SQL 1')}</div>
+                <div class="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border-l-4 border-amber-500 text-xs sm:text-sm text-slate-700 dark:text-slate-200"><strong>Apa yang Dilakukan:</strong> Membuat database <code class="font-mono font-bold">db_gudang</code>, mengisi 5 sepatu, dan membangun tabel Kartu Stok (<code class="font-mono font-bold">log_stok</code>).</div>
+            </div>`;
+        }
+
+        function renderSlide6() {
+            return `<div class="slide-enter flex flex-col justify-between h-full gap-4">
+                <div class="space-y-1"><span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Langkah Web 3 · Tabel Saklar Cabang &amp; ERD</span><h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Salin Skrip SQL 2: Buat Tabel <code class="font-mono">${term('api_keys_tbl', 'api_keys')}</code> &amp; Potret ERD</h2><p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">Klik tab <strong>SQL</strong> lagi, salin &amp; jalankan:</p></div>
+                <div class="my-auto">${renderCodeBox('sql_2_api_keys', '📋 Salin Skrip SQL 2 (api_keys)')}</div>
+                <div class="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border-l-4 border-emerald-600 text-xs sm:text-sm text-slate-700 dark:text-slate-200"><strong>📸 Potret ERD:</strong> Klik <code class="font-mono font-bold">db_gudang</code> → tab <strong>Designer</strong> → screenshot ketiga tabel untuk Form 2.</div>
+            </div>`;
+        }
+
+        function renderSlide7() {
+            return `<div class="slide-enter flex flex-col justify-between h-full gap-4">
+                <div class="space-y-1"><span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Langkah Web 4 · File 1 dari 6</span><h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Buat File <code class="font-mono">sistem_gudang/config/koneksi.php</code></h2><p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">Simpan (<kbd class="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 font-mono">Ctrl+S</kbd>):</p></div>
+                <div class="my-auto">${renderCodeBox('php_1_koneksi', '📋 Salin koneksi.php')}</div>
+                <div class="p-3.5 rounded-2xl bg-slate-100 dark:bg-slate-800 text-xs sm:text-sm text-slate-700 dark:text-slate-200"><strong>Fungsi:</strong> Jembatan antara Web Gudang dengan database <code class="font-mono font-bold">db_gudang</code>.</div>
+            </div>`;
+        }
+
+        function renderSlide8() {
+            return `<div class="slide-enter flex flex-col justify-between h-full gap-4">
+                <div class="space-y-1"><span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Langkah Web 5 · File 2 dari 6</span><h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Buat Halaman Dashboard Gudang (<code class="font-mono">sistem_gudang/index.php</code>)</h2></div>
+                <div class="my-auto">${renderCodeBox('php_2_gudang_index', '📋 Salin index.php')}</div>
+                <div class="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border-l-4 border-emerald-600 text-xs sm:text-sm text-slate-700 dark:text-slate-200"><strong>Uji:</strong> Buka <a href="http://localhost/sistem_gudang/" target="_blank" class="font-mono font-bold underline">http://localhost/sistem_gudang/</a></div>
+            </div>`;
+        }
+
+        function renderSlide9() {
+            return `<div class="slide-enter flex flex-col justify-between h-full gap-4">
+                <div class="space-y-1"><span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Langkah Web 6 · File 3 dari 6</span><h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Buat Pintu Layanan Katalog (<code class="font-mono">sistem_gudang/api/barang.php</code>)</h2></div>
+                <div class="my-auto">${renderCodeBox('php_3_api_barang', '📋 Salin api/barang.php')}</div>
+                <div class="p-3.5 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/40 border-l-4 border-indigo-600 text-xs sm:text-sm text-slate-700 dark:text-slate-200"><strong>Cara Kerja:</strong> Melayani <code class="font-mono">GET /api/barang.php</code> dan <code class="font-mono">GET /api/barang.php?kode=SP001</code>.</div>
+            </div>`;
+        }
+
+        function renderSlide10() {
+            return `<div class="slide-enter flex flex-col justify-between h-full gap-4">
+                <div class="space-y-1"><span class="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">Langkah Web 7 · File 4 dari 6</span><h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Buat Pintu Layanan Potong Stok (<code class="font-mono">api/stok-keluar.php</code>)</h2></div>
+                <div class="my-auto">${renderCodeBox('php_4_api_stok_keluar', '📋 Salin stok-keluar.php')}</div>
+                <div class="p-3.5 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border-l-4 border-blue-600 text-xs sm:text-sm text-slate-700 dark:text-slate-200"><strong>Terpenting:</strong> Cegah struk kembar (409), tolak stok kurang (400), potong stok, catat ke Kartu Stok.</div>
+            </div>`;
+        }
+
+        function renderSlide11() {
+            return `<div class="slide-enter flex flex-col justify-between h-full gap-4">
+                <div class="space-y-1"><span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Langkah Web 8 · File 5 dari 6</span><h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Buat Pintu Layanan Tambah Stok (<code class="font-mono">api/stok-masuk.php</code>)</h2></div>
+                <div class="my-auto">${renderCodeBox('php_5_api_stok_masuk', '📋 Salin stok-masuk.php')}</div>
+                <div class="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border-l-4 border-emerald-600 text-xs sm:text-sm text-slate-700 dark:text-slate-200"><strong>Web Gudang Selesai 100%!</strong> Tinggal 1 file terakhir di Slide 12.</div>
+            </div>`;
+        }
+
+        function renderSlide12() {
+            return `<div class="slide-enter flex flex-col justify-between h-full gap-4">
+                <div class="space-y-1"><span class="text-xs font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400">Langkah Web 9 · File 6 dari 6</span><h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Buat Web Penguji Layanan Kasir (<code class="font-mono">sistem_penjualan/index.php</code>)</h2></div>
+                <div class="my-auto">${renderCodeBox('php_6_kasir_tester', '📋 Salin sistem_penjualan/index.php')}</div>
+                <div class="p-3.5 rounded-2xl bg-orange-50 dark:bg-orange-950/40 border-l-4 border-orange-600 text-xs sm:text-sm text-slate-700 dark:text-slate-200"><strong>🎉 Selesai!</strong> Buka <a href="http://localhost/sistem_gudang/" target="_blank" class="underline font-bold">Web Gudang</a> dan <a href="http://localhost/sistem_penjualan/" target="_blank" class="underline font-bold">Web Kasir</a>. Lanjut ke 3 Misi Investigasi!</div>
+            </div>`;
+        }
+
+        function renderSlide13() {
+            const missions = [
+                { badge: "MISI INVESTIGASI 1", title: "Uji Potong Stok Normal & Amati Kartu Stok", steps: "1. Buka Web Kasir.\n2. Pilih '3. Lapor Barang Terjual'.\n3. Isi Kode: SP001, Qty: 2, Nomor Bukti: TRX-101, klik Kirim.", questionToThink: "Pertanyaan untuk Form 2 Misi 1:\nApa yang berubah pada stok & log_stok? Mengapa pencatatan bukti ini penting bagi pemilik bisnis?" },
+                { badge: "MISI INVESTIGASI 2", title: "Uji Struk Kembar (Anti-Duplikat)", steps: "1. Masih di Web Kasir, pilihan '3. Lapor Barang Terjual'.\n2. JANGAN ubah Nomor Bukti (tetap TRX-101).\n3. Klik Kirim sekali lagi!", questionToThink: "Pertanyaan untuk Form 2 Misi 2:\nMengapa permintaan kedua ditolak? Bagaimana sistem tahu itu kembar? Kerugian apa yang dicegah?" },
+                { badge: "MISI INVESTIGASI 3", title: "Uji Pencabutan Izin Cabang (Saklar OFF)", steps: "1. Buka Web Gudang.\n2. Pada tabel 'Daftar Izin Akses Cabang', klik 'Matikan (0)' pada kunci GDG-KEY-UTAMA-001.\n3. Kembali ke Web Kasir, klik Kirim Permintaan.\n4. ⚠️ PENTING: Setelah amati error 401, KLIK LAGI 'Nyalakan (1)' di Web Gudang agar Misi berikutnya tidak gagal!", questionToThink: "Pertanyaan untuk Form 2 Misi 3:\nApa respons yang muncul? Dalam situasi bisnis apa manajer perlu mematikan saklar cabang?" }
+            ];
+            const m = missions[activeMissionTab];
+            let tabBtns = '';
+            for (let i = 0; i < missions.length; i++) {
+                const isAct = i === activeMissionTab;
+                tabBtns += `<button type="button" onclick="activeMissionTab=${i};renderCurrentSlide();" class="p-3 rounded-2xl border-2 text-left transition ${isAct ? 'border-emerald-600 bg-emerald-50/70 dark:bg-emerald-950/50 shadow-xs' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900'}"><div class="text-[10px] font-extrabold uppercase text-emerald-600">${missions[i].badge}</div><div class="text-xs font-extrabold text-slate-900 dark:text-white mt-0.5">${missions[i].title}</div></button>`;
+            }
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-3">
+                    <div class="space-y-1"><span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Penjelasan Sebelum Form 2</span><h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Lakukan 3 Misi Ini di Web Anda</h2><p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">Coba sendiri ketiga misi di browser agar bisa menjawab <strong>Form 2</strong> dengan kalimat Anda sendiri:</p></div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">${tabBtns}</div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 my-auto">
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border space-y-1.5"><span class="text-xs font-extrabold uppercase text-emerald-700 dark:text-emerald-400">🛠️ Langkah Eksperimen:</span><div class="text-xs sm:text-sm text-slate-700 dark:text-slate-200 whitespace-pre-line leading-relaxed font-semibold">${escapeHtml(m.steps)}</div></div>
+                        <div class="p-4 rounded-2xl bg-amber-50/70 dark:bg-amber-950/30 border-2 border-amber-300 dark:border-amber-800 space-y-1.5"><span class="text-xs font-extrabold uppercase text-amber-800 dark:text-amber-300">🧠 Cara Menganalisis:</span><div class="text-xs sm:text-sm text-slate-800 dark:text-slate-100 whitespace-pre-line leading-relaxed font-semibold">${escapeHtml(m.questionToThink)}</div></div>
+                    </div>
+                    <div class="p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 text-xs">
+                        <strong>🛟 Jika data web kacau (stok minus / log menumpuk):</strong> Jalankan <strong>Skrip Reset SQL</strong> di bawah melalui phpMyAdmin → tab SQL. Reset mengembalikan stok ke angka awal, mengosongkan log_stok, dan menyalakan semua saklar kunci.
+                        <pre class="mt-2 p-3 rounded-lg bg-slate-900 text-emerald-300 text-[10px] overflow-x-auto font-mono max-h-48">${escapeHtml(RAW_CODES.sql_reset_gudang)}</pre>
+                        <button type="button" onclick="copyCodeByKey('sql_reset_gudang', this)" class="mt-2 px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-extrabold">📋 Salin Skrip Reset SQL</button>
+                    </div>
+                </div>`;
+        }
+
+        function renderSlide14() {
+            const isSaved = isExpComplete();
+            const isEditing = uiWizard.expEditing || !isSaved;
+            const isMin = uiWizard.expMinimized;
+            const missions = [{ no: 1, title: 'Potong Stok Normal & Kartu Stok' }, { no: 2, title: 'Penolakan Struk Kembar (Anti-Duplikat)' }, { no: 3, title: 'Pencabutan Izin Cabang (Saklar OFF)' }];
+            let bodyHtml = '';
+            if (isEditing) {
+                let missionCards = '';
+                for (let m = 0; m < missions.length; m++) {
+                    const mc = missions[m]; const num = mc.no;
+                    missionCards += `
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <div class="flex items-center gap-2"><span class="px-2 py-0.5 rounded-md bg-emerald-600 text-white text-[10px] font-extrabold">MISI ${num}</span><span class="text-xs font-extrabold text-slate-900 dark:text-white">${escapeHtml(mc.title)}</span></div>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                                <div><label class="font-bold block mb-0.5 text-slate-600 dark:text-slate-300">🔵 SEBELUM</label><textarea id="inp_exp_${num}_sebelum" rows="2" oninput="autoResizeTextarea(this); updateField('exp_${num}_sebelum', this.value)" placeholder="Kondisi awal yang diamati..." class="auto-expand w-full p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs">${escapeHtml(formState['exp_' + num + '_sebelum'])}</textarea></div>
+                                <div><label class="font-bold block mb-0.5 text-slate-600 dark:text-slate-300">🟢 SESUDAH</label><textarea id="inp_exp_${num}_sesudah" rows="2" oninput="autoResizeTextarea(this); updateField('exp_${num}_sesudah', this.value)" placeholder="Apa yang berubah..." class="auto-expand w-full p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs">${escapeHtml(formState['exp_' + num + '_sesudah'])}</textarea></div>
+                                <div><label class="font-bold block mb-0.5 text-slate-600 dark:text-slate-300">💡 MENGAPA</label><textarea id="inp_exp_${num}_mengapa" rows="2" oninput="autoResizeTextarea(this); updateField('exp_${num}_mengapa', this.value)" placeholder="Mengapa penting bagi pemilik toko..." class="auto-expand w-full p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs">${escapeHtml(formState['exp_' + num + '_mengapa'])}</textarea></div>
+                            </div>
+                        </div>`;
+                }
+                bodyHtml = `
+                    <div class="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border-2 border-emerald-600 shadow-md space-y-3">
+                        ${renderWizardCardHeader('Form 2', 'Laporan Investigasi Mandiri (Sebelum → Sesudah → Mengapa)', isSaved, true, false, '', '')}
+                        <div class="p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-xs text-slate-700 dark:text-slate-200">📝 <strong>Batasan:</strong> <strong>1–3 kalimat</strong> per bagian. Yang dinilai ketepatan analisis, bukan panjang tulisan.</div>
+                        ${missionCards}
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
+                            <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border space-y-1.5"><label class="text-xs font-bold text-indigo-700 dark:text-indigo-300 block">📸 Screenshot ERD (opsional)</label><input type="file" accept="image/*" onchange="handleImageUpload(event, 'img_erd')" class="text-xs w-full">${formState.img_erd ? `<img src="${formState.img_erd}" class="h-20 rounded border mt-1 object-contain bg-white">` : ''}</div>
+                            <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border space-y-1.5"><label class="text-xs font-bold text-emerald-700 dark:text-emerald-300 block">📸 Screenshot Web (opsional)</label><input type="file" accept="image/*" onchange="handleImageUpload(event, 'img_sim')" class="text-xs w-full">${formState.img_sim ? `<img src="${formState.img_sim}" class="h-20 rounded border mt-1 object-contain bg-white">` : ''}</div>
+                        </div>
+                        <div class="flex justify-end pt-1"><button type="button" onclick="saveExpLkm4()" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-extrabold transition flex items-center gap-2 shadow-sm"><i class="fa-solid fa-check"></i><span>Simpan Investigasi</span></button></div>
+                    </div>`;
+            } else {
+                bodyHtml = `<div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-emerald-300 dark:border-emerald-800">${renderWizardCardHeader('Form 2', 'Hasil 3 Misi Investigasi Telah Disimpan', true, false, isMin, 'uiWizard.expEditing=true;renderCurrentSlide();', 'uiWizard.expMinimized=!uiWizard.expMinimized;renderCurrentSlide();')}</div>`;
+            }
+            return `<div class="slide-enter flex flex-col justify-between h-full gap-4"><div class="space-y-1"><span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-pen-to-square mr-1"></i>Form Isian 2 (Wajib Diisi Mandiri)</span><h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Catatan Hasil Investigasi Sistem</h2></div><div class="my-auto">${bodyHtml}</div></div>`;
+        }
+
+        function renderSlide15() {
+            const cols = [
+                { name: "1. Nama Layanan Bisnis", guide: "Tulis nama fungsi bisnis yang mudah dipahami.", think: "Apa tujuan bisnis? (Ingat 4 layanan RPS: katalog, detail 1 barang, stok keluar, stok masuk)." },
+                { name: "2. Jenis Aksi & Alamat Endpoint", guide: "Tulis method (GET/POST) + nama file endpoint.", think: "Apakah layanan ini hanya membaca (GET) atau mengubah stok (POST)? File mana di /sistem_gudang/api/ yang melayani?" },
+                { name: "3. Syarat Data Kiriman Kasir", guide: "Sebutkan syarat di Header & Body.", think: "Stempel kunci apa yang wajib? Informasi apa yang wajib ditulis Kasir di body?" },
+                { name: "4. Balasan Gudang Jika Berhasil", guide: "Jelaskan info apa yang dikembalikan saat 200 OK.", think: "Saat berhasil, data apa yang dibutuhkan layar Kasir? (Daftar produk / sisa stok?)" },
+                { name: "5. Aturan Penolakan Bisnis", guide: "Rumuskan kapan Gudang wajib menolak + kode error (400/401/404/409).", think: "Apa saja kondisi pelanggaran yang mungkin terjadi? Kode penolakan mana yang tepat?" }
+            ];
+            const c = cols[activeContractColTab];
+            let btns = '';
+            for (let i = 0; i < cols.length; i++) {
+                const isAct = i === activeContractColTab;
+                btns += `<button type="button" onclick="activeContractColTab=${i};renderCurrentSlide();" class="p-2.5 rounded-xl border-2 text-left transition ${isAct ? 'border-indigo-600 bg-indigo-50/70 dark:bg-indigo-950/50 shadow-xs' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900'}"><div class="text-xs font-extrabold text-slate-900 dark:text-white leading-snug">${escapeHtml(cols[i].name)}</div></button>`;
+            }
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    <div class="space-y-1"><span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Penjelasan Sebelum Form 3</span><h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Pahami 5 Kolom Ini Sebelum Merancang 4 Layanan</h2><p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">Klik setiap kolom di bawah agar Anda paham cara mengisinya:</p></div>
+                    <div class="grid grid-cols-1 sm:grid-cols-5 gap-2">${btns}</div>
+                    <div class="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-2 border-indigo-200 dark:border-indigo-800 my-auto space-y-3">
+                        <h3 class="text-lg font-extrabold text-indigo-700 dark:text-indigo-300">${escapeHtml(c.name)}</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border"><span class="text-xs font-extrabold uppercase text-slate-400">📖 Apa yang Ditulis?</span><p class="text-xs sm:text-sm text-slate-800 dark:text-slate-100 leading-relaxed font-semibold mt-1">${escapeHtml(c.guide)}</p></div>
+                            <div class="p-4 rounded-2xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800"><span class="text-xs font-extrabold uppercase text-amber-800 dark:text-amber-300">💡 Pertanyaan Pemicu:</span><p class="text-xs sm:text-sm text-slate-800 dark:text-slate-100 leading-relaxed font-semibold mt-1">${escapeHtml(c.think)}</p></div>
+                        </div>
+                    </div>
+                </div>`;
+        }
+
+        function renderSlide16() {
+            const errorCodes = [
+                { code: '400', label: 'Bad Request', hint: 'Data tidak valid / stok kurang' },
+                { code: '401', label: 'Unauthorized', hint: 'Kunci API salah atau saklar OFF' },
+                { code: '404', label: 'Not Found', hint: 'Barang tidak terdaftar' },
+                { code: '409', label: 'Conflict', hint: 'Nomor referensi/struk sudah dipakai' }
+            ];
+            const serviceHints = ["Layanan #1: Lihat seluruh katalog barang", "Layanan #2: Cek detail & stok 1 barang (by kode)", "Layanan #3: Lapor barang terjual (stok keluar)", "Layanan #4: Lapor barang datang / retur (stok masuk)"];
+            let cardsHtml = '';
+            for (let i = 0; i < 4; i++) {
+                const item = formState.ep[i];
+                const isEditing = uiWizard.epActive === i;
+                const isSaved = isEpItemComplete(i);
+                const isMin = !!uiWizard.epMinimized[i];
+                const headerTitle = item.nama.trim() ? item.nama : serviceHints[i];
+                if (isEditing) {
+                    let errRowsHtml = '';
+                    for (let e = 0; e < errorCodes.length; e++) {
+                        const ec = errorCodes[e];
+                        const onField = 'e' + ec.code + '_on';
+                        const ketField = 'e' + ec.code + '_ket';
+                        const isOn = !!item[onField];
+                        errRowsHtml += `<tr class="border-t border-slate-200 dark:border-slate-700">
+                            <td class="p-1.5 text-center"><input type="checkbox" ${isOn ? 'checked' : ''} onchange="updateEpField(${i}, '${onField}', this.checked)" class="w-4 h-4 accent-rose-600"></td>
+                            <td class="p-1.5 font-mono font-bold text-xs">${ec.code}</td>
+                            <td class="p-1.5 text-[10px] text-slate-500">${ec.label}</td>
+                            <td class="p-1.5"><input type="text" id="inp_ep_${ketField}_${i}" value="${escapeHtml(item[ketField] || '')}" oninput="updateEpField(${i}, '${ketField}', this.value)" ${isOn ? '' : 'disabled'} placeholder="${escapeHtml(ec.hint)}" class="w-full px-2 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-[11px] disabled:opacity-40"></td>
+                        </tr>`;
+                    }
+                    cardsHtml += `
+                        <div class="p-5 rounded-3xl bg-white dark:bg-slate-900 border-2 border-emerald-600 shadow-md space-y-3">
+                            ${renderWizardCardHeader('Layanan #' + (i + 1), headerTitle, isSaved, true, false, '', '')}
+                            <p class="text-xs text-indigo-600 dark:text-indigo-400 font-bold border-t border-slate-100 dark:border-slate-800 pt-2">🎯 ${escapeHtml(serviceHints[i])}</p>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div><label class="text-xs font-bold block mb-1">1. Nama Layanan *</label><input type="text" id="inp_ep_nama_${i}" value="${escapeHtml(item.nama)}" oninput="updateEpField(${i}, 'nama', this.value)" placeholder="Mis. Ambil seluruh katalog barang" class="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-bold"></div>
+                                <div><label class="text-xs font-bold block mb-1">2. Method &amp; Nama File *</label>
+                                    <div class="flex gap-2">
+                                        <select onchange="updateEpField(${i}, 'method', this.value)" class="w-24 px-2 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-mono font-bold">
+                                            <option value="GET" ${item.method === 'GET' ? 'selected' : ''}>GET</option><option value="POST" ${item.method === 'POST' ? 'selected' : ''}>POST</option>
+                                        </select>
+                                        <div class="flex-1 flex items-center rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 overflow-hidden">
+                                            <span class="px-2 py-2.5 text-[11px] font-mono text-slate-500 dark:text-slate-400 bg-slate-200 dark:bg-slate-700 whitespace-nowrap">/sistem_gudang/api/</span>
+                                            <input type="text" id="inp_ep_filename_${i}" value="${escapeHtml(item.filename)}" oninput="updateEpField(${i}, 'filename', this.value)" placeholder="nama-file.php" class="flex-1 min-w-0 px-2 py-2.5 bg-transparent text-xs font-mono font-bold focus:outline-none">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="sm:col-span-2"><label class="text-xs font-bold block mb-1">3. Request Body (Isi Surat) *</label><textarea id="inp_ep_body_${i}" rows="2" oninput="autoResizeTextarea(this); updateEpField(${i}, 'body', this.value)" placeholder='POST: {"kode":"SP001","qty":2,"no_referensi":"TRX-01"}. GET: tulis "-"' class="auto-expand w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-mono">${escapeHtml(item.body)}</textarea></div>
+                                <div class="sm:col-span-2"><label class="text-xs font-bold block mb-1">4. Response Sukses (200 OK) *</label><textarea id="inp_ep_sukses_${i}" rows="2" oninput="autoResizeTextarea(this); updateEpField(${i}, 'sukses', this.value)" placeholder='Field apa yang dikembalikan? Contoh: {"status":"sukses","data":[...]}' class="auto-expand w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-mono">${escapeHtml(item.sukses)}</textarea></div>
+                            </div>
+                            <div class="pt-1"><label class="text-xs font-bold block mb-1.5">5. Aturan Penolakan (centang yang berlaku, isi kondisinya) *</label>
+                                <div class="overflow-x-auto rounded-xl border border-slate-300 dark:border-slate-700">
+                                    <table class="w-full text-left text-xs"><thead class="bg-rose-50 dark:bg-rose-950/40"><tr><th class="p-1.5 text-center w-8">✓</th><th class="p-1.5 w-12">Kode</th><th class="p-1.5 w-24">Label</th><th class="p-1.5">Kondisi Bisnis</th></tr></thead><tbody>${errRowsHtml}</tbody></table>
+                                </div>
+                            </div>
+                            <div class="flex justify-end pt-1"><button type="button" onclick="saveEpItemLkm4(${i})" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold transition shadow-sm"><i class="fa-solid fa-check mr-1"></i>${i < 3 ? 'Simpan & Lanjut #' + (i + 2) : 'Simpan #4'}</button></div>
+                        </div>`;
+                } else if (isSaved) {
+                    let errList = '';
+                    if (item.e400_on && item.e400_ket.trim()) errList += `<div>• <strong>400:</strong> ${escapeHtml(item.e400_ket)}</div>`;
+                    if (item.e401_on && item.e401_ket.trim()) errList += `<div>• <strong>401:</strong> ${escapeHtml(item.e401_ket)}</div>`;
+                    if (item.e404_on && item.e404_ket.trim()) errList += `<div>• <strong>404:</strong> ${escapeHtml(item.e404_ket)}</div>`;
+                    if (item.e409_on && item.e409_ket.trim()) errList += `<div>• <strong>409:</strong> ${escapeHtml(item.e409_ket)}</div>`;
+                    cardsHtml += `<div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-emerald-300 dark:border-emerald-800 space-y-2">
+                        ${renderWizardCardHeader('Layanan #' + (i + 1), item.nama + ' (' + item.method + ' ' + item.filename + ')', true, false, isMin, 'uiWizard.epActive=' + i + ';renderCurrentSlide();', 'uiWizard.epMinimized[' + i + ']=!uiWizard.epMinimized[' + i + '];renderCurrentSlide();')}
+                        ${!isMin ? `<div class="p-3 rounded-xl bg-white dark:bg-slate-900 border text-xs space-y-1"><div><strong>Body:</strong> <code class="font-mono">${escapeHtml(item.body)}</code></div><div><strong>Sukses:</strong> <code class="font-mono">${escapeHtml(item.sukses)}</code></div><div class="text-rose-700 dark:text-rose-300"><strong>Penolakan:</strong>${errList || ' (belum ada)'}</div></div>` : ''}
+                    </div>`;
+                } else {
+                    cardsHtml += `<div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-800">${renderWizardCardHeader('Layanan #' + (i + 1), headerTitle, false, false, true, 'uiWizard.epActive=' + i + ';renderCurrentSlide();', '')}</div>`;
+                }
+            }
+            const done = getEpCompletedCount();
+            const barColor = done === 4 ? 'bg-emerald-600' : done >= 2 ? 'bg-amber-500' : 'bg-rose-500';
+            const barPct = (done / 4) * 100;
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-3">
+                    <div class="space-y-1">
+                        <div class="flex items-center justify-between gap-2 flex-wrap">
+                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-pen-to-square mr-1"></i>Form Isian 3 (Wajib Dirumuskan Mandiri)</span>
+                            <span class="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg ${done === 4 ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'} text-xs font-extrabold">
+                                <i class="fa-solid fa-circle-check"></i>Progress: ${done}/4 endpoint lengkap
+                            </span>
+                        </div>
+                        <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Perancangan 4 Kontrak Layanan API</h2>
+                        <div class="w-full h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden"><div class="h-full ${barColor} transition-all duration-300" style="width: ${barPct}%"></div></div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Header kunci API diisi <strong>satu kali</strong> di bawah (berlaku untuk 4 endpoint).</p>
+                    </div>
+                    <div class="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800">
+                        <label class="text-xs font-bold block mb-1.5">🔑 Header Umum (sama untuk keempat endpoint):</label>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-mono font-bold px-2 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 whitespace-nowrap">X-API-KEY:</span>
+                            <input type="text" id="inp_header_umum" value="${escapeHtml(formState.header_umum)}" oninput="updateField('header_umum', this.value)" placeholder="GDG-KEY-UTAMA-001" class="flex-1 px-3 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-sm font-mono font-bold">
+                        </div>
+                    </div>
+                    <div class="space-y-2.5 my-auto">${cardsHtml}</div>
+                </div>`;
+        }
+
+        function renderSlide17() {
+            return `<div class="slide-enter flex flex-col justify-between h-full gap-5">
+                <div class="space-y-1.5"><span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Penjelasan Sebelum Form 4 · Panduan Peer Review</span><h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Cara Memeriksa Kontrak API Bersama Rekan Pasangan</h2><p class="text-sm text-slate-600 dark:text-slate-300">Tunjukkan Form 3 Anda ke rekan pasangan, lalu periksa 4 pertanyaan evaluasi berikut:</p></div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 my-auto">
+                    <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border space-y-1.5"><span class="text-xs font-extrabold text-indigo-600">1. KELENGKAPAN &amp; KONSISTENSI</span><h3 class="text-base font-extrabold text-slate-900 dark:text-white">Apakah nama data sudah konsisten?</h3><p class="text-xs text-slate-600 dark:text-slate-300">Periksa apakah istilah di Layanan #1 s.d. #4 seragam (tidak berganti antara "kode" dan "id_barang").</p></div>
+                    <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border space-y-1.5"><span class="text-xs font-extrabold text-indigo-600">2. KEJELASAN ATURAN PENOLAKAN</span><h3 class="text-base font-extrabold text-slate-900 dark:text-white">Apakah celah risiko sudah ditutup?</h3><p class="text-xs text-slate-600 dark:text-slate-300">Apakah penolakan 400/401/404/409 sudah dicantumkan pada kondisi yang tepat?</p></div>
+                    <div class="p-5 rounded-3xl bg-amber-50/70 dark:bg-amber-950/30 border space-y-1.5"><span class="text-xs font-extrabold text-amber-700">3. KRITIK / MASUKAN REKAN</span><h3 class="text-base font-extrabold text-slate-900 dark:text-white">Bagian mana yang belum jelas?</h3><p class="text-xs text-slate-700 dark:text-slate-200">Minta rekan sebutkan minimal 1 bagian yang bisa diperjelas.</p></div>
+                    <div class="p-5 rounded-3xl bg-emerald-50/70 dark:bg-emerald-950/30 border space-y-1.5"><span class="text-xs font-extrabold text-emerald-700">4. TINDAK LANJUT</span><h3 class="text-base font-extrabold text-slate-900 dark:text-white">Apa yang Anda perbaiki?</h3><p class="text-xs text-slate-700 dark:text-slate-200">Catat perbaikan yang Anda lakukan setelah menerima masukan.</p></div>
+                </div>
+            </div>`;
+        }
+
+        function renderSlide18() {
+            const isSaved = isPeerComplete();
+            const isEditing = uiWizard.peerEditing || !isSaved;
+            const isMin = uiWizard.peerMinimized;
+            const items = [
+                { no: 1, title: 'Kelengkapan 4 Endpoint Wajib', desc: 'Keempat endpoint RPS tercantum dengan method dan URL yang benar?' },
+                { no: 2, title: 'Konsistensi Nama Field JSON', desc: 'Nama field (kode, nama, harga, stok, qty, no_referensi) seragam di semua endpoint?' },
+                { no: 3, title: 'Kejelasan Aturan Penolakan', desc: 'Kode 400/401/404/409 dipakai pada kondisi yang tepat?' },
+                { no: 4, title: 'Kesesuaian Skema log_stok & api_keys', desc: 'Kolom di kedua tabel mendukung kebutuhan kontrak API?' }
+            ];
+            let bodyHtml = '';
+            if (isEditing) {
+                let rowsHtml = '';
+                for (let i = 0; i < items.length; i++) {
+                    const it = items[i];
+                    const sKey = 'pr_' + it.no + '_status';
+                    const cKey = 'pr_' + it.no + '_catatan';
+                    const status = formState[sKey];
+                    const catatan = formState[cKey];
+                    rowsHtml += `<tr class="border-t border-slate-200 dark:border-slate-700 align-top">
+                        <td class="p-2 font-bold text-xs">${it.no}</td>
+                        <td class="p-2 text-xs"><strong class="block text-slate-900 dark:text-white">${escapeHtml(it.title)}</strong><span class="text-slate-500 dark:text-slate-400">${escapeHtml(it.desc)}</span></td>
+                        <td class="p-2"><div class="flex gap-1 flex-col"><button type="button" onclick="updateField('${sKey}', 'Ya'); renderCurrentSlide();" class="px-2 py-1 rounded text-[11px] font-extrabold border ${status === 'Ya' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-600'}">✓ Ya</button><button type="button" onclick="updateField('${sKey}', 'Revisi'); renderCurrentSlide();" class="px-2 py-1 rounded text-[11px] font-extrabold border ${status === 'Revisi' ? 'bg-amber-600 text-white border-amber-600' : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-600'}">↻ Revisi</button></div></td>
+                        <td class="p-2"><textarea id="inp_${cKey}" rows="2" oninput="autoResizeTextarea(this); updateField('${cKey}', this.value)" placeholder="${status === 'Revisi' ? 'Wajib: apa perbaikannya?' : 'Catatan tambahan (opsional)...'}" class="auto-expand w-full p-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-[11px]">${escapeHtml(catatan)}</textarea></td>
+                    </tr>`;
+                }
+                bodyHtml = `<div class="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border-2 border-emerald-600 shadow-md space-y-3">
+                    ${renderWizardCardHeader('Form 4', 'Ceklis Peer Review Bersama ' + (formState.pasangan_nama || 'Rekan Pasangan'), isSaved, true, false, '', '')}
+                    <div class="p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-xs text-slate-700 dark:text-slate-200">📋 <strong>Instruksi:</strong> Isi bersama rekan. Pilih <strong>Ya</strong> atau <strong>Revisi</strong>. Jika <strong>Revisi</strong>, catatan wajib diisi perbaikan konkret.</div>
+                    <div class="overflow-x-auto rounded-xl border border-slate-300 dark:border-slate-700"><table class="w-full text-left text-xs"><thead class="bg-slate-100 dark:bg-slate-800"><tr><th class="p-2 w-8">No</th><th class="p-2">Aspek yang Diperiksa</th><th class="p-2 w-20">Status</th><th class="p-2">Catatan / Perbaikan</th></tr></thead><tbody>${rowsHtml}</tbody></table></div>
+                    <div class="flex justify-end pt-1"><button type="button" onclick="savePeerLkm4()" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-extrabold transition flex items-center gap-2 shadow-sm"><i class="fa-solid fa-check"></i><span>Simpan Peer Review</span></button></div>
+                </div>`;
+            } else {
+                bodyHtml = `<div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-emerald-300 dark:border-emerald-800">${renderWizardCardHeader('Form 4', 'Hasil Peer Review Telah Disimpan', true, false, isMin, 'uiWizard.peerEditing=true;renderCurrentSlide();', 'uiWizard.peerMinimized=!uiWizard.peerMinimized;renderCurrentSlide();')}</div>`;
+            }
+            return `<div class="slide-enter flex flex-col justify-between h-full gap-4"><div class="space-y-1"><span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-pen-to-square mr-1"></i>Form Isian 4 (Ceklis Peer Review)</span><h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Ceklis Evaluasi Silang</h2></div><div class="my-auto">${bodyHtml}</div></div>`;
+        }
+
+        function renderSlide19() {
+            return `<div class="slide-enter flex flex-col justify-between h-full gap-5">
+                <div class="space-y-1.5"><span class="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">Penjelasan Sebelum Form 5 (OPSIONAL) · Problem Solving</span><h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Bagaimana Merancang Solusi Kontrak API untuk UMKM?</h2><p class="text-sm text-slate-600 dark:text-slate-300">Form 5 bersifat <strong>OPSIONAL / BONUS</strong>. Jika Anda memilih mengerjakan, pilih <strong>1 UMKM nyata</strong> dan gunakan 3 langkah berpikir:</p></div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-5 my-auto">
+                    <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-t-4 border-rose-500 border space-y-2"><span class="px-2.5 py-1 rounded-lg bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300 text-xs font-extrabold">LANGKAH 1 · MASALAH</span><h3 class="text-base font-extrabold text-slate-900 dark:text-white">Apa Kendala Manual?</h3><p class="text-xs text-slate-600 dark:text-slate-300">Amati apa yang masih lambat atau rawan salah di UMKM tersebut.</p></div>
+                    <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-t-4 border-emerald-600 border space-y-2"><span class="px-2.5 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-xs font-extrabold">LANGKAH 2 · LAYANAN GET</span><h3 class="text-base font-extrabold text-slate-900 dark:text-white">Rancang 1 Layanan Baca</h3><p class="text-xs text-slate-600 dark:text-slate-300">Pintu <code class="font-mono font-bold">GET</code> untuk menampilkan informasi (status pesanan, ketersediaan, dsb).</p></div>
+                    <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-t-4 border-indigo-600 border space-y-2"><span class="px-2.5 py-1 rounded-lg bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 text-xs font-extrabold">LANGKAH 3 · LAYANAN POST</span><h3 class="text-base font-extrabold text-slate-900 dark:text-white">Rancang 1 Layanan Tulis</h3><p class="text-xs text-slate-600 dark:text-slate-300">Pintu <code class="font-mono font-bold">POST</code> untuk mengubah data + aturan penolakan.</p></div>
+                </div>
+            </div>`;
+        }
+
+        function renderSlide20() {
+            const isSaved = isUmkmComplete();
+            const isEditing = uiWizard.umkmEditing || !isSaved;
+            const isMin = uiWizard.umkmMinimized;
+            let bodyHtml = '';
+            if (isEditing) {
+                bodyHtml = `<div class="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border-2 border-amber-500 shadow-md space-y-4">
+                    ${renderWizardCardHeader('Form 5', 'BONUS: Studi Kasus Kreatif UMKM (Opsional)', isSaved, true, false, '', '')}
+                    <div class="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-xs text-slate-700 dark:text-slate-200">⭐ <strong>Form ini OPSIONAL.</strong> Isilah jika ingin <strong>nilai bonus</strong> dan memperkuat portofolio. Tidak wajib untuk pengumpulan PDF.</div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
+                        <div><label class="text-xs font-bold block mb-1">Nama UMKM *</label><input type="text" id="inp_umkm_nama" value="${escapeHtml(formState.umkm_nama)}" oninput="updateField('umkm_nama', this.value)" placeholder="Nama usaha..." class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-bold"></div>
+                        <div><label class="text-xs font-bold block mb-1">Bidang Usaha *</label><input type="text" id="inp_umkm_bidang" value="${escapeHtml(formState.umkm_bidang)}" oninput="updateField('umkm_bidang', this.value)" placeholder="Kategori usaha..." class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs"></div>
+                        <div class="sm:col-span-2"><label class="text-xs font-bold text-rose-700 dark:text-rose-300 block mb-1">Akar Masalah Operasional *</label><textarea id="inp_umkm_masalah" rows="2" oninput="autoResizeTextarea(this); updateField('umkm_masalah', this.value)" placeholder="Masalah manual/keterlambatan informasi..." class="auto-expand w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs">${escapeHtml(formState.umkm_masalah)}</textarea></div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border space-y-2"><span class="text-xs font-extrabold text-emerald-700 dark:text-emerald-400">LAYANAN UMKM #1 (GET)</span><input type="text" id="inp_umkm_ep1_nama" value="${escapeHtml(formState.umkm_ep1_nama)}" oninput="updateField('umkm_ep1_nama', this.value)" placeholder="Nama Layanan #1 *" class="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-900 border text-xs font-bold"><input type="text" id="inp_umkm_ep1_url" value="${escapeHtml(formState.umkm_ep1_url)}" oninput="updateField('umkm_ep1_url', this.value)" placeholder="GET /api/... *" class="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-900 border text-xs font-mono"><textarea id="inp_umkm_ep1_aturan" rows="3" oninput="autoResizeTextarea(this); updateField('umkm_ep1_aturan', this.value)" placeholder="Data kiriman, balasan 200, aturan penolakan..." class="auto-expand w-full p-2.5 rounded-lg bg-white dark:bg-slate-900 border text-xs">${escapeHtml(formState.umkm_ep1_aturan)}</textarea></div>
+                        <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border space-y-2"><span class="text-xs font-extrabold text-indigo-700 dark:text-indigo-400">LAYANAN UMKM #2 (POST)</span><input type="text" id="inp_umkm_ep2_nama" value="${escapeHtml(formState.umkm_ep2_nama)}" oninput="updateField('umkm_ep2_nama', this.value)" placeholder="Nama Layanan #2 *" class="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-900 border text-xs font-bold"><input type="text" id="inp_umkm_ep2_url" value="${escapeHtml(formState.umkm_ep2_url)}" oninput="updateField('umkm_ep2_url', this.value)" placeholder="POST /api/... *" class="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-900 border text-xs font-mono"><textarea id="inp_umkm_ep2_aturan" rows="3" oninput="autoResizeTextarea(this); updateField('umkm_ep2_aturan', this.value)" placeholder="Data kiriman, balasan 200, aturan penolakan..." class="auto-expand w-full p-2.5 rounded-lg bg-white dark:bg-slate-900 border text-xs">${escapeHtml(formState.umkm_ep2_aturan)}</textarea></div>
+                    </div>
+                    <div class="flex justify-end pt-1"><button type="button" onclick="saveUmkmLkm4()" class="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs sm:text-sm font-extrabold transition flex items-center gap-2 shadow-sm"><i class="fa-solid fa-check"></i><span>Simpan Rancangan (Bonus)</span></button></div>
+                </div>`;
+            } else {
+                bodyHtml = `<div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-amber-300 dark:border-amber-800">${renderWizardCardHeader('Form 5', 'BONUS: ' + formState.umkm_nama, true, false, isMin, 'uiWizard.umkmEditing=true;renderCurrentSlide();', 'uiWizard.umkmMinimized=!uiWizard.umkmMinimized;renderCurrentSlide();')}</div>`;
+            }
+            return `<div class="slide-enter flex flex-col justify-between h-full gap-4"><div class="space-y-1"><span class="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400"><i class="fa-solid fa-lightbulb mr-1"></i>Form Isian 5 · OPSIONAL / BONUS (Tidak Wajib)</span><h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Rancangan Kontrak API pada UMKM Pilihan Anda</h2><p class="text-xs text-slate-500 dark:text-slate-400">Form ini <strong>tidak wajib</strong> untuk pengumpulan PDF. Isilah untuk mendapat <strong>nilai bonus</strong>.</p></div><div class="my-auto">${bodyHtml}</div></div>`;
+        }
+
+        function renderSlide21() {
+            return `
+                <div class="slide-enter space-y-4">
+                    <div class="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4 no-print">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-circle-check mr-1"></i>Seluruh Form LKM 04 Telah Lengkap • Siap Cetak</span>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Berkas Pengumpulan &amp; Pratinjau PDF LKM 04</h2>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Unduh berkas yang diminta RPS, lalu cetak laporan resmi ukuran A4.</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2 shrink-0">
+                            <button type="button" onclick="exportJsonData()" class="px-3.5 py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-extrabold transition flex items-center gap-1.5"><i class="fa-solid fa-download"></i><span>Simpan .JSON</span></button>
+                            <button type="button" onclick="window.print()" class="px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition"><i class="fa-solid fa-print mr-1"></i>Cetak</button>
+                            <button type="button" id="btnDownloadPdf" onclick="downloadPdfLkm4()" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-extrabold transition shadow-md flex items-center gap-2"><i class="fa-solid fa-file-pdf"></i><span>Generate &amp; Unduh PDF</span></button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 no-print">
+                        <div class="p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 space-y-1.5">
+                            <div class="flex items-center gap-2"><span class="w-7 h-7 rounded-lg bg-indigo-600 text-white font-extrabold flex items-center justify-center text-xs">1</span><span class="text-xs font-extrabold text-indigo-900 dark:text-indigo-200">Ekspor File SQL</span></div>
+                            <p class="text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed">phpMyAdmin → klik <code class="font-mono font-bold">db_gudang</code> → tab <strong>Export</strong> → <strong>Go</strong>. Simpan sebagai <code class="font-mono font-bold">db_gudang.sql</code>.</p>
+                        </div>
+                        <div class="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 space-y-1.5">
+                            <div class="flex items-center gap-2"><span class="w-7 h-7 rounded-lg bg-emerald-600 text-white font-extrabold flex items-center justify-center text-xs">2</span><span class="text-xs font-extrabold text-emerald-900 dark:text-emerald-200">Unduh PDF LKM 04</span></div>
+                            <p class="text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed">Klik tombol hijau <strong>Generate &amp; Unduh PDF</strong> di atas. Akan tersimpan sebagai <code class="font-mono font-bold">LKM_04_...pdf</code>.</p>
+                        </div>
+                        <div class="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 space-y-1.5">
+                            <div class="flex items-center gap-2"><span class="w-7 h-7 rounded-lg bg-amber-600 text-white font-extrabold flex items-center justify-center text-xs">3</span><span class="text-xs font-extrabold text-amber-900 dark:text-amber-200">Simpan .JSON (Backup)</span></div>
+                            <p class="text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed">Klik <strong>Simpan .JSON</strong> untuk arsip. Bisa dimuat ulang di perangkat lain via tombol <strong>Muat .JSON</strong> di header.</p>
+                        </div>
+                    </div>
+
+                    <div id="pdfWrapper" class="max-w-4xl mx-auto bg-white rounded-2xl shadow-md border border-slate-300 overflow-hidden">
+                        <div id="pdfPrintArea" class="p-6 sm:p-10 space-y-4">
+                            ${generatePdfHtmlLkm4()}
+                        </div>
+                    </div>
+                </div>`;
+        }
+
+        function generatePdfHtmlLkm4() {
+            const d = formState;
+            const dash = function (v) { return (v && String(v).trim() !== '') ? escapeHtml(v) : '<span style="color:#94a3b8; font-style:italic;">(Belum diisi)</span>'; };
+
+            let expRows = '';
+            const missionTitles = ['Potong Stok Normal & Kartu Stok', 'Penolakan Struk Kembar (Anti-Duplikat)', 'Pencabutan Izin Cabang (Saklar OFF)'];
+            for (let m = 1; m <= 3; m++) {
+                expRows += `<tr><td style="font-weight:700;">Misi ${m}: ${missionTitles[m - 1]}</td><td>${dash(d['exp_' + m + '_sebelum'])}</td><td>${dash(d['exp_' + m + '_sesudah'])}</td><td>${dash(d['exp_' + m + '_mengapa'])}</td></tr>`;
+            }
+
+            let epRowsStr = '';
+            for (let i = 0; i < 4; i++) {
+                const e = d.ep[i];
+                let errList = '';
+                if (e.e400_on && e.e400_ket.trim()) errList += `• 400: ${escapeHtml(e.e400_ket)}<br>`;
+                if (e.e401_on && e.e401_ket.trim()) errList += `• 401: ${escapeHtml(e.e401_ket)}<br>`;
+                if (e.e404_on && e.e404_ket.trim()) errList += `• 404: ${escapeHtml(e.e404_ket)}<br>`;
+                if (e.e409_on && e.e409_ket.trim()) errList += `• 409: ${escapeHtml(e.e409_ket)}<br>`;
+                epRowsStr += `<tr><td style="font-weight:700;">${i + 1}. ${dash(e.nama)}</td><td style="font-family:monospace; font-weight:700;">${escapeHtml(e.method)} /sistem_gudang/api/${dash(e.filename)}</td><td style="font-family:monospace; font-size:10px;">${dash(e.body)}</td><td style="font-family:monospace; font-size:10px;">${dash(e.sukses)}</td><td style="color:#991b1b;">${errList || '(belum ada)'}</td></tr>`;
+            }
+
+            let prRows = '';
+            const prTitles = ['Kelengkapan 4 Endpoint Wajib', 'Konsistensi Nama Field JSON', 'Kejelasan Aturan Penolakan', 'Kesesuaian Skema log_stok & api_keys'];
+            for (let p = 1; p <= 4; p++) {
+                const status = formState['pr_' + p + '_status'];
+                const color = status === 'Ya' ? '#059669' : (status === 'Revisi' ? '#d97706' : '#94a3b8');
+                prRows += `<tr><td style="font-weight:700;">${p}. ${prTitles[p - 1]}</td><td style="text-align:center; font-weight:700; color:${color};">${dash(status)}</td><td>${dash(formState['pr_' + p + '_catatan'])}</td></tr>`;
+            }
+
+            let imagesHtml = '';
+            if (d.img_erd || d.img_sim) {
+                imagesHtml = `<div style="margin-top: 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">${d.img_erd ? `<div style="border:1px solid #cbd5e1; padding:6px; border-radius:6px;"><div style="font-size:9.5px; font-weight:700; margin-bottom:4px;">Bukti 1: ERD db_gudang</div><img src="${d.img_erd}" style="max-height:145px; width:100%; object-fit:contain;"></div>` : ''}${d.img_sim ? `<div style="border:1px solid #cbd5e1; padding:6px; border-radius:6px;"><div style="font-size:9.5px; font-weight:700; margin-bottom:4px;">Bukti 2: Web Gudang & Penguji Kasir</div><img src="${d.img_sim}" style="max-height:145px; width:100%; object-fit:contain;"></div>` : ''}</div>`;
+            }
+
+            return `
+                <div style="border-bottom: 2px solid #1e293b; padding-bottom: 10px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+                    <div>
+                        <div style="font-size: 10px; font-weight: 800; letter-spacing: 0.06em; color: #059669; text-transform: uppercase;">UNIVERSITAS PERINTIS INDONESIA (UPERTIS)</div>
+                        <div style="font-size: 14.5px; font-weight: 800; color: #0f172a; margin-top: 2px;">LEMBAR KERJA MAHASISWA (LKM 04) • SPESIFIKASI KONTRAK LAYANAN API</div>
+                        <div style="font-size: 10.5px; color: #475569; margin-top: 1px;">Program Studi S1 Bisnis Digital • Sistem Terintegrasi (BD5231)</div>
+                    </div>
+                    <div style="text-align: right; font-size: 10px; color: #475569; background: #f8fafc; padding: 6px 10px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                        <div style="font-weight: 800; color: #0f172a;">PERTEMUAN 4</div>
+                        <div>Sub-CPMK 1.2 · Bobot 3%</div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 10px;">
+                    <div style="font-size: 10px; font-weight: 800; margin-bottom: 4px; text-transform: uppercase; background: #eff6ff; padding: 4px 8px; border-left: 3px solid #4f46e5;">📋 BERKAS YANG WAJIB DIKUMPULKAN</div>
+                    <table class="pdf-table">
+                        <tr><td style="width: 5%;">☐</td><td style="width: 45%; font-weight: 700;">PDF LKM 04 (file ini)</td><td style="width: 50%; font-size: 10px; color:#64748b;">Dihasilkan dari tombol "Generate & Unduh PDF".</td></tr>
+                        <tr><td>☐</td><td style="font-weight: 700;">db_gudang.sql</td><td style="font-size: 10px; color:#64748b;">Ekspor dari phpMyAdmin → tab Export.</td></tr>
+                        <tr><td>☐</td><td style="font-weight: 700;">Data_LKM04_....json (opsional)</td><td style="font-size: 10px; color:#64748b;">Cadangan data untuk dilanjutkan di perangkat lain.</td></tr>
+                    </table>
+                </div>
+
+                <div style="margin-bottom: 10px;">
+                    <div style="font-size: 10.5px; font-weight: 800; margin-bottom: 4px; text-transform: uppercase;">1. Identitas Mahasiswa &amp; Reviewer</div>
+                    <table class="pdf-table">
+                        <tr><th style="width: 20%;">Nama Mahasiswa</th><td style="width: 30%; font-weight: 700;">${dash(d.nama)}</td><th style="width: 20%;">NIM</th><td style="width: 30%; font-family: monospace; font-weight: 700;">${dash(d.nim)}</td></tr>
+                        <tr><th>Kelas &amp; Tanggal</th><td>${dash(d.kelas)} (${dash(d.tgl)})</td><th>Rekan Reviewer</th><td>${dash(d.pasangan_nama)} ${d.pasangan_nim ? '(' + escapeHtml(d.pasangan_nim) + ')' : ''}</td></tr>
+                    </table>
+                </div>
+
+                <div style="margin-bottom: 10px;">
+                    <div style="font-size: 10.5px; font-weight: 800; margin-bottom: 4px; text-transform: uppercase;">2. Hasil Investigasi Mandiri (Sebelum → Sesudah → Mengapa)</div>
+                    <table class="pdf-table"><thead><tr><th style="width:18%;">Misi</th><th style="width:24%;">Sebelum</th><th style="width:24%;">Sesudah</th><th style="width:34%;">Mengapa Penting</th></tr></thead><tbody>${expRows}</tbody></table>
+                    ${imagesHtml}
+                </div>
+
+                <div style="margin-bottom: 10px;">
+                    <div style="font-size: 10.5px; font-weight: 800; margin-bottom: 4px; text-transform: uppercase;">3. Tabel Perancangan 4 Kontrak Layanan API</div>
+                    <div style="font-size: 10px; margin-bottom: 4px; padding: 4px 8px; background: #f8fafc; border: 1px solid #cbd5e1;"><strong>Header Umum (X-API-KEY):</strong> <code style="font-family:monospace;">${dash(d.header_umum)}</code></div>
+                    <table class="pdf-table"><thead><tr><th>Nama Layanan</th><th>Method &amp; Endpoint</th><th>Request Body</th><th>Response 200</th><th>Aturan Penolakan</th></tr></thead><tbody>${epRowsStr}</tbody></table>
+                </div>
+
+                <div style="margin-bottom: 10px;">
+                    <div style="font-size: 10.5px; font-weight: 800; margin-bottom: 4px; text-transform: uppercase;">4. Ceklis Peer Review</div>
+                    <table class="pdf-table"><thead><tr><th style="width:30%;">Aspek</th><th style="width:10%;">Status</th><th style="width:60%;">Catatan / Perbaikan</th></tr></thead><tbody>${prRows}</tbody></table>
+                </div>
+
+                ${d.umkm_nama ? `
+                <div style="margin-bottom: 12px;">
+                    <div style="font-size: 10.5px; font-weight: 800; margin-bottom: 4px; text-transform: uppercase;">5. (BONUS) Studi Kasus UMKM: ${dash(d.umkm_nama)} ${d.umkm_bidang ? ' — ' + escapeHtml(d.umkm_bidang) : ''}</div>
+                    <div style="font-size: 10px; margin-bottom: 4px; padding: 6px 8px; background: #fef3c7; border: 1px solid #fcd34d;"><strong>Akar Masalah:</strong> ${dash(d.umkm_masalah)}</div>
+                    <table class="pdf-table"><thead><tr><th style="width:24%;">Nama Layanan UMKM</th><th style="width:22%;">Method &amp; URL</th><th style="width:54%;">Syarat Kiriman, Balasan 200, &amp; Penolakan</th></tr></thead><tbody><tr><td style="font-weight:700;">1. ${dash(d.umkm_ep1_nama)}</td><td style="font-family:monospace;">${dash(d.umkm_ep1_url)}</td><td>${dash(d.umkm_ep1_aturan)}</td></tr><tr><td style="font-weight:700;">2. ${dash(d.umkm_ep2_nama)}</td><td style="font-family:monospace;">${dash(d.umkm_ep2_url)}</td><td>${dash(d.umkm_ep2_aturan)}</td></tr></tbody></table>
+                </div>` : ''}
+
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; padding-top: 4px; font-size: 10px; color: #334155;">
+                    <div style="max-width: 360px; color: #64748b;"><strong>Pernyataan Orisinalitas:</strong> Seluruh analisis dan perancangan pada LKM 04 ini disusun secara mandiri berdasarkan pengujian web langsung.</div>
+                    <div style="text-align: center; min-width: 180px;">
+                        <div>Padang, ${d.tgl ? escapeHtml(d.tgl) : '........................'}</div>
+                        <div style="margin-bottom: 34px; font-weight: 600;">Mahasiswa Pelaksana,</div>
+                        <div style="font-weight: 800; text-decoration: underline; color: #0f172a;">${d.nama ? escapeHtml(d.nama) : '( ........................................ )'}</div>
+                        <div style="font-family: monospace;">NIM: ${d.nim ? escapeHtml(d.nim) : '........................'}</div>
+                    </div>
+                </div>`;
+        }
+
+        function saveIdentitasLkm4() { if (!validateFormSlide(2)) return; uiWizard.identitasMinimized = false; triggerAutoSave(); renderCurrentSlide(); showToast('Identitas berhasil disimpan!', 'success'); }
+        function saveExpLkm4() { if (!validateFormSlide(13)) return; uiWizard.expMinimized = false; triggerAutoSave(); renderCurrentSlide(); showToast('Hasil investigasi berhasil disimpan!', 'success'); }
+
+        function saveEpItemLkm4(idx) {
+            const it = formState.ep[idx];
+            if (!it.nama.trim()) { highlightEmptyInput('inp_ep_nama_' + idx, 'Nama Layanan #' + (idx + 1) + ' wajib diisi.'); return; }
+            if (!it.filename.trim()) { highlightEmptyInput('inp_ep_filename_' + idx, 'Nama File Layanan #' + (idx + 1) + ' wajib diisi.'); return; }
+            if (!it.body.trim()) { highlightEmptyInput('inp_ep_body_' + idx, 'Request Body Layanan #' + (idx + 1) + ' wajib diisi (atau "-").'); return; }
+            if (!it.sukses.trim()) { highlightEmptyInput('inp_ep_sukses_' + idx, 'Response Sukses Layanan #' + (idx + 1) + ' wajib diisi.'); return; }
+            const anyErr = (it.e400_on && it.e400_ket.trim()) || (it.e401_on && it.e401_ket.trim()) || (it.e404_on && it.e404_ket.trim()) || (it.e409_on && it.e409_ket.trim());
+            if (!anyErr) { showToast('Centang minimal 1 aturan penolakan dan isi kondisinya untuk Layanan #' + (idx + 1) + '.', 'error'); return; }
+            uiWizard.epSaved[idx] = true;
+            uiWizard.epMinimized[idx] = true;
+            if (idx < 3 && !isEpItemComplete(idx + 1)) { uiWizard.epActive = idx + 1; } else { uiWizard.epActive = -1; uiWizard.epMinimized[idx] = false; }
+            triggerAutoSave();
+            renderCurrentSlide();
+            showToast('Kontrak Layanan #' + (idx + 1) + ' disimpan! (' + getEpCompletedCount() + '/4 endpoint lengkap)', 'success');
+        }
+
+        function savePeerLkm4() { if (!validateFormSlide(17)) return; uiWizard.peerMinimized = false; triggerAutoSave(); renderCurrentSlide(); showToast('Hasil Peer Review berhasil disimpan!', 'success'); }
+        function saveUmkmLkm4() { uiWizard.umkmMinimized = false; triggerAutoSave(); renderCurrentSlide(); showToast('Rancangan UMKM (Bonus) berhasil disimpan!', 'success'); }
+
+        function copyCodeByKey(codeKey, btn) {
+            const text = RAW_CODES[codeKey] || '';
+            if (!text) return;
+            const showCopied = function () { const orig = btn.textContent; btn.textContent = '✓ Tersalin Utuh!'; setTimeout(function () { btn.textContent = orig; }, 1800); };
+            if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(text).then(showCopied).catch(function () { fallbackCopy(text, showCopied); }); }
+            else { fallbackCopy(text, showCopied); }
+        }
+
+        function fallbackCopy(text, callback) {
+            try { const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'absolute'; ta.style.left = '-9999px'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); if (callback) callback(); } catch (err) {}
+        }
+
+        function downloadPdfLkm4() {
+            for (let i = 0; i < TOTAL_SLIDES - 1; i++) { if ([2, 13, 15, 17].indexOf(i) !== -1) { if (!validateFormSlide(i)) { currentSlideIndex = i; renderCurrentSlide(); return; } } }
+            if (currentSlideIndex !== TOTAL_SLIDES - 1) { currentSlideIndex = TOTAL_SLIDES - 1; renderCurrentSlide(); }
+            const el = document.getElementById('pdfPrintArea');
+            const d = formState;
+            const cleanNim = (d.nim || 'NIM').replace(/[^a-zA-Z0-9_-]/g, '');
+            const cleanNama = (d.nama || 'Mahasiswa').trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '');
+            const fn = 'LKM_04_Kontrak_API_' + cleanNim + '_' + cleanNama + '.pdf';
+            const btn = document.getElementById('btnDownloadPdf');
+            const orig = btn ? btn.innerHTML : '';
+            if (btn) { btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span>Menyiapkan PDF...</span>'; btn.disabled = true; }
+            if (typeof html2pdf !== 'undefined') {
+                html2pdf().set({ margin: [8, 8, 8, 8], filename: fn, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(el).save().then(function () { if (btn) { btn.innerHTML = orig; btn.disabled = false; } }).catch(function () { if (btn) { btn.innerHTML = orig; btn.disabled = false; } window.print(); });
+            } else { if (btn) { btn.innerHTML = orig; btn.disabled = false; } window.print(); }
+        }
+
+        function clearAllData() {
+            const today = new Date().toISOString().split('T')[0];
+            formState = {
+                nama: '', nim: '', kelas: '', tgl: today, pasangan_nama: '', pasangan_nim: '',
+                header_umum: 'GDG-KEY-UTAMA-001',
+                exp_1_sebelum: '', exp_1_sesudah: '', exp_1_mengapa: '',
+                exp_2_sebelum: '', exp_2_sesudah: '', exp_2_mengapa: '',
+                exp_3_sebelum: '', exp_3_sesudah: '', exp_3_mengapa: '',
+                img_erd: '', img_sim: '',
+                ep: [
+                    { nama: '', method: 'GET',  filename: 'barang.php',     body: '', sukses: '', e400_on: false, e400_ket: '', e401_on: true,  e401_ket: 'Kunci API tidak dikirim / saklar mati', e404_on: false, e404_ket: '', e409_on: false, e409_ket: '' },
+                    { nama: '', method: 'GET',  filename: 'barang.php',     body: '', sukses: '', e400_on: false, e400_ket: '', e401_on: true,  e401_ket: 'Kunci API tidak dikirim / saklar mati', e404_on: true,  e404_ket: 'Kode barang tidak terdaftar', e409_on: false, e409_ket: '' },
+                    { nama: '', method: 'POST', filename: 'stok-keluar.php', body: '', sukses: '', e400_on: true,  e400_ket: 'Stok tidak cukup / qty <= 0',          e401_on: true,  e401_ket: 'Kunci API tidak dikirim / saklar mati', e404_on: true,  e404_ket: 'Kode barang tidak terdaftar', e409_on: true,  e409_ket: 'Nomor referensi sudah dipakai' },
+                    { nama: '', method: 'POST', filename: 'stok-masuk.php',  body: '', sukses: '', e400_on: true,  e400_ket: 'Qty <= 0 atau kode barang kosong',      e401_on: true,  e401_ket: 'Kunci API tidak dikirim / saklar mati', e404_on: true,  e404_ket: 'Kode barang tidak terdaftar', e409_on: false, e409_ket: '' }
+                ],
+                pr_1_status: '', pr_1_catatan: '', pr_2_status: '', pr_2_catatan: '',
+                pr_3_status: '', pr_3_catatan: '', pr_4_status: '', pr_4_catatan: '',
+                umkm_nama: '', umkm_bidang: '', umkm_masalah: '',
+                umkm_ep1_nama: '', umkm_ep1_url: '', umkm_ep1_aturan: '',
+                umkm_ep2_nama: '', umkm_ep2_url: '', umkm_ep2_aturan: ''
+            };
+            uiWizard = {
+                identitasEditing: true, identitasMinimized: false,
+                expEditing: true, expMinimized: false,
+                epActive: 0, epSaved: { 0: false, 1: false, 2: false, 3: false }, epMinimized: { 0: false, 1: false, 2: false, 3: false },
+                peerEditing: true, peerMinimized: false,
+                umkmEditing: true, umkmMinimized: false
+            };
+            try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+            currentSlideIndex = 0;
+            renderCurrentSlide();
+            showToast('Seluruh isian LKM 04 telah dikosongkan.', 'success');
+        }
+
+        const SLIDES = [
+            { id: 1, category: "Pengantar", title: "Pembuatan Web dari Nol, Investigasi Sistem & LKM 04 Mandiri", render: renderSlide1 },
+            { id: 2, category: "Penjelasan Form 1", title: "Mengapa Perancangan Kontrak API Wajib Berpasangan?", render: renderSlide2 },
+            { id: 3, category: "Form Isian 1", title: "Data Diri Mahasiswa & Rekan Reviewer", render: renderSlide3 },
+            { id: 4, category: "Langkah Web 1", title: "Nyalakan XAMPP & Buat 4 Folder di C:\\xampp\\htdocs", render: renderSlide4 },
+            { id: 5, category: "Langkah Web 2", title: "Skrip SQL 1: Buat db_gudang, barang, & log_stok", render: renderSlide5 },
+            { id: 6, category: "Langkah Web 3", title: "Skrip SQL 2: Buat Tabel api_keys & Potret ERD", render: renderSlide6 },
+            { id: 7, category: "Langkah Web 4", title: "File Web 1/6: Buat sistem_gudang/config/koneksi.php", render: renderSlide7 },
+            { id: 8, category: "Langkah Web 5", title: "File Web 2/6: Buat Dashboard Gudang (sistem_gudang/index.php)", render: renderSlide8 },
+            { id: 9, category: "Langkah Web 6", title: "File Web 3/6: Buat Pintu Katalog (api/barang.php)", render: renderSlide9 },
+            { id: 10, category: "Langkah Web 7", title: "File Web 4/6: Buat Pintu Potong Stok (api/stok-keluar.php)", render: renderSlide10 },
+            { id: 11, category: "Langkah Web 8", title: "File Web 5/6: Buat Pintu Tambah Stok (api/stok-masuk.php)", render: renderSlide11 },
+            { id: 12, category: "Langkah Web 9", title: "File Web 6/6: Buat Web Penguji Kasir (sistem_penjualan/index.php)", render: renderSlide12 },
+            { id: 13, category: "Penjelasan Form 2", title: "Panduan 3 Misi Investigasi & Skrip Reset SQL", render: renderSlide13 },
+            { id: 14, category: "Form Isian 2", title: "Catatan Investigasi (Sebelum → Sesudah → Mengapa)", render: renderSlide14 },
+            { id: 15, category: "Penjelasan Form 3", title: "Pahami 5 Kolom Sebelum Merancang Kontrak API", render: renderSlide15 },
+            { id: 16, category: "Form Isian 3", title: "Perancangan 4 Kontrak Layanan API (Ramping + Progress)", render: renderSlide16 },
+            { id: 17, category: "Penjelasan Form 4", title: "Cara Memeriksa Kontrak API Bersama Rekan Pasangan", render: renderSlide17 },
+            { id: 18, category: "Form Isian 4", title: "Ceklis Evaluasi Silang (Peer Review)", render: renderSlide18 },
+            { id: 19, category: "Penjelasan Form 5 (Opsional)", title: "Rancangan Solusi Kontrak API untuk UMKM Sekitar", render: renderSlide19 },
+            { id: 20, category: "Form Isian 5 (Bonus)", title: "BONUS: Rancangan Kontrak API pada UMKM Pilihan", render: renderSlide20 },
+            { id: 21, category: "Berkas Pengumpulan & PDF", title: "Unduh Berkas (SQL + PDF + JSON) & Pratinjau LKM 04", render: renderSlide21 }
+        ];
+
+        function renderCurrentSlide() {
+            const slide = SLIDES[currentSlideIndex];
+            const viewport = document.getElementById('slideViewport');
+            if (!viewport || !slide) return;
+            viewport.innerHTML = slide.render();
+            const pct = Math.round(((currentSlideIndex + 1) / TOTAL_SLIDES) * 100);
+            document.getElementById('topProgressBar').style.width = pct + '%';
+            document.getElementById('slideCounterBadge').textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES;
+            document.getElementById('mobileFooterCounter').textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES;
+            document.getElementById('slideCategoryPill').textContent = slide.category;
+            document.getElementById('headerSlideTitle').textContent = slide.title;
+            const prevBtn = document.getElementById('prevSlideBtn');
+            const nextBtn = document.getElementById('nextSlideBtn');
+            const nextBtnText = document.getElementById('nextBtnText');
+            prevBtn.disabled = currentSlideIndex === 0;
+            if (currentSlideIndex === TOTAL_SLIDES - 1) { nextBtnText.textContent = "Selesai"; nextBtn.disabled = true; }
+            else { nextBtnText.textContent = "Selanjutnya"; nextBtn.disabled = false; }
+            renderDotsAndDrawer();
+            const textareas = viewport.querySelectorAll('textarea.auto-expand');
+            for (let i = 0; i < textareas.length; i++) { autoResizeTextarea(textareas[i]); }
+        }
+
+        function renderDotsAndDrawer() {
+            const dotsContainer = document.getElementById('slideDotsContainer');
+            let dotsHtml = '';
+            let drawerHtml = '';
+            for (let idx = 0; idx < SLIDES.length; idx++) {
+                const s = SLIDES[idx];
+                const isActive = idx === currentSlideIndex;
+                const isForm = s.category.indexOf('Form Isian') !== -1;
+                const dotClass = isActive ? 'w-7 bg-emerald-600 dark:bg-emerald-400' : isForm ? 'w-2.5 bg-amber-400 dark:bg-amber-500 hover:bg-amber-600' : 'w-2 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400';
+                dotsHtml += `<button type="button" onclick="goToSlide(${idx})" title="${escapeHtml(s.title)}" class="h-2 rounded-full transition-all ${dotClass}"></button>`;
+                const itemClass = isActive ? 'bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 font-bold' : 'hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-300';
+                const badgeClass = isActive ? 'bg-emerald-600 text-white' : isForm ? 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-500';
+                drawerHtml += `<button type="button" onclick="selectSlideFromDrawer(${idx})" class="w-full text-left p-3 rounded-xl transition flex items-start gap-3 ${itemClass}"><span class="w-6 h-6 rounded-lg text-xs font-extrabold flex items-center justify-center shrink-0 mt-0.5 ${badgeClass}">${s.id}</span><div class="min-w-0 flex-1"><div class="text-[10px] uppercase tracking-wider opacity-75">${escapeHtml(s.category)}</div><div class="text-xs sm:text-sm leading-snug break-words">${escapeHtml(s.title)}</div></div></button>`;
+            }
+            if (dotsContainer) dotsContainer.innerHTML = dotsHtml;
+            const drawerList = document.getElementById('drawerSlideList');
+            if (drawerList) drawerList.innerHTML = drawerHtml;
+        }
+
+        function selectSlideFromDrawer(index) { toggleSlideDrawer(); goToSlide(index); }
+        function changeSlide(direction) { const nextIdx = currentSlideIndex + direction; if (nextIdx >= 0 && nextIdx < TOTAL_SLIDES) { goToSlide(nextIdx); } }
+
+        function goToSlide(targetIdx) {
+            if (targetIdx < 0 || targetIdx >= TOTAL_SLIDES) return;
+            if (targetIdx > currentSlideIndex) {
+                for (let checkIdx = currentSlideIndex; checkIdx < targetIdx; checkIdx++) {
+                    if ([2, 13, 15, 17].indexOf(checkIdx) !== -1) { currentSlideIndex = checkIdx; if (!validateFormSlide(checkIdx)) return; }
+                }
+            }
+            currentSlideIndex = targetIdx;
+            renderCurrentSlide();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function toggleSlideDrawer() {
+            const drawer = document.getElementById('slideDrawer');
+            const backdrop = document.getElementById('slideDrawerBackdrop');
+            const isClosed = drawer.classList.contains('-translate-x-full');
+            if (isClosed) { backdrop.classList.remove('hidden'); setTimeout(function () { backdrop.classList.remove('opacity-0'); }, 10); drawer.classList.remove('-translate-x-full'); }
+            else { backdrop.classList.add('opacity-0'); drawer.classList.add('-translate-x-full'); setTimeout(function () { backdrop.classList.add('hidden'); }, 200); }
+        }
+
+        function showTerm(key) {
+            const item = GLOSSARY_DB[key];
+            if (!item) return;
+            document.getElementById('termCategoryBadge').textContent = item.category;
+            document.getElementById('termTitle').textContent = item.title;
+            document.getElementById('termMainDesc').textContent = item.main;
+            document.getElementById('termDetailDesc').textContent = item.detail;
+            document.getElementById('termSourceName').textContent = 'Sumber: ' + item.source;
+            const modal = document.getElementById('termModalBackdrop');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+        function closeTermModal() { const m = document.getElementById('termModalBackdrop'); m.classList.add('hidden'); m.classList.remove('flex'); }
+        function openGlossaryIndex() { document.getElementById('glossarySearchInput').value = ''; renderGlossaryList(''); const m = document.getElementById('glossaryModalBackdrop'); m.classList.remove('hidden'); m.classList.add('flex'); }
+        function closeGlossaryIndex() { const m = document.getElementById('glossaryModalBackdrop'); m.classList.add('hidden'); m.classList.remove('flex'); }
+        function selectGlossaryTerm(key) { closeGlossaryIndex(); showTerm(key); }
+
+        function renderGlossaryList(query) {
+            const q = String(query || '').trim().toLowerCase();
+            const keys = Object.keys(GLOSSARY_DB);
+            let html = ''; let count = 0;
+            for (let i = 0; i < keys.length; i++) {
+                const k = keys[i]; const item = GLOSSARY_DB[k];
+                if (item.title.toLowerCase().indexOf(q) !== -1 || item.category.toLowerCase().indexOf(q) !== -1 || item.main.toLowerCase().indexOf(q) !== -1) {
+                    count++;
+                    html += `<button type="button" data-term="${escapeHtml(k)}" onclick="selectGlossaryTerm(this.dataset.term)" class="text-left p-4 rounded-2xl bg-slate-50 hover:bg-emerald-50/60 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-800 transition space-y-1"><div class="flex items-center justify-between"><span class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">${escapeHtml(item.category)}</span><span class="text-[10px] text-slate-400">${escapeHtml(item.source)}</span></div><div class="text-sm font-extrabold text-slate-900 dark:text-white leading-snug">${escapeHtml(item.title)}</div><p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">${escapeHtml(item.main)}</p></button>`;
+                }
+            }
+            const grid = document.getElementById('glossaryListGrid');
+            if (grid) { grid.innerHTML = count > 0 ? html : '<div class="col-span-2 text-center py-8 text-xs text-slate-500">Istilah tidak ditemukan.</div>'; }
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const ico = document.getElementById('themeIcon');
+            html.classList.toggle('dark');
+            ico.className = html.classList.contains('dark') ? 'fa-solid fa-sun text-amber-400 text-sm' : 'fa-solid fa-moon text-sm';
+        }
+
+        document.addEventListener('keydown', function (e) {
+            const activeTag = document.activeElement && document.activeElement.tagName ? document.activeElement.tagName.toLowerCase() : '';
+            if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') return;
+            if (e.key === 'ArrowRight') changeSlide(1);
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+            if (e.key === 'Escape') { closeTermModal(); closeGlossaryIndex(); }
+        });
+
+        loadSavedState();
+        renderCurrentSlide();
+    </script>
+</body>
+</html>
