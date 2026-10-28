@@ -1,0 +1,1958 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Materi Minggu 4 (Upgraded): Perancangan Kontrak API & Skema Database Pendukung (BD5231)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace']
+                    }
+                }
+            }
+        };
+    </script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Istilah teknis memiliki latar kapsul sendiri agar selalu kontras di latar apa pun */
+        .tech-term {
+            display: inline-block;
+            color: #3730a3;
+            background-color: #eef2ff;
+            border: 1px solid #c7d2fe;
+            padding: 0.05rem 0.45rem;
+            border-radius: 0.4rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            line-height: 1.35;
+        }
+        .dark .tech-term {
+            color: #e0e7ff;
+            background-color: rgba(79, 70, 229, 0.35);
+            border-color: rgba(129, 140, 248, 0.45);
+        }
+        .tech-term:hover {
+            background-color: #e0e7ff;
+            border-color: #818cf8;
+            color: #1e1b4b;
+            transform: translateY(-1px);
+        }
+        .dark .tech-term:hover {
+            background-color: rgba(99, 102, 241, 0.55);
+            color: #ffffff;
+        }
+
+        .slide-enter {
+            animation: fadeSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes fadeSlide {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        pre.json-box {
+            background: #0b0b10;
+            color: #e4e4e7;
+            border-radius: 0.85rem;
+            padding: 0.85rem 1.05rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            line-height: 1.55;
+            overflow-x: auto;
+            border: 1px solid #1f1f2e;
+            margin: 0;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #334155;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col justify-between transition-colors duration-200">
+
+    <!-- Header -->
+    <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800">
+        <div class="w-full h-1 bg-slate-100 dark:bg-slate-800">
+            <div id="topProgressBar" class="h-full bg-indigo-600 dark:bg-indigo-500 transition-all duration-300" style="width: 5%;"></div>
+        </div>
+
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+                <button type="button" onclick="toggleSlideDrawer()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition flex items-center gap-2 text-xs sm:text-sm font-bold shrink-0">
+                    <i class="fa-solid fa-list-ul text-indigo-600 dark:text-indigo-400"></i>
+                    <span class="hidden sm:inline">Daftar Slide</span>
+                    <span id="slideCounterBadge" class="px-2 py-0.5 text-xs rounded-lg bg-indigo-600 text-white font-bold">1 / 19</span>
+                </button>
+
+                <div class="hidden md:flex items-center gap-2.5 min-w-0">
+                    <span id="slideCategoryPill" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 shrink-0">
+                        Minggu 4 · Materi
+                    </span>
+                    <h1 id="headerSlideTitle" class="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">
+                        Perancangan Kontrak API &amp; Skema Database Pendukung
+                    </h1>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 shrink-0">
+                <button type="button" onclick="openGlossaryIndex()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 text-xs sm:text-sm font-bold flex items-center gap-2 transition">
+                    <i class="fa-solid fa-book-open text-indigo-600 dark:text-indigo-400"></i>
+                    <span>Kamus Istilah</span>
+                </button>
+
+                <button type="button" onclick="toggleTheme()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center transition" title="Ganti Tema Layar">
+                    <i id="themeIcon" class="fa-solid fa-moon text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Slide Drawer -->
+    <div id="slideDrawerBackdrop" onclick="toggleSlideDrawer()" class="fixed inset-0 bg-slate-950/50 backdrop-blur-xs z-40 hidden opacity-0 transition-opacity duration-200"></div>
+    <aside id="slideDrawer" class="fixed top-0 left-0 bottom-0 w-80 sm:w-96 bg-white dark:bg-slate-900 z-50 shadow-2xl border-r border-slate-200 dark:border-slate-800 transform -translate-x-full transition-transform duration-200 flex flex-col">
+        <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Sistem Terintegrasi (BD5231)</span>
+                <h2 class="text-base font-extrabold text-slate-900 dark:text-white mt-0.5">Materi Tatap Muka Pertemuan 4</h2>
+            </div>
+            <button type="button" onclick="toggleSlideDrawer()" class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div id="drawerSlideList" class="p-3.5 overflow-y-auto space-y-1 flex-1"></div>
+        <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 flex items-center justify-between">
+            <span>Gunakan tombol panah Kiri / Kanan</span>
+            <span class="font-bold">19 Slide Materi</span>
+        </div>
+    </aside>
+
+    <!-- Main Slide Viewport -->
+    <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 flex flex-col justify-center">
+        <div id="slideViewport" class="bg-white dark:bg-slate-900 rounded-3xl shadow-xs border border-slate-200/80 dark:border-slate-800 p-6 sm:p-8 lg:p-10 min-h-[560px] flex flex-col justify-between relative overflow-hidden">
+            <!-- Konten slide dirender secara dinamis -->
+        </div>
+    </main>
+
+    <!-- Sticky Footer Navigation -->
+    <footer class="sticky bottom-0 z-20 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 py-3 px-4 sm:px-6">
+        <div class="max-w-6xl mx-auto flex items-center justify-between gap-4">
+            <button type="button" id="prevSlideBtn" onclick="changeSlide(-1)" class="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                <i class="fa-solid fa-arrow-left text-xs"></i>
+                <span>Sebelumnya</span>
+            </button>
+
+            <div id="slideDotsContainer" class="hidden md:flex items-center gap-1.5 flex-wrap justify-center"></div>
+
+            <div class="md:hidden text-xs font-bold text-slate-500 dark:text-slate-400" id="mobileFooterCounter">
+                1 / 19
+            </div>
+
+            <button type="button" id="nextSlideBtn" onclick="changeSlide(1)" class="px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-indigo-600 hover:bg-indigo-700 text-white transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                <span id="nextBtnText">Selanjutnya</span>
+                <i class="fa-solid fa-arrow-right text-xs"></i>
+            </button>
+        </div>
+    </footer>
+
+    <!-- Modal Penjelasan Istilah -->
+    <div id="termModalBackdrop" onclick="closeTermModal()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl slide-enter">
+            <div class="flex items-start justify-between gap-4 mb-4">
+                <div>
+                    <span id="termCategoryBadge" class="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">Kategori</span>
+                    <h3 id="termTitle" class="text-xl font-extrabold text-slate-900 dark:text-white mt-1.5">Nama Istilah</h3>
+                </div>
+                <button type="button" onclick="closeTermModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <p id="termMainDesc" class="text-sm text-slate-700 dark:text-slate-200 leading-relaxed bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200/70 dark:border-slate-700/70"></p>
+
+                <div class="p-3.5 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-200/70 dark:border-indigo-800/70">
+                    <div class="text-[11px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-1">Analogi Bisnis di Toko Sepatu:</div>
+                    <p id="termDetailDesc" class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed"></p>
+                </div>
+
+                <div class="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800 text-xs px-1">
+                    <span id="termSourceName" class="font-semibold text-slate-400">Referensi</span>
+                    <button type="button" onclick="closeTermModal(); openGlossaryIndex();" class="font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1.5">
+                        <span>Buka Kamus Lengkap</span>
+                        <i class="fa-solid fa-book-open text-[10px]"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Kamus Istilah Lengkap -->
+    <div id="glossaryModalBackdrop" onclick="closeGlossaryIndex()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-4xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden slide-enter">
+            <div class="p-5 sm:p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white">Kamus Istilah Ramah Bisnis Digital — Minggu 4</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Penjelasan bahasa sederhana untuk Kontrak API, Amplop Header vs Isi Body, log_stok, api_keys, ENUM, dan TINYINT.</p>
+                </div>
+                <button type="button" onclick="closeGlossaryIndex()" class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-sm"></i>
+                    <input id="glossarySearchInput" oninput="renderGlossaryList(this.value)" type="text" placeholder="Cari istilah seperti Kontrak API, Header, Body, ENUM, TINYINT, log_stok, api_keys..." class="w-full pl-10 pr-4 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+            <div id="glossaryListGrid" class="p-5 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+        </div>
+    </div>
+
+    <script>
+        const GLOSSARY_DB = {
+            kontrak_api: {
+                title: "Kontrak API (API Specification / API Spec)",
+                category: "Dokumen Bisnis & Teknis",
+                main: "Dokumen kesepakatan tertulis antara tim penyedia data (Gudang) dan tim peminta data (Kasir) yang mengatur alamat URL, method, data yang dikirim, dan bentuk balasan JSON.",
+                detail: "Ibarat SOP pemesanan di restoran: pelayan (Kasir) dan koki (Gudang) sepakat cara menulis pesanan di kertas agar tidak terjadi salah masak.",
+                source: "Materi Minggu 4 (Sub-CPMK 1.2)"
+            },
+            resource: {
+                title: "Resource (Objek Bisnis yang Diakses)",
+                category: "Konsep REST API",
+                main: "Objek atau urusan bisnis yang datanya disediakan oleh API, seperti 'barang', 'stok-keluar', atau 'stok-masuk'.",
+                detail: "Dalam penamaan alamat API yang baik, nama Resource ditulis menggunakan kata benda yang jelas seperti /api/barang.php atau /api/stok-keluar.php.",
+                source: "Materi Minggu 4 (Sub-CPMK 1.2)"
+            },
+            endpoint: {
+                title: "Endpoint (Alamat Pintu Layanan API)",
+                category: "Konsep REST API",
+                main: "Alamat URL spesifik yang dipanggil oleh aplikasi Kasir untuk melakukan satu tugas tertentu di Sistem Gudang.",
+                detail: "Di Minggu 4 kita merancang 4 endpoint utama: GET barang, GET barang?kode=, POST stok-keluar, dan POST stok-masuk.",
+                source: "Praktikum 4 Sistem Terintegrasi"
+            },
+            header_amplop: {
+                title: "HTTP Header (Bagian Luar Amplop Surat)",
+                category: "Analogi Surat API",
+                main: "Bagian luar pesan HTTP tempat menuliskan keterangan surat (seperti Content-Type: application/json) dan menempelkan stempel kunci izin akses (X-API-KEY).",
+                detail: "Petugas keamanan Gudang cukup memeriksa stempel X-API-KEY di luar amplop (Header) terlebih dahulu sebelum mengizinkan isi surat (Body) dibuka.",
+                source: "Materi Minggu 4 (Slide 4)"
+            },
+            req_body: {
+                title: "Request Body (Kertas Pesanan di Dalam Amplop)",
+                category: "Analogi Surat API",
+                main: "Isi surat berupa paket data JSON yang dimasukkan ke dalam amplop HTTP ketika aplikasi Kasir mengirim perintah tulis (POST).",
+                detail: "Saat barang terjual, kertas pesanan di dalam amplop (Request Body) berisi: {\"no_referensi\": \"TRX-001\", \"kode\": \"SP001\", \"qty\": 2}.",
+                source: "Materi Minggu 4 (Slide 4)"
+            },
+            log_stok: {
+                title: "Tabel log_stok (Kartu Stok Gantung Digital)",
+                category: "Skema Database Pendukung",
+                main: "Tabel pendukung di database Gudang (db_gudang) yang mencatat setiap peristiwa keluar atau masuknya barang beserta waktu, jumlah, sisa stok, dan nomor bukti transaksinya.",
+                detail: "Ibarat Kartu Stok Gantung di gudang toko: kalau stok sepatu berkurang dari 8 menjadi 6, kepala gudang bisa mengecek di log_stok bahwa 2 pasang itu keluar untuk nomor struk TRX-20261028-001.",
+                source: "Praktikum 4 Sistem Terintegrasi"
+            },
+            api_keys_tbl: {
+                title: "Tabel api_keys (Buku Tamu & Saklar Kunci Mitra)",
+                category: "Skema Database Pendukung",
+                main: "Tabel pendukung di database Gudang (db_gudang) untuk menyimpan daftar Kode API resmi milik banyak aplikasi mitra (Kasir Utama, Kasir Cabang, Web Online) beserta saklar aktifnya.",
+                detail: "Jika suatu saat aplikasi Kasir Cabang bermasalah, Admin Gudang cukup mematikan saklar (status_aktif = 0) milik cabang tersebut tanpa mengganggu Kasir Utama.",
+                source: "Praktikum 4 Sistem Terintegrasi"
+            },
+            enum_type: {
+                title: "Tipe Data ENUM (Kolom Pilihan Ganda)",
+                category: "Istilah Database Ramah Awam",
+                main: "Jenis kolom di MySQL yang membatasi isinya hanya boleh memilih dari daftar kata yang sudah ditentukan.",
+                detail: "Pada tabel log_stok, kolom 'jenis' bertipe ENUM('masuk', 'keluar') artinya kolom itu hanya boleh diisi kata 'masuk' atau 'keluar' saja, tidak bisa diisi kata lain.",
+                source: "Materi Minggu 4 (Slide 12)"
+            },
+            tinyint_type: {
+                title: "Tipe Data TINYINT(1) (Kolom Saklar ON / OFF)",
+                category: "Istilah Database Ramah Awam",
+                main: "Jenis kolom angka kecil di MySQL yang biasa dipakai sebagai saklar lampu: angka 1 artinya Nyala/Aktif (ON), dan angka 0 artinya Mati/Nonaktif (OFF).",
+                detail: "Digunakan pada kolom 'status_aktif' di tabel api_keys untuk menyalakan (1) atau mematikan (0) izin akses suatu Kode API.",
+                source: "Materi Minggu 4 (Slide 13)"
+            },
+            peer_review: {
+                title: "Peer Review (Uji Silang Spesifikasi Antar Pasangan)",
+                category: "Metode Pembelajaran Minggu 4",
+                main: "Kegiatan bertukar dokumen spesifikasi API (API Spec) dengan teman pasangan lab untuk saling memeriksa apakah alamat endpoint dan nama field JSON sudah jelas.",
+                detail: "Jika pasangan lab Anda bingung membaca dokumen API Spec yang Anda tulis, berarti kontrak API Anda masih perlu diperjelas sebelum dikoding.",
+                source: "RPS Sistem Terintegrasi Minggu 4"
+            }
+        };
+
+        function term(key, customLabel) {
+            const item = GLOSSARY_DB[key];
+            if (!item) return customLabel || key;
+            const label = customLabel || item.title.split(' (')[0];
+            return '<span class="tech-term" onclick="showTerm(\'' + key + '\')">' + label + '</span>';
+        }
+
+        function escapeHtml(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        let currentSlideIndex = 0;
+        const TOTAL_SLIDES = 19;
+
+        // State Slide 7: Simulasi 1 — Inspektor Kontrak 4 Endpoint Utama
+        let selectedEndpointIdx = 0;
+        const ENDPOINT_CONTRACTS = [
+            {
+                code: "EP-1 (Titik Integrasi 1)",
+                name: "Ambil Daftar Semua Barang",
+                method: "GET",
+                methodColor: "bg-emerald-600 text-white",
+                url: "/sistem_gudang/api/barang.php",
+                headers: "Accept: application/json\nX-API-KEY: GDG-KEY-UTAMA-001",
+                reqBody: "(Amplop Kosong / Tidak ada Body — karena method GET hanya meminta data)",
+                resSuccessCode: "200 OK",
+                resSuccessJson: `{\n  "status": "sukses",\n  "data": [\n    {"id": 1, "kode": "SP001", "nama": "Sneakers Pro", "harga": 450000, "stok": 8},\n    {"id": 2, "kode": "SP002", "nama": "Formal Classic", "harga": 380000, "stok": 6}\n  ]\n}`,
+                resErrorCode: "401 Unauthorized (Jika Kunci API salah/mati)",
+                resErrorJson: `{\n  "status": "error",\n  "kode_error": "UNAUTHORIZED",\n  "pesan": "Kode API (X-API-KEY) tidak valid atau sedang dinonaktifkan"\n}`,
+                businessNote: "Dipanggil otomatis saat kasir membuka layar Mesin Kasir POS agar daftar pilihan sepatu beserta harga dan sisa stoknya tampil lengkap."
+            },
+            {
+                code: "EP-2 (Titik Integrasi 2)",
+                name: "Ambil Detail 1 Barang Berdasarkan Kode",
+                method: "GET",
+                methodColor: "bg-emerald-600 text-white",
+                url: "/sistem_gudang/api/barang.php?kode=SP001",
+                headers: "Accept: application/json\nX-API-KEY: GDG-KEY-UTAMA-001",
+                reqBody: "(Tidak ada Body — kode sepatu langsung ditulis di ujung alamat URL ?kode=SP001)",
+                resSuccessCode: "200 OK",
+                resSuccessJson: `{\n  "status": "sukses",\n  "data": {\n    "id": 1,\n    "kode": "SP001",\n    "nama": "Sneakers Pro",\n    "harga": 450000,\n    "stok": 8\n  }\n}`,
+                resErrorCode: "404 Not Found (Jika kode sepatu tidak terdaftar)",
+                resErrorJson: `{\n  "status": "error",\n  "kode_error": "BARANG_TIDAK_TERDAFTAR",\n  "pesan": "Barang dengan kode SP999 tidak ditemukan di Gudang"\n}`,
+                businessNote: "Dipakai saat aplikasi Kasir ingin mengecek ketersediaan stok terbaru untuk 1 kode sepatu spesifik sebelum dimasukkan ke struk belanja."
+            },
+            {
+                code: "EP-3 (Titik Integrasi 3)",
+                name: "Kurangi Stok Gudang Otomatis (Stok Keluar)",
+                method: "POST",
+                methodColor: "bg-blue-600 text-white",
+                url: "/sistem_gudang/api/stok-keluar.php",
+                headers: "Content-Type: application/json\nX-API-KEY: GDG-KEY-UTAMA-001",
+                reqBody: `{\n  "no_referensi": "TRX-20261028-001",\n  "kode": "SP001",\n  "qty": 2,\n  "keterangan": "Penjualan Kasir POS"\n}`,
+                resSuccessCode: "200 OK",
+                resSuccessJson: `{\n  "status": "sukses",\n  "pesan": "Stok SP001 berhasil dikurangi 2 pasang",\n  "data": {\n    "kode": "SP001",\n    "qty_keluar": 2,\n    "sisa_stok": 6,\n    "no_referensi": "TRX-20261028-001"\n  }\n}`,
+                resErrorCode: "400 (Stok Kurang) / 409 (Nota Duplikat)",
+                resErrorJson: `{\n  "status": "error",\n  "kode_error": "STOK_TIDAK_CUKUP",\n  "pesan": "Stok SP001 tidak mencukupi (Sisa: 1, Diminta: 2)"\n}`,
+                businessNote: "Endpoint tulis terpenting: mengurangi angka stok di tabel barang SEKALIGUS mencatat riwayat keluar di tabel log_stok. Wajib menolak bila stok kurang (400) atau nomor referensi sudah dipakai (409)!"
+            },
+            {
+                code: "EP-4 (Titik Integrasi 4)",
+                name: "Tambah Stok Gudang / Retur (Stok Masuk)",
+                method: "POST",
+                methodColor: "bg-indigo-600 text-white",
+                url: "/sistem_gudang/api/stok-masuk.php",
+                headers: "Content-Type: application/json\nX-API-KEY: GDG-KEY-UTAMA-001",
+                reqBody: `{\n  "no_referensi": "PO-20261028-005",\n  "kode": "SP001",\n  "qty": 10,\n  "keterangan": "Kiriman stok baru dari supplier"\n}`,
+                resSuccessCode: "200 OK",
+                resSuccessJson: `{\n  "status": "sukses",\n  "pesan": "Stok SP001 berhasil ditambah 10 pasang",\n  "data": {\n    "kode": "SP001",\n    "qty_masuk": 10,\n    "sisa_stok": 16,\n    "no_referensi": "PO-20261028-005"\n  }\n}`,
+                resErrorCode: "400 Bad Request (Jika qty <= 0 atau kode kosong)",
+                resErrorJson: `{\n  "status": "error",\n  "kode_error": "INPUT_TIDAK_VALID",\n  "pesan": "Jumlah barang masuk (qty) harus lebih besar dari 0"\n}`,
+                businessNote: "Dipanggil ketika ada barang datang dari pemasok atau ketika kasir membatalkan nota (retur barang kembali ke gudang)."
+            }
+        ];
+
+        // State Slide 10: Simulasi 2 — Simulator Respons Sukses vs Error Standar (5 Skenario)
+        let activeErrorCaseIdx = 0;
+        const ERROR_CASES = [
+            {
+                label: "✅ 1. Transaksi Normal (200 OK)",
+                httpCode: "200 OK",
+                badgeCls: "bg-emerald-600 text-white",
+                inputSent: `Amplop (Header): X-API-KEY: GDG-KEY-UTAMA-001\nIsi Surat (Body): {"no_referensi": "TRX-101", "kode": "SP001", "qty": 2}`,
+                serverCheck: "1. Cek Stempel Kunci di api_keys -> Valid & Aktif (1)\n2. Cek Kode SP001 di barang -> Ada (Stok: 8)\n3. Cek Qty (2 <= 8) -> Cukup!\n4. Cek TRX-101 di log_stok -> Belum pernah dipakai.\n5. Kurangi stok jadi 6 & catat ke log_stok.",
+                jsonReply: `{\n  "status": "sukses",\n  "pesan": "Stok SP001 berhasil dikurangi 2 pasang",\n  "data": {\n    "kode": "SP001",\n    "sisa_stok": 6,\n    "no_referensi": "TRX-101"\n  }\n}`
+            },
+            {
+                label: "🔒 2. Kunci API Salah/Mati (401)",
+                httpCode: "401 Unauthorized",
+                badgeCls: "bg-amber-600 text-white",
+                inputSent: `Amplop (Header): X-API-KEY: KUNCI-PALSU-999\nIsi Surat (Body): {"no_referensi": "TRX-102", "kode": "SP001", "qty": 2}`,
+                serverCheck: "1. Cek Stempel Kunci di tabel api_keys -> TIDAK DITEMUKAN!\n2. Surat langsung ditolak di pintu depan tanpa membuka isinya.",
+                jsonReply: `{\n  "status": "error",\n  "kode_error": "UNAUTHORIZED",\n  "pesan": "Kode API tidak valid atau sudah dinonaktifkan oleh Gudang"\n}`
+            },
+            {
+                label: "🔍 3. Kode Barang salah (404)",
+                httpCode: "404 Not Found",
+                badgeCls: "bg-orange-600 text-white",
+                inputSent: `Amplop (Header): X-API-KEY: GDG-KEY-UTAMA-001\nIsi Surat (Body): {"no_referensi": "TRX-103", "kode": "SP999", "qty": 1}`,
+                serverCheck: "1. Cek Stempel Kunci -> Valid\n2. Cari kode SP999 di tabel barang -> TIDAK TERDAFTAR!",
+                jsonReply: `{\n  "status": "error",\n  "kode_error": "BARANG_TIDAK_TERDAFTAR",\n  "pesan": "Barang dengan kode SP999 tidak terdaftar di Gudang"\n}`
+            },
+            {
+                label: "⚠️ 4. Stok Gudang Kurang (400)",
+                httpCode: "400 Bad Request",
+                badgeCls: "bg-rose-600 text-white",
+                inputSent: `Amplop (Header): X-API-KEY: GDG-KEY-UTAMA-001\nIsi Surat (Body): {"no_referensi": "TRX-104", "kode": "SP001", "qty": 25}`,
+                serverCheck: "1. Cek Stempel Kunci -> Valid\n2. Cek Stok SP001 -> Sisa 6 pasang\n3. Aturan Bisnis: Pembeli minta 25, stok cuma 6 -> TOLAK!",
+                jsonReply: `{\n  "status": "error",\n  "kode_error": "STOK_TIDAK_CUKUP",\n  "pesan": "Stok SP001 tidak mencukupi (Tersedia: 6, Diminta: 25)"\n}`
+            },
+            {
+                label: "🛑 5. Nota Kembar / Duplikat (409)",
+                httpCode: "409 Conflict",
+                badgeCls: "bg-purple-600 text-white",
+                inputSent: `Amplop (Header): X-API-KEY: GDG-KEY-UTAMA-001\nIsi Surat (Body): {"no_referensi": "TRX-101", "kode": "SP001", "qty": 2}`,
+                serverCheck: "1. Cek Stempel Kunci -> Valid\n2. Cek no_referensi TRX-101 di tabel log_stok -> SUDAH PERNAH DIPROSES!\n3. Tolak agar stok tidak terpotong dua kali gara-gara kasir terpencet 2x.",
+                jsonReply: `{\n  "status": "error",\n  "kode_error": "STRUK_KEMBAR_DUPLIKAT",\n  "pesan": "Nomor referensi TRX-101 sudah pernah memotong stok sebelumnya!"\n}`
+            }
+        ];
+
+        // State Slide 14: Simulasi 3 — Live Simulator Tabel barang, log_stok, & api_keys
+        let simDbGudang = {
+            stokSP001: 8,
+            keyActive: true,
+            lastTrxNum: 100,
+            logs: [
+                { id: 1, kode: "SP001", jenis: "masuk", qty: 8, sisa: 8, ref: "SALDO-AWAL", ket: "Stok awal gudang" }
+            ],
+            feedback: "Klik tombol biru '🛒 Kasir Jual 2 Pasang' atau '📦 Barang Datang +5' untuk melihat bagaimana tabel barang dan tabel log_stok bekerja bersama!"
+        };
+
+        // State Slide 18: Simulasi 4 — Studi Kasus Peer Review & Kuis Kilat
+        let activeTabSlide18 = 'kasus';
+        const PEER_SCENARIOS = [
+            {
+                id: 1,
+                badge: "🎯 Kasus Peer Review 1 · Konsistensi Nama Field JSON",
+                title: "Saat memeriksa dokumen API Spec milik pasangan Anda, tertulis bahwa endpoint GET /api/barang.php mengeluarkan field 'harga_barang', sedangkan di endpoint GET /api/barang.php?kode=SP001 tertulis mengeluarkan field 'harga'. Apa masukan Peer Review yang paling tepat?",
+                opts: [
+                    { ltr: "A", text: "Biarkan saja karena programmer pasti bisa menebak sendiri.", correct: false, explain: "Ketidakkonsistenan nama field antar-endpoint adalah sumber bug paling sering saat integrasi." },
+                    { ltr: "B", text: "Sarankan agar nama field disamakan secara konsisten di semua endpoint (misalnya sama-sama bernama 'harga' sesuai nama kolom di tabel barang).", correct: true, explain: "Tepat! Prinsip utama desain Kontrak API adalah konsistensi: objek yang sama harus memiliki nama key JSON yang sama di seluruh endpoint." }
+                ]
+            },
+            {
+                id: 2,
+                badge: "🎯 Kasus Peer Review 2 · Mengapa Butuh Tabel log_stok?",
+                title: "Pemilik toko bertanya: 'Kalau setiap ada barang terjual kita tinggal mengurangi angka stok di tabel barang saja (UPDATE barang SET stok = stok - qty), mengapa kita harus repot-repot membuat tabel log_stok segala?'",
+                opts: [
+                    { ltr: "A", text: "Karena tanpa tabel log_stok, kita kehilangan jejak audit (tidak tahu kapan, berapa, dan gara-gara nomor struk mana stok sepatu tersebut berkurang) serta rawan terpotong dua kali.", correct: true, explain: "Sangat tepat! Tabel barang hanya menyimpan angka sisa terakhir, sedangkan tabel log_stok menyimpan sejarah pergerakan barang (kartu stok) dan mencegah struk yang sama memotong stok dua kali." },
+                    { ltr: "B", text: "Karena MySQL tidak mengizinkan perintah UPDATE jika tidak ada tabel log_stok.", correct: false, explain: "Secara teknis MySQL bisa melakukan UPDATE tanpa log_stok, namun secara bisnis sangat berbahaya karena tidak ada bukti riwayatnya." }
+                ]
+            },
+            {
+                id: 3,
+                badge: "🎯 Kasus Peer Review 3 · Peran Saklar di Tabel api_keys",
+                title: "Apa keuntungan memindahkan penyimpanan Kode API dari file teks biasa (api_key.txt di Minggu 3) ke dalam tabel database khusus bernama api_keys yang punya kolom status_aktif (1/0)?",
+                opts: [
+                    { ltr: "A", text: "Gudang bisa memberikan Kode API yang berbeda untuk beberapa aplikasi mitra (misal Kasir Toko Utama, Kasir Cabang B, Web Online) dan bisa mematikan saklar izin salah satu cabang kapan saja tanpa mengganggu cabang lain.", correct: true, explain: "Tepat sekali! Dengan tabel api_keys, kita tahu aplikasi mana yang sedang mengakses Gudang dan bisa mencabut izin satu aplikasi dengan mengubah status_aktif menjadi 0." },
+                    { ltr: "B", text: "Supaya kita tidak perlu lagi memakai format JSON.", correct: false, explain: "Pertukaran datanya tetap menggunakan format JSON." }
+                ]
+            },
+            {
+                id: 4,
+                badge: "🎯 Kasus Peer Review 4 · Pemilihan HTTP Method",
+                title: "Pasangan lab Anda merancang endpoint pengurangan stok dengan cara: GET /api/kurangi-stok.php?kode=SP001&qty=2. Mengapa rancangan ini harus direvisi?",
+                opts: [
+                    { ltr: "A", text: "Karena operasi yang mengubah data (mengurangi/menambah stok dan menulis log_stok) wajib menggunakan method POST (bukan GET) dengan paket JSON di dalam Request Body.", correct: true, explain: "Tepat! Method GET hanya boleh digunakan untuk membaca data (Read), sedangkan perubahan stok wajib menggunakan method POST." },
+                    { ltr: "B", text: "Karena URL tidak boleh memakai tanda tanya (?).", correct: false, explain: "Tanda tanya (?) sangat boleh dipakai untuk filter baca seperti GET /api/barang.php?kode=SP001." }
+                ]
+            }
+        ];
+        let peerChoices = {};
+
+        const TF_QUIZ_M4 = [
+            { id: 1, text: 'Dalam analogi surat, HTTP Header adalah bagian luar amplop (tempat menempelkan kunci X-API-KEY), sedangkan HTTP Body adalah kertas isi pesanan di dalam amplop.', answer: 'true', explain: 'Benar. Analogi amplop (Header) dan isi surat (Body) memudahkan kita memahami struktur pengiriman pesan API.' },
+            { id: 2, text: 'Tabel log_stok berfungsi sebagai Kartu Stok Digital yang mencatat setiap riwayat keluar dan masuknya barang lengkap dengan nomor referensi (nomor struk/PO) dan sisa stok akhir.', answer: 'true', explain: 'Benar. Dengan begitu setiap perubahan angka stok di tabel barang selalu bisa ditelusuri bukti transaksinya.' },
+            { id: 3, text: 'Jika stok barang di Gudang tinggal 2 pasang lalu Kasir meminta pengurangan stok sebanyak 5 pasang, server Gudang seharusnya tetap mengurangi stok menjadi minus (-3) dan mengembalikan status 200 OK.', answer: 'false', explain: 'Salah. Server Gudang wajib menolak permintaan tersebut dengan kode status error (400 Bad Request) dan pesan JSON yang menjelaskan bahwa stok tidak mencukupi.' },
+            { id: 4, text: 'Kolom status_aktif bertipe TINYINT(1) pada tabel api_keys bekerja seperti saklar: angka 1 berarti kunci aktif, dan angka 0 berarti kunci dinonaktifkan.', answer: 'true', explain: 'Benar. Admin Gudang cukup mengubah angka menjadi 0 untuk mencabut akses suatu aplikasi Kasir tanpa perlu menghapus baris datanya.' },
+            { id: 5, text: 'Spesifikasi endpoint yang lengkap wajib mencantumkan 6 informasi: Nama Resource/Fungsi, Method, URL, Header, Request Body, serta contoh Response Sukses dan Response Error.', answer: 'true', explain: 'Benar. Keenam informasi tersebut adalah standar minimum dokumentasi Kontrak API.' }
+        ];
+        let tfChoicesM4 = {};
+
+        /* ================= RENDER SLIDES 1 - 19 ================= */
+
+        function renderSlide1() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-8">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center my-auto">
+                        <div class="lg:col-span-7 space-y-5">
+                            <div class="inline-flex flex-wrap items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 text-xs font-bold border border-indigo-200/60 dark:border-indigo-800/60">
+                                <span>Minggu 4 · Materi Tatap Muka (50 Menit)</span>
+                                <span>•</span>
+                                <span>Sub-CPMK 1.2 (Bobot 3%)</span>
+                            </div>
+
+                            <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 dark:text-white leading-tight tracking-tight">
+                                Perancangan ${term('kontrak_api', 'Kontrak API')} &amp; Skema Database Pendukung
+                            </h2>
+
+                            <p class="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Bagaimana Analis Bisnis Digital menerjemahkan Titik Integrasi menjadi dokumen <strong>Spesifikasi Kontrak API (API Spec)</strong> yang rapi, menyepakati format pesan sukses &amp; error, serta merancang 2 tabel pengaman di Gudang: tabel ${term('log_stok', 'log_stok')} (Kartu Stok) dan tabel ${term('api_keys_tbl', 'api_keys')} (Saklar Kunci Akses Mitra).
+                            </p>
+
+                            <div class="flex flex-wrap gap-2 pt-1">
+                                <span class="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs font-extrabold">✨ Bahasa Bisnis &amp; Analogi Sederhana</span>
+                                <span class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold">🎯 C4, P3 · Merancang Kontrak</span>
+                                <span class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold">📋 2 Tabel Template Siap Copy ke Word</span>
+                            </div>
+
+                            <div class="p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200/70 dark:border-indigo-800/70 flex items-center gap-3 text-xs sm:text-sm text-slate-700 dark:text-slate-200">
+                                <i class="fa-solid fa-hand-pointer text-indigo-600 dark:text-indigo-400 text-base shrink-0"></i>
+                                <span><strong>Tips Belajar Pemula:</strong> Klik kapsul istilah seperti ${term('header_amplop', 'Header (Amplop)')}, ${term('req_body', 'Body (Isi Surat)')}, ${term('enum_type', 'ENUM')}, atau ${term('tinyint_type', 'TINYINT(1)')} untuk melihat artinya dalam bahasa sehari-hari!</span>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-5">
+                            <div class="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 space-y-4">
+                                <div>
+                                    <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Alur Materi Hari Ini (19 Slide)</span>
+                                    <h3 class="text-lg font-extrabold text-slate-900 dark:text-white mt-1">4 Bagian Pembelajaran (Klik untuk Melompat)</h3>
+                                </div>
+
+                                <div class="space-y-2.5">
+                                    <button type="button" onclick="goToSlide(1)" class="w-full text-left flex items-start gap-3 p-3.5 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 dark:hover:bg-slate-800/80 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-0.5 font-extrabold text-xs">M1</div>
+                                        <div>
+                                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">Modul 1: Kontrak API &amp; Analogi Amplop Surat (Slide 2-7)</h4>
+                                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Peran bisnis digital, Amplop Header vs Isi Body &amp; Simulasi 4 Endpoint.</p>
+                                        </div>
+                                    </button>
+
+                                    <button type="button" onclick="goToSlide(7)" class="w-full text-left flex items-start gap-3 p-3.5 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 dark:hover:bg-slate-800/80 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-0.5 font-extrabold text-xs">M2</div>
+                                        <div>
+                                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">Modul 2: Aturan Konsistensi &amp; Pesan Error Standar (Slide 8-10)</h4>
+                                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">3 aturan desain endpoint &amp; Simulator 5 Skenario Respons Server.</p>
+                                        </div>
+                                    </button>
+
+                                    <button type="button" onclick="goToSlide(10)" class="w-full text-left flex items-start gap-3 p-3.5 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 dark:hover:bg-slate-800/80 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-0.5 font-extrabold text-xs">M3</div>
+                                        <div>
+                                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">Modul 3: Kartu Stok (log_stok) &amp; Saklar Kunci (api_keys) (Slide 11-15)</h4>
+                                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Arti ENUM &amp; TINYINT, Simulator 3 Tabel + Cegah Nota Kembar &amp; ERD.</p>
+                                        </div>
+                                    </button>
+
+                                    <button type="button" onclick="goToSlide(15)" class="w-full text-left flex items-start gap-3 p-3.5 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 dark:hover:bg-slate-800/80 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-0.5 font-extrabold text-xs">M4</div>
+                                        <div>
+                                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">Modul 4: Template Tabel, Peer Review &amp; Kuis (Slide 16-19)</h4>
+                                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Template Tabel API Spec &amp; Ceklis Peer Review (kosong siap diisi) + Kuis Minggu 4.</p>
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide2() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-6">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400">Pengantar · Menyambung Pertemuan 3</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Dari "Titik Integrasi" Menuju "Kontrak API Resmi"</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Mari kita lihat bagaimana hasil pekerjaan Anda di Minggu ke-3 menjadi bahan baku utama untuk Minggu ke-4 hari ini:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-11 gap-4 items-stretch my-auto">
+                        <!-- Minggu 3 -->
+                        <div class="lg:col-span-5 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-4">
+                            <div class="space-y-3">
+                                <span class="inline-block px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-xs font-extrabold uppercase tracking-wider">◀ Hasil Minggu 3 Lalu</span>
+                                <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Sudah Tahu "Kapan &amp; Data Apa" yang Dikirim</h3>
+                                <ul class="space-y-2 text-xs sm:text-sm text-slate-700 dark:text-slate-200">
+                                    <li class="flex items-start gap-2.5"><span class="text-emerald-600 font-extrabold">✓</span><span>Kita sudah memetakan kolom antara <code class="font-mono font-bold">db_gudang</code> dan <code class="font-mono font-bold">db_penjualan</code> (diikat oleh Kode Sepatu <code class="font-mono">SP001</code>).</span></li>
+                                    <li class="flex items-start gap-2.5"><span class="text-emerald-600 font-extrabold">✓</span><span>Kita sudah menemukan <strong>4 Titik Integrasi</strong>: ambil katalog barang, cek detail 1 barang, potong stok keluar, dan tambah stok masuk.</span></li>
+                                </ul>
+                            </div>
+                            <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-500">
+                                <strong>Kelemahan di Minggu 3:</strong> Kemarin Kode API masih disimpan di file teks <code class="font-mono">api_key.txt</code> (hanya muat 1 kunci) dan saat stok berkurang belum ada kartu riwayat pencatatannya!
+                            </div>
+                        </div>
+
+                        <!-- Arrow -->
+                        <div class="lg:col-span-1 flex items-center justify-center">
+                            <div class="w-11 h-11 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-extrabold shadow-md">
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </div>
+                        </div>
+
+                        <!-- Minggu 4 -->
+                        <div class="lg:col-span-5 p-5 rounded-3xl bg-indigo-50/70 dark:bg-indigo-950/40 border-2 border-indigo-500/70 flex flex-col justify-between gap-4">
+                            <div class="space-y-3">
+                                <span class="inline-block px-3 py-1 rounded-full bg-indigo-600 text-white text-xs font-extrabold uppercase tracking-wider">▶ Target Kita Hari Ini (Minggu 4)</span>
+                                <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Menyusun Kontrak API &amp; 2 Tabel Pengaman</h3>
+                                <ul class="space-y-2 text-xs sm:text-sm text-slate-700 dark:text-slate-200">
+                                    <li class="flex items-start gap-2.5"><span class="text-indigo-600 dark:text-indigo-400 font-extrabold">1.</span><span>Menulis dokumen ${term('kontrak_api', 'Spesifikasi Kontrak API (API Spec)')} untuk 4 endpoint utama secara rapi dalam bentuk tabel.</span></li>
+                                    <li class="flex items-start gap-2.5"><span class="text-indigo-600 dark:text-indigo-400 font-extrabold">2.</span><span>Menambahkan tabel <strong>${term('log_stok', 'log_stok')}</strong> (Kartu Stok) di Gudang untuk mencatat bukti keluar/masuk barang.</span></li>
+                                    <li class="flex items-start gap-2.5"><span class="text-indigo-600 dark:text-indigo-400 font-extrabold">3.</span><span>Menambahkan tabel <strong>${term('api_keys_tbl', 'api_keys')}</strong> di Gudang untuk mengelola izin akses banyak aplikasi Kasir.</span></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide3() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-6">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Peran Mahasiswa Bisnis Digital</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Mengapa ${term('kontrak_api', 'Kontrak API')} Adalah Tugas Analis Bisnis / Product Manager?</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">Bayangkan sebuah restoran: <strong>Pelayan (Aplikasi Kasir)</strong> dan <strong>Koki Dapur (Aplikasi Gudang)</strong> berkomunikasi lewat secarik kertas pesanan. Siapa yang menentukan aturan isi kertas pesanan itu? <strong>Manajer Operasional Bisnis!</strong></p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 my-auto">
+                        <div class="p-6 rounded-3xl bg-rose-50/70 dark:bg-rose-950/30 border-l-4 border-rose-600 border-y border-r border-rose-200 dark:border-rose-800 space-y-3">
+                            <span class="px-2.5 py-1 rounded-lg bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 text-xs font-extrabold uppercase">❌ Jika Tanpa Kontrak API yang Jelas</span>
+                            <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Pelayan &amp; Koki Beda Istilah</h3>
+                            <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed">
+                                Programmer Kasir mengirim pesan <code class="font-mono font-bold">{"sepatu": "SP001", "beli": 2}</code>, padahal Programmer Gudang menunggu pesan <code class="font-mono font-bold">{"kode": "SP001", "qty": 2}</code>. Akibatnya pesanan ditolak dan operasional toko macet meskipun kedua aplikasi tidak ada yang error!
+                            </p>
+                        </div>
+
+                        <div class="p-6 rounded-3xl bg-emerald-50/70 dark:bg-emerald-950/30 border-l-4 border-emerald-600 border-y border-r border-emerald-200 dark:border-emerald-800 space-y-3">
+                            <span class="px-2.5 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-xs font-extrabold uppercase">✓ Keputusan Bisnis di Dalam Kontrak API</span>
+                            <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">3 Hal yang Anda Tentukan Sebagai Analis Bisnis:</h3>
+                            <ul class="list-disc pl-5 space-y-1.5 text-xs sm:text-sm text-slate-700 dark:text-slate-200">
+                                <li><strong>Bukti Transaksi Wajib:</strong> Setiap pengurangan stok wajib menyertakan Nomor Struk (<code class="font-mono">no_referensi</code>) agar tidak bisa memotong stok tanpa bukti.</li>
+                                <li><strong>Aturan Penolakan Bisnis:</strong> Jika stok gudang tinggal 1 tapi pembeli mau beli 2, apa kalimat pesan error yang harus muncul di layar kasir?</li>
+                                <li><strong>Kontrol Cabang:</strong> Cabang mana saja yang diberi kunci akses aktif?</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide4() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400">Analogi Mudah untuk Pemula</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Jangan Bingung Istilah Teknis: Analogi "Amplop Surat vs Isi Surat"</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">Saat aplikasi Kasir mengirim permintaan HTTP ke Gudang, bayangkan Kasir sedang mengirim <strong>sepucuk surat resmi</strong> yang terdiri atas 3 bagian:</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 my-auto">
+                        <!-- 1. Alamat Tujuan -->
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-t-4 border-blue-600 border-x border-b border-slate-200 dark:border-slate-800 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="px-2.5 py-1 rounded-lg bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 font-mono text-xs font-extrabold">1. METHOD &amp; URL</span>
+                                <span class="text-2xl">📍</span>
+                            </div>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Tujuan &amp; Jenis Urusan Kurir</h3>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Menentukan ke loket mana kurir harus pergi (${term('endpoint', '/api/stok-keluar.php')}) dan apa tujuannya: apakah hanya mau melihat daftar (<code class="font-mono font-bold text-emerald-600">GET</code>) atau menyerahkan berkas perubahan stok (<code class="font-mono font-bold text-blue-600">POST</code>).
+                            </p>
+                        </div>
+
+                        <!-- 2. Luar Amplop (Header) -->
+                        <div class="p-5 rounded-3xl bg-amber-50/60 dark:bg-amber-950/30 border-t-4 border-amber-500 border-x border-b border-amber-200 dark:border-amber-800 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="px-2.5 py-1 rounded-lg bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 font-mono text-xs font-extrabold">2. LUAR AMPLOP (HEADER)</span>
+                                <span class="text-2xl">✉️</span>
+                            </div>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Stempel Izin di ${term('header_amplop', 'HTTP Header')}</h3>
+                            <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed">
+                                Tulisan yang ditempel di <strong>bagian luar amplop</strong>. Di sinilah Kasir menempelkan stempel kunci akses (<strong><code class="font-mono">X-API-KEY: GDG-KEY-UTAMA-001</code></strong>) dan label bahwa isi suratnya berbahasa JSON (<code class="font-mono">Content-Type: application/json</code>).
+                            </p>
+                        </div>
+
+                        <!-- 3. Isi Surat (Body) -->
+                        <div class="p-5 rounded-3xl bg-indigo-50/60 dark:bg-indigo-950/30 border-t-4 border-indigo-600 border-x border-b border-indigo-200 dark:border-indigo-800 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="px-2.5 py-1 rounded-lg bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 font-mono text-xs font-extrabold">3. ISI SURAT (BODY)</span>
+                                <span class="text-2xl">📄</span>
+                            </div>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Kertas Pesanan di ${term('req_body', 'Request Body')}</h3>
+                            <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed">
+                                Kertas pesanan di <strong>dalam amplop</strong> (khusus untuk <code class="font-mono font-bold">POST</code>) yang berisi rincian transaksi: nomor struk (<code class="font-mono">no_referensi</code>), kode sepatu (<code class="font-mono">kode</code>), dan jumlah pasang yang dibeli (<code class="font-mono">qty</code>).
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/40 border-l-4 border-indigo-600 text-xs sm:text-sm text-slate-700 dark:text-slate-200">
+                        <strong>Cara Kerja Satpam Gudang:</strong> Saat surat datang, Satpam Gudang memeriksa <strong>Luar Amplop (Header <code class="font-mono">X-API-KEY</code>)</strong> terlebih dahulu. Kalau stempel kuncinya palsu, surat langsung ditolak (<code class="font-mono">401 Unauthorized</code>) tanpa perlu membuka isi amplopnya!
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide5() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Anatomi Spesifikasi API</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Enam Kolom Wajib di Dalam Tabel ${term('kontrak_api', 'Kontrak API')}</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">Sesuai RPS Minggu ke-4, dokumen API Spec yang Anda kumpulkan nanti berbentuk tabel yang memuat 6 kolom informasi ini:</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 my-auto">
+                        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                            <span class="px-2.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-mono text-xs font-extrabold">KOLOM 1 · RESOURCE</span>
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Nama Layanan / Objek</h3>
+                            <p class="text-xs text-slate-600 dark:text-slate-300">Menjelaskan nama ${term('resource', 'Resource')} dan tujuannya. Contoh: <em>"Stok Keluar — Mengurangi stok gudang saat barang terjual"</em>.</p>
+                        </div>
+
+                        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                            <span class="px-2.5 py-0.5 rounded bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-mono text-xs font-extrabold">KOLOM 2 · METHOD</span>
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">GET (Baca) atau POST (Tulis)</h3>
+                            <p class="text-xs text-slate-600 dark:text-slate-300">Gunakan <code class="font-mono font-bold text-emerald-600">GET</code> untuk membaca katalog/stok, dan gunakan <code class="font-mono font-bold text-blue-600">POST</code> untuk mengirim transaksi stok keluar atau stok masuk.</p>
+                        </div>
+
+                        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                            <span class="px-2.5 py-0.5 rounded bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300 font-mono text-xs font-extrabold">KOLOM 3 · URL ENDPOINT</span>
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Alamat Pintu Layanan</h3>
+                            <p class="text-xs text-slate-600 dark:text-slate-300">Alamat lengkap ${term('endpoint', 'Endpoint')} yang dipanggil. Contoh: <code class="font-mono font-bold">/sistem_gudang/api/stok-keluar.php</code>.</p>
+                        </div>
+
+                        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                            <span class="px-2.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 font-mono text-xs font-extrabold">KOLOM 4 · HEADER (AMPLOP)</span>
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Kunci Akses &amp; Format</h3>
+                            <p class="text-xs text-slate-600 dark:text-slate-300">Mencantumkan syarat stempel kunci <code class="font-mono font-bold">X-API-KEY</code> dan <code class="font-mono">Content-Type: application/json</code>.</p>
+                        </div>
+
+                        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                            <span class="px-2.5 py-0.5 rounded bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 font-mono text-xs font-extrabold">KOLOM 5 · BODY (ISI SURAT)</span>
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Contoh JSON Kiriman</h3>
+                            <p class="text-xs text-slate-600 dark:text-slate-300">Contoh struktur JSON yang dikirim Kasir pada method <code class="font-mono">POST</code> (misal <code class="font-mono">no_referensi, kode, qty</code>).</p>
+                        </div>
+
+                        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                            <span class="px-2.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-mono text-xs font-extrabold">KOLOM 6 · RESPONS SERVER</span>
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Balasan Sukses &amp; Error</h3>
+                            <p class="text-xs text-slate-600 dark:text-slate-300">Menuliskan contoh JSON saat berhasil (<code class="font-mono">200 OK</code>) dan contoh JSON saat gagal (<code class="font-mono">400/401/404/409</code>).</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide6() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Transformasi Minggu 3 ke Minggu 4</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Dari 4 Titik Integrasi Menjadi 4 Endpoint Kontrak API</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">Pada Praktikum 4 di RPS, kita wajib menetapkan minimal 4 endpoint berikut untuk menghubungkan Sistem Penjualan dan Sistem Gudang secara utuh:</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 my-auto">
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-l-4 border-emerald-600 border-y border-r border-slate-200 dark:border-slate-800 flex items-start gap-4">
+                            <span class="px-3 py-1 rounded-xl bg-emerald-600 text-white font-mono text-xs font-extrabold shrink-0 mt-0.5">GET</span>
+                            <div class="space-y-1">
+                                <div class="text-[11px] font-bold text-slate-400 uppercase">Endpoint 1 · Dari Titik Integrasi #1</div>
+                                <h3 class="text-sm sm:text-base font-mono font-extrabold text-slate-900 dark:text-white">/api/barang.php</h3>
+                                <p class="text-xs text-slate-600 dark:text-slate-300">Mengambil seluruh daftar sepatu beserta harga dan sisa stok terbaru dari Gudang untuk ditampilkan di katalog Kasir.</p>
+                            </div>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-l-4 border-emerald-600 border-y border-r border-slate-200 dark:border-slate-800 flex items-start gap-4">
+                            <span class="px-3 py-1 rounded-xl bg-emerald-600 text-white font-mono text-xs font-extrabold shrink-0 mt-0.5">GET</span>
+                            <div class="space-y-1">
+                                <div class="text-[11px] font-bold text-slate-400 uppercase">Endpoint 2 · Dari Titik Integrasi #2</div>
+                                <h3 class="text-sm sm:text-base font-mono font-extrabold text-slate-900 dark:text-white">/api/barang.php?kode=SP001</h3>
+                                <p class="text-xs text-slate-600 dark:text-slate-300">Mengecek detail dan ketersediaan stok untuk 1 kode sepatu spesifik yang dipilih pembeli di meja kasir.</p>
+                            </div>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-l-4 border-blue-600 border-y border-r border-slate-200 dark:border-slate-800 flex items-start gap-4">
+                            <span class="px-3 py-1 rounded-xl bg-blue-600 text-white font-mono text-xs font-extrabold shrink-0 mt-0.5">POST</span>
+                            <div class="space-y-1">
+                                <div class="text-[11px] font-bold text-slate-400 uppercase">Endpoint 3 · Dari Titik Integrasi #3</div>
+                                <h3 class="text-sm sm:text-base font-mono font-extrabold text-slate-900 dark:text-white">/api/stok-keluar.php</h3>
+                                <p class="text-xs text-slate-600 dark:text-slate-300">Mengurangi stok sepatu di Gudang secara otomatis saat kasir menyimpan struk penjualan, sekaligus mencatatnya ke <code class="font-mono">log_stok</code>.</p>
+                            </div>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-l-4 border-indigo-600 border-y border-r border-slate-200 dark:border-slate-800 flex items-start gap-4">
+                            <span class="px-3 py-1 rounded-xl bg-indigo-600 text-white font-mono text-xs font-extrabold shrink-0 mt-0.5">POST</span>
+                            <div class="space-y-1">
+                                <div class="text-[11px] font-bold text-slate-400 uppercase">Endpoint 4 · Dari Titik Integrasi #4</div>
+                                <h3 class="text-sm sm:text-base font-mono font-extrabold text-slate-900 dark:text-white">/api/stok-masuk.php</h3>
+                                <p class="text-xs text-slate-600 dark:text-slate-300">Menambah stok sepatu di Gudang ketika ada kiriman barang datang dari pemasok atau retur pembatalan nota dari kasir.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/40 border-l-4 border-indigo-600 text-xs sm:text-sm text-slate-700 dark:text-slate-200">
+                        <strong>Perhatikan Pemisahan Pintu Layanannya:</strong> Di Minggu 4 ini, kita memisahkan pintu <strong><code class="font-mono">stok-keluar.php</code></strong> dan <strong><code class="font-mono">stok-masuk.php</code></strong> menjadi endpoint tersendiri agar kontrak API kita jauh lebih rapi!
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide7() {
+            const ep = ENDPOINT_CONTRACTS[selectedEndpointIdx];
+
+            let tabsHtml = '';
+            for (let i = 0; i < ENDPOINT_CONTRACTS.length; i++) {
+                const item = ENDPOINT_CONTRACTS[i];
+                const isAct = i === selectedEndpointIdx;
+                tabsHtml += `
+                    <button type="button" onclick="selectEndpointContract(${i})" class="p-3 rounded-2xl border-2 text-left transition flex flex-col justify-between gap-1 ${isAct ? 'border-indigo-600 bg-indigo-50/70 dark:bg-indigo-950/50' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300'}">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="px-2 py-0.5 rounded font-mono text-[10px] font-extrabold ${item.methodColor}">${item.method}</span>
+                            <span class="text-[10px] font-bold text-slate-400">${item.code}</span>
+                        </div>
+                        <div class="font-mono text-xs font-extrabold text-slate-900 dark:text-white truncate mt-1">${escapeHtml(item.url)}</div>
+                        <div class="text-[11px] text-slate-500 truncate">${escapeHtml(item.name)}</div>
+                    </button>
+                `;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-3.5">
+                    <div class="space-y-0.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400">Simulasi Interaktif 1</span>
+                        <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Inspektor Kontrak 4 Endpoint (Amplop Header, Isi Body &amp; Balasan)</h2>
+                        <p class="text-xs text-slate-600 dark:text-slate-300">Klik salah satu dari 4 kartu endpoint di bawah ini untuk melihat isi kontraknya secara lengkap:</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                        ${tabsHtml}
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch my-auto">
+                        <!-- Kiri: Spesifikasi Request -->
+                        <div class="lg:col-span-5 p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-2.5">
+                            <div class="space-y-2">
+                                <div class="flex items-center gap-2">
+                                    <span class="px-2.5 py-1 rounded-lg font-mono text-xs font-extrabold ${ep.methodColor}">${ep.method}</span>
+                                    <span class="font-mono text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">${escapeHtml(ep.url)}</span>
+                                </div>
+                                <div>
+                                    <div class="text-[11px] font-extrabold uppercase text-amber-600 dark:text-amber-400 mb-1">✉️ Luar Amplop (Request Header):</div>
+                                    <pre class="json-box">${escapeHtml(ep.headers)}</pre>
+                                </div>
+                                <div>
+                                    <div class="text-[11px] font-extrabold uppercase text-indigo-600 dark:text-indigo-400 mb-1">📄 Isi Surat (Request Body):</div>
+                                    <pre class="json-box">${escapeHtml(ep.reqBody)}</pre>
+                                </div>
+                            </div>
+                            <div class="p-2.5 rounded-xl bg-indigo-50/80 dark:bg-indigo-950/40 border-l-4 border-indigo-600 text-xs text-slate-700 dark:text-slate-200">
+                                <strong>Kegunaan Bisnis:</strong> ${escapeHtml(ep.businessNote)}
+                            </div>
+                        </div>
+
+                        <!-- Kanan: Spesifikasi Response Sukses & Error -->
+                        <div class="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div class="p-4 rounded-3xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/70 flex flex-col justify-between gap-2">
+                                <div>
+                                    <span class="inline-block px-2.5 py-0.5 rounded-md bg-emerald-600 text-white font-mono text-[11px] font-extrabold mb-1.5">✓ Balasan Sukses: ${ep.resSuccessCode}</span>
+                                    <pre class="json-box">${escapeHtml(ep.resSuccessJson)}</pre>
+                                </div>
+                                <div class="text-[11px] text-emerald-800 dark:text-emerald-300 font-semibold">
+                                    Selalu memiliki key <code class="font-mono">"status": "sukses"</code> agar aplikasi Kasir mudah mengecek keberhasilannya.
+                                </div>
+                            </div>
+
+                            <div class="p-4 rounded-3xl bg-rose-50/50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800/70 flex flex-col justify-between gap-2">
+                                <div>
+                                    <span class="inline-block px-2.5 py-0.5 rounded-md bg-rose-600 text-white font-mono text-[11px] font-extrabold mb-1.5">✕ Balasan Error: ${ep.resErrorCode}</span>
+                                    <pre class="json-box">${escapeHtml(ep.resErrorJson)}</pre>
+                                </div>
+                                <div class="text-[11px] text-rose-800 dark:text-rose-300 font-semibold">
+                                    Selalu memiliki key <code class="font-mono">"status": "error"</code> dan <code class="font-mono">"pesan"</code> yang siap ditampilkan ke layar kasir.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide8() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Prinsip Desain Kontrak API</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Tiga Aturan Emas Agar Kontrak API Tidak Membingungkan</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">Saat merancang spesifikasi API bersama pasangan kelompok Anda, patuhi 3 aturan sederhana ini:</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 my-auto">
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-t-4 border-indigo-600 border-x border-b border-slate-200 dark:border-slate-800 space-y-3">
+                            <span class="px-2.5 py-1 rounded-lg bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-mono text-xs font-extrabold">ATURAN 1 · NAMA ENDPOINT</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Gunakan Nama Resource yang Jelas &amp; Huruf Kecil</h3>
+                            <div class="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-xs font-mono text-rose-700 dark:text-rose-300">
+                                ❌ /api/AmbilDataBarangGudang.php<br>
+                                ❌ /api/kurangin_stok_sepatu.php
+                            </div>
+                            <div class="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-xs font-mono text-emerald-700 dark:text-emerald-300 font-bold">
+                                ✓ /api/barang.php<br>
+                                ✓ /api/stok-keluar.php<br>
+                                ✓ /api/stok-masuk.php
+                            </div>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-t-4 border-cyan-600 border-x border-b border-slate-200 dark:border-slate-800 space-y-3">
+                            <span class="px-2.5 py-1 rounded-lg bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300 font-mono text-xs font-extrabold">ATURAN 2 · KONSISTENSI KEY JSON</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Jangan Ganti-Ganti Istilah untuk Barang yang Sama</h3>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Jika di endpoint <code class="font-mono">GET barang.php</code> kode sepatu diberi nama key <code class="font-mono font-bold">"kode"</code>, maka di <code class="font-mono">POST stok-keluar.php</code> dan <code class="font-mono">POST stok-masuk.php</code> wajib tetap memakai nama <code class="font-mono font-bold">"kode"</code> (jangan berubah jadi <code class="font-mono">"id_sepatu"</code> atau <code class="font-mono">"sku_brg"</code>).
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-t-4 border-emerald-600 border-x border-b border-slate-200 dark:border-slate-800 space-y-3">
+                            <span class="px-2.5 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-mono text-xs font-extrabold">ATURAN 3 · AMPLOP BALASAN SERAGAM</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Selalu Sertakan Key <code class="font-mono">"status"</code> dan <code class="font-mono">"pesan"</code></h3>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Biasakan setiap balasan JSON memiliki pembungkus standar: <code class="font-mono font-bold">"status"</code> (<code class="font-mono">"sukses"</code> atau <code class="font-mono">"error"</code>), <code class="font-mono font-bold">"pesan"</code> (kalimat penjelasan untuk kasir), dan <code class="font-mono font-bold">"data"</code> (isi datanya).
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide9() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">Standar Kode Status HTTP &amp; Pesan Error</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Lima Kode Status HTTP yang Wajib Masuk ke Kontrak API</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">Jangan semua kondisi diberi kode <code class="font-mono">200 OK</code>! Di dalam dokumen Kontrak API, pasangkan setiap kondisi bisnis berikut dengan kode status HTTP yang tepat:</p>
+                    </div>
+
+                    <div class="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 my-auto">
+                        <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                            <thead>
+                                <tr class="bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+                                    <th class="p-3 font-extrabold">Kode Status HTTP</th>
+                                    <th class="p-3 font-extrabold">Kapan Digunakan pada Sistem Gudang?</th>
+                                    <th class="p-3 font-extrabold">Contoh Format Balasan JSON Standar</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 dark:divide-slate-800 bg-white dark:bg-slate-900">
+                                <tr>
+                                    <td class="p-3 font-mono font-extrabold text-emerald-600 dark:text-emerald-400">200 OK</td>
+                                    <td class="p-3">Saat daftar barang berhasil diambil atau pengurangan/penambahan stok berhasil disimpan.</td>
+                                    <td class="p-3 font-mono text-xs">{"status": "sukses", "pesan": "Stok berhasil diperbarui", "data": {...}}</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 font-mono font-extrabold text-rose-600 dark:text-rose-400">400 Bad Request</td>
+                                    <td class="p-3">Saat Kasir mengirim input tidak valid (misal <code class="font-mono">kode</code> kosong, <code class="font-mono">qty &lt;= 0</code>, atau jumlah beli melebihi sisa stok gudang).</td>
+                                    <td class="p-3 font-mono text-xs">{"status": "error", "pesan": "Stok SP001 tidak mencukupi (Sisa: 6)"}</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 font-mono font-extrabold text-amber-600 dark:text-amber-400">401 Unauthorized</td>
+                                    <td class="p-3">Saat Kasir tidak mengirim Kode API, atau Kode API tidak terdaftar / saklarnya mati (<code class="font-mono">status_aktif = 0</code>) di tabel <code class="font-mono">api_keys</code>.</td>
+                                    <td class="p-3 font-mono text-xs">{"status": "error", "pesan": "Kode API tidak valid atau tidak aktif"}</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 font-mono font-extrabold text-orange-600 dark:text-orange-400">404 Not Found</td>
+                                    <td class="p-3">Saat kode sepatu yang diminta Kasir (misal <code class="font-mono">SP999</code>) tidak terdaftar di dalam tabel <code class="font-mono">barang</code>.</td>
+                                    <td class="p-3 font-mono text-xs">{"status": "error", "pesan": "Barang dengan kode SP999 tidak ditemukan"}</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 font-mono font-extrabold text-purple-600 dark:text-purple-400">409 Conflict</td>
+                                    <td class="p-3">Saat Kasir tidak sengaja mengirim nomor struk (<code class="font-mono">no_referensi</code>) yang sama dua kali untuk mencegah stok terpotong ganda.</td>
+                                    <td class="p-3 font-mono text-xs">{"status": "error", "pesan": "Nomor referensi TRX-101 sudah pernah diproses!"}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide10() {
+            const c = ERROR_CASES[activeErrorCaseIdx];
+            let caseBtns = '';
+            for (let i = 0; i < ERROR_CASES.length; i++) {
+                const it = ERROR_CASES[i];
+                const isAct = i === activeErrorCaseIdx;
+                caseBtns += `
+                    <button type="button" onclick="selectErrorCase(${i})" class="px-3 py-1.5 rounded-xl text-xs font-extrabold transition border ${isAct ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-indigo-400'}">
+                        ${escapeHtml(it.label)}
+                    </button>
+                `;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400">Simulasi Interaktif 2</span>
+                        <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Uji 5 Skenario Pemeriksaan pada Endpoint <code class="font-mono">POST stok-keluar</code></h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">Pilih salah satu dari 5 situasi di bawah ini untuk melihat bagaimana Server Gudang memeriksa surat dari Kasir dan membalasnya:</p>
+                    </div>
+
+                    <div class="flex flex-wrap gap-1.5">
+                        ${caseBtns}
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch my-auto">
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-3">
+                            <div>
+                                <div class="text-xs font-extrabold uppercase text-indigo-600 dark:text-indigo-400 mb-1">📤 1. Surat yang Dikirim Aplikasi Kasir:</div>
+                                <pre class="json-box">${escapeHtml(c.inputSent)}</pre>
+                            </div>
+                            <div>
+                                <div class="text-xs font-extrabold uppercase text-amber-600 dark:text-amber-400 mb-1">⚙️ 2. Pemeriksaan Bertahap di Gudang:</div>
+                                <pre class="json-box">${escapeHtml(c.serverCheck)}</pre>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-3">
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-extrabold uppercase text-emerald-600 dark:text-emerald-400">📥 3. Balasan HTTP dari Gudang:</span>
+                                    <span class="px-3 py-1 rounded-lg font-mono text-xs font-extrabold ${c.badgeCls}">Status: ${c.httpCode}</span>
+                                </div>
+                                <pre class="json-box">${escapeHtml(c.jsonReply)}</pre>
+                            </div>
+                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                                <strong>Pelajaran Bisnis Penting:</strong> Lihat Skenario 5! Dengan memeriksa <code class="font-mono font-bold">no_referensi</code> di tabel <code class="font-mono font-bold">log_stok</code>, Gudang berhasil mencegah pemotongan stok ganda meskipun tombol di kasir terpencet dua kali!
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide11() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-6">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Skema Database Pendukung Integrasi</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Mengapa Database Gudang Butuh 2 Tabel Baru di Minggu 4?</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">Sampai Minggu ke-3, database <code class="font-mono font-bold">db_gudang</code> hanya memiliki 1 tabel yaitu <code class="font-mono font-bold">barang</code>. Ketika sistem mulai diintegrasikan secara profesional, kita wajib menambah 2 tabel pendamping ini:</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 my-auto">
+                        <div class="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-t-4 border-amber-500 border-x border-b border-slate-200 dark:border-slate-800 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 text-xs font-extrabold">TABEL PENDAMPING 1 · KARTU STOK</span>
+                                <span class="font-mono text-xs font-bold text-amber-600">db_gudang.log_stok</span>
+                            </div>
+                            <h3 class="text-xl font-extrabold text-slate-900 dark:text-white">📋 Ibarat "Kartu Stok Gantung" di Rak Gudang</h3>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Kalau tiba-tiba stok <em>Sneakers Pro</em> di tabel <code class="font-mono">barang</code> tinggal 2 pasang (padahal pagi tadi ada 10 pasang), manajer toko pasti bertanya: <strong>"Ke mana perginya yang 8 pasang? Kapan keluarnya? Untuk nomor struk yang mana?"</strong>
+                            </p>
+                            <p class="text-xs sm:text-sm text-amber-800 dark:text-amber-300 font-semibold">
+                                Tabel <strong>${term('log_stok', 'log_stok')}</strong> mencatat setiap pergerakan keluar/masuk barang beserta nomor buktinya (<code class="font-mono">no_referensi</code>)!
+                            </p>
+                        </div>
+
+                        <div class="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-t-4 border-indigo-600 border-x border-b border-slate-200 dark:border-slate-800 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="px-3 py-1 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 text-xs font-extrabold">TABEL PENDAMPING 2 · BUKU TAMU KUNCI</span>
+                                <span class="font-mono text-xs font-bold text-indigo-600">db_gudang.api_keys</span>
+                            </div>
+                            <h3 class="text-xl font-extrabold text-slate-900 dark:text-white">🔑 Ibarat "Panel Saklar Kartu Akses Cabang"</h3>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Di Minggu 3 kita baru menyimpan 1 Kode API di file teks <code class="font-mono">api_key.txt</code>. Bagaimana jika toko punya <strong>3 aplikasi yang terhubung ke Gudang</strong> (Kasir Toko Utama, Kasir Cabang B, dan Website Toko Online)?
+                            </p>
+                            <p class="text-xs sm:text-sm text-indigo-800 dark:text-indigo-300 font-semibold">
+                                Tabel <strong>${term('api_keys_tbl', 'api_keys')}</strong> menyimpan daftar kunci untuk banyak aplikasi sekaligus lengkap dengan saklar ON/OFF (<code class="font-mono">status_aktif</code>)!
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide12() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">Bedah Tabel Pendukung 1 (Bahasa Bisnis Sederhana)</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Isi Kolom Tabel ${term('log_stok', 'log_stok')} (Kartu Stok Digital)</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">Setiap kali ada stok keluar (penjualan kasir) atau stok masuk (barang datang), sistem Gudang otomatis menulis 1 baris baru ke tabel ini:</p>
+                    </div>
+
+                    <div class="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 my-auto">
+                        <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                            <thead>
+                                <tr class="bg-amber-50 dark:bg-amber-950/60 border-b border-amber-200 dark:border-amber-800">
+                                    <th class="p-2.5 font-extrabold text-amber-900 dark:text-amber-200">Nama Kolom</th>
+                                    <th class="p-2.5 font-extrabold text-amber-900 dark:text-amber-200">Tipe Data &amp; Arti Sederhananya</th>
+                                    <th class="p-2.5 font-extrabold text-amber-900 dark:text-amber-200">Contoh Isi</th>
+                                    <th class="p-2.5 font-extrabold text-amber-900 dark:text-amber-200">Kegunaan Bisnisnya</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 dark:divide-slate-800 bg-white dark:bg-slate-900">
+                                <tr><td class="p-2.5 font-mono font-bold">🔑 id</td><td class="p-2.5"><code class="font-mono">INT</code> (Nomor urut otomatis)</td><td class="p-2.5 font-mono">1, 2, 3</td><td class="p-2.5">Nomor baris catatan riwayat stok.</td></tr>
+                                <tr><td class="p-2.5 font-mono font-bold text-emerald-700 dark:text-emerald-400">🔗 barang_id &amp; kode_barang</td><td class="p-2.5"><code class="font-mono">INT</code> &amp; <code class="font-mono">VARCHAR(10)</code> (Teks kode sepatu)</td><td class="p-2.5 font-mono">"SP001"</td><td class="p-2.5">Menunjuk sepatu mana yang stoknya berubah (nyambung ke tabel <code class="font-mono">barang</code>).</td></tr>
+                                <tr><td class="p-2.5 font-mono font-bold">jenis</td><td class="p-2.5">${term('enum_type', "ENUM('masuk','keluar')")} — <strong>Kolom Pilihan Ganda</strong></td><td class="p-2.5 font-mono">'keluar'</td><td class="p-2.5">Hanya boleh diisi kata <code class="font-mono">'masuk'</code> (stok bertambah) atau <code class="font-mono">'keluar'</code> (stok berkurang).</td></tr>
+                                <tr><td class="p-2.5 font-mono font-bold">qty</td><td class="p-2.5"><code class="font-mono">INT</code> (Angka bulat positif)</td><td class="p-2.5 font-mono">2</td><td class="p-2.5">Jumlah pasang sepatu yang masuk atau keluar pada transaksi tersebut.</td></tr>
+                                <tr><td class="p-2.5 font-mono font-bold">stok_akhir</td><td class="p-2.5"><code class="font-mono">INT</code> (Angka bulat sisa stok)</td><td class="p-2.5 font-mono">6</td><td class="p-2.5">Mencatat sisa stok di rak tepat setelah dikurangi/ditambah (memudahkan audit).</td></tr>
+                                <tr><td class="p-2.5 font-mono font-bold text-indigo-600 dark:text-indigo-400">⭐ no_referensi</td><td class="p-2.5"><code class="font-mono">VARCHAR(30)</code> (Teks nomor bukti)</td><td class="p-2.5 font-mono">"TRX-20261028-001"</td><td class="p-2.5">Nomor struk kasir / surat jalan pemasok. <strong>Mencegah 1 struk memotong stok 2 kali!</strong></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide13() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Bedah Tabel Pendukung 2 (Bahasa Bisnis Sederhana)</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Isi Kolom Tabel ${term('api_keys_tbl', 'api_keys')} (Saklar Kunci Akses Mitra)</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">Tabel <code class="font-mono font-bold">api_keys</code> di dalam <code class="font-mono font-bold">db_gudang</code> menyimpan daftar aplikasi mana saja yang diberi izin resmi untuk memanggil API Gudang:</p>
+                    </div>
+
+                    <div class="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 my-auto">
+                        <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                            <thead>
+                                <tr class="bg-indigo-50 dark:bg-indigo-950/60 border-b border-indigo-200 dark:border-indigo-800">
+                                    <th class="p-3 font-extrabold text-indigo-900 dark:text-indigo-200">Nama Kolom</th>
+                                    <th class="p-3 font-extrabold text-indigo-900 dark:text-indigo-200">Tipe Data &amp; Arti Sederhananya</th>
+                                    <th class="p-3 font-extrabold text-indigo-900 dark:text-indigo-200">Contoh Isi</th>
+                                    <th class="p-3 font-extrabold text-indigo-900 dark:text-indigo-200">Kegunaan Bisnisnya</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 dark:divide-slate-800 bg-white dark:bg-slate-900">
+                                <tr><td class="p-3 font-mono font-bold">🔑 id</td><td class="p-3"><code class="font-mono">INT</code> (Nomor urut otomatis)</td><td class="p-3 font-mono">1, 2</td><td class="p-3">Nomor urut aplikasi mitra.</td></tr>
+                                <tr><td class="p-3 font-mono font-bold">nama_aplikasi</td><td class="p-3"><code class="font-mono">VARCHAR(100)</code> (Teks nama mitra/cabang)</td><td class="p-3 font-mono">"Kasir POS Toko Utama"</td><td class="p-3">Supaya Admin Gudang tahu kunci ini milik aplikasi atau cabang yang mana.</td></tr>
+                                <tr><td class="p-3 font-mono font-bold text-orange-600 dark:text-orange-400">⭐ api_key</td><td class="p-3"><code class="font-mono">VARCHAR(64) UNIQUE</code> (Teks kode unik)</td><td class="p-3 font-mono">"GDG-KEY-UTAMA-001"</td><td class="p-3">Kode rahasia yang di-generate oleh Gudang dan ditempel ke pengaturan Kasir.</td></tr>
+                                <tr><td class="p-3 font-mono font-bold text-emerald-600 dark:text-emerald-400">status_aktif</td><td class="p-3">${term('tinyint_type', 'TINYINT(1)')} — <strong>Saklar ON/OFF (1 atau 0)</strong></td><td class="p-3 font-mono">1 (Nyala) / 0 (Mati)</td><td class="p-3">Saklar pengaman: angka <code class="font-mono font-bold">1</code> artinya kunci diizinkan, angka <code class="font-mono font-bold">0</code> artinya kunci diblokir sementara.</td></tr>
+                                <tr><td class="p-3 font-mono font-bold">dibuat_pada</td><td class="p-3"><code class="font-mono">DATETIME</code> (Tanggal &amp; jam)</td><td class="p-3 font-mono">"2026-10-28 09:00:00"</td><td class="p-3">Mencatat kapan kunci akses tersebut diterbitkan.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide14() {
+            const s = simDbGudang;
+            let logRowsHtml = '';
+            for (let i = s.logs.length - 1; i >= 0; i--) {
+                const lg = s.logs[i];
+                const badgeCls = lg.jenis === 'masuk'
+                    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                    : 'bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-300';
+                logRowsHtml += `
+                    <tr class="border-t border-slate-200 dark:border-slate-800">
+                        <td class="p-2 font-mono">${lg.id}</td>
+                        <td class="p-2 font-mono font-bold">${escapeHtml(lg.kode)}</td>
+                        <td class="p-2"><span class="px-2 py-0.5 rounded font-mono text-[10px] font-extrabold uppercase ${badgeCls}">${lg.jenis}</span></td>
+                        <td class="p-2 font-mono font-bold">${lg.jenis === 'masuk' ? '+' : '-'}${lg.qty}</td>
+                        <td class="p-2 font-mono font-bold text-indigo-600 dark:text-indigo-400">${lg.sisa}</td>
+                        <td class="p-2 font-mono text-[11px] font-bold">${escapeHtml(lg.ref)}</td>
+                    </tr>
+                `;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-3.5">
+                    <div class="space-y-0.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400">Simulasi Interaktif 3 · Kerja Sama 3 Tabel Gudang</span>
+                        <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Simulasi Tabel <code class="font-mono">barang</code>, <code class="font-mono">log_stok</code>, &amp; <code class="font-mono">api_keys</code> (Plus Cegah Nota Kembar!)</h2>
+                        <p class="text-xs text-slate-600 dark:text-slate-300">Tekan tombol di sebelah kiri untuk menguji pengurangan stok, penambahan stok, saklar kunci API, hingga perlindungan terhadap <strong>Nota Kembar</strong>:</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch my-auto">
+                        <!-- Kiri: Tabel barang & api_keys + Tombol Aksi -->
+                        <div class="lg:col-span-5 space-y-2.5 flex flex-col justify-between">
+                            <div class="p-3.5 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-800 space-y-1.5">
+                                <div class="text-[11px] font-extrabold uppercase text-emerald-700 dark:text-emerald-300">1. Tabel db_gudang.barang</div>
+                                <div class="flex items-center justify-between bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                                    <div>
+                                        <div class="font-bold text-xs sm:text-sm">👟 SP001 - Sneakers Pro</div>
+                                        <div class="text-[11px] text-slate-500">Harga: Rp 450.000</div>
+                                    </div>
+                                    <span class="px-3 py-1 rounded-xl bg-emerald-600 text-white font-mono text-sm font-extrabold">
+                                        Stok: ${s.stokSP001}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-300 dark:border-indigo-800 space-y-1.5">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-[11px] font-extrabold uppercase text-indigo-700 dark:text-indigo-300">2. Tabel db_gudang.api_keys</span>
+                                    <button type="button" onclick="simToggleApiKeyStatus()" class="px-2.5 py-0.5 rounded text-[10px] font-extrabold ${s.keyActive ? 'bg-rose-600 text-white' : 'bg-emerald-600 text-white'}">
+                                        ${s.keyActive ? 'Matikan Saklar (Set 0)' : 'Nyalakan Saklar (Set 1)'}
+                                    </button>
+                                </div>
+                                <div class="bg-white dark:bg-slate-900 p-2 rounded-xl border border-slate-200 dark:border-slate-700 font-mono text-xs flex items-center justify-between">
+                                    <span>GDG-KEY-UTAMA-001 (Kasir POS)</span>
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-extrabold ${s.keyActive ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
+                                        status_aktif = ${s.keyActive ? '1 (ON)' : '0 (OFF)'}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-2">
+                                <button type="button" onclick="simRunStockAction('keluar', 2, false)" class="py-2 px-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs transition shadow-xs">
+                                    🛒 Kasir Jual 2 Pasang
+                                </button>
+                                <button type="button" onclick="simRunStockAction('masuk', 5, false)" class="py-2 px-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs transition shadow-xs">
+                                    📦 Barang Datang +5
+                                </button>
+                            </div>
+                            <button type="button" onclick="simRunStockAction('keluar', 2, true)" class="w-full py-2 px-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs transition shadow-xs">
+                                🛑 Uji Kirim Nota Kembar (No Referensi Sama dengan Baris Terakhir)
+                            </button>
+                        </div>
+
+                        <!-- Kanan: Tabel log_stok -->
+                        <div class="lg:col-span-7 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between">
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-extrabold uppercase text-amber-700 dark:text-amber-400">3. Tabel db_gudang.log_stok (Kartu Stok)</span>
+                                    <button type="button" onclick="simResetGudangTables()" class="text-xs font-bold text-slate-500 hover:text-slate-800 underline">Reset Tabel</button>
+                                </div>
+                                <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+                                    <table class="w-full text-left border-collapse text-xs">
+                                        <thead class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                                            <tr><th class="p-2">ID</th><th class="p-2">Kode</th><th class="p-2">Jenis</th><th class="p-2">Qty</th><th class="p-2">Stok Akhir</th><th class="p-2">No Referensi</th></tr>
+                                        </thead>
+                                        <tbody>
+                                            ${logRowsHtml}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="p-3 rounded-xl bg-amber-50/80 dark:bg-amber-950/40 border-l-4 border-amber-500 text-xs font-semibold text-slate-700 dark:text-slate-200 mt-2">
+                                💬 ${escapeHtml(s.feedback)}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide15() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Pembaruan Peta Tabel (ERD) Minggu 4</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Peta Tabel <code class="font-mono">db_gudang</code> Sekarang Memiliki 3 Tabel!</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">Perhatikan perkembangan database Sistem Gudang kita: tabel <code class="font-mono font-bold">barang</code> kini berelasi 1-ke-Banyak (1:N) dengan tabel <code class="font-mono font-bold">log_stok</code>, ditemani tabel pengaman <code class="font-mono font-bold">api_keys</code>:</p>
+                    </div>
+
+                    <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 my-auto overflow-x-auto">
+                        <svg class="w-full min-w-[760px] h-auto" viewBox="0 0 900 265">
+                            <!-- Tabel barang -->
+                            <rect x="20" y="20" width="245" height="220" rx="14" fill="#ffffff" stroke="#059669" stroke-width="2.2"/>
+                            <rect x="20" y="20" width="245" height="34" rx="14" fill="#059669"/>
+                            <text x="142" y="42" text-anchor="middle" font-size="13.5" font-weight="800" fill="#ffffff" font-family="monospace">1. barang (Induk)</text>
+                            <text x="36" y="76" font-size="12" font-family="monospace" fill="#0f172a">🔑 <tspan font-weight="800">id</tspan> : INT (PK)</text>
+                            <text x="36" y="102" font-size="12" font-family="monospace" fill="#047857">⭐ <tspan font-weight="800">kode</tspan> : VARCHAR(10) UNIQUE</text>
+                            <text x="36" y="128" font-size="12" font-family="monospace" fill="#334155">• nama : VARCHAR(100)</text>
+                            <text x="36" y="154" font-size="12" font-family="monospace" fill="#334155">• harga : DECIMAL(12,2)</text>
+                            <text x="36" y="180" font-size="12" font-family="monospace" fill="#334155">• stok : INT</text>
+
+                            <!-- Garis Relasi 1:N -->
+                            <line x1="265" y1="85" x2="335" y2="85" stroke="#d97706" stroke-width="3"/>
+                            <text x="300" y="75" text-anchor="middle" font-size="11" font-weight="800" fill="#b45309">1 : N (FK)</text>
+
+                            <!-- Tabel log_stok -->
+                            <rect x="335" y="20" width="265" height="225" rx="14" fill="#ffffff" stroke="#d97706" stroke-width="2.2"/>
+                            <rect x="335" y="20" width="265" height="34" rx="14" fill="#d97706"/>
+                            <text x="467" y="42" text-anchor="middle" font-size="13.5" font-weight="800" fill="#ffffff" font-family="monospace">2. log_stok (Kartu Stok)</text>
+                            <text x="352" y="74" font-size="11.5" font-family="monospace" fill="#0f172a">🔑 <tspan font-weight="800">id</tspan> : INT (PK)</text>
+                            <text x="352" y="96" font-size="11.5" font-family="monospace" fill="#b45309">🔗 <tspan font-weight="800">barang_id</tspan> : INT (FK)</text>
+                            <text x="352" y="118" font-size="11.5" font-family="monospace" fill="#334155">• kode_barang : VARCHAR(10)</text>
+                            <text x="352" y="140" font-size="11.5" font-family="monospace" fill="#334155">• jenis : ENUM('masuk','keluar')</text>
+                            <text x="352" y="162" font-size="11.5" font-family="monospace" fill="#334155">• qty : INT</text>
+                            <text x="352" y="184" font-size="11.5" font-family="monospace" fill="#334155">• stok_akhir : INT</text>
+                            <text x="352" y="206" font-size="11.5" font-family="monospace" fill="#334155">• no_referensi : VARCHAR(30)</text>
+                            <text x="352" y="228" font-size="11.5" font-family="monospace" fill="#334155">• keterangan &amp; tanggal</text>
+
+                            <!-- Tabel api_keys -->
+                            <rect x="635" y="20" width="245" height="220" rx="14" fill="#ffffff" stroke="#4f46e5" stroke-width="2.2"/>
+                            <rect x="635" y="20" width="245" height="34" rx="14" fill="#4f46e5"/>
+                            <text x="757" y="42" text-anchor="middle" font-size="13.5" font-weight="800" fill="#ffffff" font-family="monospace">3. api_keys (Kunci Mitra)</text>
+                            <text x="652" y="76" font-size="11.5" font-family="monospace" fill="#0f172a">🔑 <tspan font-weight="800">id</tspan> : INT (PK)</text>
+                            <text x="652" y="102" font-size="11.5" font-family="monospace" fill="#334155">• nama_aplikasi : VARCHAR(100)</text>
+                            <text x="652" y="128" font-size="11.5" font-family="monospace" fill="#4f46e5">⭐ <tspan font-weight="800">api_key</tspan> : VARCHAR(64) UNIQUE</text>
+                            <text x="652" y="154" font-size="11.5" font-family="monospace" fill="#047857">• status_aktif : TINYINT(1)</text>
+                            <text x="652" y="180" font-size="11.5" font-family="monospace" fill="#334155">• dibuat_pada : DATETIME</text>
+                        </svg>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide16() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Standar Tugas Minggu 4 · Bagian 1 (Template Kosong Siap Copy ke MS Word)</span>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Template Tabel Spesifikasi Kontrak API (4 Endpoint Wajib RPS)</h2>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">Tabel ini <strong>sengaja dikosongkan</strong>. Salin ke Word, lalu isi sendiri berdasarkan pemahaman Anda dari <strong>Slide 5</strong> (Enam Kolom Wajib) dan <strong>Slide 7</strong> (Simulasi Kontrak).</p>
+                        </div>
+                        <button type="button" onclick="copyRichTable('tableApiSpecM4', this)" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs transition flex items-center gap-2 shadow-xs">
+                            <i class="fa-solid fa-table"></i>
+                            <span>Salin Template ke Word</span>
+                        </button>
+                    </div>
+
+                    <div class="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border-l-4 border-amber-500 text-xs text-slate-700 dark:text-slate-200 space-y-1.5">
+                        <div><strong>📌 Petunjuk Pengisian (hindari split-attention):</strong></div>
+                        <div>• Format 6 kolom lengkap dapat dilihat di <strong>Slide 5</strong> (Anatomi API Spec).</div>
+                        <div>• Contoh isian nyata untuk 4 endpoint ada di <strong>Slide 7</strong> (Inspektor Kontrak) — klik tiap kartu EP-1 s.d. EP-4.</div>
+                        <div>• <strong>Baris pertama di bawah adalah CONTOH FORMAT (bukan jawaban).</strong> Empat baris sisanya wajib Anda isi sendiri.</div>
+                    </div>
+
+                    <div class="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 my-auto">
+                        <table id="tableApiSpecM4" class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-slate-100 dark:bg-slate-800 border-b border-slate-300 dark:border-slate-700">
+                                    <th class="p-2 border border-slate-300 dark:border-slate-700 font-extrabold">No &amp; Nama Layanan</th>
+                                    <th class="p-2 border border-slate-300 dark:border-slate-700 font-extrabold">Method &amp; URL Endpoint</th>
+                                    <th class="p-2 border border-slate-300 dark:border-slate-700 font-extrabold">Header (Amplop)</th>
+                                    <th class="p-2 border border-slate-300 dark:border-slate-700 font-extrabold">Request Body (Isi Surat)</th>
+                                    <th class="p-2 border border-slate-300 dark:border-slate-700 font-extrabold">Respons Sukses (200 OK)</th>
+                                    <th class="p-2 border border-slate-300 dark:border-slate-700 font-extrabold">Respons Error (4xx / 5xx)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white dark:bg-slate-900">
+                                <tr class="bg-slate-50 dark:bg-slate-800/60">
+                                    <td class="p-2 border border-slate-300 dark:border-slate-700 font-bold text-slate-400 italic">[CONTOH FORMAT — bukan jawaban] 1. Nama Layanan</td>
+                                    <td class="p-2 border border-slate-300 dark:border-slate-700 font-mono text-slate-400 italic">[METHOD] /sistem_gudang/api/[nama-file].php</td>
+                                    <td class="p-2 border border-slate-300 dark:border-slate-700 font-mono text-slate-400 italic">X-API-KEY: [kunci]</td>
+                                    <td class="p-2 border border-slate-300 dark:border-slate-700 text-slate-400 italic">[data JSON yang dikirim / "-" jika GET]</td>
+                                    <td class="p-2 border border-slate-300 dark:border-slate-700 font-mono text-slate-400 italic">{"status":"sukses", ...}</td>
+                                    <td class="p-2 border border-slate-300 dark:border-slate-700 font-mono text-slate-400 italic">[kode]: {"status":"error", ...}</td>
+                                </tr>
+                                <tr><td class="p-2 border border-slate-300 dark:border-slate-700 font-bold">1. </td><td class="p-2 border border-slate-300 dark:border-slate-700"></td><td class="p-2 border border-slate-300 dark:border-slate-700"></td><td class="p-2 border border-slate-300 dark:border-slate-700"></td><td class="p-2 border border-slate-300 dark:border-slate-700"></td><td class="p-2 border border-slate-300 dark:border-slate-700"></td></tr>
+                                <tr><td class="p-2 border border-slate-300 dark:border-slate-700 font-bold">2. </td><td class="p-2 border border-slate-300 dark:border-slate-700"></td><td class="p-2 border border-slate-300 dark:border-slate-700"></td><td class="p-2 border border-slate-300 dark:border-slate-700"></td><td class="p-2 border border-slate-300 dark:border-slate-700"></td><td class="p-2 border border-slate-300 dark:border-slate-700"></td></tr>
+                                <tr><td class="p-2 border border-slate-300 dark:border-slate-700 font-bold">3. </td><td class="p-2 border border-slate-300 dark:border-slate-700"></td><td class="p-2 border border-slate-300 dark:border-slate-700"></td><td class="p-2 border border-slate-300 dark:border-slate-700"></td><td class="p-2 border border-slate-300 dark:border-slate-700"></td><td class="p-2 border border-slate-300 dark:border-slate-700"></td></tr>
+                                <tr><td class="p-2 border border-slate-300 dark:border-slate-700 font-bold">4. </td><td class="p-2 border border-slate-300 dark:border-slate-700"></td><td class="p-2 border border-slate-300 dark:border-slate-700"></td><td class="p-2 border border-slate-300 dark:border-slate-700"></td><td class="p-2 border border-slate-300 dark:border-slate-700"></td><td class="p-2 border border-slate-300 dark:border-slate-700"></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide17() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Standar Tugas Minggu 4 · Bagian 2 (Template Kosong Siap Copy ke Word)</span>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Template Ceklis ${term('peer_review', 'Peer Review')} Antar-Pasangan</h2>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">Tabel ini <strong>kosong</strong> dan wajib diisi oleh rekan pasangan Anda. Salin ke Word, lalu minta pasangan mengisi kolom <strong>Status (Ya/Revisi)</strong> dan <strong>Catatan</strong>.</p>
+                        </div>
+                        <button type="button" onclick="copyRichTable('tablePeerReviewM4', this)" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs transition flex items-center gap-2 shadow-xs">
+                            <i class="fa-solid fa-table"></i>
+                            <span>Salin Template ke Word</span>
+                        </button>
+                    </div>
+
+                    <div class="p-3.5 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 border-l-4 border-indigo-500 text-xs text-slate-700 dark:text-slate-200 space-y-1.5">
+                        <div><strong>📌 Petunjuk Peer Review:</strong></div>
+                        <div>• Kolom <strong>"Aspek yang Diperiksa"</strong> adalah pertanyaan pemandu (tidak perlu diubah).</div>
+                        <div>• Mintalah rekan pasangan Anda menuliskan <strong>Ya / Revisi</strong> pada kolom Status.</div>
+                        <div>• Catatan wajib berisi <strong>masukan konkret</strong> dan <strong>tindak lanjut perbaikan</strong> yang Anda lakukan.</div>
+                    </div>
+
+                    <div class="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 my-auto">
+                        <table id="tablePeerReviewM4" class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-slate-100 dark:bg-slate-800 border-b border-slate-300 dark:border-slate-700">
+                                    <th class="p-2.5 border border-slate-300 dark:border-slate-700 font-extrabold">No</th>
+                                    <th class="p-2.5 border border-slate-300 dark:border-slate-700 font-extrabold">Aspek Kontrak API yang Diperiksa oleh Pasangan</th>
+                                    <th class="p-2.5 border border-slate-300 dark:border-slate-700 font-extrabold">Status (Ya / Revisi)</th>
+                                    <th class="p-2.5 border border-slate-300 dark:border-slate-700 font-extrabold">Catatan Masukan dari Pasangan &amp; Perbaikan yang Dilakukan</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white dark:bg-slate-900">
+                                <tr>
+                                    <td class="p-2.5 border border-slate-300 dark:border-slate-700 font-bold">1</td>
+                                    <td class="p-2.5 border border-slate-300 dark:border-slate-700">Apakah sudah memuat minimal 4 endpoint (<code class="font-mono">GET barang</code>, <code class="font-mono">GET barang?kode=</code>, <code class="font-mono">POST stok-keluar</code>, <code class="font-mono">POST stok-masuk</code>)?</td>
+                                    <td class="p-2.5 border border-slate-300 dark:border-slate-700 text-slate-400 italic">.........</td>
+                                    <td class="p-2.5 border border-slate-300 dark:border-slate-700"></td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2.5 border border-slate-300 dark:border-slate-700 font-bold">2</td>
+                                    <td class="p-2.5 border border-slate-300 dark:border-slate-700">Apakah nama atribut JSON (<code class="font-mono">kode, nama, harga, stok, qty, no_referensi</code>) sudah konsisten di semua endpoint?</td>
+                                    <td class="p-2.5 border border-slate-300 dark:border-slate-700 text-slate-400 italic">.........</td>
+                                    <td class="p-2.5 border border-slate-300 dark:border-slate-700"></td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2.5 border border-slate-300 dark:border-slate-700 font-bold">3</td>
+                                    <td class="p-2.5 border border-slate-300 dark:border-slate-700">Apakah Header <code class="font-mono">X-API-KEY</code> dan format respons error (<code class="font-mono">400, 401, 404, 409</code>) sudah dicantumkan dengan jelas?</td>
+                                    <td class="p-2.5 border border-slate-300 dark:border-slate-700 text-slate-400 italic">.........</td>
+                                    <td class="p-2.5 border border-slate-300 dark:border-slate-700"></td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2.5 border border-slate-300 dark:border-slate-700 font-bold">4</td>
+                                    <td class="p-2.5 border border-slate-300 dark:border-slate-700">Apakah skema tabel pendukung <code class="font-mono">log_stok</code> dan <code class="font-mono">api_keys</code> di <code class="font-mono">db_gudang</code> sudah sesuai dengan kebutuhan kontrak API?</td>
+                                    <td class="p-2.5 border border-slate-300 dark:border-slate-700 text-slate-400 italic">.........</td>
+                                    <td class="p-2.5 border border-slate-300 dark:border-slate-700"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide18() {
+            let contentHtml = '';
+            if (activeTabSlide18 === 'kasus') {
+                let cardsHtml = '';
+                for (let i = 0; i < PEER_SCENARIOS.length; i++) {
+                    const sc = PEER_SCENARIOS[i];
+                    const chosenIdx = peerChoices[sc.id];
+                    const hasAnswered = chosenIdx !== undefined;
+
+                    let optsHtml = '';
+                    for (let j = 0; j < sc.opts.length; j++) {
+                        const o = sc.opts[j];
+                        let btnCls = 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 hover:border-indigo-500';
+                        let badgeCls = 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300';
+
+                        if (hasAnswered) {
+                            if (o.correct) {
+                                btnCls = 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 text-emerald-900 dark:text-emerald-200';
+                                badgeCls = 'bg-emerald-600 text-white';
+                            } else if (chosenIdx === j) {
+                                btnCls = 'bg-rose-50 dark:bg-rose-950/60 border-rose-500 text-rose-900 dark:text-rose-200';
+                                badgeCls = 'bg-rose-600 text-white';
+                            } else {
+                                btnCls = 'opacity-60 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800';
+                            }
+                        }
+
+                        optsHtml += `
+                            <button type="button" ${hasAnswered ? 'disabled' : ''} onclick="choosePeerScenario(${sc.id}, ${j})" class="w-full text-left p-2.5 rounded-xl border-2 font-semibold text-xs flex items-start gap-2.5 transition ${btnCls}">
+                                <span class="w-5 h-5 rounded-md font-mono text-[11px] font-extrabold flex items-center justify-center shrink-0 mt-0.5 ${badgeCls}">${o.ltr}</span>
+                                <span>${escapeHtml(o.text)}</span>
+                            </button>
+                        `;
+                    }
+
+                    let fbHtml = '';
+                    if (hasAnswered) {
+                        const selectedOpt = sc.opts[chosenIdx];
+                        const fbCls = selectedOpt.correct
+                            ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-500 text-emerald-900 dark:text-emerald-200'
+                            : 'bg-rose-50 dark:bg-rose-950/50 border-rose-500 text-rose-900 dark:text-rose-200';
+                        fbHtml = `
+                            <div class="p-2 rounded-xl border-l-4 ${fbCls} text-[11px] leading-relaxed">
+                                ${escapeHtml(selectedOpt.explain)}
+                            </div>
+                        `;
+                    }
+
+                    cardsHtml += `
+                        <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-2">
+                            <div class="space-y-1">
+                                <span class="inline-block px-2 py-0.5 rounded-full bg-orange-100 dark:bg-orange-950 text-orange-700 dark:text-orange-300 text-[10px] font-extrabold uppercase">${sc.badge}</span>
+                                <p class="text-xs font-bold text-slate-900 dark:text-white leading-snug">${escapeHtml(sc.title)}</p>
+                            </div>
+                            <div class="space-y-1.5">
+                                ${optsHtml}
+                                ${fbHtml}
+                            </div>
+                        </div>
+                    `;
+                }
+                contentHtml = `<div class="grid grid-cols-1 lg:grid-cols-2 gap-3 my-auto">${cardsHtml}</div>`;
+            } else {
+                let itemsHtml = '';
+                for (let i = 0; i < TF_QUIZ_M4.length; i++) {
+                    const q = TF_QUIZ_M4[i];
+                    const chosen = tfChoicesM4[q.id];
+                    const hasAns = chosen !== undefined;
+                    const isCorrect = chosen === q.answer;
+
+                    let rowCls = 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800';
+                    let numCls = 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200';
+                    if (hasAns) {
+                        rowCls = isCorrect ? 'bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-500' : 'bg-rose-50/70 dark:bg-rose-950/30 border-rose-500';
+                        numCls = isCorrect ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white';
+                    }
+
+                    const btnStyle = function (val) {
+                        if (!hasAns) return 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 hover:border-indigo-500';
+                        if (chosen === val) {
+                            return isCorrect ? 'bg-emerald-600 border-emerald-600 text-white' : 'bg-rose-600 border-rose-600 text-white';
+                        }
+                        if (q.answer === val) {
+                            return 'bg-emerald-100 dark:bg-emerald-950 border-emerald-500 text-emerald-800 dark:text-emerald-300';
+                        }
+                        return 'opacity-50 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800';
+                    };
+
+                    itemsHtml += `
+                        <div class="p-3 rounded-2xl border ${rowCls} space-y-1.5 transition">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                                <div class="flex items-start gap-2.5 text-xs font-bold text-slate-900 dark:text-white">
+                                    <span class="w-5 h-5 rounded-md font-mono text-[11px] flex items-center justify-center shrink-0 ${numCls}">${q.id}</span>
+                                    <span>${q.text}</span>
+                                </div>
+                                <div class="flex gap-1.5 shrink-0">
+                                    <button type="button" ${hasAns ? 'disabled' : ''} onclick="answerTfM4(${q.id}, 'true')" class="px-3 py-1 rounded-xl border font-extrabold text-xs transition ${btnStyle('true')}">Benar</button>
+                                    <button type="button" ${hasAns ? 'disabled' : ''} onclick="answerTfM4(${q.id}, 'false')" class="px-3 py-1 rounded-xl border font-extrabold text-xs transition ${btnStyle('false')}">Salah</button>
+                                </div>
+                            </div>
+                            ${hasAns ? `<div class="p-2 rounded-xl bg-white/80 dark:bg-slate-900/80 border-l-4 ${isCorrect ? 'border-emerald-600' : 'border-rose-600'} text-[11px] text-slate-700 dark:text-slate-200">${escapeHtml(q.explain)}</div>` : ''}
+                        </div>
+                    `;
+                }
+                contentHtml = `<div class="space-y-2 my-auto">${itemsHtml}</div>`;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-3.5">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400">Simulasi Interaktif 4 · Evaluasi Minggu 4</span>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Latihan Kasus Peer Review &amp; Kuis Kilat</h2>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="inline-flex p-1 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                                <button type="button" onclick="switchSlide18TabM4('kasus')" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition ${activeTabSlide18 === 'kasus' ? 'bg-indigo-600 text-white' : 'text-slate-600 dark:text-slate-300'}">🎯 4 Kasus Peer Review</button>
+                                <button type="button" onclick="switchSlide18TabM4('kuis')" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition ${activeTabSlide18 === 'kuis' ? 'bg-indigo-600 text-white' : 'text-slate-600 dark:text-slate-300'}">⚡ 5 Kuis Benar/Salah</button>
+                            </div>
+                            <button type="button" onclick="resetEvaluationsM4()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 transition">
+                                Ulangi
+                            </button>
+                        </div>
+                    </div>
+
+                    ${contentHtml}
+                </div>
+            `;
+        }
+
+        function renderSlide19() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-6">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Penutup Materi Tatap Muka · Pertemuan 4</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Kesimpulan Materi &amp; Persiapan Masuk ke Praktikum 4</h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 my-auto">
+                        <div class="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-l-4 border-emerald-600 border-y border-r border-slate-200 dark:border-slate-800 space-y-3">
+                            <div class="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center text-2xl">📌</div>
+                            <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Intisari Minggu 4</h3>
+                            <ul class="list-disc pl-5 space-y-2 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                <li><strong>Kontrak API (API Spec)</strong> menyepakati 4 endpoint utama (<code class="font-mono">GET barang</code>, <code class="font-mono">GET barang?kode=</code>, <code class="font-mono">POST stok-keluar</code>, dan <code class="font-mono">POST stok-masuk</code>) lengkap dengan <strong>Amplop Header (<code class="font-mono">X-API-KEY</code>)</strong>, <strong>Isi Surat Body</strong>, dan format balasan JSON.</li>
+                                <li>Tabel <strong><code class="font-mono">log_stok</code></strong> berperan sebagai Kartu Stok Gantung Digital yang mencatat bukti keluar/masuk barang dan menolak nota duplikat (<code class="font-mono">409 Conflict</code>).</li>
+                                <li>Tabel <strong><code class="font-mono">api_keys</code></strong> mengelola daftar kunci banyak cabang/aplikasi dengan saklar ON/OFF (<code class="font-mono">status_aktif</code>).</li>
+                            </ul>
+                        </div>
+
+                        <div class="p-6 rounded-3xl bg-indigo-50/70 dark:bg-indigo-950/40 border-l-4 border-indigo-600 border-y border-r border-indigo-200 dark:border-indigo-800 space-y-3">
+                            <div class="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-2xl">💻</div>
+                            <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Selanjutnya: Buka File HTML Praktikum 4!</h3>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Di modul Praktikum 4 terpisah, Anda akan mempraktikkan secara langsung:
+                            </p>
+                            <ol class="list-decimal pl-5 space-y-1.5 text-xs sm:text-sm text-slate-700 dark:text-slate-200 font-semibold">
+                                <li>Menjalankan skrip SQL pembuatan tabel <code class="font-mono font-bold">log_stok</code> dan <code class="font-mono font-bold">api_keys</code> di <code class="font-mono">db_gudang</code>.</li>
+                                <li>Menjalankan <strong>GUI Aplikasi Gudang Baru</strong> yang punya fitur <strong>Kartu Stok Digital (<code class="font-mono">log_stok</code>)</strong> dan <strong>Saklar ON/OFF Kunci API Cabang (<code class="font-mono">api_keys</code>)</strong>!</li>
+                                <li>Menyelesaikan dokumen <strong>API Spec + Peer Review (Bobot 3%)</strong>.</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-300 flex flex-wrap items-center justify-between gap-2">
+                        <span><strong>Rujukan Resmi RPS:</strong> MDN Web Docs (HTTP Status Codes) • Dokumentasi Resmi PHP &amp; MySQL/MariaDB.</span>
+                        <span class="font-mono font-bold text-indigo-600 dark:text-indigo-400">Sub-CPMK 1.2 · Minggu 4 Selesai</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        const SLIDES = [
+            { id: 1, category: "Minggu 4 · Sampul", title: "Perancangan Kontrak API & Skema Database Pendukung", render: renderSlide1 },
+            { id: 2, category: "Pengantar · Jembatan M3", title: "Dari Titik Integrasi Menuju Kontrak API Resmi", render: renderSlide2 },
+            { id: 3, category: "Peran Bisnis Digital", title: "Mengapa Kontrak API Adalah Tugas Analis Bisnis / Product Manager?", render: renderSlide3 },
+            { id: 4, category: "Analogi Surat API", title: "Analogi Amplop Surat (Header) vs Isi Surat (Body)", render: renderSlide4 },
+            { id: 5, category: "Anatomi API Spec", title: "Enam Kolom Wajib di Dalam Tabel Kontrak API", render: renderSlide5 },
+            { id: 6, category: "Transformasi Endpoint", title: "Dari 4 Titik Integrasi Menjadi 4 Endpoint Kontrak API", render: renderSlide6 },
+            { id: 7, category: "Simulasi Interaktif 1", title: "Inspektor Kontrak 4 Endpoint (Amplop, Isi Surat & Balasan)", render: renderSlide7 },
+            { id: 8, category: "Prinsip Desain API", title: "Tiga Aturan Emas Agar Kontrak API Tidak Membingungkan", render: renderSlide8 },
+            { id: 9, category: "Standar Status HTTP", title: "Lima Kode Status HTTP yang Wajib Masuk ke Kontrak API", render: renderSlide9 },
+            { id: 10, category: "Simulasi Interaktif 2", title: "Uji 5 Skenario Pemeriksaan pada Endpoint POST stok-keluar", render: renderSlide10 },
+            { id: 11, category: "Database Pendukung", title: "Mengapa Database Gudang Butuh 2 Tabel Baru di Minggu 4?", render: renderSlide11 },
+            { id: 12, category: "Tabel Pendukung 1", title: "Isi Kolom Tabel log_stok (Kartu Stok Digital & Arti ENUM)", render: renderSlide12 },
+            { id: 13, category: "Tabel Pendukung 2", title: "Isi Kolom Tabel api_keys (Saklar Kunci Mitra & Arti TINYINT)", render: renderSlide13 },
+            { id: 14, category: "Simulasi Interaktif 3", title: "Simulasi Tabel barang, log_stok, & api_keys + Uji Nota Kembar", render: renderSlide14 },
+            { id: 15, category: "Pembaruan ERD", title: "Peta Tabel db_gudang Sekarang Memiliki 3 Tabel!", render: renderSlide15 },
+            { id: 16, category: "Template API Spec", title: "Template Tabel Spesifikasi Kontrak API (Siap Copy ke MS Word)", render: renderSlide16 },
+            { id: 17, category: "Template Peer Review", title: "Template Ceklis Peer Review Antar-Pasangan (Siap Copy ke Word)", render: renderSlide17 },
+            { id: 18, category: "Simulasi Interaktif 4", title: "Latihan Kasus Peer Review & Kuis Kilat Minggu 4", render: renderSlide18 },
+            { id: 19, category: "Penutup Materi", title: "Kesimpulan Materi & Persiapan Masuk ke Praktikum 4", render: renderSlide19 }
+        ];
+
+        function renderCurrentSlide() {
+            const slide = SLIDES[currentSlideIndex];
+            const viewport = document.getElementById('slideViewport');
+            viewport.innerHTML = slide.render();
+
+            const pct = Math.round(((currentSlideIndex + 1) / TOTAL_SLIDES) * 100);
+            document.getElementById('topProgressBar').style.width = pct + '%';
+            document.getElementById('slideCounterBadge').textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES;
+            document.getElementById('mobileFooterCounter').textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES;
+            document.getElementById('slideCategoryPill').textContent = slide.category;
+            document.getElementById('headerSlideTitle').textContent = slide.title;
+
+            const prevBtn = document.getElementById('prevSlideBtn');
+            const nextBtn = document.getElementById('nextSlideBtn');
+            const nextBtnText = document.getElementById('nextBtnText');
+
+            prevBtn.disabled = currentSlideIndex === 0;
+            if (currentSlideIndex === TOTAL_SLIDES - 1) {
+                nextBtnText.textContent = "Selesai";
+                nextBtn.disabled = true;
+            } else {
+                nextBtnText.textContent = "Selanjutnya";
+                nextBtn.disabled = false;
+            }
+
+            renderDotsAndDrawer();
+        }
+
+        function renderDotsAndDrawer() {
+            const dotsContainer = document.getElementById('slideDotsContainer');
+            let dotsHtml = '';
+            let drawerHtml = '';
+
+            for (let idx = 0; idx < SLIDES.length; idx++) {
+                const s = SLIDES[idx];
+                const isActive = idx === currentSlideIndex;
+                const dotClass = isActive
+                    ? 'w-6 bg-indigo-600 dark:bg-indigo-400'
+                    : 'w-2 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400';
+
+                dotsHtml += `<button type="button" onclick="goToSlide(${idx})" title="${escapeHtml(s.title)}" class="h-2 rounded-full transition-all ${dotClass}"></button>`;
+
+                const itemClass = isActive
+                    ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 font-bold'
+                    : 'hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-300';
+                const badgeClass = isActive
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500';
+
+                drawerHtml += `
+                    <button type="button" onclick="selectSlideFromDrawer(${idx})" class="w-full text-left p-3 rounded-xl transition flex items-start gap-3 ${itemClass}">
+                        <span class="w-6 h-6 rounded-lg text-xs font-extrabold flex items-center justify-center shrink-0 ${badgeClass}">${s.id}</span>
+                        <div class="min-w-0">
+                            <div class="text-[10px] uppercase tracking-wider opacity-75">${escapeHtml(s.category)}</div>
+                            <div class="text-xs sm:text-sm truncate">${escapeHtml(s.title)}</div>
+                        </div>
+                    </button>
+                `;
+            }
+
+            dotsContainer.innerHTML = dotsHtml;
+            document.getElementById('drawerSlideList').innerHTML = drawerHtml;
+        }
+
+        function selectSlideFromDrawer(index) {
+            goToSlide(index);
+            toggleSlideDrawer();
+        }
+
+        function changeSlide(direction) {
+            const nextIdx = currentSlideIndex + direction;
+            if (nextIdx >= 0 && nextIdx < TOTAL_SLIDES) {
+                currentSlideIndex = nextIdx;
+                renderCurrentSlide();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function goToSlide(index) {
+            if (index >= 0 && index < TOTAL_SLIDES) {
+                currentSlideIndex = index;
+                renderCurrentSlide();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function toggleSlideDrawer() {
+            const drawer = document.getElementById('slideDrawer');
+            const backdrop = document.getElementById('slideDrawerBackdrop');
+            const isClosed = drawer.classList.contains('-translate-x-full');
+
+            if (isClosed) {
+                backdrop.classList.remove('hidden');
+                setTimeout(function () {
+                    backdrop.classList.remove('opacity-0');
+                }, 10);
+                drawer.classList.remove('-translate-x-full');
+            } else {
+                backdrop.classList.add('opacity-0');
+                drawer.classList.add('-translate-x-full');
+                setTimeout(function () {
+                    backdrop.classList.add('hidden');
+                }, 200);
+            }
+        }
+
+        /* Handlers Simulasi 1, 2, 3, 4 */
+        function selectEndpointContract(idx) {
+            selectedEndpointIdx = idx;
+            renderCurrentSlide();
+        }
+
+        function selectErrorCase(idx) {
+            activeErrorCaseIdx = idx;
+            renderCurrentSlide();
+        }
+
+        function simToggleApiKeyStatus() {
+            simDbGudang.keyActive = !simDbGudang.keyActive;
+            simDbGudang.feedback = simDbGudang.keyActive
+                ? '✅ Saklar GDG-KEY-UTAMA-001 dinyalakan (status_aktif = 1). Sekarang permintaan API dari Kasir diizinkan.'
+                : '🔒 Saklar GDG-KEY-UTAMA-001 dimatikan (status_aktif = 0). Coba klik tombol di kiri, pasti langsung ditolak!';
+            renderCurrentSlide();
+        }
+
+        function simRunStockAction(jenis, qty, isDuplicateTest) {
+            if (!simDbGudang.keyActive) {
+                simDbGudang.feedback = '❌ 401 Unauthorized: Ditolak! Saklar status_aktif kunci GDG-KEY-UTAMA-001 sedang mati (0)!';
+                renderCurrentSlide();
+                return;
+            }
+
+            if (isDuplicateTest) {
+                const lastLog = simDbGudang.logs[simDbGudang.logs.length - 1];
+                simDbGudang.feedback = '🛑 409 Conflict (Nota Kembar Ditolak!): Nomor referensi "' + lastLog.ref + '" sudah tercatat di tabel log_stok. Stok SP001 aman tidak terpotong dua kali!';
+                renderCurrentSlide();
+                return;
+            }
+
+            if (jenis === 'keluar' && simDbGudang.stokSP001 < qty) {
+                simDbGudang.feedback = '❌ 400 Bad Request: Stok SP001 tidak mencukupi (Sisa stok: ' + simDbGudang.stokSP001 + ', Diminta: ' + qty + ')!';
+                renderCurrentSlide();
+                return;
+            }
+
+            simDbGudang.stokSP001 = jenis === 'masuk' ? simDbGudang.stokSP001 + qty : simDbGudang.stokSP001 - qty;
+            simDbGudang.lastTrxNum++;
+            const newId = simDbGudang.logs.length + 1;
+            const refCode = (jenis === 'masuk' ? 'PO-' : 'TRX-') + simDbGudang.lastTrxNum;
+
+            simDbGudang.logs.push({
+                id: newId,
+                kode: "SP001",
+                jenis: jenis,
+                qty: qty,
+                sisa: simDbGudang.stokSP001,
+                ref: refCode,
+                ket: jenis === 'masuk' ? "Restock supplier" : "Penjualan kasir"
+            });
+
+            simDbGudang.feedback = '✅ 200 OK: Stok SP001 menjadi ' + simDbGudang.stokSP001 + ' pasang, dan bukti "' + refCode + '" resmi tercatat di tabel log_stok!';
+            renderCurrentSlide();
+        }
+
+        function simResetGudangTables() {
+            simDbGudang.stokSP001 = 8;
+            simDbGudang.keyActive = true;
+            simDbGudang.lastTrxNum = 100;
+            simDbGudang.logs = [
+                { id: 1, kode: "SP001", jenis: "masuk", qty: 8, sisa: 8, ref: "SALDO-AWAL", ket: "Stok awal gudang" }
+            ];
+            simDbGudang.feedback = "Simulasi di-reset ke kondisi awal (Stok SP001 = 8 pasang).";
+            renderCurrentSlide();
+        }
+
+        function switchSlide18TabM4(tabName) {
+            activeTabSlide18 = tabName;
+            renderCurrentSlide();
+        }
+
+        function choosePeerScenario(scId, optIdx) {
+            peerChoices[scId] = optIdx;
+            renderCurrentSlide();
+        }
+
+        function answerTfM4(qId, val) {
+            tfChoicesM4[qId] = val;
+            renderCurrentSlide();
+        }
+
+        function resetEvaluationsM4() {
+            peerChoices = {};
+            tfChoicesM4 = {};
+            renderCurrentSlide();
+        }
+
+        function copyRichTable(tableId, btn) {
+            const tableEl = document.getElementById(tableId);
+            if (!tableEl) return;
+
+            const showCopied = function () {
+                const origHtml = btn.innerHTML;
+                btn.innerHTML = '<i class="fa-solid fa-check"></i><span>Tabel Tersalin! Tempel (Ctrl+V) di Word</span>';
+                setTimeout(function () {
+                    btn.innerHTML = origHtml;
+                }, 2000);
+            };
+
+            try {
+                const range = document.createRange();
+                range.selectNode(tableEl);
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(range);
+                document.execCommand('copy');
+                selection.removeAllRanges();
+                showCopied();
+            } catch (err) {
+                console.warn('Copy gagal:', err);
+            }
+        }
+
+        /* Modal Istilah & Kamus Lengkap */
+        function showTerm(key) {
+            const item = GLOSSARY_DB[key];
+            if (!item) return;
+
+            document.getElementById('termCategoryBadge').textContent = item.category;
+            document.getElementById('termTitle').textContent = item.title;
+            document.getElementById('termMainDesc').textContent = item.main;
+            document.getElementById('termDetailDesc').textContent = item.detail;
+            document.getElementById('termSourceName').textContent = "Sumber: " + item.source;
+
+            const modal = document.getElementById('termModalBackdrop');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeTermModal() {
+            const modal = document.getElementById('termModalBackdrop');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function openGlossaryIndex() {
+            document.getElementById('glossarySearchInput').value = '';
+            renderGlossaryList('');
+            const modal = document.getElementById('glossaryModalBackdrop');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeGlossaryIndex() {
+            const modal = document.getElementById('glossaryModalBackdrop');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function selectGlossaryTerm(key) {
+            closeGlossaryIndex();
+            showTerm(key);
+        }
+
+        function renderGlossaryList(query) {
+            const q = String(query || '').trim().toLowerCase();
+            const allKeys = Object.keys(GLOSSARY_DB);
+            const matchedKeys = [];
+
+            for (let i = 0; i < allKeys.length; i++) {
+                const k = allKeys[i];
+                const item = GLOSSARY_DB[k];
+                if (
+                    item.title.toLowerCase().indexOf(q) !== -1 ||
+                    item.category.toLowerCase().indexOf(q) !== -1 ||
+                    item.main.toLowerCase().indexOf(q) !== -1
+                ) {
+                    matchedKeys.push(k);
+                }
+            }
+
+            const container = document.getElementById('glossaryListGrid');
+            if (matchedKeys.length === 0) {
+                container.innerHTML = '<div class="col-span-2 text-center py-8 text-xs text-slate-500">Istilah tidak ditemukan.</div>';
+                return;
+            }
+
+            let html = '';
+            for (let i = 0; i < matchedKeys.length; i++) {
+                const k = matchedKeys[i];
+                const item = GLOSSARY_DB[k];
+                html += `
+                    <button type="button" onclick="selectGlossaryTerm('${k}')" class="text-left p-4 rounded-2xl bg-slate-50 hover:bg-indigo-50/60 dark:bg-slate-800/50 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800 transition space-y-1">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">${escapeHtml(item.category)}</span>
+                            <span class="text-[10px] text-slate-400">${escapeHtml(item.source)}</span>
+                        </div>
+                        <div class="text-sm font-extrabold text-slate-900 dark:text-white">${escapeHtml(item.title)}</div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">${escapeHtml(item.main)}</p>
+                    </button>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function toggleTheme() {
+            const htmlEl = document.documentElement;
+            const icon = document.getElementById('themeIcon');
+            htmlEl.classList.toggle('dark');
+            const isDark = htmlEl.classList.contains('dark');
+            icon.className = isDark ? 'fa-solid fa-sun text-amber-400 text-sm' : 'fa-solid fa-moon text-sm';
+        }
+
+        document.addEventListener('keydown', function (e) {
+            const activeTag = document.activeElement && document.activeElement.tagName
+                ? document.activeElement.tagName.toLowerCase()
+                : '';
+            if (activeTag === 'input' || activeTag === 'textarea') return;
+
+            if (e.key === 'ArrowRight') changeSlide(1);
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+            if (e.key === 'Escape') {
+                closeTermModal();
+                closeGlossaryIndex();
+            }
+        });
+
+        window.onload = function () {
+            renderCurrentSlide();
+        };
+    </script>
+</body>
+</html>
