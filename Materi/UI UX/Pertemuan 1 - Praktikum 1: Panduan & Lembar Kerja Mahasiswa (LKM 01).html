@@ -118,6 +118,11 @@
             color: #1e293b;
             text-align: left;
         }
+        /* Pengaman: cegah baris tabel terpotong di tengah saat berganti halaman PDF */
+        .pdf-table tr {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
 
         @media print {
             body * { visibility: hidden; }
@@ -142,7 +147,31 @@
     <input type="file" id="jsonFileInput" accept=".json,application/json" class="hidden" onchange="handleJsonFileImport(event)">
 
     <!-- Toast Peringatan Validasi & Status File -->
-    <div id="toastBanner" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 hidden max-w-md w-[92%] sm:w-full px-4 py-3.5 rounded-2xl shadow-2xl border flex items-start gap-3 transition-all duration-200 no-print">
+    <div id="resetModalBackdrop" onclick="closeResetModal()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4 no-print">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-md w-full p-5 sm:p-7 shadow-2xl space-y-4">
+            <div class="flex items-start gap-3">
+                <div class="w-10 h-10 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                <div class="space-y-1">
+                    <h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">Kosongkan seluruh isian?</h3>
+                    <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">Semua data yang sudah Anda isi, termasuk salinan otomatis di browser, akan dihapus. Unduh dulu data proyek (.json) bila masih dibutuhkan. Setelah dikosongkan, Anda punya 10 detik untuk membatalkan.</p>
+                </div>
+            </div>
+            <button type="button" onclick="exportJsonData()" class="w-full px-4 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:hover:bg-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-800 text-xs sm:text-sm font-extrabold transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-download"></i><span>Unduh Data Proyek (.json) Dulu</span>
+            </button>
+            <div class="flex justify-end gap-2.5 pt-1">
+                <button type="button" onclick="closeResetModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-bold transition">Batal</button>
+                <button type="button" onclick="confirmResetAll()" class="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs sm:text-sm font-extrabold transition flex items-center gap-2"><i class="fa-solid fa-trash-can"></i><span>Ya, Kosongkan</span></button>
+            </div>
+        </div>
+    </div>
+
+    <div id="undoBar" class="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-[60] hidden items-center gap-3 px-4 py-2.5 rounded-2xl bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 text-xs sm:text-sm font-bold shadow-2xl no-print">
+        <span id="undoMessage">Perubahan diterapkan.</span>
+        <button type="button" onclick="undoLastChange()" class="px-3 py-1 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-900 font-extrabold">Batalkan (<span id="undoCountdown">10</span>)</button>
+    </div>
+
+    <div id="toastBanner" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-[60] hidden max-w-md w-[92%] sm:w-full px-4 py-3.5 rounded-2xl shadow-2xl border flex items-start gap-3 transition-all duration-200 no-print">
         <i id="toastIcon" class="fa-solid fa-circle-exclamation text-lg mt-0.5 shrink-0"></i>
         <div class="flex-1 text-xs sm:text-sm font-bold leading-snug" id="toastMessage">Pesan notifikasi</div>
         <button type="button" onclick="hideToast()" class="text-current opacity-70 hover:opacity-100 shrink-0">
@@ -168,6 +197,7 @@
                     <span id="slideCategoryPill" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 shrink-0">
                         Pengantar
                     </span>
+                    <span id="slideProgressPill" class="hidden"></span>
                     <h1 id="headerSlideTitle" class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 truncate">
                         Panduan & Lembar Kerja Praktikum 1
                     </h1>
@@ -221,8 +251,13 @@
         </div>
         <div id="drawerSlideList" class="p-3.5 overflow-y-auto space-y-1 flex-1"></div>
         <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 flex items-center justify-between">
-            <span>Semua Form Wajib Diisi Berurutan</span>
-            <span class="font-bold">12 Slide</span>
+            <div class="w-full space-y-1">
+                <div class="flex items-center justify-between">
+                    <span id="drawerOverallProgress">Form lengkap: 0 / 5</span>
+                    <span id="drawerRemainingTime" class="font-bold">Sisa isian</span>
+                </div>
+                <div class="text-[11px] leading-snug opacity-80">Waktu hanya perkiraan. Boleh berhenti dan lanjut di sesi lain lewat tombol Simpan .JSON lalu Muat .JSON.</div>
+            </div>
         </div>
     </aside>
 
@@ -414,7 +449,7 @@
             if (!banner || !msgEl) return;
 
             msgEl.textContent = message;
-            banner.className = 'fixed top-20 left-1/2 transform -translate-x-1/2 z-50 max-w-lg w-[92%] sm:w-full px-4 py-3.5 rounded-2xl shadow-2xl border flex items-start gap-3 transition-all duration-200 no-print slide-enter ';
+            banner.className = 'fixed top-20 left-1/2 transform -translate-x-1/2 z-[60] max-w-lg w-[92%] sm:w-full px-4 py-3.5 rounded-2xl shadow-2xl border flex items-start gap-3 transition-all duration-200 no-print slide-enter ';
 
             if (type === 'success') {
                 banner.className += 'bg-emerald-600 text-white border-emerald-500';
@@ -657,6 +692,53 @@
             return true;
         }
 
+        // Contoh isian (ghost text): hanya butir pertama tiap bagian
+        function exPh(example, base) {
+            return escapeHtml(example ? 'Contoh: ' + example : base);
+        }
+        function normText(x) {
+            return (x || '').toLowerCase().replace(/[^a-z0-9\u00C0-\u024F\s]/g, ' ').replace(/\s+/g, ' ').trim();
+        }
+        function isSimilarText(a, b) {
+            const na = normText(a), nb = normText(b);
+            if (!na || !nb) return false;
+            if (na === nb) return true;
+            const wa = na.split(' '), wb = nb.split(' ');
+            if (wa.length < 4 || wb.length < 4) return false;
+            const sa = new Set(wa), sb = new Set(wb);
+            let inter = 0;
+            sa.forEach(function (w) { if (sb.has(w)) inter++; });
+            const union = sa.size + sb.size - inter;
+            return union > 0 && (inter / union) >= 0.85;
+        }
+        // Pertanyaan wawancara harus terbuka & netral (sesuai materi slide 10)
+        function questionIssue(text) {
+            const t = (text || '').trim();
+            if (!t) return null;
+            if (/\b(bukankah|benar kan|betul kan|tentu saja|setuju bahwa)\b|\b(kan|bukan)\s*\?/i.test(t)) return { type: 'leading' };
+            if (/^\s*(apakah|pernahkah|bisakah|dapatkah|sudahkah|benarkah|maukah|sukakah|setujukah)\b/i.test(t)) return { type: 'closed' };
+            const m = t.match(/\b(aplikasi|fitur|website|situs|dashboard|notifikasi|chatbot|sistem|tombol)\b/i);
+            if (m) return { type: 'feature', word: m[1].toLowerCase() };
+            return null;
+        }
+        function questionHintMsg(text) {
+            const is = questionIssue(text);
+            if (!is) return '';
+            if (is.type === 'leading') return 'Pertanyaan ini terasa mengarahkan jawaban. Buat lebih netral, misalnya "Bagaimana pengalaman Anda saat...?".';
+            if (is.type === 'closed') return 'Pertanyaan tertutup hanya dijawab ya atau tidak. Coba awali dengan "Bagaimana pengalaman Anda...", "Ceritakan...", atau "Apa saja pertimbangan Anda...".';
+            return 'Hindari menyebut solusi atau fitur ("' + is.word + '"). Tanyakan pengalaman narasumber, bukan pendapat tentang fitur.';
+        }
+        function assumptionHintMsg(text) {
+            return /\?\s*$/.test((text || '').trim()) ? 'Dugaan berupa pernyataan asumsi, bukan pertanyaan. Pertanyaannya ditulis di kolom di bawah.' : '';
+        }
+        function refreshLiveHint(id, msg) {
+            const el = document.getElementById(id);
+            if (el) el.innerHTML = msg ? '<i class="fa-solid fa-lightbulb mr-1"></i>' + escapeHtml(msg) : '';
+        }
+        function hintInitHtml(msg) {
+            return msg ? '<i class="fa-solid fa-lightbulb mr-1"></i>' + escapeHtml(msg) : '';
+        }
+
         function updateField(fieldKey, val) {
             formState[fieldKey] = val;
             triggerAutoSave();
@@ -672,15 +754,48 @@
         // SIMPAN & MUAT FILE DATA PROYEK (.JSON) LINTAS PERANGKAT
         // =========================================================================
         let saveTimer = null;
+        let hasUnexportedChanges = false;
+        let storageWarned = false;
+        let saveBadgeOkClass = null;
+        function writeAutoSave() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify({ form: formState, ui: uiWizard }));
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+        function setSaveBadge(ok) {
+            const badge = document.getElementById('saveBadge');
+            if (!badge) return;
+            if (saveBadgeOkClass === null) saveBadgeOkClass = badge.className;
+            if (ok) {
+                badge.className = saveBadgeOkClass;
+                badge.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Tersimpan';
+                badge.onclick = null;
+                badge.removeAttribute('title');
+            } else {
+                badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-100 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300 text-[11px] font-bold cursor-pointer';
+                badge.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Tidak tersimpan \u2022 Unduh .JSON';
+                badge.onclick = exportJsonData;
+                badge.title = 'Penyimpanan otomatis di browser gagal. Klik untuk mengunduh data (.JSON).';
+            }
+        }
+        function warnStorageFailure() {
+            if (storageWarned) return;
+            storageWarned = true;
+            showToast('Penyimpanan otomatis di browser tidak berfungsi (mungkin mode privat atau penyimpanan penuh). Data bisa hilang saat tab ditutup, jadi unduh file .JSON secara berkala.', 'error');
+        }
         function triggerAutoSave() {
+            hasUnexportedChanges = true;
             clearTimeout(saveTimer);
             const badge = document.getElementById('saveBadge');
             if (badge) badge.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
             saveTimer = setTimeout(function () {
-                try {
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify({ form: formState, ui: uiWizard }));
-                } catch (e) {}
-                if (badge) badge.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Tersimpan';
+                const ok = writeAutoSave();
+                setSaveBadge(ok);
+                if (!ok) warnStorageFailure(); else storageWarned = false;
+                renderDotsAndDrawer();
             }, 350);
         }
 
@@ -735,6 +850,8 @@
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
 
+            hasUnexportedChanges = false;
+            refreshSelfCheckPanel();
             showToast('File data proyek (.json) berhasil diunduh! Simpan file ini untuk dilanjutkan di perangkat lain atau pertemuan berikutnya.', 'success');
         }
 
@@ -781,7 +898,8 @@
                         uiWizard = Object.assign(uiWizard, targetData.ui);
                     }
                     syncSavedStatesFromData();
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify({ form: formState, ui: uiWizard }));
+                    if (!writeAutoSave()) warnStorageFailure();
+                    hasUnexportedChanges = false;
                     renderCurrentSlide();
                     showToast('Data proyek berhasil dimuat dari file .json!', 'success');
                 } catch (err) {
@@ -977,7 +1095,7 @@
                                     <i class="fa-solid fa-upload"></i>
                                     <span>Muat File Data Proyek (.json)</span>
                                 </button>
-                                <button type="button" onclick="clearAllData()" class="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 text-xs sm:text-sm font-bold transition flex items-center gap-2">
+                                <button type="button" onclick="openResetModal()" class="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 text-xs sm:text-sm font-bold transition flex items-center gap-2">
                                     <i class="fa-solid fa-rotate-left"></i>
                                     <span>Reset</span>
                                 </button>
@@ -1348,24 +1466,24 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100 dark:border-slate-800">
                             <div>
                                 <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Nama Usaha UMKM Mitra *</label>
-                                <input type="text" id="inp_un" value="${escapeHtml(formState.un)}" oninput="updateField('un', this.value)" placeholder="Ketik nama usaha mitra..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <input type="text" id="inp_un" value="${escapeHtml(formState.un)}" oninput="updateField('un', this.value)" placeholder="${exPh('Warung Makan Bu Sari', 'Ketik nama usaha mitra...')}" class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
                             </div>
                             <div>
                                 <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Bidang / Kategori Usaha *</label>
-                                <input type="text" id="inp_ub" value="${escapeHtml(formState.ub)}" oninput="updateField('ub', this.value)" placeholder="Ketik bidang usaha..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <input type="text" id="inp_ub" value="${escapeHtml(formState.ub)}" oninput="updateField('ub', this.value)" placeholder="${exPh('Kuliner (warung makan rumahan)', 'Ketik bidang usaha...')}" class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
                             </div>
                             <div>
                                 <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Nama Pemilik / Pengelola Usaha *</label>
-                                <input type="text" id="inp_up" value="${escapeHtml(formState.up)}" oninput="updateField('up', this.value)" placeholder="Ketik nama pemilik atau pengelola..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <input type="text" id="inp_up" value="${escapeHtml(formState.up)}" oninput="updateField('up', this.value)" placeholder="${exPh('Ibu Sari, pemilik sekaligus pengelola harian', 'Ketik nama pemilik atau pengelola...')}" class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
                             </div>
                             <div>
                                 <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Lokasi / Alamat Usaha *</label>
-                                <input type="text" id="inp_ul" value="${escapeHtml(formState.ul)}" oninput="updateField('ul', this.value)" placeholder="Ketik lokasi atau alamat usaha..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <input type="text" id="inp_ul" value="${escapeHtml(formState.ul)}" oninput="updateField('ul', this.value)" placeholder="${exPh('Jl. Contoh No. 12, dekat kampus', 'Ketik lokasi atau alamat usaha...')}" class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
                             </div>
                         </div>
                         <div>
                             <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Media Komunikasi / Cara Melayani Pelanggan Saat Ini (Online maupun Offline) *</label>
-                            <input type="text" id="inp_uk" value="${escapeHtml(formState.uk)}" oninput="updateField('uk', this.value)" placeholder="Jelaskan apakah melayani tatap muka di toko fisik, menggunakan chat, media sosial, dll..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <input type="text" id="inp_uk" value="${escapeHtml(formState.uk)}" oninput="updateField('uk', this.value)" placeholder="${exPh('Melayani pembeli langsung di warung dan menerima pesanan lewat WhatsApp', 'Jelaskan apakah melayani tatap muka di toko fisik, menggunakan chat, media sosial, dll...')}" class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
                         </div>
                         <div class="flex justify-end pt-1">
                             <button type="button" onclick="saveProfilPart(1)" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-extrabold transition flex items-center gap-2 shadow-sm">
@@ -1400,11 +1518,11 @@
                         <div class="space-y-4 pt-2 border-t border-slate-100 dark:border-slate-800">
                             <div>
                                 <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Siapa Target Pelanggan Utama Usaha Ini dan Kapan Mereka Biasanya Bertransaksi? *</label>
-                                <textarea id="inp_upel" rows="4" oninput="autoResizeTextarea(this); updateField('upel', this.value)" placeholder="Uraikan profil pelanggan utama yang dilayani oleh UMKM ini..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(formState.upel)}</textarea>
+                                <textarea id="inp_upel" rows="4" oninput="autoResizeTextarea(this); updateField('upel', this.value)" placeholder="${exPh('Mahasiswa dan karyawan kantor sekitar yang membeli makan siang', 'Uraikan profil pelanggan utama yang dilayani oleh UMKM ini...')}" class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(formState.upel)}</textarea>
                             </div>
                             <div>
                                 <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Bagaimana Urutan Langkah Saat Pelanggan Mencari Informasi, Memesan, hingga Membayar Saat Ini? *</label>
-                                <textarea id="inp_ud" rows="4" oninput="autoResizeTextarea(this); updateField('ud', this.value)" placeholder="Ceritakan alur proses pelayanan dari awal hingga transaksi selesai..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(formState.ud)}</textarea>
+                                <textarea id="inp_ud" rows="4" oninput="autoResizeTextarea(this); updateField('ud', this.value)" placeholder="${exPh('Pembeli melihat menu di spanduk atau chat, memesan, membayar tunai atau transfer, lalu menerima pesanan', 'Ceritakan alur proses pelayanan dari awal hingga transaksi selesai...')}" class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(formState.ud)}</textarea>
                             </div>
                         </div>
                         <div class="flex justify-end pt-1">
@@ -1509,7 +1627,7 @@
                             <span class="text-[11px] font-bold text-amber-700 dark:text-amber-400">Wajib Diisi</span>
                         </div>
                         <p class="text-xs text-slate-600 dark:text-slate-300">Tuliskan tugas atau aktivitas yang Anda telusuri saat mengamati alur pelayanan UMKM mitra:</p>
-                        <textarea id="inp_skenario" rows="2" oninput="autoResizeTextarea(this); updateField('skenario', this.value)" placeholder="Tuliskan skenario aktivitas yang Anda amati dari awal hingga akhir..." class="w-full p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 text-sm sm:text-base font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500">${escapeHtml(formState.skenario)}</textarea>
+                        <textarea id="inp_skenario" rows="2" oninput="autoResizeTextarea(this); updateField('skenario', this.value)" placeholder="${exPh('Saya berperan sebagai pembeli baru: mencari informasi di Instagram, menanyakan harga lewat chat, memesan, lalu membayar', 'Tuliskan skenario aktivitas yang Anda amati dari awal hingga akhir...')}" class="w-full p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 text-sm sm:text-base font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500">${escapeHtml(formState.skenario)}</textarea>
                         <div class="flex justify-end">
                             <button type="button" onclick="saveSkenarioCard()" class="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-extrabold transition">
                                 <i class="fa-solid fa-check mr-1"></i>Simpan Skenario & Mulai Catat Hambatan #1
@@ -1549,21 +1667,21 @@
                                     <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">
                                         1. Titik atau Tahapan Layanan Tempat Masalah Terjadi *
                                     </label>
-                                    <input type="text" id="inp_aud_k_${i}" value="${escapeHtml(r.k)}" oninput="updateAuditField(${i}, 'k', this.value)" placeholder="Tuliskan bagian atau tahapan layanan yang diamati..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <input type="text" id="inp_aud_k_${i}" value="${escapeHtml(r.k)}" oninput="updateAuditField(${i}, 'k', this.value)" placeholder="${exPh(i === 0 ? 'Tahap pencarian informasi harga' : '', 'Tuliskan bagian atau tahapan layanan yang diamati...')}" class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
                                 </div>
 
                                 <div>
                                     <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">
                                         2. Uraian Kesulitan atau Hambatan yang Terlihat *
                                     </label>
-                                    <textarea id="inp_aud_m_${i}" rows="4" oninput="autoResizeTextarea(this); updateAuditField(${i}, 'm', this.value)" placeholder="Uraikan secara lengkap kendala atau hambatan yang Anda temukan pada bagian tersebut..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(r.m)}</textarea>
+                                    <textarea id="inp_aud_m_${i}" rows="4" oninput="autoResizeTextarea(this); updateAuditField(${i}, 'm', this.value)" placeholder="${exPh(i === 0 ? 'Daftar harga tidak tercantum di profil sehingga saya harus bertanya satu per satu lewat chat' : '', 'Uraikan secara lengkap kendala atau hambatan yang Anda temukan pada bagian tersebut...')}" class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(r.m)}</textarea>
                                 </div>
 
                                 <div>
                                     <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">
                                         3. Dampak / Akibatnya bagi Pelanggan maupun Pengelola UMKM *
                                     </label>
-                                    <textarea id="inp_aud_d_${i}" rows="3" oninput="autoResizeTextarea(this); updateAuditField(${i}, 'd', this.value)" placeholder="Jelaskan dampak dari hambatan tersebut terhadap proses transaksi atau pelayanan..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(r.d)}</textarea>
+                                    <textarea id="inp_aud_d_${i}" rows="3" oninput="autoResizeTextarea(this); updateAuditField(${i}, 'd', this.value)" placeholder="${exPh(i === 0 ? 'Pembeli menunggu balasan lama dan penjual harus mengulang jawaban yang sama berkali-kali' : '', 'Jelaskan dampak dari hambatan tersebut terhadap proses transaksi atau pelayanan...')}" class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(r.d)}</textarea>
                                 </div>
                             </div>
 
@@ -1695,13 +1813,15 @@
                                     <label class="text-xs sm:text-sm font-bold text-indigo-700 dark:text-indigo-300 block mb-1.5">
                                         Dugaan Sementara (Asumsi) #${p.num} Berdasarkan Pengamatan Anda *
                                     </label>
-                                    <textarea id="inp_a${p.num}" rows="4" oninput="autoResizeTextarea(this); updateField('${p.aKey}', this.value)" placeholder="Tuliskan dugaan masalah yang ingin Anda buktikan kebenarannya..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(aVal)}</textarea>
+                                    <textarea id="inp_a${p.num}" rows="4" oninput="autoResizeTextarea(this); updateField('${p.aKey}', this.value); refreshLiveHint('aHint_${p.num}', assumptionHintMsg(this.value))" placeholder="${exPh(p.num === 1 ? 'Pelanggan kesulitan mengetahui harga dan stok karena informasinya tidak tertulis jelas' : '', 'Tuliskan dugaan masalah yang ingin Anda buktikan kebenarannya...')}" class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(aVal)}</textarea>
+                                    <div id="aHint_${p.num}" class="text-[11px] font-semibold text-amber-700 dark:text-amber-400 mt-1">${hintInitHtml(assumptionHintMsg(aVal))}</div>
                                 </div>
                                 <div>
                                     <label class="text-xs sm:text-sm font-bold text-emerald-700 dark:text-emerald-300 block mb-1.5">
                                         Pertanyaan Wawancara Terbuka & Netral untuk Menguji Dugaan #${p.num} *
                                     </label>
-                                    <textarea id="inp_t${p.num}" rows="4" oninput="autoResizeTextarea(this); updateField('${p.tKey}', this.value)" placeholder="Tuliskan kalimat pertanyaan terbuka yang akan Anda ajukan kepada narasumber..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500">${escapeHtml(tVal)}</textarea>
+                                    <textarea id="inp_t${p.num}" rows="4" oninput="autoResizeTextarea(this); updateField('${p.tKey}', this.value); refreshLiveHint('tHint_${p.num}', questionHintMsg(this.value))" placeholder="${exPh(p.num === 1 ? 'Ceritakan bagaimana biasanya Anda mencari tahu harga dan stok sebelum memesan?' : '', 'Tuliskan kalimat pertanyaan terbuka yang akan Anda ajukan kepada narasumber...')}" class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500">${escapeHtml(tVal)}</textarea>
+                                    <div id="tHint_${p.num}" class="text-[11px] font-semibold text-amber-700 dark:text-amber-400 mt-1">${hintInitHtml(questionHintMsg(tVal))}</div>
                                 </div>
                             </div>
                             <div class="flex justify-end pt-1">
@@ -1748,16 +1868,16 @@
                         <div class="space-y-4 pt-2 border-t border-slate-100 dark:border-slate-800">
                             <div>
                                 <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Tujuan Utama Riset Lapangan *</label>
-                                <textarea id="inp_rt" rows="3" oninput="autoResizeTextarea(this); updateField('rt', this.value)" placeholder="Tuliskan tujuan riset yang ingin Anda capai pada wawancara Pertemuan 2..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(formState.rt)}</textarea>
+                                <textarea id="inp_rt" rows="3" oninput="autoResizeTextarea(this); updateField('rt', this.value)" placeholder="${exPh('Memahami cara pelanggan mencari informasi harga dan memesan, serta kendala yang mereka alami', 'Tuliskan tujuan riset yang ingin Anda capai pada wawancara Pertemuan 2...')}" class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(formState.rt)}</textarea>
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Kriteria & Jumlah Calon Narasumber *</label>
-                                    <input type="text" id="inp_rn" value="${escapeHtml(formState.rn)}" oninput="updateField('rn', this.value)" placeholder="Tuliskan kriteria dan target jumlah narasumber..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <input type="text" id="inp_rn" value="${escapeHtml(formState.rn)}" oninput="updateField('rn', this.value)" placeholder="${exPh('1 pemilik dan 3 pelanggan yang membeli minimal 2 kali sebulan', 'Tuliskan kriteria dan target jumlah narasumber...')}" class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
                                 </div>
                                 <div>
                                     <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Rencana Waktu Pelaksanaan *</label>
-                                    <input type="text" id="inp_rj" value="${escapeHtml(formState.rj)}" oninput="updateField('rj', this.value)" placeholder="Tuliskan rencana jadwal wawancara..." class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <input type="text" id="inp_rj" value="${escapeHtml(formState.rj)}" oninput="updateField('rj', this.value)" placeholder="${exPh('Pekan depan, hari kerja pukul 14.00-16.00 saat usaha sedang sepi', 'Tuliskan rencana jadwal wawancara...')}" class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500">
                                 </div>
                             </div>
                         </div>
@@ -1808,6 +1928,56 @@
             `;
         }
 
+        function computeSelfCheck() {
+            const checks = [];
+            const badQ = [], badA = [];
+            [1, 2, 3].forEach(function (n) {
+                if (questionIssue(formState['t' + n])) badQ.push('#' + n);
+                if (assumptionHintMsg(formState['a' + n])) badA.push('#' + n);
+            });
+            checks.push({ ok: badQ.length === 0, label: 'Pertanyaan wawancara terbuka dan netral (tidak tertutup, mengarahkan, atau menyebut fitur)', detail: 'Periksa pertanyaan ' + badQ.join(', ') });
+            checks.push({ ok: badA.length === 0, label: 'Dugaan sementara berupa pernyataan asumsi, bukan pertanyaan', detail: 'Periksa dugaan ' + badA.join(', ') });
+            let dupAud = 0;
+            for (let a = 0; a < 5; a++) {
+                for (let b = a + 1; b < 5; b++) {
+                    if (isSimilarText((formState.aud[a] || {}).m, (formState.aud[b] || {}).m)) dupAud++;
+                }
+            }
+            checks.push({ ok: dupAud === 0, label: 'Kelima hambatan yang dicatat berbeda satu sama lain', detail: dupAud + ' pasangan hambatan terlalu mirip' });
+            checks.push({ ok: /\d/.test(formState.rn || ''), label: 'Kriteria dan target narasumber memuat angka', detail: 'Tulis jumlah narasumber, misal 1 pemilik dan 3 pelanggan' });
+            checks.push({ ok: !hasUnexportedChanges, label: 'Data sudah diunduh sebagai file .JSON', detail: 'Klik Simpan Data (.JSON) di atas' });
+            return checks;
+        }
+        function renderSelfCheckInner() {
+            const checks = computeSelfCheck();
+            const issues = checks.filter(function (c) { return !c.ok; }).length;
+            const summary = 'Saran kualitas sebelum kumpul \u2022 ' + (issues === 0
+                ? '<span class="text-emerald-600 dark:text-emerald-400">semua baik</span>'
+                : '<span class="text-amber-700 dark:text-amber-400">' + issues + ' catatan</span>');
+            const body = checks.map(function (c) {
+                return c.ok
+                    ? '<div class="text-[11px] sm:text-xs text-slate-600 dark:text-slate-300"><i class="fa-solid fa-circle-check text-emerald-600 mr-1.5"></i>' + escapeHtml(c.label) + '</div>'
+                    : '<div class="text-[11px] sm:text-xs font-semibold text-amber-800 dark:text-amber-300"><i class="fa-solid fa-circle-exclamation mr-1.5"></i>' + escapeHtml(c.label) + ' <span class="font-normal">\u2014 ' + escapeHtml(c.detail) + '</span></div>';
+            }).join('') + '<div class="pt-1 text-[11px] text-slate-500 dark:text-slate-400">Semua catatan hanya saran, tidak menghalangi unduh PDF.</div>';
+            return { summary: summary, body: body };
+        }
+        function renderSelfCheckPanelHtml() {
+            const r = renderSelfCheckInner();
+            return `
+                <details id="selfCheckPanel" class="max-w-4xl mx-auto rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 no-print">
+                    <summary id="selfCheckSummary" class="cursor-pointer select-none px-4 py-3 text-xs font-extrabold text-slate-800 dark:text-slate-100">${r.summary}</summary>
+                    <div id="selfCheckBody" class="px-4 pb-4 space-y-1.5">${r.body}</div>
+                </details>`;
+        }
+        function refreshSelfCheckPanel() {
+            const sum = document.getElementById('selfCheckSummary');
+            const body = document.getElementById('selfCheckBody');
+            if (!sum || !body) return;
+            const r = renderSelfCheckInner();
+            sum.innerHTML = r.summary;
+            body.innerHTML = r.body;
+        }
+
         function renderSlide12() {
             return `
                 <div class="slide-enter space-y-5">
@@ -1832,6 +2002,8 @@
                             </button>
                         </div>
                     </div>
+
+                    ${renderSelfCheckPanelHtml()}
 
                     <div id="pdfWrapper" class="max-w-4xl mx-auto bg-white rounded-2xl shadow-md border border-slate-300 overflow-hidden">
                         <div id="pdfPrintArea" class="p-6 sm:p-10 space-y-4">
@@ -2250,6 +2422,66 @@
             }
         }
 
+        const FORM_SLIDE_INDEXES = [2, 4, 6, 8, 10];
+        // Perkiraan waktu pengerjaan per slide (menit); bukan hasil pengukuran
+        const SLIDE_MINUTES = [3, 5, 3, 3, 10, 3, 12, 3, 25, 3, 20, 5];
+        function getSlideCompletion(idx) {
+            let done = 0, total = 0, unit = 'bagian';
+            if (idx === 2) {
+                unit = 'isian'; total = 4;
+                ['nama', 'nim', 'kelas', 'tgl'].forEach(function (k) { if ((formState[k] || '').trim()) done++; });
+            } else if (idx === 4) {
+                unit = 'refleksi'; total = 3;
+                for (let n = 1; n <= 3; n++) if (isRefleksiComplete(n)) done++;
+            } else if (idx === 6) {
+                total = 2;
+                for (let n = 1; n <= 2; n++) if (isProfilPartComplete(n)) done++;
+            } else if (idx === 8) {
+                unit = 'bagian'; total = 6;
+                if ((formState.skenario || '').trim()) done++;
+                for (let i = 0; i < 5; i++) if (isAuditItemComplete(i)) done++;
+            } else if (idx === 10) {
+                total = 4;
+                for (let n = 1; n <= 4; n++) if (isRisetPartComplete(n)) done++;
+            } else {
+                return null;
+            }
+            return { done: Math.min(done, total), total: total, unit: unit };
+        }
+        function getRemainingMinutesForSlide(idx) {
+            const c = getSlideCompletion(idx);
+            if (!c) return 0;
+            return Math.ceil(SLIDE_MINUTES[idx] * (1 - Math.min(c.done / c.total, 1)));
+        }
+        function updateProgressChrome() {
+            const comp = getSlideCompletion(currentSlideIndex);
+            const pill = document.getElementById('slideProgressPill');
+            if (pill) {
+                if (comp) {
+                    const full = comp.done >= comp.total;
+                    pill.className = 'text-xs font-bold px-2.5 py-1 rounded-lg shrink-0 ' + (full
+                        ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
+                        : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300');
+                    pill.textContent = (full ? 'Lengkap ' : 'Terisi ') + comp.done + '/' + comp.total + ' ' + comp.unit + (full ? '' : ' \u2022 sisa \u00B1' + getRemainingMinutesForSlide(currentSlideIndex) + ' mnt');
+                } else {
+                    pill.className = 'hidden';
+                    pill.textContent = '';
+                }
+            }
+            const mob = document.getElementById('mobileFooterCounter');
+            if (mob) mob.textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES + (comp ? ' \u2022 ' + comp.done + '/' + comp.total : '');
+            let fullForms = 0, remainTotal = 0;
+            for (let i = 0; i < FORM_SLIDE_INDEXES.length; i++) {
+                const c = getSlideCompletion(FORM_SLIDE_INDEXES[i]);
+                if (c && c.done >= c.total) fullForms++;
+                remainTotal += getRemainingMinutesForSlide(FORM_SLIDE_INDEXES[i]);
+            }
+            const overall = document.getElementById('drawerOverallProgress');
+            if (overall) overall.textContent = 'Form lengkap: ' + fullForms + ' / ' + FORM_SLIDE_INDEXES.length;
+            const remEl = document.getElementById('drawerRemainingTime');
+            if (remEl) remEl.textContent = remainTotal > 0 ? 'Sisa isian \u00B1' + remainTotal + ' menit' : 'Semua isian lengkap';
+        }
+
         function renderDotsAndDrawer() {
             const dotsContainer = document.getElementById('slideDotsContainer');
             let dotsHtml = '';
@@ -2260,13 +2492,21 @@
                 const isActive = idx === currentSlideIndex;
                 const isForm = s.category.indexOf('Form') !== -1;
 
+                const comp = getSlideCompletion(idx);
+                const compFull = !!comp && comp.done >= comp.total;
+                const compPartial = !!comp && comp.done > 0 && !compFull;
                 const dotClass = isActive
                     ? 'w-7 bg-indigo-600 dark:bg-indigo-400'
+                    : compFull
+                    ? 'w-4 bg-emerald-600 dark:bg-emerald-500 hover:bg-emerald-700'
+                    : compPartial
+                    ? 'w-3 bg-amber-400 dark:bg-amber-500 hover:bg-amber-500'
                     : isForm
-                    ? 'w-2 bg-emerald-400/70 dark:bg-emerald-600 hover:bg-emerald-500'
+                    ? 'w-2 bg-emerald-300/60 dark:bg-emerald-900 hover:bg-emerald-400'
                     : 'w-2 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400';
+                const dotTitle = s.title + (comp ? ' (' + comp.done + '/' + comp.total + ' ' + comp.unit + (compFull ? ', lengkap' : '') + ')' : '');
 
-                dotsHtml += `<button type="button" onclick="goToSlide(${idx})" title="${escapeHtml(s.title)}" class="h-2 rounded-full transition-all ${dotClass}"></button>`;
+                dotsHtml += `<button type="button" onclick="goToSlide(${idx})" title="${escapeHtml(dotTitle)}" aria-label="${escapeHtml('Slide ' + s.id + ': ' + dotTitle)}" ${isActive ? 'aria-current="step"' : ''} class="h-2 rounded-full transition-all ${dotClass}"></button>`;
 
                 const itemClass = isActive
                     ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 font-bold'
@@ -2281,9 +2521,10 @@
                     <button type="button" onclick="selectSlideFromDrawer(${idx})" class="w-full text-left p-3 rounded-xl transition flex items-start gap-3 ${itemClass}">
                         <span class="w-6 h-6 rounded-lg text-xs font-extrabold flex items-center justify-center shrink-0 mt-0.5 ${badgeClass}">${s.id}</span>
                         <div class="min-w-0 flex-1">
-                            <div class="text-[10px] uppercase tracking-wider opacity-75">${escapeHtml(s.category)}</div>
+                            <div class="text-[10px] uppercase tracking-wider opacity-75">${escapeHtml(s.category)} \u2022 \u00B1${SLIDE_MINUTES[idx]} mnt</div>
                             <div class="text-xs sm:text-sm leading-snug break-words">${escapeHtml(s.title)}</div>
                         </div>
+                        ${comp ? `<span class="shrink-0 mt-0.5 text-[10px] font-extrabold px-2 py-0.5 rounded-md ${compFull ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'}">${compFull ? '<i class="fa-solid fa-check"></i> ' : ''}${comp.done}/${comp.total}</span>` : ''}
                     </button>
                 `;
             }
@@ -2291,6 +2532,7 @@
             if (dotsContainer) dotsContainer.innerHTML = dotsHtml;
             const drawerList = document.getElementById('drawerSlideList');
             if (drawerList) drawerList.innerHTML = drawerHtml;
+            updateProgressChrome();
         }
 
         function selectFigmaTool(key) {
@@ -2347,7 +2589,64 @@
             }
         }
 
-        function clearAllData() {
+        function openResetModal() {
+            const m = document.getElementById('resetModalBackdrop');
+            m.classList.remove('hidden');
+            m.classList.add('flex');
+        }
+        function closeResetModal() {
+            const m = document.getElementById('resetModalBackdrop');
+            m.classList.add('hidden');
+            m.classList.remove('flex');
+        }
+        let undoSnapshot = null;
+        let undoTick = null;
+        function showUndoBar(snap, message) {
+            undoSnapshot = snap;
+            clearInterval(undoTick);
+            let left = 10;
+            const bar = document.getElementById('undoBar');
+            const cd = document.getElementById('undoCountdown');
+            const msg = document.getElementById('undoMessage');
+            if (!bar || !cd) return;
+            if (msg) msg.textContent = message || 'Perubahan diterapkan.';
+            cd.textContent = left;
+            bar.classList.remove('hidden');
+            bar.classList.add('flex');
+            undoTick = setInterval(function () {
+                left--;
+                cd.textContent = Math.max(left, 0);
+                if (left <= 0) hideUndoBar(true);
+            }, 1000);
+        }
+        function hideUndoBar(dropSnapshot) {
+            clearInterval(undoTick);
+            const bar = document.getElementById('undoBar');
+            if (bar) { bar.classList.add('hidden'); bar.classList.remove('flex'); }
+            if (dropSnapshot) undoSnapshot = null;
+        }
+        function undoLastChange() {
+            if (!undoSnapshot) return;
+            try {
+                const snap = JSON.parse(undoSnapshot);
+                formState = snap.form;
+                uiWizard = snap.ui;
+                currentSlideIndex = snap.slide || 0;
+                syncSavedStatesFromData();
+                triggerAutoSave();
+            } catch (e) {}
+            hideUndoBar(true);
+            renderCurrentSlide();
+            showToast('Isian berhasil dipulihkan.', 'success');
+        }
+        function confirmResetAll() {
+            const snap = JSON.stringify({ form: formState, ui: uiWizard, slide: currentSlideIndex });
+            closeResetModal();
+            clearAllData(true);
+            showUndoBar(snap, 'Seluruh isian dikosongkan.');
+        }
+
+        function clearAllData(silent) {
             const today = new Date().toISOString().split('T')[0];
             formState = {
                 nama: "", nim: "", kelas: "", tgl: today,
@@ -2382,9 +2681,10 @@
                 risetMinimized: { 1: false, 2: false, 3: false, 4: false }
             };
             try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+            hasUnexportedChanges = false;
             currentSlideIndex = 0;
             renderCurrentSlide();
-            showToast('Seluruh isian telah dikosongkan.', 'success');
+            if (!silent) showToast('Seluruh isian telah dikosongkan.', 'success');
         }
 
         function downloadPdf() {
@@ -2423,7 +2723,8 @@
                     filename: fn,
                     image: { type: 'jpeg', quality: 0.98 },
                     html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
-                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                    pagebreak: { mode: ['css', 'legacy'] }
                 }).from(el).save().then(function () {
                     if (btn) { btn.innerHTML = orig; btn.disabled = false; }
                 }).catch(function () {
@@ -2525,17 +2826,37 @@
             const activeTag = document.activeElement && document.activeElement.tagName
                 ? document.activeElement.tagName.toLowerCase()
                 : '';
-            if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') return;
-            if (e.key === 'ArrowRight') changeSlide(1);
-            if (e.key === 'ArrowLeft') changeSlide(-1);
             if (e.key === 'Escape') {
                 closeTermModal();
                 closeGlossaryIndex();
+                closeResetModal();
+            }
+            if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') return;
+            const resetModal = document.getElementById('resetModalBackdrop');
+            if (resetModal && !resetModal.classList.contains('hidden')) return;
+            if (e.key === 'ArrowRight') changeSlide(1);
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+        });
+
+        window.addEventListener('beforeunload', function (e) {
+            if (hasUnexportedChanges) {
+                e.preventDefault();
+                e.returnValue = '';
+                return '';
             }
         });
 
         loadSavedState();
         renderCurrentSlide();
+        (function checkStorageAtStartup() {
+            try {
+                localStorage.setItem('__lkm01_probe', '1');
+                localStorage.removeItem('__lkm01_probe');
+            } catch (e) {
+                setSaveBadge(false);
+                warnStorageFailure();
+            }
+        })();
     </script>
 </body>
 </html>
