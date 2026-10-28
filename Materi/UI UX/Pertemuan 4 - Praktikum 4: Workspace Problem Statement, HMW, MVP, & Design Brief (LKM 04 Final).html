@@ -129,6 +129,11 @@
     <input type="file" id="jsonFileInput" accept=".json,application/json" class="hidden" onchange="handleJsonFileImport(event)">
 
     <!-- Toast Peringatan Validasi & Status File -->
+    <div id="undoBar" class="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-[60] hidden items-center gap-3 px-4 py-2.5 rounded-2xl bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 text-xs sm:text-sm font-bold shadow-2xl no-print">
+        <span id="undoMessage">Perubahan diterapkan.</span>
+        <button type="button" onclick="undoLastChange()" class="px-3 py-1 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-900 font-extrabold">Batalkan (<span id="undoCountdown">10</span>)</button>
+    </div>
+
     <div id="toastBanner" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 hidden max-w-lg w-[92%] sm:w-full px-4 py-3.5 rounded-2xl shadow-2xl border flex items-start gap-3 transition-all duration-200 no-print">
         <i id="toastIcon" class="fa-solid fa-circle-exclamation text-lg mt-0.5 shrink-0"></i>
         <div class="flex-1 text-xs sm:text-sm font-bold leading-snug" id="toastMessage">Pesan notifikasi</div>
@@ -180,6 +185,7 @@
 
                 <div class="hidden lg:flex items-center gap-2 min-w-0">
                     <span id="slideCategoryPill" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 shrink-0">Pengantar</span>
+                    <span id="slideProgressPill" class="hidden"></span>
                     <h1 id="headerSlideTitle" class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 truncate">Panduan & Lembar Kerja Praktikum 4 (LKM 04)</h1>
                 </div>
             </div>
@@ -226,8 +232,13 @@
         </div>
         <div id="drawerSlideList" class="p-3.5 overflow-y-auto space-y-1.5 flex-1"></div>
         <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 flex items-center justify-between">
-            <span>Semua Form Wajib Diisi Berurutan</span>
-            <span class="font-bold">12 Slide</span>
+            <div class="w-full space-y-1">
+                <div class="flex items-center justify-between">
+                    <span id="drawerOverallProgress">Form lengkap: 0 / 5</span>
+                    <span id="drawerRemainingTime" class="font-bold">Sisa isian</span>
+                </div>
+                <div class="text-[11px] leading-snug opacity-80">Waktu hanya perkiraan. Boleh berhenti dan lanjut di sesi lain lewat tombol Simpan .JSON lalu Muat .JSON.</div>
+            </div>
         </div>
     </aside>
 
@@ -331,8 +342,9 @@
         function safeSetStorage(key, val) {
             memoryFallbackStore[key] = val;
             if (checkStorageAvailable()) {
-                try { window.localStorage.setItem(key, val); } catch (e) {}
+                try { window.localStorage.setItem(key, val); return true; } catch (e) { return false; }
             }
+            return false;
         }
 
         function safeRemoveStorage(key) {
@@ -647,8 +659,51 @@
         const FORBIDDEN_FEATURE_NOUNS = [
             'aplikasi', 'fitur', 'tombol', 'notifikasi', 'pop-up', 'popup',
             'website', 'situs', 'dashboard', 'database', 'sistem', 'chatbot',
-            'menu', 'halaman', 'form', 'formulir', 'login', 'akun', 'filter'
+            'halaman', 'form', 'formulir', 'login', 'akun', 'filter'
         ];
+
+        // Contoh isian (ghost text) pada butir pertama; butir lain memakai petunjuk biasa
+        function exPh(example, base) {
+            return escapeHtml(example ? 'Contoh: ' + example : base);
+        }
+        function normText(x) {
+            return (x || '').toLowerCase().replace(/[^a-z0-9\u00C0-\u024F\s]/g, ' ').replace(/\s+/g, ' ').trim();
+        }
+        function isSimilarText(a, b) {
+            const na = normText(a), nb = normText(b);
+            if (!na || !nb) return false;
+            if (na === nb) return true;
+            const wa = na.split(' '), wb = nb.split(' ');
+            if (wa.length < 4 || wb.length < 4) return false;
+            const sa = new Set(wa), sb = new Set(wb);
+            let inter = 0;
+            sa.forEach(function (w) { if (sb.has(w)) inter++; });
+            const union = sa.size + sb.size - inter;
+            return union > 0 && (inter / union) >= 0.85;
+        }
+        function hintHtml(msg) {
+            return msg ? '<i class="fa-solid fa-lightbulb mr-1"></i>' + escapeHtml(msg) : '';
+        }
+        function povNeedHintMsg(text) {
+            const t = (text || '').trim();
+            if (!t) return '';
+            const bad = detectForbiddenFeatureNoun(t);
+            return bad ? 'Hindari kata benda teknis "' + bad + '". Gunakan kata kerja tujuan pengguna.' : '';
+        }
+        function povReasonHintMsg(text) {
+            return /^\s*karena\b/i.test(text || '') ? 'Tidak perlu menulis "karena" di awal. Kalimat POV menambahkannya otomatis.' : '';
+        }
+        function hmwHintMsg(text) {
+            const t = (text || '').trim();
+            if (!t) return '';
+            if (!isValidHmwQuestionFormat(t)) return 'Awali dengan "Bagaimana kita dapat..." atau "Bagaimana kami...".';
+            const bad = detectForbiddenFeatureNoun(t);
+            return bad ? 'Terlalu sempit: hindari mengunci fitur teknis "' + bad + '". Fokus pada tujuan pengguna.' : '';
+        }
+        function refreshLiveHint(id, msg) {
+            const el = document.getElementById(id);
+            if (el) el.innerHTML = hintHtml(msg);
+        }
 
         function detectForbiddenFeatureNoun(text) {
             const lower = String(text || '').toLowerCase();
@@ -674,8 +729,8 @@
             const n = (povObj.needVerb || '').trim() || '[Kebutuhan dalam kata kerja...]';
             const evArr = Array.isArray(povObj.evidenceCodes) && povObj.evidenceCodes.length > 0
                 ? povObj.evidenceCodes.join(', ')
-                : 'INS-1';
-            const r = (povObj.insightReason || '').trim() || '[Akar masalah berdasarkan bukti riset...]';
+                : '[kode bukti]';
+            const r = (povObj.insightReason || '').trim().replace(/^karena\s+/i, '') || '[Akar masalah berdasarkan bukti riset...]';
             return u + ' membutuhkan cara untuk ' + n + ' karena ' + r + ' [' + evArr + '].';
         }
 
@@ -791,8 +846,58 @@
         // =========================================================================
         // TARIK OTOMATIS DATA PERSONA, PENGELOLA [PEMILIK], & BUKTI INSIGHT LKM 03
         // =========================================================================
+        function pruneDanglingPovEvidence() {
+            const valid = new Set((formState.evidences || []).map(function (e) { return (e.code || '').trim(); }).filter(Boolean));
+            let removed = 0;
+            (formState.povs || []).forEach(function (p) {
+                if (!Array.isArray(p.evidenceCodes)) return;
+                const kept = p.evidenceCodes.filter(function (c) { return valid.has(c); });
+                removed += p.evidenceCodes.length - kept.length;
+                p.evidenceCodes = kept;
+            });
+            return removed;
+        }
+        function countValidEvidenceCodes(p) {
+            const valid = new Set((formState.evidences || []).map(function (e) { return (e.code || '').trim(); }).filter(Boolean));
+            const seen = new Set();
+            (p.evidenceCodes || []).forEach(function (c) { if (valid.has(c)) seen.add(c); });
+            return seen.size;
+        }
+        function nextFreeEvidenceCode(prefix, list) {
+            const used = new Set((list || formState.evidences).map(function (e) { return (e.code || '').trim(); }));
+            let n = (list || formState.evidences).length + 1;
+            while (used.has(prefix + '-' + n)) n++;
+            return prefix + '-' + n;
+        }
+        function renameEvidenceCodeRefs(oldCode, newCode) {
+            if (!oldCode) return;
+            (formState.povs || []).forEach(function (p) {
+                if (!Array.isArray(p.evidenceCodes)) return;
+                p.evidenceCodes = p.evidenceCodes.map(function (c) { return c === oldCode ? newCode : c; });
+            });
+        }
+        function hasDuplicateEvidenceCode(idx) {
+            const code = ((formState.evidences[idx] || {}).code || '').trim().toLowerCase();
+            if (!code) return false;
+            return formState.evidences.some(function (e, j) { return j !== idx && (e.code || '').trim().toLowerCase() === code; });
+        }
+        function renderSelectedEvidencePreview(p) {
+            const sel = (p.evidenceCodes || []).map(function (c) {
+                return formState.evidences.find(function (e) { return e.code === c; });
+            }).filter(Boolean);
+            if (sel.length === 0) {
+                return '<div class="mt-2 text-[11px] text-slate-500 dark:text-slate-400">Klik kode bukti untuk memilih. Isi bukti terpilih akan tampil di sini.</div>';
+            }
+            return '<div class="mt-2 space-y-1">' + sel.map(function (e) {
+                const t = (e.text || '').trim();
+                return '<div class="text-[11px] text-slate-600 dark:text-slate-300"><strong class="text-indigo-700 dark:text-indigo-300">[' + escapeHtml(e.code) + ']</strong> ' + escapeHtml(t.length > 90 ? t.substring(0, 90) + '...' : t) + '</div>';
+            }).join('') + '</div>';
+        }
+
         function importFromLkm03Object(lkm03Form, showSuccessNotif) {
             if (!lkm03Form) return false;
+            const snapForUndo = showSuccessNotif ? JSON.stringify({ form: formState, ui: uiWizard, slide: currentSlideIndex }) : null;
+            const hadData = !!((formState.personaNama || '').trim() || (formState.personaRingkasan || '').trim() || (formState.pemilikRingkasan || '').trim() || (formState.evidences || []).some(function (e) { return (e.text || '').trim(); }));
 
             if (lkm03Form.nama) formState.nama = lkm03Form.nama;
             if (lkm03Form.nim) formState.nim = lkm03Form.nim;
@@ -842,7 +947,7 @@
                 }
             }
 
-            const pulledEvidences = [];
+            let pulledEvidences = [];
             if (Array.isArray(lkm03Form.clusters)) {
                 for (let i = 0; i < lkm03Form.clusters.length; i++) {
                     const c = lkm03Form.clusters[i];
@@ -853,10 +958,33 @@
                         pulledEvidences.push({
                             code: 'INS-' + (i + 1),
                             origin: 'Insight Klaster #' + (i + 1) + (srcCodes ? ' [' + srcCodes + ']' : ''),
-                            text: (c.insight && c.insight.trim()) ? c.insight.trim() : c.label.trim()
+                            text: (c.insight && c.insight.trim()) ? c.insight.trim() : String(c.label || '').trim()
                         });
                     }
                 }
+            }
+
+            if (lkm03Form.empathy) {
+                const emp = lkm03Form.empathy;
+                const pairs = [];
+                if ((emp.contradiction || '').trim()) pairs.push({ s: emp.contradictionSaysIdx, d: emp.contradictionDoesIdx, t: emp.contradiction });
+                if (Array.isArray(emp.extraContradictions)) {
+                    emp.extraContradictions.forEach(function (x) {
+                        if (x && (x.text || '').trim()) pairs.push({ s: x.saysIdx, d: x.doesIdx, t: x.text });
+                    });
+                }
+                pairs.forEach(function (pr, k) {
+                    const sObj = (Array.isArray(emp.says) && emp.says[pr.s || 0]) || null;
+                    const dObj = (Array.isArray(emp.does) && emp.does[pr.d || 0]) || null;
+                    const srcLabel = (sObj && dObj) ? ' [' + sObj.source + ' vs ' + dObj.source + ']' : '';
+                    const sTxt = (sObj && (sObj.text || '').trim()) ? 'Ucapan [' + sObj.source + '] "' + sObj.text.trim() + '". ' : '';
+                    const dTxt = (dObj && (dObj.text || '').trim()) ? 'Tindakan [' + dObj.source + '] "' + dObj.text.trim() + '". ' : '';
+                    pulledEvidences.push({
+                        code: 'EMD-' + (k + 1),
+                        origin: 'Empathy Map: Kontradiksi Ucapan vs Tindakan' + srcLabel,
+                        text: sTxt + dTxt + 'Analisis: ' + pr.t.trim()
+                    });
+                });
             }
 
             if (Array.isArray(lkm03Form.journey)) {
@@ -898,19 +1026,30 @@
                 }
             }
 
+            pulledEvidences = pulledEvidences.filter(function (e) { return e.text; });
             if (pulledEvidences.length >= MIN_EVIDENCE_ITEMS) {
-                formState.evidences = pulledEvidences;
+                const merged = pulledEvidences.slice();
+                (formState.evidences || []).forEach(function (ev) {
+                    if (ev && /^Temuan Tambahan/i.test(ev.origin || '') && (ev.text || '').trim()) {
+                        let code = ev.code;
+                        if (merged.some(function (m) { return m.code === code; })) code = nextFreeEvidenceCode('INS', merged);
+                        merged.push({ code: code, origin: ev.origin, text: ev.text });
+                    }
+                });
+                formState.evidences = merged;
             } else if (pulledEvidences.length > 0) {
                 for (let k = 0; k < pulledEvidences.length; k++) {
                     formState.evidences[k] = pulledEvidences[k];
                 }
             }
 
+            const prunedCount = pruneDanglingPovEvidence();
             syncSavedStatesFromData();
             triggerAutoSave();
             if (showSuccessNotif) {
                 renderCurrentSlide();
-                showToast('Data Persona, Profil Pengelola UMKM, Insight Klaster, CJM, & Observasi dari LKM 03 berhasil ditarik lengkap ke LKM 04!', 'success');
+                showToast('Data Persona, Profil Pengelola UMKM, Insight Klaster, Kontradiksi, CJM, & Observasi dari LKM 03 berhasil ditarik ke LKM 04!' + (prunedCount > 0 ? ' ' + prunedCount + ' rujukan bukti pada POV dihapus karena buktinya sudah tidak ada.' : ''), 'success');
+                if (hadData && snapForUndo) showUndoBar(snapForUndo, 'Isian lama diganti data LKM 03.');
             }
             return true;
         }
@@ -953,7 +1092,7 @@
                 if (!Array.isArray(formState.evidences) || formState.evidences.length < MIN_EVIDENCE_ITEMS) return false;
                 for (let i = 0; i < formState.evidences.length; i++) {
                     const ev = formState.evidences[i];
-                    if (!ev.code.trim() || !ev.origin.trim() || !ev.text.trim()) return false;
+                    if (!ev.code.trim() || !ev.origin.trim() || !ev.text.trim() || hasDuplicateEvidenceCode(i)) return false;
                 }
                 return true;
             }
@@ -963,7 +1102,7 @@
         function isPovItemComplete(idx) {
             const p = formState.povs[idx];
             if (!p || !p.userDesc.trim() || !p.needVerb.trim() || !p.insightReason.trim()) return false;
-            if (!Array.isArray(p.evidenceCodes) || p.evidenceCodes.length < MIN_EVIDENCE_PER_POV) return false;
+            if (!Array.isArray(p.evidenceCodes) || countValidEvidenceCodes(p) < MIN_EVIDENCE_PER_POV) return false;
             if (detectForbiddenFeatureNoun(p.needVerb)) return false;
             return true;
         }
@@ -1059,6 +1198,7 @@
                 for (let i = 0; i < formState.evidences.length; i++) {
                     const ev = formState.evidences[i];
                     if (!ev.code.trim()) { uiWizard.infoActive = 3; renderCurrentSlide(); highlightEmptyInput('inp_ev_code_' + i, 'Kode Bukti #' + (i + 1) + ' (Bagian 1C) wajib diisi.'); return false; }
+                    if (hasDuplicateEvidenceCode(i)) { uiWizard.infoActive = 3; renderCurrentSlide(); highlightEmptyInput('inp_ev_code_' + i, 'Kode Bukti [' + ev.code + '] dipakai lebih dari sekali. Setiap bukti harus punya kode unik.'); return false; }
                     if (!ev.origin.trim()) { uiWizard.infoActive = 3; renderCurrentSlide(); highlightEmptyInput('inp_ev_origin_' + i, 'Asal Artefak LKM 03 pada Bukti #' + (i + 1) + ' wajib diisi.'); return false; }
                     if (!ev.text.trim()) { uiWizard.infoActive = 3; renderCurrentSlide(); highlightEmptyInput('inp_ev_text_' + i, 'Isi User Insight / Pain Point pada Bukti [' + ev.code + '] wajib diisi.'); return false; }
                 }
@@ -1078,7 +1218,7 @@
                         highlightEmptyInput('inp_pov_need_' + i, 'MENGUNCI FITUR TERDETEKSI: Hindari kata benda teknis "' + forbiddenNeed + '" di kolom Kebutuhan POV. Gunakan kata kerja tujuan manusia!');
                         return false;
                     }
-                    if (!Array.isArray(p.evidenceCodes) || p.evidenceCodes.length < MIN_EVIDENCE_PER_POV) {
+                    if (!Array.isArray(p.evidenceCodes) || countValidEvidenceCodes(p) < MIN_EVIDENCE_PER_POV) {
                         uiWizard.povActive = i; renderCurrentSlide();
                         showToast('POV #' + (i + 1) + ' wajib merujuk minimal ' + MIN_EVIDENCE_PER_POV + ' bukti LKM 03. Silakan centang kode buktinya.', 'error');
                         return false;
@@ -1182,12 +1322,37 @@
         // SIMPAN & MUAT MASTER BUNDLE (.JSON) DUA ARAH
         // =========================================================================
         let saveTimer = null;
+        let hasUnexportedChanges = false;
+        let storageWarned = false;
+        let saveBadgeOkClass = null;
+        function setSaveBadge(ok) {
+            const badge = document.getElementById('saveBadge');
+            if (!badge) return;
+            if (saveBadgeOkClass === null) saveBadgeOkClass = badge.className;
+            if (ok) {
+                badge.className = saveBadgeOkClass;
+                badge.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Tersimpan';
+                badge.onclick = null;
+                badge.removeAttribute('title');
+            } else {
+                badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-100 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300 text-[11px] font-bold cursor-pointer';
+                badge.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Tidak tersimpan \u2022 Unduh .JSON';
+                badge.onclick = exportJsonData;
+                badge.title = 'Penyimpanan otomatis di browser gagal. Klik untuk mengunduh data (.JSON).';
+            }
+        }
+        function warnStorageFailure() {
+            if (storageWarned) return;
+            storageWarned = true;
+            showToast('Penyimpanan otomatis di browser tidak berfungsi (mungkin mode privat atau penyimpanan penuh). Data bisa hilang saat tab ditutup, jadi unduh file .JSON secara berkala.', 'error');
+        }
         function triggerAutoSave() {
+            hasUnexportedChanges = true;
             clearTimeout(saveTimer);
             const badge = document.getElementById('saveBadge');
             if (badge) badge.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
             saveTimer = setTimeout(function () {
-                safeSetStorage(STORAGE_KEY, JSON.stringify({ form: formState, ui: uiWizard }));
+                const savedOk = safeSetStorage(STORAGE_KEY, JSON.stringify({ form: formState, ui: uiWizard }));
                 try {
                     let master = {};
                     const rawMaster = safeGetStorage(MASTER_BUNDLE_KEY);
@@ -1195,7 +1360,9 @@
                     master.lkm04 = { form: formState, ui: uiWizard };
                     safeSetStorage(MASTER_BUNDLE_KEY, JSON.stringify(master));
                 } catch (e) {}
-                if (badge) badge.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Tersimpan';
+                setSaveBadge(savedOk);
+                if (!savedOk) warnStorageFailure(); else storageWarned = false;
+                renderDotsAndDrawer();
             }, 350);
         }
 
@@ -1211,6 +1378,7 @@
                         if (!Array.isArray(formState.hmws) || formState.hmws.length < MIN_HMW_ITEMS) formState.hmws = createDefaultHmwList();
                         if (!Array.isArray(formState.features) || formState.features.length < MIN_FEATURE_ITEMS) formState.features = createDefaultFeatures();
                         if (!formState.brief || !Array.isArray(formState.brief.coreFlows)) formState.brief = createDefaultBrief();
+                        pruneDanglingPovEvidence();
                     }
                     if (parsed.ui) uiWizard = Object.assign(uiWizard, parsed.ui);
                     syncSavedStatesFromData();
@@ -1236,11 +1404,11 @@
                 const rawMaster = safeGetStorage(MASTER_BUNDLE_KEY);
                 if (rawMaster) master = JSON.parse(rawMaster) || {};
                 const r1 = safeGetStorage('upertis_lkm01_neutral_v5');
-                if (r1 && !master.lkm01) master.lkm01 = JSON.parse(r1);
+                if (r1) master.lkm01 = JSON.parse(r1);
                 const r2 = safeGetStorage('upertis_lkm02_neutral_v2');
-                if (r2 && !master.lkm02) master.lkm02 = JSON.parse(r2);
+                if (r2) master.lkm02 = JSON.parse(r2);
                 const r3 = safeGetStorage('upertis_lkm03_dynamic_v2');
-                if (r3 && !master.lkm03) master.lkm03 = JSON.parse(r3);
+                if (r3) master.lkm03 = JSON.parse(r3);
             } catch (e) {}
 
             const payload = {
@@ -1263,6 +1431,8 @@
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
 
+            hasUnexportedChanges = false;
+            refreshSelfCheckPanel();
             showToast('Master File Data Proyek (.json) LKM 01 s/d LKM 04 berhasil diunduh!', 'success');
         }
 
@@ -1292,10 +1462,12 @@
                     if (parsed && parsed.lkm04 && parsed.lkm04.form) {
                         formState = Object.assign(formState, parsed.lkm04.form);
                         if (parsed.lkm04.ui) uiWizard = Object.assign(uiWizard, parsed.lkm04.ui);
+                        pruneDanglingPovEvidence();
                         master.lkm04 = parsed.lkm04;
                         safeSetStorage(MASTER_BUNDLE_KEY, JSON.stringify(master));
                         syncSavedStatesFromData();
                         safeSetStorage(STORAGE_KEY, JSON.stringify({ form: formState, ui: uiWizard }));
+                        hasUnexportedChanges = false;
                         renderCurrentSlide();
                         showToast('Data proyek LKM 04 berhasil dimuat sepenuhnya dari file .json!', 'success');
                         return;
@@ -1324,15 +1496,20 @@
         // FUNGSI UPDATE & MANIPULASI BARIS DINAMIS
         // =========================================================================
         function updateField(fieldKey, val) { formState[fieldKey] = val; triggerAutoSave(); }
-        function updateEvidence(idx, key, val) { if (formState.evidences[idx]) { formState.evidences[idx][key] = val; triggerAutoSave(); } }
+        function updateEvidence(idx, key, val) {
+            const ev = formState.evidences[idx];
+            if (!ev) return;
+            if (key === 'code') renameEvidenceCodeRefs(ev.code, val);
+            ev[key] = val;
+            triggerAutoSave();
+        }
         function addEvidenceItem() {
-            const nextNum = formState.evidences.length + 1;
-            formState.evidences.push({ code: 'INS-' + nextNum, origin: 'Temuan Tambahan LKM 03', text: '' });
+            formState.evidences.push({ code: nextFreeEvidenceCode('INS'), origin: 'Temuan Tambahan LKM 03', text: '' });
             triggerAutoSave(); renderCurrentSlide();
         }
         function removeEvidenceItem(idx) {
             if (formState.evidences.length <= MIN_EVIDENCE_ITEMS) return;
-            formState.evidences.splice(idx, 1); triggerAutoSave(); renderCurrentSlide();
+            formState.evidences.splice(idx, 1); pruneDanglingPovEvidence(); triggerAutoSave(); renderCurrentSlide();
         }
 
         function updatePovField(idx, key, val) {
@@ -1486,6 +1663,7 @@
                 for (let i = 0; i < formState.evidences.length; i++) {
                     const ev = formState.evidences[i];
                     if (!ev.code.trim()) { highlightEmptyInput('inp_ev_code_' + i, 'Kode Bukti #' + (i + 1) + ' wajib diisi.'); return; }
+                    if (hasDuplicateEvidenceCode(i)) { highlightEmptyInput('inp_ev_code_' + i, 'Kode Bukti [' + ev.code + '] dipakai lebih dari sekali. Setiap bukti harus punya kode unik.'); return; }
                     if (!ev.origin.trim()) { highlightEmptyInput('inp_ev_origin_' + i, 'Asal Artefak LKM 03 pada Bukti #' + (i + 1) + ' wajib diisi.'); return; }
                     if (!ev.text.trim()) { highlightEmptyInput('inp_ev_text_' + i, 'Isi User Insight / Pain Point pada Bukti [' + ev.code + '] wajib diisi.'); return; }
                 }
@@ -1508,7 +1686,7 @@
                 highlightEmptyInput('inp_pov_need_' + idx, 'MENGUNCI FITUR: Hindari kata benda teknis "' + forbiddenNeed + '" di kolom Kebutuhan POV. Gunakan kata kerja tujuan pengguna!');
                 return;
             }
-            if (!Array.isArray(p.evidenceCodes) || p.evidenceCodes.length < MIN_EVIDENCE_PER_POV) {
+            if (!Array.isArray(p.evidenceCodes) || countValidEvidenceCodes(p) < MIN_EVIDENCE_PER_POV) {
                 showToast('POV #' + (idx + 1) + ' wajib merujuk minimal ' + MIN_EVIDENCE_PER_POV + ' bukti LKM 03. Silakan centang kode buktinya.', 'error');
                 return;
             }
@@ -2073,7 +2251,7 @@
                             ? 'bg-indigo-600 text-white border-indigo-600'
                             : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:bg-slate-100';
                         sourceChecksHtml += `
-                            <button type="button" onclick="togglePovEvidenceCode(${i}, '${escapeHtml(ev.code)}')" class="px-2.5 py-1.5 rounded-lg border text-[11px] font-extrabold transition flex items-center gap-1.5 ${cls}">
+                            <button type="button" onclick="togglePovEvidenceCode(${i}, '${escapeHtml(ev.code)}')" title="${escapeHtml(ev.origin + ': ' + (ev.text || '').substring(0, 140))}" class="px-2.5 py-1.5 rounded-lg border text-[11px] font-extrabold transition flex items-center gap-1.5 ${cls}">
                                 <i class="fa-solid ${isChecked ? 'fa-square-check' : 'fa-regular fa-square'}"></i>
                                 <span>[${escapeHtml(ev.code)}]</span>
                             </button>
@@ -2092,17 +2270,20 @@
                                 <div class="sm:col-span-6">
                                     <label class="text-xs sm:text-sm font-bold text-amber-700 dark:text-amber-400 block mb-1.5">2. [EVIDENCE] Pilih Kode Bukti Rujukan LKM 03 (Wajib Min. ${MIN_EVIDENCE_PER_POV} Bukti) *</label>
                                     <div class="flex flex-wrap gap-1.5">${sourceChecksHtml || '<span class="text-xs text-rose-500">Daftar Bukti LKM 03 di Slide 3 kosong.</span>'}</div>
+                                    ${renderSelectedEvidencePreview(p)}
                                 </div>
                             </div>
 
                             <div>
                                 <label class="text-xs sm:text-sm font-bold text-emerald-700 dark:text-emerald-300 block mb-1.5">3. [NEED] Membutuhkan cara untuk apa? (Gunakan Kata Kerja tujuan manusia, JANGAN menyebut kata "fitur/aplikasi/notifikasi") *</label>
-                                <input type="text" id="inp_pov_need_${i}" value="${escapeHtml(p.needVerb)}" oninput="updatePovField(${i}, 'needVerb', this.value)" placeholder="Awali dengan kata kerja (contoh: mengetahui kepastian stok dan estimasi biaya sebelum datang ke lokasi)..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                <input type="text" id="inp_pov_need_${i}" value="${escapeHtml(p.needVerb)}" oninput="updatePovField(${i}, 'needVerb', this.value); refreshLiveHint('povNeedHint_${i}', povNeedHintMsg(this.value))" placeholder="Awali dengan kata kerja (contoh: mengetahui kepastian stok dan estimasi biaya sebelum datang ke lokasi)..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                <div id="povNeedHint_${i}" class="text-[11px] font-semibold text-amber-700 dark:text-amber-400 mt-1">${hintHtml(povNeedHintMsg(p.needVerb))}</div>
                             </div>
 
                             <div>
                                 <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">4. [INSIGHT / KARENA...] Mengapa hal tersebut menjadi masalah krusial bagi mereka berdasarkan bukti lapangan? *</label>
-                                <textarea id="inp_pov_reason_${i}" rows="3" oninput="autoResizeTextarea(this); updatePovField(${i}, 'insightReason', this.value)" placeholder="Jelaskan akar masalah nyata yang dialami pengguna di lapangan (tanpa kata 'karena' di awal kalimat)..." class="auto-expand w-full p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(p.insightReason)}</textarea>
+                                <textarea id="inp_pov_reason_${i}" rows="3" oninput="autoResizeTextarea(this); updatePovField(${i}, 'insightReason', this.value); refreshLiveHint('povReasonHint_${i}', povReasonHintMsg(this.value))" placeholder="${exPh(i === 0 ? 'harga dan stok tidak terlihat, sehingga setiap pelanggan harus bertanya satu per satu lewat chat dan menunggu balasan' : '', 'Jelaskan akar masalah nyata yang dialami pengguna di lapangan (tanpa kata karena di awal kalimat)...')}" class="auto-expand w-full p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(p.insightReason)}</textarea>
+                                <div id="povReasonHint_${i}" class="text-[11px] font-semibold text-amber-700 dark:text-amber-400 mt-1">${hintHtml(povReasonHintMsg(p.insightReason))}</div>
                             </div>
 
                             <div class="p-4 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 space-y-1">
@@ -2196,7 +2377,8 @@
                             </div>
                             <div>
                                 <label class="text-xs font-bold text-emerald-700 dark:text-emerald-300 block mb-1">Kalimat Pertanyaan How Might We #${i + 1} (Awali dengan: "Bagaimana kita dapat...") *</label>
-                                <input type="text" id="inp_hmw_q_${i}" value="${escapeHtml(h.question)}" oninput="updateHmwField(${i}, 'question', this.value)" placeholder="Bagaimana kita dapat membantu [pengguna] untuk [tujuan] tanpa [hambatan] (JANGAN MENGUNCI NAMA FITUR)..." class="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <input type="text" id="inp_hmw_q_${i}" value="${escapeHtml(h.question)}" oninput="updateHmwField(${i}, 'question', this.value); refreshLiveHint('hmwHint_${i}', hmwHintMsg(this.value))" placeholder="${exPh(i === 0 ? 'Bagaimana kita dapat membantu pelanggan yang sibuk memastikan stok dan harga tanpa harus menunggu balasan penjual?' : '', 'Bagaimana kita dapat membantu [pengguna] untuk [tujuan] tanpa [hambatan] (JANGAN MENGUNCI NAMA FITUR)...')}" class="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <div id="hmwHint_${i}" class="text-[11px] font-semibold text-amber-700 dark:text-amber-400 mt-1">${hintHtml(hmwHintMsg(h.question))}</div>
                             </div>
                         </div>
                     `;
@@ -2642,6 +2824,79 @@
             `;
         }
 
+        function computeSelfCheck() {
+            const checks = [];
+            // 1. triangulasi: tiap POV didukung bukti dari >= 2 jenis asal
+            const weak = [];
+            formState.povs.forEach(function (p, i) {
+                const kinds = new Set();
+                (p.evidenceCodes || []).forEach(function (c) {
+                    if (!formState.evidences.some(function (e) { return e.code === c; })) return;
+                    const m = String(c).match(/^[A-Za-z]+/);
+                    kinds.add(m ? m[0].toUpperCase() : c);
+                });
+                if (kinds.size < 2) weak.push('#' + (i + 1));
+            });
+            checks.push({ ok: weak.length === 0, label: 'Tiap POV didukung bukti dari lebih dari satu jenis (misal insight + observasi)', detail: 'Periksa POV ' + weak.join(', ') });
+            // 2. kontradiksi dipakai
+            const emdCodes = formState.evidences.filter(function (e) { return /^EMD-/i.test(e.code); }).map(function (e) { return e.code; });
+            if (emdCodes.length > 0) {
+                const used = formState.povs.some(function (p) { return (p.evidenceCodes || []).some(function (c) { return emdCodes.indexOf(c) !== -1; }); });
+                checks.push({ ok: used, label: 'Bukti kontradiksi (EMD) dipakai di minimal satu POV', detail: 'Kontradiksi ucapan vs tindakan biasanya sumber insight terkuat' });
+            }
+            // 3. "karena" di awal alasan
+            const karenaPov = [];
+            formState.povs.forEach(function (p, i) { if (povReasonHintMsg(p.insightReason)) karenaPov.push('#' + (i + 1)); });
+            checks.push({ ok: karenaPov.length === 0, label: 'Alasan POV tidak diawali kata "karena"', detail: 'Periksa POV ' + karenaPov.join(', ') });
+            // 4. HMW tidak kembar
+            let dupHmw = 0;
+            for (let a = 0; a < formState.hmws.length; a++) {
+                for (let b = a + 1; b < formState.hmws.length; b++) {
+                    if (isSimilarText(formState.hmws[a].question, formState.hmws[b].question)) dupHmw++;
+                }
+            }
+            checks.push({ ok: dupHmw === 0, label: 'Tidak ada pertanyaan HMW yang hampir sama', detail: dupHmw + ' pasangan HMW terlalu mirip' });
+            // 5. metrik berangka
+            let noNum = 0, totalM = 0;
+            (formState.brief.uxMetrics || []).concat(formState.brief.bizMetrics || []).forEach(function (m) {
+                totalM++;
+                if (!/\d/.test(m.indicator || '')) noNum++;
+            });
+            checks.push({ ok: totalM > 0 && noNum === 0, label: 'Setiap indikator metrik memuat angka target (misal 80% atau 1 menit)', detail: noNum + ' indikator belum berangka' });
+            // 6. unduh
+            checks.push({ ok: !hasUnexportedChanges, label: 'Data sudah diunduh sebagai file .JSON', detail: 'Klik Simpan Data (.JSON) di atas' });
+            return checks;
+        }
+        function renderSelfCheckInner() {
+            const checks = computeSelfCheck();
+            const issues = checks.filter(function (c) { return !c.ok; }).length;
+            const summary = 'Saran kualitas sebelum kumpul \u2022 ' + (issues === 0
+                ? '<span class="text-emerald-600 dark:text-emerald-400">semua baik</span>'
+                : '<span class="text-amber-700 dark:text-amber-400">' + issues + ' catatan</span>');
+            const body = checks.map(function (c) {
+                return c.ok
+                    ? '<div class="text-[11px] sm:text-xs text-slate-600 dark:text-slate-300"><i class="fa-solid fa-circle-check text-emerald-600 mr-1.5"></i>' + escapeHtml(c.label) + '</div>'
+                    : '<div class="text-[11px] sm:text-xs font-semibold text-amber-800 dark:text-amber-300"><i class="fa-solid fa-circle-exclamation mr-1.5"></i>' + escapeHtml(c.label) + ' <span class="font-normal">\u2014 ' + escapeHtml(c.detail) + '</span></div>';
+            }).join('') + '<div class="pt-1 text-[11px] text-slate-500 dark:text-slate-400">Semua catatan hanya saran, tidak menghalangi unduh PDF.</div>';
+            return { summary: summary, body: body };
+        }
+        function renderSelfCheckPanelHtml() {
+            const r = renderSelfCheckInner();
+            return `
+                <details id="selfCheckPanel" class="max-w-4xl mx-auto rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 no-print">
+                    <summary id="selfCheckSummary" class="cursor-pointer select-none px-4 py-3 text-xs font-extrabold text-slate-800 dark:text-slate-100">${r.summary}</summary>
+                    <div id="selfCheckBody" class="px-4 pb-4 space-y-1.5">${r.body}</div>
+                </details>`;
+        }
+        function refreshSelfCheckPanel() {
+            const sum = document.getElementById('selfCheckSummary');
+            const body = document.getElementById('selfCheckBody');
+            if (!sum || !body) return;
+            const r = renderSelfCheckInner();
+            sum.innerHTML = r.summary;
+            body.innerHTML = r.body;
+        }
+
         function renderSlide12() {
             const allPovOk = formState.povs.length >= MIN_POV_ITEMS && formState.povs.every(function (_, idx) { return isPovItemComplete(idx); });
             const allFeatOk = formState.features.length >= MIN_FEATURE_ITEMS && formState.features.every(function (_, idx) { return isFeatureItemComplete(idx); }) && countMvpFeatures() >= MIN_MVP_COUNT;
@@ -2681,6 +2936,8 @@
                         </div>
                     </div>
 
+                    ${renderSelfCheckPanelHtml()}
+
                     <div id="pdfWrapper" class="max-w-4xl mx-auto bg-white rounded-2xl shadow-md border border-slate-300 overflow-hidden">
                         <div id="pdfPrintArea" class="p-6 sm:p-10 space-y-5">${generatePdfHtmlString()}</div>
                     </div>
@@ -2697,7 +2954,7 @@
             const evRowsHtml = d.evidences.map(function (ev) { return `<div>• <strong>[${escapeHtml(ev.code)}] ${escapeHtml(ev.origin)}:</strong> ${dash(ev.text)}</div>`; }).join('');
 
             const povRowsHtml = d.povs.map(function (p, idx) {
-                const evArr = Array.isArray(p.evidenceCodes) && p.evidenceCodes.length > 0 ? p.evidenceCodes.join(', ') : 'INS-1';
+                const evArr = Array.isArray(p.evidenceCodes) && p.evidenceCodes.length > 0 ? p.evidenceCodes.join(', ') : '-';
                 return `
                 <tr class="pdf-keep-together">
                     <td style="width:24%; font-weight:800; color:#1e293b;">
@@ -2939,6 +3196,69 @@
             }
         }
 
+        const FORM_SLIDE_INDEXES = [2, 4, 6, 8, 10];
+        // Perkiraan waktu pengerjaan per slide (menit); bukan hasil pengukuran
+        const SLIDE_MINUTES = [3, 3, 10, 3, 25, 3, 15, 3, 20, 3, 15, 5];
+        function getSlideCompletion(idx) {
+            let done = 0, total = 0, unit = 'bagian';
+            if (idx === 2) {
+                total = 3;
+                for (let k = 1; k <= 3; k++) if (isInfoPartComplete(k)) done++;
+            } else if (idx === 4) {
+                unit = 'POV';
+                total = Math.max(formState.povs.length, MIN_POV_ITEMS);
+                for (let i = 0; i < formState.povs.length; i++) if (isPovItemComplete(i)) done++;
+            } else if (idx === 6) {
+                total = 2;
+                for (let k = 1; k <= 2; k++) if (isHmwOpsPartComplete(k)) done++;
+            } else if (idx === 8) {
+                unit = 'fitur';
+                total = Math.max(formState.features.length, MIN_FEATURE_ITEMS);
+                for (let i = 0; i < formState.features.length; i++) if (isFeatureItemComplete(i)) done++;
+                const hmwNoFeat = formState.hmws.some(function (h) { return !formState.features.some(function (f) { return f.hmwCode === h.code; }); });
+                if (done >= total && (countMvpFeatures() < MIN_MVP_COUNT || hmwNoFeat)) done = total - 1;
+            } else if (idx === 10) {
+                total = 2;
+                for (let k = 1; k <= 2; k++) if (isBriefPartComplete(k)) done++;
+            } else {
+                return null;
+            }
+            return { done: Math.min(done, total), total: total, unit: unit };
+        }
+        function getRemainingMinutesForSlide(idx) {
+            const c = getSlideCompletion(idx);
+            if (!c) return 0;
+            return Math.ceil(SLIDE_MINUTES[idx] * (1 - Math.min(c.done / c.total, 1)));
+        }
+        function updateProgressChrome() {
+            const comp = getSlideCompletion(currentSlideIndex);
+            const pill = document.getElementById('slideProgressPill');
+            if (pill) {
+                if (comp) {
+                    const full = comp.done >= comp.total;
+                    pill.className = 'text-xs font-bold px-2.5 py-1 rounded-lg shrink-0 ' + (full
+                        ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
+                        : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300');
+                    pill.textContent = (full ? 'Lengkap ' : 'Terisi ') + comp.done + '/' + comp.total + ' ' + comp.unit + (full ? '' : ' \u2022 sisa \u00B1' + getRemainingMinutesForSlide(currentSlideIndex) + ' mnt');
+                } else {
+                    pill.className = 'hidden';
+                    pill.textContent = '';
+                }
+            }
+            const mob = document.getElementById('mobileFooterCounter');
+            if (mob) mob.textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES + (comp ? ' \u2022 ' + comp.done + '/' + comp.total : '');
+            let fullForms = 0, remainTotal = 0;
+            for (let i = 0; i < FORM_SLIDE_INDEXES.length; i++) {
+                const c = getSlideCompletion(FORM_SLIDE_INDEXES[i]);
+                if (c && c.done >= c.total) fullForms++;
+                remainTotal += getRemainingMinutesForSlide(FORM_SLIDE_INDEXES[i]);
+            }
+            const overall = document.getElementById('drawerOverallProgress');
+            if (overall) overall.textContent = 'Form lengkap: ' + fullForms + ' / ' + FORM_SLIDE_INDEXES.length;
+            const remEl = document.getElementById('drawerRemainingTime');
+            if (remEl) remEl.textContent = remainTotal > 0 ? 'Sisa isian \u00B1' + remainTotal + ' menit' : 'Semua isian lengkap';
+        }
+
         function renderDotsAndDrawer() {
             const dotsContainer = document.getElementById('slideDotsContainer');
             let dotsHtml = '';
@@ -2949,13 +3269,21 @@
                 const isActive = idx === currentSlideIndex;
                 const isForm = s.category.indexOf('Form') !== -1;
 
+                const comp = getSlideCompletion(idx);
+                const compFull = !!comp && comp.done >= comp.total;
+                const compPartial = !!comp && comp.done > 0 && !compFull;
                 const dotClass = isActive
                     ? 'w-7 bg-indigo-600 dark:bg-indigo-400'
+                    : compFull
+                    ? 'w-4 bg-emerald-600 dark:bg-emerald-500 hover:bg-emerald-700'
+                    : compPartial
+                    ? 'w-3 bg-amber-400 dark:bg-amber-500 hover:bg-amber-500'
                     : isForm
-                    ? 'w-2 bg-emerald-400/70 dark:bg-emerald-600 hover:bg-emerald-500'
+                    ? 'w-2 bg-emerald-300/60 dark:bg-emerald-900 hover:bg-emerald-400'
                     : 'w-2 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400';
+                const dotTitle = s.title + (comp ? ' (' + comp.done + '/' + comp.total + ' ' + comp.unit + (compFull ? ', lengkap' : '') + ')' : '');
 
-                dotsHtml += `<button type="button" onclick="goToSlide(${idx})" title="${escapeHtml(s.title)}" class="h-2 rounded-full transition-all ${dotClass}"></button>`;
+                dotsHtml += `<button type="button" onclick="goToSlide(${idx})" title="${escapeHtml(dotTitle)}" aria-label="${escapeHtml('Slide ' + s.id + ': ' + dotTitle)}" ${isActive ? 'aria-current="step"' : ''} class="h-2 rounded-full transition-all ${dotClass}"></button>`;
 
                 const itemClass = isActive
                     ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 font-bold'
@@ -2970,9 +3298,10 @@
                     <button type="button" onclick="selectSlideFromDrawer(${idx})" class="w-full text-left p-3 rounded-xl transition flex items-start gap-3 ${itemClass}">
                         <span class="w-6 h-6 rounded-lg text-xs font-extrabold flex items-center justify-center shrink-0 mt-0.5 ${badgeClass}">${s.id}</span>
                         <div class="min-w-0 flex-1">
-                            <div class="text-[10px] uppercase tracking-wider opacity-75">${escapeHtml(s.category)}</div>
+                            <div class="text-[10px] uppercase tracking-wider opacity-75">${escapeHtml(s.category)} \u2022 \u00B1${SLIDE_MINUTES[idx]} mnt</div>
                             <div class="text-xs sm:text-sm leading-snug break-words">${escapeHtml(s.title)}</div>
                         </div>
+                        ${comp ? `<span class="shrink-0 mt-0.5 text-[10px] font-extrabold px-2 py-0.5 rounded-md ${compFull ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'}">${compFull ? '<i class="fa-solid fa-check"></i> ' : ''}${comp.done}/${comp.total}</span>` : ''}
                     </button>
                 `;
             }
@@ -2980,6 +3309,7 @@
             if (dotsContainer) dotsContainer.innerHTML = dotsHtml;
             const drawerList = document.getElementById('drawerSlideList');
             if (drawerList) drawerList.innerHTML = drawerHtml;
+            updateProgressChrome();
         }
 
         function selectSlideFromDrawer(index) {
@@ -3029,7 +3359,49 @@
             }
         }
 
+        let undoSnapshot = null;
+        let undoTick = null;
+        function showUndoBar(snap, message) {
+            undoSnapshot = snap;
+            clearInterval(undoTick);
+            let left = 10;
+            const bar = document.getElementById('undoBar');
+            const cd = document.getElementById('undoCountdown');
+            const msg = document.getElementById('undoMessage');
+            if (!bar || !cd) return;
+            if (msg) msg.textContent = message || 'Perubahan diterapkan.';
+            cd.textContent = left;
+            bar.classList.remove('hidden');
+            bar.classList.add('flex');
+            undoTick = setInterval(function () {
+                left--;
+                cd.textContent = Math.max(left, 0);
+                if (left <= 0) hideUndoBar(true);
+            }, 1000);
+        }
+        function hideUndoBar(dropSnapshot) {
+            clearInterval(undoTick);
+            const bar = document.getElementById('undoBar');
+            if (bar) { bar.classList.add('hidden'); bar.classList.remove('flex'); }
+            if (dropSnapshot) undoSnapshot = null;
+        }
+        function undoLastChange() {
+            if (!undoSnapshot) return;
+            try {
+                const snap = JSON.parse(undoSnapshot);
+                formState = snap.form;
+                uiWizard = snap.ui;
+                currentSlideIndex = snap.slide || 0;
+                syncSavedStatesFromData();
+                triggerAutoSave();
+            } catch (e) {}
+            hideUndoBar(true);
+            renderCurrentSlide();
+            showToast('Isian berhasil dipulihkan.', 'success');
+        }
+
         function confirmResetAllData() {
+            const resetSnapshot = JSON.stringify({ form: formState, ui: uiWizard, slide: currentSlideIndex });
             const today = new Date().toISOString().split('T')[0];
             formState = {
                 nama: "", nim: "", kelas: "", tgl: today, umkm: "", bidang: "",
@@ -3052,7 +3424,8 @@
             closeResetModal();
             currentSlideIndex = 0;
             renderCurrentSlide();
-            showToast('Seluruh isian LKM 04 telah dikosongkan.', 'success');
+            hasUnexportedChanges = false;
+            showUndoBar(resetSnapshot, 'Seluruh isian LKM 04 dikosongkan.');
         }
 
         function downloadPdf() {
@@ -3193,19 +3566,33 @@
             const activeTag = document.activeElement && document.activeElement.tagName
                 ? document.activeElement.tagName.toLowerCase()
                 : '';
-            if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') return;
-            if (e.key === 'ArrowRight') changeSlide(1);
-            if (e.key === 'ArrowLeft') changeSlide(-1);
             if (e.key === 'Escape') {
                 closeTermModal();
                 closeGlossaryIndex();
                 closeResetModal();
+            }
+            if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') return;
+            const resetModal = document.getElementById('resetModalBackdrop');
+            if (resetModal && !resetModal.classList.contains('hidden')) return;
+            if (e.key === 'ArrowRight') changeSlide(1);
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+        });
+
+        window.addEventListener('beforeunload', function (e) {
+            if (hasUnexportedChanges) {
+                e.preventDefault();
+                e.returnValue = '';
+                return '';
             }
         });
 
         // Jalankan inisialisasi
         loadSavedState();
         renderCurrentSlide();
+        if (!checkStorageAvailable()) {
+            setSaveBadge(false);
+            warnStorageFailure();
+        }
     </script>
 </body>
 </html>
