@@ -119,6 +119,11 @@
             color: #1e293b;
             text-align: left;
         }
+        /* Pengaman: cegah baris tabel terpotong di tengah saat berganti halaman PDF */
+        .pdf-table tr {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
         .pdf-page-break {
             page-break-before: always;
             break-before: page;
@@ -743,7 +748,7 @@
         function iStatementHintHtml(label) {
             const t = (label || '').trim();
             if (!t || isValidIStatement(t)) return '';
-            return '<i class="fa-solid fa-lightbulb mr-1"></i>Awali judul dengan "Saya\u2026" atau "Kami\u2026" (sudut pandang pengguna).';
+            return '<i class="fa-solid fa-lightbulb mr-1"></i>Awali judul dengan "Saya…" atau "Kami…" (sudut pandang pengguna).';
         }
         function refreshIStatementHint(idx) {
             const el = document.getElementById('iStmtHint_' + idx);
@@ -771,7 +776,7 @@
             if (el && c) el.innerHTML = buildInsightHint(c.label, c.insight);
         }
         function iStatementErrorMsg(idx) {
-            return 'FORMAT I-STATEMENT: Judul Tema Klaster #' + (idx + 1) + ' wajib menggunakan kata sudut pandang pengguna ("Saya\u2026" atau "Kami\u2026").';
+            return 'FORMAT I-STATEMENT: Judul Tema Klaster #' + (idx + 1) + ' wajib menggunakan kata sudut pandang pengguna ("Saya…" atau "Kami…").';
         }
 
         function isClusterComplete(cIdx) {
@@ -1546,7 +1551,7 @@
                             uiWizard = Object.assign(uiWizard, parsed.lkm03.ui);
                         }
                         syncSavedStatesFromData();
-                        localStorage.setItem(STORAGE_KEY, JSON.stringify({ form: formState, ui: uiWizard }));
+                        if (!writeAutoSave()) warnStorageFailure();
                         hasUnexportedChanges = false;
                         renderCurrentSlide();
                         showToast('Data proyek LKM 03 berhasil dimuat sepenuhnya dari file .json!', 'success');
@@ -1573,7 +1578,7 @@
                         }
 
                         syncSavedStatesFromData();
-                        localStorage.setItem(STORAGE_KEY, JSON.stringify({ form: formState, ui: uiWizard }));
+                        if (!writeAutoSave()) warnStorageFailure();
                         hasUnexportedChanges = false;
                         renderCurrentSlide();
                         showToast('Identitas Mahasiswa & Profil UMKM dari pertemuan sebelumnya berhasil dimuat! Silakan lengkapi sintesis LKM 03.', 'success');
@@ -1585,7 +1590,7 @@
                         formState = Object.assign(formState, parsed.form);
                         if (parsed.ui) uiWizard = Object.assign(uiWizard, parsed.ui);
                         syncSavedStatesFromData();
-                        localStorage.setItem(STORAGE_KEY, JSON.stringify({ form: formState, ui: uiWizard }));
+                        if (!writeAutoSave()) warnStorageFailure();
                         hasUnexportedChanges = false;
                         renderCurrentSlide();
                         showToast('Data proyek LKM 03 berhasil dimuat!', 'success');
@@ -3888,7 +3893,8 @@
                     filename: fn,
                     image: { type: 'jpeg', quality: 0.98 },
                     html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
-                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                    pagebreak: { mode: ['css', 'legacy'] }
                 }).from(el).save().then(function () {
                     if (btn) { btn.innerHTML = orig; btn.disabled = false; }
                 }).catch(function () {
