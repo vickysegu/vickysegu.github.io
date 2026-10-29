@@ -1,0 +1,2677 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pertemuan 3: Operasi Aritmatika & Logika Relasional (BD1205)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace']
+                    }
+                }
+            }
+        };
+    </script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .tech-term {
+            color: #4f46e5;
+            font-weight: 700;
+            cursor: pointer;
+            transition: color 0.15s ease, opacity 0.15s ease;
+        }
+        .dark .tech-term {
+            color: #818cf8;
+        }
+        .tech-term:hover {
+            color: #3730a3;
+            opacity: 0.85;
+        }
+        .dark .tech-term:hover {
+            color: #a5b4fc;
+        }
+
+        .slide-enter {
+            animation: fadeSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes fadeSlide {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fg-canvas {
+            background-color: #ffffff;
+            background-image: radial-gradient(#e2e8f0 1.2px, transparent 1.2px);
+            background-size: 18px 18px;
+        }
+        .dark .fg-canvas {
+            background-color: #0f172a;
+            background-image: radial-gradient(#1e293b 1.2px, transparent 1.2px);
+        }
+
+        .fg-node {
+            transition: transform 0.15s ease, filter 0.15s ease;
+            cursor: pointer;
+        }
+        .fg-node:hover {
+            transform: scale(1.02);
+        }
+
+        .fg-node-active rect,
+        .fg-node-active polygon {
+            fill: #ef4444 !important;
+            stroke: #991b1b !important;
+            stroke-width: 2.6px !important;
+        }
+        .fg-node-active text {
+            fill: #ffffff !important;
+            font-weight: 800 !important;
+        }
+
+        @keyframes waitPulse {
+            0%, 100% { filter: drop-shadow(0 0 0px rgba(79, 70, 229, 0)); }
+            50% { filter: drop-shadow(0 0 9px rgba(79, 70, 229, 0.65)); }
+        }
+        .fg-node-waiting {
+            animation: waitPulse 1.3s infinite;
+        }
+        .fg-node-waiting polygon {
+            fill: #4f46e5 !important;
+            stroke: #312e81 !important;
+            stroke-width: 2.8px !important;
+        }
+        .fg-node-waiting text {
+            fill: #ffffff !important;
+            font-weight: 800 !important;
+        }
+
+        .draggable-step {
+            cursor: grab;
+            user-select: none;
+            transition: all 0.15s ease;
+        }
+        .draggable-step:active {
+            cursor: grabbing;
+        }
+        .draggable-step.dragging {
+            opacity: 0.45;
+        }
+        .draggable-step.drag-over {
+            border-color: #4f46e5 !important;
+            transform: translateY(-2px);
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #334155;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col justify-between transition-colors duration-200">
+
+    <!-- Sticky Header -->
+    <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800">
+        <div class="w-full h-1 bg-slate-100 dark:bg-slate-800">
+            <div id="topProgressBar" class="h-full bg-indigo-600 dark:bg-indigo-500 transition-all duration-300" style="width: 6%;"></div>
+        </div>
+
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+                <button type="button" onclick="toggleSlideDrawer()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition flex items-center gap-2 text-xs sm:text-sm font-bold shrink-0">
+                    <i class="fa-solid fa-list-ul text-indigo-600 dark:text-indigo-400"></i>
+                    <span class="hidden sm:inline">Daftar Slide</span>
+                    <span id="slideCounterBadge" class="px-2 py-0.5 text-xs rounded-lg bg-indigo-600 text-white font-bold">1 / 18</span>
+                </button>
+
+                <div class="hidden md:flex items-center gap-2.5 min-w-0">
+                    <span id="slideCategoryPill" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 shrink-0">
+                        Modul 1
+                    </span>
+                    <h1 id="headerSlideTitle" class="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">
+                        Operasi Aritmatika &amp; Logika Relasional
+                    </h1>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 shrink-0">
+                <button type="button" onclick="openGlossaryIndex()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 text-xs sm:text-sm font-bold flex items-center gap-2 transition">
+                    <i class="fa-solid fa-book-open text-indigo-600 dark:text-indigo-400"></i>
+                    <span>Kamus Istilah</span>
+                </button>
+
+                <button type="button" onclick="toggleTheme()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center transition" title="Ganti Tema Layar">
+                    <i id="themeIcon" class="fa-solid fa-moon text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Slide Drawer -->
+    <div id="slideDrawerBackdrop" onclick="toggleSlideDrawer()" class="fixed inset-0 bg-slate-950/50 backdrop-blur-xs z-40 hidden opacity-0 transition-opacity duration-200"></div>
+    <aside id="slideDrawer" class="fixed top-0 left-0 bottom-0 w-80 sm:w-96 bg-white dark:bg-slate-900 z-50 shadow-2xl border-r border-slate-200 dark:border-slate-800 transform -translate-x-full transition-transform duration-200 flex flex-col">
+        <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Dasar Pemrograman 1 (BD1205)</span>
+                <h2 class="text-base font-extrabold text-slate-900 dark:text-white mt-0.5">Daftar Materi Pertemuan 3</h2>
+            </div>
+            <button type="button" onclick="toggleSlideDrawer()" class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div id="drawerSlideList" class="p-3.5 overflow-y-auto space-y-1 flex-1"></div>
+        <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 flex items-center justify-between">
+            <span>Gunakan tombol panah Kiri / Kanan</span>
+            <span class="font-bold">18 Slide</span>
+        </div>
+    </aside>
+
+    <!-- Main Slide Viewport -->
+    <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 flex flex-col justify-center">
+        <div id="slideViewport" class="bg-white dark:bg-slate-900 rounded-3xl shadow-xs border border-slate-200/80 dark:border-slate-800 p-6 sm:p-8 lg:p-10 min-h-[540px] flex flex-col justify-between relative overflow-hidden">
+            <!-- Konten slide dirender secara dinamis -->
+        </div>
+    </main>
+
+    <!-- Sticky Footer Navigation -->
+    <footer class="sticky bottom-0 z-20 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 py-3 px-4 sm:px-6">
+        <div class="max-w-6xl mx-auto flex items-center justify-between gap-4">
+            <button type="button" id="prevSlideBtn" onclick="changeSlide(-1)" class="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                <i class="fa-solid fa-arrow-left text-xs"></i>
+                <span>Sebelumnya</span>
+            </button>
+
+            <div id="slideDotsContainer" class="hidden md:flex items-center gap-1.5"></div>
+
+            <div class="md:hidden text-xs font-bold text-slate-500 dark:text-slate-400" id="mobileFooterCounter">
+                1 / 18
+            </div>
+
+            <button type="button" id="nextSlideBtn" onclick="changeSlide(1)" class="px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-indigo-600 hover:bg-indigo-700 text-white transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                <span id="nextBtnText">Selanjutnya</span>
+                <i class="fa-solid fa-arrow-right text-xs"></i>
+            </button>
+        </div>
+    </footer>
+
+    <!-- Modal Penjelasan Istilah -->
+    <div id="termModalBackdrop" onclick="closeTermModal()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl slide-enter">
+            <div class="flex items-start justify-between gap-4 mb-4">
+                <div>
+                    <span id="termCategoryBadge" class="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">Kategori</span>
+                    <h3 id="termTitle" class="text-xl font-extrabold text-slate-900 dark:text-white mt-1.5">Nama Istilah</h3>
+                </div>
+                <button type="button" onclick="closeTermModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <p id="termMainDesc" class="text-sm text-slate-700 dark:text-slate-200 leading-relaxed bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200/70 dark:border-slate-700/70"></p>
+
+                <div class="p-3.5 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-200/70 dark:border-indigo-800/70">
+                    <div class="text-[11px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-1">Contoh di UMKM Warung Digital:</div>
+                    <p id="termDetailDesc" class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed"></p>
+                </div>
+
+                <div class="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800 text-xs px-1">
+                    <span id="termSourceName" class="font-semibold text-slate-400">Referensi</span>
+                    <button type="button" onclick="closeTermModal(); openGlossaryIndex();" class="font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1.5">
+                        <span>Buka Kamus Lengkap</span>
+                        <i class="fa-solid fa-book-open text-[10px]"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Kamus Istilah Lengkap -->
+    <div id="glossaryModalBackdrop" onclick="closeGlossaryIndex()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-4xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden slide-enter">
+            <div class="p-5 sm:p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white">Kamus Istilah Pertemuan 3 (BD1205)</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Penjelasan ramah pemula untuk Operasi Aritmatika, Blok Assign, Prioritas Operator, dan Logika Relasional.</p>
+                </div>
+                <button type="button" onclick="closeGlossaryIndex()" class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-sm"></i>
+                    <input id="glossarySearchInput" oninput="renderGlossaryList(this.value)" type="text" placeholder="Cari istilah seperti Assign, Aritmatika, Modulo, Precedence, Relasional, Boolean, HPP, Laba..." class="w-full pl-10 pr-4 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+            <div id="glossaryListGrid" class="p-5 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+        </div>
+    </div>
+
+    <script>
+        const GLOSSARY_DB = {
+            assign: {
+                title: "Assign (Simbol Persegi Panjang Kuning)",
+                category: "Simbol Flowgorithm",
+                main: "Instruksi di Flowgorithm untuk menghitung suatu rumus matematika atau ekspresi logika di sebelah kanan tanda sama dengan (=), lalu menyimpan hasil akhirnya ke dalam laci variabel di sebelah kiri.",
+                detail: "Menulis 'Assign totalHarga = hargaJual * jumlahBeli' akan mengalikan isi hargaJual dan jumlahBeli, lalu menaruh hasilnya ke variabel totalHarga.",
+                source: "Flowgorithm Statements"
+            },
+            aritmatika: {
+                title: "Operasi Aritmatika",
+                category: "Komputasi Dasar",
+                main: "Operasi perhitungan matematika dasar di dalam program komputer yang meliputi penjumlahan (+), pengurangan (-), perkalian (*), pembagian (/), dan sisa bagi (Mod atau %).",
+                detail: "Digunakan di kasir Warung Digital untuk menghitung subtotal belanja, nominal potongan diskon, total modal kulakan, hingga laba bersih.",
+                source: "Sub-CPMK 1.2 BD1205"
+            },
+            ekspresi: {
+                title: "Ekspresi (Expression)",
+                category: "Konsep Pemrograman",
+                main: "Gabungan dari variabel, angka konstanta, dan operator (seperti * atau -) yang dievaluasi oleh komputer hingga menghasilkan satu nilai tunggal.",
+                detail: "Pada perintah 'Assign totalBayar = totalHarga - nominalDiskon', bagian 'totalHarga - nominalDiskon' di sebelah kanan disebut sebagai Ekspresi.",
+                source: "Fundamental Pemrograman"
+            },
+            operand: {
+                title: "Operand & Operator",
+                category: "Konsep Pemrograman",
+                main: "Operator adalah simbol tindakan (seperti +, -, *, /), sedangkan Operand adalah nilai atau variabel yang dihitung oleh operator tersebut.",
+                detail: "Dalam rumus 'hargaJual * jumlahBeli', tanda bintang (*) adalah Operator, sedangkan hargaJual dan jumlahBeli adalah Operand.",
+                source: "Fundamental Pemrograman"
+            },
+            modulo: {
+                title: "Modulo (Mod atau % / Sisa Bagi)",
+                category: "Operator Aritmatika",
+                main: "Operator untuk mencari angka sisa dari pembagian bilangan bulat. Di Flowgorithm dapat ditulis dengan kata kunci 'Mod' atau simbol persen '%'.",
+                detail: "Jika Warung Digital punya 14 botol kopi dan dikemas ke kardus isi 6 botol, maka 14 % 6 menghasilkan sisa 2 botol yang belum masuk kardus.",
+                source: "Flowgorithm Operators"
+            },
+            precedence: {
+                title: "Operator Precedence (Hirarki Prioritas)",
+                category: "Aturan Matematika",
+                main: "Aturan urutan pengerjaan operasi matematika di mana komputer selalu mengerjakan ekspresi di dalam tanda kurung () terlebih dahulu, disusul perkalian/pembagian (*, /, %), baru penjumlahan/pengurangan (+, -).",
+                detail: "Menulis '(hargaJual - hargaModal) * jumlahBeli' wajib memakai kurung agar pengurangan selisih untung per barang dihitung lebih dulu sebelum dikalikan jumlah beli.",
+                source: "Order of Operations"
+            },
+            hpp: {
+                title: "Harga Modal / HPP (Harga Pokok Penjualan)",
+                category: "Bisnis Digital",
+                main: "Biaya kulakan atau modal produksi untuk 1 unit barang sebelum ditambah keuntungan. Dalam sistem kasir, HPP dikalikan jumlah barang terjual untuk mengetahui Total Modal.",
+                detail: "Jika 1 cup Kopi Susu membutuhkan modal bahan Rp 9.000 dan dijual Rp 15.000, maka hargaModal adalah 9000.",
+                source: "Akuntansi UMKM"
+            },
+            omzet: {
+                title: "Omzet Kotor vs Total Bayar Bersih",
+                category: "Bisnis Digital",
+                main: "Omzet kotor (totalHarga) adalah harga jual dikali jumlah beli sebelum dipotong diskon. Total Bayar Bersih (totalBayar) adalah uang riil yang dibayar pembeli setelah dikurangi nominal diskon.",
+                detail: "Jika beli 4 cup @Rp 15.000 (totalHarga = 60000) dan diskon Rp 6.000, maka totalBayar yang masuk ke laci kasir adalah 54000.",
+                source: "Manajemen Ritel"
+            },
+            lababersih: {
+                title: "Laba Bersih Transaksi (Net Profit)",
+                category: "Bisnis Digital",
+                main: "Keuntungan bersih yang benar-benar dikantongi pemilik UMKM dari satu transaksi setelah uang pembayaran pelanggan (totalBayar) dikurangi total modal kulakan (totalModal).",
+                detail: "Rumus di kasir Warung Digital: labaBersih = totalBayar - totalModal. Jika bernilai negatif, berarti diskon terlalu besar hingga toko merugi!",
+                source: "Studi Kasus BD1205"
+            },
+            diskon: {
+                title: "Nominal Diskon (Potongan Harga)",
+                category: "Bisnis Digital",
+                main: "Jumlah potongan rupiah yang diberikan kepada pelanggan, dihitung dari persentase diskon dibagi 100 lalu dikalikan total harga belanja.",
+                detail: "Rumus di Flowgorithm: nominalDiskon = totalHarga * (persenDiskon / 100). Misal diskon 10% dari 60000 menghasilkan nominalDiskon = 6000.",
+                source: "Studi Kasus BD1205"
+            },
+            relasional: {
+                title: "Operasi Logika Relasional (Pembanding)",
+                category: "Logika Komputasi",
+                main: "Operasi untuk membandingkan dua nilai (apakah sama, lebih besar, atau lebih kecil) yang hasilnya selalu berupa nilai kebenaran Boolean: True (Benar) atau False (Salah).",
+                detail: "Mengecek apakah transaksi menghasilkan untung dengan ekspresi 'labaBersih > 0' atau apakah pelanggan berhak dapat promo dengan 'totalHarga >= 50000'.",
+                source: "Sub-CPMK 1.2 BD1205"
+            },
+            boolean: {
+                title: "Boolean (Tipe Data True / False)",
+                category: "Tipe Data",
+                main: "Tipe data logika yang hanya menyimpan nilai True (Benar) atau False (Salah). Merupakan wadah tempat menyimpan hasil dari operasi relasional.",
+                detail: "Variabel 'Declare Boolean apakahUntung' akan berisi True jika labaBersih > 0, atau False jika toko impas/rugi.",
+                source: "Flowgorithm Data Types"
+            },
+            equality: {
+                title: "Operator == (Sama Dengan Pembanding) vs = (Pengisi)",
+                category: "Aturan Sintaks",
+                main: "Tanda satu sama dengan (=) digunakan pada blok Assign untuk mengisi nilai ke variabel, sedangkan dua sama dengan (==) digunakan untuk membandingkan apakah dua nilai sama persis.",
+                detail: "Ekspresi 'jumlahBeli == 10' mengecek apakah jumlahBeli bernilai 10 (menghasilkan True/False).",
+                source: "Flowgorithm Expressions"
+            },
+            real: {
+                title: "Real (Tipe Data Angka Desimal)",
+                category: "Tipe Data",
+                main: "Tipe data untuk menampung angka yang memiliki pecahan desimal (ditulis dengan tanda titik, seperti 0.10 atau 1500.5). Sangat aman digunakan saat perhitungan melibatkan pembagian atau persentase.",
+                detail: "Menyimpan hasil perhitungan diskon atau rasio margin keuntungan yang berpotensi menghasilkan angka desimal.",
+                source: "Flowgorithm Data Types"
+            }
+        };
+
+        function term(key, customLabel) {
+            const item = GLOSSARY_DB[key];
+            if (!item) return customLabel || key;
+            const label = customLabel || item.title.split(' (')[0];
+            return '<span class="tech-term" onclick="showTerm(\'' + key + '\')">' + label + '</span>';
+        }
+
+        function escapeHtml(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        let currentSlideIndex = 0;
+        const TOTAL_SLIDES = 18;
+
+        // State Slide 2: Mengapa Kasir Perlu Kalkulator Modal & Laba
+        let s2StoryMode = 'profit_aware'; // 'omzet_only' | 'profit_aware'
+
+        // State Slide 3: Inspektor 9 Variabel Kalkulator Warung Digital
+        let s3VarKey = 'labaBersih';
+
+        // State Slide 5: Cara Kerja Blok Assign (Kanan ke Kiri)
+        let s5AssignPhase = 2; // 0: baca kanan, 1: hitung ekspresi, 2: simpan ke kiri
+
+        // State Slide 6: Lab 5 Operator Aritmatika
+        let s6OpKey = '*';
+
+        // State Slide 7: Jebakan Pembagian & Diskon (Integer vs Real)
+        let s7TotalBelanja = 55000;
+        let s7PersenDiskon = 15;
+        let s7FormulaStyle = 'correct'; // 'correct' | 'wrong_order'
+
+        // State Slide 8: Battle Prioritas Operator (Tanpa Kurung vs Dengan Kurung)
+        let s8HargaModal = 9000;
+        let s8HargaJual = 15000;
+        let s8JumlahBeli = 4;
+
+        // State Slide 9: Stepper 5 Rumus Kalkulator Transaksi Warung Digital
+        let s9Step = 4;
+
+        // State Slide 11: Eksplorasi 6 Operator Relasional
+        let s11SelectedOp = '>=';
+        let s11ValA = 60000;
+        let s11ValB = 50000;
+
+        // State Slide 12: Perbedaan = (Assign) vs == (Equality)
+        let s12Tab = 'compare'; // 'assign' | 'compare'
+
+        // State Slide 13: Sandbox Terpadu Aritmatika + Logika Relasional Warung Digital
+        let s13Modal = 10000;
+        let s13Jual = 16000;
+        let s13Qty = 4;
+        let s13DiskonPct = 10;
+
+        // State Slide 15: Simulasi 1 - Live IDE Flowgorithm Kalkulator Modal, Diskon & Laba
+        let simStepIndex = -1;
+        let simAutoTimer = null;
+        let simIsAuto = false;
+        let simWaitingVar = null;
+        let simMemory = {
+            namaProduk: null,
+            hargaModal: null,
+            hargaJual: null,
+            jumlahBeli: null,
+            persenDiskon: null,
+            totalHarga: null,
+            nominalDiskon: null,
+            totalBayar: null,
+            totalModal: null,
+            labaBersih: null,
+            apakahUntung: null
+        };
+        let simChatLog = [];
+        let simBannerText = 'Klik tombol Run Otomatis atau Step di kanan atas untuk menjalankan simulasi flowchart kalkulator modal, diskon, dan laba Warung Digital.';
+        let simInputError = '';
+
+        // State Slide 16: Simulasi 2 - Rakit 5 Blok Assign di Kanvas
+        let activeBuilderSlot = 1;
+        let builderSlots = { 1: '', 2: '', 3: '', 4: '', 5: '' };
+        let builderFeedback = { type: '', text: '' };
+
+        // State Slide 17: Simulasi 3 - Drag & Drop 8 Langkah Sequence Kalkulasi
+        const CORRECT_CALC_STEPS = [
+            { id: 1, type: "Main", label: "Main", text: "Mulai program kalkulator transaksi Warung Digital" },
+            { id: 2, type: "Declare", label: "Declare", text: "Declare variabel input, variabel hitung (Real/Integer), & apakahUntung (Boolean)" },
+            { id: 3, type: "Input", label: "Input 1-per-1", text: "Input hargaModal, hargaJual, jumlahBeli, dan persenDiskon satu per satu" },
+            { id: 4, type: "Assign", label: "Assign #1", text: "Assign totalHarga = hargaJual * jumlahBeli (Hitung omzet kotor)" },
+            { id: 5, type: "Assign", label: "Assign #2", text: "Assign nominalDiskon = totalHarga * (persenDiskon / 100)" },
+            { id: 6, type: "Assign", label: "Assign #3", text: "Assign totalBayar = totalHarga - nominalDiskon & totalModal = hargaModal * jumlahBeli" },
+            { id: 7, type: "Assign", label: "Assign #4 & Relasi", text: "Assign labaBersih = totalBayar - totalModal & apakahUntung = labaBersih > 0" },
+            { id: 8, type: "Output", label: "Output & End", text: "Output rincian struk, laba bersih, serta status apakahUntung lalu End" }
+        ];
+        let calcStepsOrder = [...CORRECT_CALC_STEPS].sort(function () { return Math.random() - 0.5; });
+        let calcShowValidation = false;
+        let calcFeedbackText = '';
+        let draggedCalcIndex = null;
+
+        // State Slide 18: Cek Pemahaman Mandiri
+        let selfCheckFeedback = { 1: null, 2: null, 3: null };
+
+        function renderSlide1() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-8">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center my-auto">
+                        <div class="lg:col-span-7 space-y-5">
+                            <div class="inline-flex flex-wrap items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 text-xs font-bold border border-indigo-200/60 dark:border-indigo-800/60">
+                                <span>Pertemuan 3 • Sub-CPMK 1.2 (Bobot 3%)</span>
+                                <span>•</span>
+                                <span>Kasus: UMKM Warung Digital</span>
+                            </div>
+
+                            <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 dark:text-white leading-tight tracking-tight">
+                                Operasi ${term('aritmatika', 'Aritmatika')} &amp; Logika ${term('relasional', 'Relasional')}
+                            </h2>
+
+                            <p class="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Di Minggu 2, kasir Warung Digital baru bisa mencatat pesanan masuk (<span class="font-mono font-bold text-indigo-600 dark:text-indigo-400">namaProduk</span>, <span class="font-mono font-bold text-indigo-600 dark:text-indigo-400">harga</span>, <span class="font-mono font-bold text-indigo-600 dark:text-indigo-400">jumlahBeli</span>). Hari ini di Minggu 3, kita menghidupkan otak perhitungannya menggunakan blok ${term('assign', 'Assign')}: menghitung <strong>total harga</strong>, <strong>potongan diskon</strong>, <strong>total modal (${term('hpp', 'HPP')})</strong>, <strong>${term('lababersih', 'laba bersih')}</strong>, hingga mengecek status untung/rugi dengan <strong>logika relasional</strong>!
+                            </p>
+
+                            <div class="p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200/70 dark:border-indigo-800/70 flex items-center gap-3 text-xs sm:text-sm text-slate-700 dark:text-slate-200">
+                                <i class="fa-solid fa-calculator text-indigo-600 dark:text-indigo-400 text-base shrink-0"></i>
+                                <span><strong>Target Pengalaman Belajar Minggu 3:</strong> Merancang flowchart simulasi kalkulasi total harga, diskon, dan modal-laba transaksi Warung Digital serta memahami ekspresi pembanding (${term('boolean', 'True / False')}) sebagai pondasi menuju materi <em>If-Else</em> di Minggu 4.</span>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-5">
+                            <div class="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 space-y-4">
+                                <div>
+                                    <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Peta 18 Slide Pertemuan 3</span>
+                                    <h3 class="text-lg font-extrabold text-slate-900 dark:text-white mt-1">4 Modul Pembelajaran Terstruktur</h3>
+                                </div>
+
+                                <div class="space-y-2.5">
+                                    <button type="button" onclick="goToSlide(1)" class="w-full text-left flex items-start gap-3 p-3.5 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 dark:hover:bg-slate-800/80 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-0.5 font-extrabold text-xs">M1</div>
+                                        <div>
+                                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">Modul 1: Anatomi Kalkulasi Bisnis UMKM (Slide 1-3)</h4>
+                                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Pentingnya hitung HPP, diskon, &amp; bedah 9 variabel kalkulator kasir.</p>
+                                        </div>
+                                    </button>
+
+                                    <button type="button" onclick="goToSlide(4)" class="w-full text-left flex items-start gap-3 p-3.5 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 dark:hover:bg-slate-800/80 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-0.5 font-extrabold text-xs">M2</div>
+                                        <div>
+                                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">Modul 2: Blok Assign &amp; Operasi Aritmatika (Slide 5-9)</h4>
+                                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Cara kerja Assign, 5 operator (+, -, *, /, %), diskon Real, &amp; kurung ().</p>
+                                        </div>
+                                    </button>
+
+                                    <button type="button" onclick="goToSlide(10)" class="w-full text-left flex items-start gap-3 p-3.5 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 dark:hover:bg-slate-800/80 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-0.5 font-extrabold text-xs">M3</div>
+                                        <div>
+                                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">Modul 3: Operasi Logika Relasional (Slide 11-13)</h4>
+                                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">6 operator pembanding, bedanya = vs ==, &amp; cek status untung/promo.</p>
+                                        </div>
+                                    </button>
+
+                                    <button type="button" onclick="goToSlide(14)" class="w-full text-left flex items-start gap-3 p-3.5 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 dark:hover:bg-slate-800/80 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-0.5 font-extrabold text-xs">M4</div>
+                                        <div>
+                                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">Modul 4: 3 Simulator Lab Kalkulator Kasir (Slide 15-18)</h4>
+                                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Live IDE Flowgorithm, rakit rumus Assign, &amp; urutkan alur kalkulasi.</p>
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide2() {
+            const isProfitAware = s2StoryMode === 'profit_aware';
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-6">
+                    <div class="space-y-2">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 1 • Masalah Nyata Keuangan UMKM</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Mengapa Kasir Digital Tidak Cukup Hanya Menghitung Total Harga Jual?</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Banyak UMKM merasa warungnya ramai pembeli dan uang di laci kasir terlihat banyak (${term('omzet', 'Omzet Kotor')}), tetapi saat akhir bulan ternyata <strong>rugi (boncos)</strong> karena memberikan diskon tanpa menghitung ${term('hpp', 'Harga Modal (HPP)')}. Bandingkan kedua pendekatan sistem kasir di bawah ini:
+                        </p>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" onclick="setS2StoryMode('omzet_only')" class="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm border transition ${!isProfitAware ? 'bg-rose-600 text-white border-rose-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <i class="fa-solid fa-eye-slash mr-1.5"></i>1. Kasir Buta Modal (Hanya Hitung Omzet &amp; Diskon Asal)
+                        </button>
+                        <button type="button" onclick="setS2StoryMode('profit_aware')" class="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm border transition ${isProfitAware ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <i class="fa-solid fa-chart-pie mr-1.5"></i>2. Kalkulator Warung Digital (Hitung Harga, Diskon, Modal &amp; Laba)
+                        </button>
+                    </div>
+
+                    <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 my-auto">
+                        ${!isProfitAware ? `
+                            <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
+                                <div class="lg:col-span-6 p-5 rounded-2xl bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 space-y-3">
+                                    <div class="text-xs font-extrabold text-rose-700 dark:text-rose-300 uppercase">Skenario Jebakan Promo Tanpa Hitung Modal:</div>
+                                    <div class="space-y-1.5 font-mono text-xs bg-white dark:bg-slate-900 p-3.5 rounded-xl border border-rose-200 dark:border-rose-800">
+                                        <div>Menu: <strong>Kopi Susu Aren (Beli 4 Cup)</strong></div>
+                                        <div>Harga Jual: Rp 15.000 x 4 = <strong>Rp 60.000</strong></div>
+                                        <div>Promo Diskon 40%: <strong>-Rp 24.000</strong></div>
+                                        <div class="text-emerald-600 font-bold pt-1 border-t border-slate-100 dark:border-slate-800">Uang Masuk Kasir: Rp 36.000 (Terlihat Banyak!)</div>
+                                    </div>
+                                    <p class="text-xs text-rose-800 dark:text-rose-300 leading-relaxed">
+                                        Kasir senang karena menerima uang Rp 36.000, padahal modal bahan baku 1 cup kopi adalah <strong>Rp 10.000</strong> (4 cup = Rp 40.000). Warung justru <strong>rugi Rp 4.000</strong> di transaksi ini!
+                                    </p>
+                                </div>
+                                <div class="lg:col-span-6 space-y-2.5 text-xs sm:text-sm">
+                                    <div class="font-extrabold text-rose-700 dark:text-rose-400">Mengapa Ini Terjadi?</div>
+                                    <div class="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                        <strong>1. Tidak Menghitung Total Modal (HPP):</strong> Algoritma kasir tidak menyertakan variabel <span class="font-mono">hargaModal</span> dalam perhitungan.
+                                    </div>
+                                    <div class="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                        <strong>2. Tidak Ada Pengecekan Relasional:</strong> Komputer tidak diberi rumus pembanding <span class="font-mono">labaBersih &gt; 0</span> untuk mendeteksi transaksi yang merugi.
+                                    </div>
+                                </div>
+                            </div>
+                        ` : `
+                            <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
+                                <div class="lg:col-span-6 p-5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 space-y-3">
+                                    <div class="text-xs font-extrabold text-indigo-700 dark:text-indigo-300 uppercase">Solusi Algoritma Minggu 3 (5 Rumus Terintegrasi):</div>
+                                    <div class="space-y-1.5 font-mono text-xs bg-white dark:bg-slate-900 p-3.5 rounded-xl border border-indigo-200 dark:border-slate-800">
+                                        <div>1. <strong>totalHarga</strong> = 15000 * 4 = <span class="text-indigo-600 font-bold">60000</span></div>
+                                        <div>2. <strong>nominalDiskon</strong> (10%) = <span class="text-amber-600 font-bold">6000</span></div>
+                                        <div>3. <strong>totalBayar</strong> = 60000 - 6000 = <span class="text-sky-600 font-bold">54000</span></div>
+                                        <div>4. <strong>totalModal</strong> = 10000 * 4 = <span class="text-slate-500 font-bold">40000</span></div>
+                                        <div class="pt-1 border-t border-slate-100 dark:border-slate-800 text-emerald-600 font-extrabold">5. labaBersih = 54000 - 40000 = Rp 14.000 (Untung!)</div>
+                                    </div>
+                                </div>
+                                <div class="lg:col-span-6 space-y-2.5 text-xs sm:text-sm">
+                                    <div class="font-extrabold text-emerald-700 dark:text-emerald-400">Keunggulan Sistem Kasir Warung Digital:</div>
+                                    <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                        <strong>1. Pelanggan Senang (Struk Jelas):</strong> Pembeli melihat rincian harga awal, potongan diskon, dan nominal akhir yang harus dibayar.
+                                    </div>
+                                    <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                        <strong>2. Pemilik Warung Tenang (Laba Terukur):</strong> Setiap kali transaksi selesai, pemilik langsung tahu berapa modal yang terpakai dan berapa ${term('lababersih', 'laba bersih')} yang masuk kantong.
+                                    </div>
+                                    <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                        <strong>3. Indikator Logika Relasional:</strong> Variabel ${term('boolean', 'Boolean')} <span class="font-mono">apakahUntung</span> otomatis bernilai <span class="font-mono font-bold text-emerald-600">True</span> jika <span class="font-mono">labaBersih &gt; 0</span>.
+                                    </div>
+                                </div>
+                            </div>
+                        `}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide3() {
+            const varsInfo = {
+                namaProduk: {
+                    group: "1. Variabel INPUT (Diketik Kasir)",
+                    type: "String",
+                    role: "Menyimpan teks nama menu yang dibeli pelanggan.",
+                    cmd: "Input namaProduk",
+                    sample: "\"Kopi Susu Gula Aren\""
+                },
+                hargaModal: {
+                    group: "1. Variabel INPUT (Diketik Kasir)",
+                    type: "Real / Integer",
+                    role: "Menyimpan angka modal pokok (HPP) untuk 1 unit produk.",
+                    cmd: "Input hargaModal",
+                    sample: "10000"
+                },
+                hargaJual: {
+                    group: "1. Variabel INPUT (Diketik Kasir)",
+                    type: "Real / Integer",
+                    role: "Menyimpan harga jual normal 1 unit produk ke pelanggan.",
+                    cmd: "Input hargaJual",
+                    sample: "15000"
+                },
+                jumlahBeli: {
+                    group: "1. Variabel INPUT (Diketik Kasir)",
+                    type: "Integer",
+                    role: "Menyimpan banyaknya unit atau porsi yang dipesan pelanggan.",
+                    cmd: "Input jumlahBeli",
+                    sample: "4"
+                },
+                persenDiskon: {
+                    group: "1. Variabel INPUT (Diketik Kasir)",
+                    type: "Real",
+                    role: "Menyimpan angka persentase diskon (misal 10 untuk diskon 10%).",
+                    cmd: "Input persenDiskon",
+                    sample: "10"
+                },
+                totalHarga: {
+                    group: "2. Variabel PROSES (Dihitung Blok Assign)",
+                    type: "Real",
+                    role: "Menyimpan omzet kotor sebelum dipotong diskon (hargaJual dikali jumlahBeli).",
+                    cmd: "Assign totalHarga = hargaJual * jumlahBeli",
+                    sample: "60000"
+                },
+                nominalDiskon: {
+                    group: "2. Variabel PROSES (Dihitung Blok Assign)",
+                    type: "Real",
+                    role: "Menyimpan nilai rupiah potongan diskon dari totalHarga.",
+                    cmd: "Assign nominalDiskon = totalHarga * (persenDiskon / 100)",
+                    sample: "6000"
+                },
+                totalBayar: {
+                    group: "2. Variabel PROSES (Dihitung Blok Assign)",
+                    type: "Real",
+                    role: "Menyimpan tagihan bersih yang harus dibayar pembeli setelah dikurangi diskon.",
+                    cmd: "Assign totalBayar = totalHarga - nominalDiskon",
+                    sample: "54000"
+                },
+                totalModal: {
+                    group: "2. Variabel PROSES (Dihitung Blok Assign)",
+                    type: "Real",
+                    role: "Menyimpan seluruh biaya modal untuk barang yang terjual di transaksi tersebut.",
+                    cmd: "Assign totalModal = hargaModal * jumlahBeli",
+                    sample: "40000"
+                },
+                labaBersih: {
+                    group: "2. Variabel PROSES (Dihitung Blok Assign)",
+                    type: "Real",
+                    role: "Menyimpan keuntungan bersih toko (uang totalBayar dikurangi totalModal).",
+                    cmd: "Assign labaBersih = totalBayar - totalModal",
+                    sample: "14000"
+                },
+                apakahUntung: {
+                    group: "3. Variabel RELASIONAL (Hasil Pembanding)",
+                    type: "Boolean (True/False)",
+                    role: "Menyimpan status kebenaran apakah transaksi menghasilkan keuntungan positif.",
+                    cmd: "Assign apakahUntung = labaBersih > 0",
+                    sample: "true"
+                }
+            };
+
+            const cur = varsInfo[s3VarKey];
+            const inputKeys = ['namaProduk', 'hargaModal', 'hargaJual', 'jumlahBeli', 'persenDiskon'];
+            const assignKeys = ['totalHarga', 'nominalDiskon', 'totalBayar', 'totalModal', 'labaBersih', 'apakahUntung'];
+
+            const renderBtnList = function (list) {
+                return list.map(function (k) {
+                    const active = s3VarKey === k;
+                    return `
+                        <button type="button" onclick="selectS3Var('${k}')" class="px-3 py-1.5 rounded-xl font-mono text-xs font-bold border transition ${active ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:border-indigo-400'}">
+                            ${k}
+                        </button>
+                    `;
+                }).join('');
+            };
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 1 • Perencanaan Kamus Data (P-I-P-O)</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Peta Variabel Kalkulator Transaksi "Warung Digital"</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Perhatikan perbedaan penting di Minggu 3: <strong>tidak semua variabel diisi lewat <span class="font-mono">Input</span>!</strong> Variabel hasil hitungan (seperti <span class="font-mono">totalHarga</span> dan <span class="font-mono">labaBersih</span>) tidak boleh diketik manual oleh kasir, melainkan <strong>dihitung otomatis oleh komputer melalui blok ${term('assign', 'Assign')}</strong>. Klik setiap variabel di bawah ini:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <div class="lg:col-span-7 space-y-3.5 flex flex-col justify-center">
+                            <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
+                                <div class="text-xs font-extrabold text-sky-700 dark:text-sky-400 uppercase tracking-wider">
+                                    <i class="fa-solid fa-keyboard mr-1.5"></i>Kelompok A: Variabel Input (Diisi Ketikan Kasir)
+                                </div>
+                                <div class="flex flex-wrap gap-2">
+                                    ${renderBtnList(inputKeys)}
+                                </div>
+                            </div>
+
+                            <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
+                                <div class="text-xs font-extrabold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
+                                    <i class="fa-solid fa-gears mr-1.5"></i>Kelompok B: Variabel Proses &amp; Relasional (Dihitung Otomatis lewat Assign)
+                                </div>
+                                <div class="flex flex-wrap gap-2">
+                                    ${renderBtnList(assignKeys)}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-5 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-2 border-indigo-500/60 flex flex-col justify-between gap-4">
+                            <div class="space-y-2">
+                                <span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">${cur.group}</span>
+                                <h3 class="text-xl font-extrabold font-mono text-indigo-600 dark:text-indigo-400 mt-1">${s3VarKey}</h3>
+                                <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${cur.role}</p>
+                            </div>
+
+                            <div class="p-3.5 rounded-2xl bg-slate-900 text-slate-100 font-mono text-xs space-y-1">
+                                <div class="text-slate-400">// Instruksi di Flowgorithm:</div>
+                                <div class="text-amber-300 font-bold break-all">${escapeHtml(cur.cmd)}</div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-2.5 text-xs">
+                                <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                    <span class="text-slate-400 block">Tipe Data:</span>
+                                    <span class="font-extrabold text-slate-800 dark:text-slate-200">${cur.type}</span>
+                                </div>
+                                <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                    <span class="text-slate-400 block">Contoh Isi Laci:</span>
+                                    <span class="font-mono font-extrabold text-emerald-600 dark:text-emerald-400">${cur.sample}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide4() {
+            return `
+                <div class="slide-enter flex flex-col justify-center h-full my-auto">
+                    <div class="p-8 sm:p-12 rounded-3xl bg-gradient-to-br from-indigo-600 to-slate-900 text-white space-y-6 shadow-lg">
+                        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/15 text-indigo-100 text-xs font-extrabold uppercase tracking-wider">
+                            <i class="fa-solid fa-bridge"></i>
+                            <span>Jembatan Antar Topik • Modul 1 Menuju Modul 2</span>
+                        </div>
+
+                        <h2 class="text-2xl sm:text-4xl font-extrabold leading-tight">
+                            Kita sudah tahu daftar variabel yang harus dihitung otomatis oleh komputer. Sekarang bagaimana cara kerja blok Assign dan simbol matematika di Flowgorithm?
+                        </h2>
+
+                        <p class="text-indigo-100 text-sm sm:text-base leading-relaxed max-w-3xl">
+                            Di <strong>Modul 2 (Slide 5 s/d 9)</strong>, kita akan membedah anatomi simbol <strong>Assign (Persegi Panjang Kuning)</strong>, mempraktikkan <strong>5 Operator Aritmatika</strong>, menghindari jebakan pembagian desimal, serta membuktikan betapa fatalnya salah menaruh <strong>tanda kurung <span class="font-mono">()</span></strong> saat menghitung laba bersih!
+                        </p>
+
+                        <div class="pt-2">
+                            <button type="button" onclick="changeSlide(1)" class="px-5 py-3 rounded-xl bg-white text-indigo-700 hover:bg-indigo-50 font-extrabold text-xs sm:text-sm transition inline-flex items-center gap-2 shadow-sm">
+                                <span>Masuk ke Modul 2: Blok Assign &amp; Operasi Aritmatika</span>
+                                <i class="fa-solid fa-arrow-right text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide5() {
+            const phases = [
+                {
+                    badge: "Tahap 1 dari 3 • Ambil Isi Laci di Sebelah Kanan",
+                    title: "1. Komputer Membaca Ekspresi di Sebelah KANAN Tanda =",
+                    desc: "Saat mengeksekusi blok Assign, komputer selalu melihat ke sebelah KANAN tanda sama dengan (=) terlebih dahulu. Ia membuka laci hargaJual (berisi 15000) dan laci jumlahBeli (berisi 4).",
+                    rightHighlight: "ring-4 ring-indigo-500 bg-indigo-50 dark:bg-indigo-950/60",
+                    leftHighlight: "opacity-60",
+                    memTotal: "uninitialized (belum terisi)"
+                },
+                {
+                    badge: "Tahap 2 dari 3 • Hitung Operasi Matematika",
+                    title: "2. Komputer Menghitung Perkalian 15000 * 4",
+                    desc: "Mesin prosesor komputer mengalikan kedua angka tersebut: 15000 * 4 sehingga menghasilkan satu angka tunggal yaitu 60000.",
+                    rightHighlight: "ring-4 ring-amber-500 bg-amber-50 dark:bg-amber-950/60",
+                    leftHighlight: "opacity-60",
+                    memTotal: "Sedang dihitung -> 60000"
+                },
+                {
+                    badge: "Tahap 3 dari 3 • Masukkan Hasil ke Laci di Sebelah Kiri",
+                    title: "3. Hasil 60000 Disimpan Masuk ke Variabel di Sebelah KIRI",
+                    desc: "Terakhir, angka 60000 dimasukkan ke dalam variabel target di sebelah KIRI tanda sama dengan (=), yaitu variabel totalHarga. Ingat: arah aliran data selalu dari KANAN ke KIRI!",
+                    rightHighlight: "opacity-75",
+                    leftHighlight: "ring-4 ring-emerald-500 bg-emerald-50 dark:bg-emerald-950/60",
+                    memTotal: "60000 (Tersimpan di Memori!)"
+                }
+            ];
+
+            const cur = phases[s5AssignPhase];
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 2 • Anatomi Instruksi Perhitungan</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Cara Kerja Blok ${term('assign', 'Assign')} (Arah Aliran: Kanan ke Kiri)</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Di sekolah dasar, kita terbiasa menulis <span class="font-mono">15000 x 4 = 60000</span> (hasil di kanan). Namun di dalam pemrograman dan Flowgorithm, <strong>nama variabel penampung hasil WAJIB berada di sebelah KIRI</strong>, sedangkan rumus ${term('ekspresi', 'ekspresi')} berada di sebelah KANAN. Klik tahap 1 sampai 3 di bawah ini:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        <button type="button" onclick="setS5Phase(0)" class="p-3 rounded-2xl border text-left transition ${s5AssignPhase === 0 ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-[11px] font-bold opacity-80">Langkah 1</div>
+                            <div class="text-xs sm:text-sm font-extrabold">1. Baca Sebelah Kanan</div>
+                        </button>
+                        <button type="button" onclick="setS5Phase(1)" class="p-3 rounded-2xl border text-left transition ${s5AssignPhase === 1 ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-[11px] font-bold opacity-80">Langkah 2</div>
+                            <div class="text-xs sm:text-sm font-extrabold">2. Hitung Rumus (*)</div>
+                        </button>
+                        <button type="button" onclick="setS5Phase(2)" class="p-3 rounded-2xl border text-left transition ${s5AssignPhase === 2 ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-[11px] font-bold opacity-80">Langkah 3</div>
+                            <div class="text-xs sm:text-sm font-extrabold">3. Simpan ke Sebelah Kiri</div>
+                        </button>
+                    </div>
+
+                    <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-5 my-auto">
+                        <!-- Visualisasi Kanan ke Kiri -->
+                        <div class="p-4 rounded-2xl bg-amber-50/70 dark:bg-amber-950/20 border-2 border-amber-400 dark:border-amber-700 flex flex-col md:flex-row items-center justify-center gap-4 font-mono">
+                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-center transition ${cur.leftHighlight}">
+                                <div class="text-[10px] font-sans font-bold uppercase text-emerald-600 dark:text-emerald-400">Variabel Target (Kiri)</div>
+                                <div class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white mt-0.5">totalHarga</div>
+                            </div>
+
+                            <div class="flex flex-col items-center">
+                                <span class="text-xs font-sans font-extrabold text-indigo-600 dark:text-indigo-400">Simpan ke Kiri</span>
+                                <span class="text-2xl font-extrabold text-indigo-600 dark:text-indigo-400">⬅ ( = )</span>
+                            </div>
+
+                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-center transition ${cur.rightHighlight}">
+                                <div class="text-[10px] font-sans font-bold uppercase text-indigo-600 dark:text-indigo-400">Ekspresi Rumus (Kanan)</div>
+                                <div class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white mt-0.5">hargaJual * jumlahBeli</div>
+                                <div class="text-xs text-slate-500 mt-0.5">(15000 * 4 = 60000)</div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+                            <div class="lg:col-span-8 space-y-1">
+                                <span class="text-xs font-extrabold text-indigo-600 dark:text-indigo-400">${cur.badge}</span>
+                                <h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">${cur.title}</h3>
+                                <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${cur.desc}</p>
+                            </div>
+                            <div class="lg:col-span-4 p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs">
+                                <span class="text-slate-400 block">Isi Laci <span class="font-mono font-bold">totalHarga</span>:</span>
+                                <span class="font-mono font-extrabold text-sm text-emerald-600 dark:text-emerald-400 mt-1 block">${cur.memTotal}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide6() {
+            const opsDB = {
+                '+': {
+                    name: "1. Penjumlahan (+)",
+                    symbol: "+",
+                    flowSyntax: "totalTagihan = totalBelanja + ongkosKirim",
+                    sampleCalc: "54000 + 5000 = 59000",
+                    desc: "Menjumlahkan dua nilai angka. Di Warung Digital dipakai untuk menambahkan biaya ongkos kirim kurir lokal atau biaya kemasan kardus ke tagihan pelanggan.",
+                    warning: "Pastikan kedua variabel bertipe angka (Integer/Real) agar dijumlahkan secara matematika."
+                },
+                '-': {
+                    name: "2. Pengurangan (-)",
+                    symbol: "-",
+                    flowSyntax: "labaBersih = totalBayar - totalModal",
+                    sampleCalc: "54000 - 40000 = 14000",
+                    desc: "Mengurangi nilai di kiri dengan nilai di kanan. Sangat krusial di kasir untuk menghitung harga setelah dipotong diskon, uang kembalian, serta menghitung Laba Bersih (Total Bayar dikurangi Total Modal).",
+                    warning: "Urutan sangat penting! Jangan terbalik menulis totalModal - totalBayar karena hasilnya akan menjadi minus."
+                },
+                '*': {
+                    name: "3. Perkalian (*)",
+                    symbol: "*",
+                    flowSyntax: "totalHarga = hargaJual * jumlahBeli",
+                    sampleCalc: "15000 * 4 = 60000",
+                    desc: "Mengalikan dua nilai angka. Ingat: di komputer, perkalian WAJIB menggunakan simbol tanda bintang (*), bukan huruf x atau titik!",
+                    warning: "Jika Anda menulis 'hargaJual x jumlahBeli' dengan huruf x, Flowgorithm akan menolak dengan pesan Syntax Error."
+                },
+                '/': {
+                    name: "4. Pembagian (/)",
+                    symbol: "/",
+                    flowSyntax: "nominalDiskon = totalHarga * (persenDiskon / 100)",
+                    sampleCalc: "60000 * (10 / 100) = 6000",
+                    desc: "Membagi nilai di kiri dengan nilai di kanan menggunakan garis miring (/). Digunakan saat mengubah angka persentase diskon (misal 10) menjadi desimal (10 / 100 = 0.1).",
+                    warning: "Karena pembagian sering menghasilkan angka desimal (koma), gunakan tipe data Real untuk variabel penampungnya."
+                },
+                '%': {
+                    name: "5. Sisa Bagi (Mod atau %)",
+                    symbol: "% (Mod)",
+                    flowSyntax: "sisaBotol = jumlahBeli % 6",
+                    sampleCalc: "14 % 6 = 2 (Karena 14 dibagi 6 dapat 2 kardus, sisa 2 botol)",
+                    desc: "Menghasilkan angka SISA dari pembagian bilangan bulat (" + term('modulo', 'Modulo') + "). Di Flowgorithm bisa ditulis dengan simbol % atau kata Mod.",
+                    warning: "Sangat berguna di logika gudang UMKM: menghitung sisa botol eceran yang tidak muat dimasukkan ke dalam pak isi 6 atau lusinan isi 12."
+                }
+            };
+
+            const keys = ['+', '-', '*', '/', '%'];
+            let tabsHtml = '';
+            for (let i = 0; i < keys.length; i++) {
+                const k = keys[i];
+                const active = s6OpKey === k;
+                tabsHtml += `
+                    <button type="button" onclick="setS6Op('${k}')" class="p-3 rounded-2xl border text-left transition ${active ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:bg-slate-100'}">
+                        <div class="font-mono text-base font-extrabold ${active ? 'text-amber-300' : 'text-indigo-600 dark:text-indigo-400'}">${opsDB[k].symbol}</div>
+                        <div class="text-xs font-extrabold mt-0.5">${opsDB[k].name.split('. ')[1]}</div>
+                    </button>
+                `;
+            }
+
+            const cur = opsDB[s6OpKey];
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 2 • Perangkat Hitung Matematika</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Laboratorium 5 Operator ${term('aritmatika', 'Aritmatika')} di Flowgorithm</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Klik kelima tombol ${term('operand', 'operator')} di bawah ini untuk melihat penulisan resminya di Flowgorithm beserta penerapannya pada kasus Warung Digital:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+                        ${tabsHtml}
+                    </div>
+
+                    <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-4 my-auto">
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
+                            <div class="lg:col-span-7 space-y-2.5">
+                                <span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">Operator Aktif: ${cur.name}</span>
+                                <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Contoh Rumus: <span class="font-mono text-indigo-600 dark:text-indigo-400">${cur.flowSyntax}</span></h3>
+                                <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${cur.desc}</p>
+                            </div>
+
+                            <div class="lg:col-span-5 fg-canvas rounded-2xl p-4 border border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center gap-2">
+                                <span class="text-[11px] font-bold text-slate-400 uppercase">Blok Assign di Flowgorithm</span>
+                                <svg class="w-full max-w-[295px] h-auto" viewBox="0 0 320 52">
+                                    <rect x="8" y="4" width="304" height="44" fill="#fef08a" stroke="#a16207" stroke-width="2.4"/>
+                                    <text x="160" y="31" text-anchor="middle" fill="#713f12" font-weight="700" font-size="11.5">${cur.flowSyntax}</text>
+                                </svg>
+                                <div class="font-mono text-xs font-extrabold text-emerald-700 dark:text-emerald-400 mt-1">${cur.sampleCalc}</div>
+                            </div>
+                        </div>
+
+                        <div class="p-3.5 rounded-2xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-800 text-xs text-amber-900 dark:text-amber-200 font-semibold">
+                            <i class="fa-solid fa-triangle-exclamation mr-1.5"></i><strong>Catatan Penting Praktikum:</strong> ${escapeHtml(cur.warning)}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide7() {
+            const exactDiscount = s7TotalBelanja * (s7PersenDiskon / 100);
+            const finalBayar = s7TotalBelanja - exactDiscount;
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 2 • Akurasi Perhitungan Persentase Diskon</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Cara Menghitung ${term('diskon', 'Potongan Diskon')} &amp; Pemilihan Tipe Data ${term('real', 'Real')}</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Di Flowgorithm, kita tidak bisa menulis simbol <span class="font-mono">15%</span> secara langsung di dalam rumus perkalian karena simbol <span class="font-mono">%</span> berarti <strong>Modulo (Sisa Bagi)</strong>! Untuk menghitung diskon 15%, kita wajib membagi angka persen dengan 100: <span class="font-mono font-bold text-indigo-600 dark:text-indigo-400">(persenDiskon / 100)</span> dan menggunakan tipe data ${term('real', 'Real')}.
+                        </p>
+                    </div>
+
+                    <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-4 my-auto">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <label class="text-xs font-bold text-slate-500 block mb-1">Total Harga Belanja (totalHarga):</label>
+                                <input type="number" step="1000" value="${s7TotalBelanja}" oninput="updateS7DiscountSim('total', this.value)" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-sm font-extrabold text-indigo-600 dark:text-indigo-400">
+                            </div>
+                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <label class="text-xs font-bold text-slate-500 block mb-1">Persentase Diskon (persenDiskon %):</label>
+                                <input type="number" min="0" max="90" value="${s7PersenDiskon}" oninput="updateS7DiscountSim('persen', this.value)" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-sm font-extrabold text-amber-600 dark:text-amber-400">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                            <!-- Kiri: Jebakan Pakai Simbol % -->
+                            <div class="p-4 rounded-2xl bg-rose-50/70 dark:bg-rose-950/30 border border-rose-300 dark:border-rose-800 space-y-2">
+                                <div class="text-xs font-extrabold text-rose-700 dark:text-rose-300 uppercase">
+                                    <i class="fa-solid fa-xmark mr-1"></i>SALAH: Menulis Simbol % untuk Persen
+                                </div>
+                                <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 font-mono text-xs text-rose-700 dark:text-rose-300 font-bold">
+                                    Assign nominalDiskon = totalHarga * 15%
+                                </div>
+                                <p class="text-xs text-slate-600 dark:text-slate-300">
+                                    Di Flowgorithm, simbol <span class="font-mono">%</span> bukan persen, melainkan operator <strong>Modulo (Sisa Bagi)</strong>! Menulis <span class="font-mono">15%</span> tanpa angka pembagi di kanannya akan menyebabkan <em>Syntax Error</em>.
+                                </p>
+                            </div>
+
+                            <!-- Kanan: Rumus Resmi yang Benar -->
+                            <div class="p-4 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-400 dark:border-emerald-800 space-y-2">
+                                <div class="text-xs font-extrabold text-emerald-700 dark:text-emerald-300 uppercase">
+                                    <i class="fa-solid fa-check mr-1"></i>BENAR: Dibagi 100 dengan Tipe Data Real
+                                </div>
+                                <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 font-mono text-xs text-emerald-700 dark:text-emerald-300 font-bold">
+                                    Assign nominalDiskon = totalHarga * (persenDiskon / 100)
+                                </div>
+                                <div id="s7ResultText" class="font-mono text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white pt-1">
+                                    Diskon = Rp ${exactDiscount.toLocaleString('id-ID')} | Total Bayar = Rp ${finalBayar.toLocaleString('id-ID')}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-300">
+                            <i class="fa-solid fa-lightbulb text-amber-500 mr-1.5"></i>
+                            <strong>Mengapa Memakai Tipe Data <span class="font-mono">Real</span>?</strong> Karena operasi <span class="font-mono">persenDiskon / 100</span> (misal <span class="font-mono">15 / 100</span>) menghasilkan angka desimal <span class="font-mono font-bold">0.15</span>. Dengan mendeklarasikan variabel uang dan diskon sebagai ${term('real', 'Real')}, perhitungan di Flowgorithm dijamin akurat tanpa pembulatan paksa.
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide8() {
+            const wrongProfit = s8HargaJual - (s8HargaModal * s8JumlahBeli);
+            const rightProfit = (s8HargaJual - s8HargaModal) * s8JumlahBeli;
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 2 • Hukum Urutan Pengerjaan Matematika</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Hukum Prioritas Operator (${term('precedence', 'Operator Precedence')}) &amp; Tanda Kurung <span class="font-mono">()</span></h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Komputer selalu mengerjakan <strong>perkalian (<span class="font-mono">*</span>) dan pembagian (<span class="font-mono">/</span>) lebih dulu</strong> daripada penjumlahan (<span class="font-mono">+</span>) dan pengurangan (<span class="font-mono">-</span>). Jika Anda ingin pengurangan dikerjakan lebih dulu, <strong>wajib dikurung dengan <span class="font-mono">()</span></strong>! Lihat betapa fatalnya jika lupa tanda kurung saat menghitung laba:
+                        </p>
+                    </div>
+
+                    <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-4 my-auto">
+                        <!-- Input Angka Uji -->
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <label class="text-[11px] font-bold text-slate-400 block mb-1">Harga Modal 1 Cup (hargaModal):</label>
+                                <input type="number" step="500" value="${s8HargaModal}" oninput="updateS8Precedence('modal', this.value)" class="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-xs font-bold">
+                            </div>
+                            <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <label class="text-[11px] font-bold text-slate-400 block mb-1">Harga Jual 1 Cup (hargaJual):</label>
+                                <input type="number" step="500" value="${s8HargaJual}" oninput="updateS8Precedence('jual', this.value)" class="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-xs font-bold">
+                            </div>
+                            <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <label class="text-[11px] font-bold text-slate-400 block mb-1">Jumlah Cup Terjual (jumlahBeli):</label>
+                                <input type="number" min="1" value="${s8JumlahBeli}" oninput="updateS8Precedence('qty', this.value)" class="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-xs font-bold">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Kiri: Tanpa Kurung (Salah Besar) -->
+                            <div class="p-4 rounded-2xl bg-rose-50/70 dark:bg-rose-950/30 border-2 border-rose-400 dark:border-rose-800 space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-extrabold text-rose-700 dark:text-rose-300 uppercase">1. Tanpa Tanda Kurung (SALAH BESAR!)</span>
+                                    <span class="px-2 py-0.5 rounded bg-rose-600 text-white text-[10px] font-bold">Bug Logika</span>
+                                </div>
+                                <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 font-mono text-xs font-bold text-rose-700 dark:text-rose-300">
+                                    laba = hargaJual - hargaModal * jumlahBeli
+                                </div>
+                                <p id="s8WrongSteps" class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    Komputer mengalikan <span class="font-mono">${s8HargaModal} * ${s8JumlahBeli} = ${s8HargaModal * s8JumlahBeli}</span> dulu, baru menghitung <span class="font-mono">${s8HargaJual} - ${s8HargaModal * s8JumlahBeli}</span>!
+                                </p>
+                                <div id="s8WrongVal" class="font-mono text-base font-extrabold text-rose-700 dark:text-rose-400 pt-1">
+                                    Hasil Salah: Rp ${wrongProfit.toLocaleString('id-ID')} (Seolah Rugi!)
+                                </div>
+                            </div>
+
+                            <!-- Kanan: Dengan Kurung (Benar) -->
+                            <div class="p-4 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border-2 border-emerald-500 dark:border-emerald-800 space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-extrabold text-emerald-700 dark:text-emerald-300 uppercase">2. Dengan Tanda Kurung () (BENAR &amp; AKURAT)</span>
+                                    <span class="px-2 py-0.5 rounded bg-emerald-600 text-white text-[10px] font-bold">Standar Emas</span>
+                                </div>
+                                <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 font-mono text-xs font-bold text-emerald-700 dark:text-emerald-300">
+                                    laba = (hargaJual - hargaModal) * jumlahBeli
+                                </div>
+                                <p id="s8RightSteps" class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    Komputer mengurangi dalam kurung <span class="font-mono">(${s8HargaJual} - ${s8HargaModal}) = ${s8HargaJual - s8HargaModal}</span> dulu, lalu dikali <span class="font-mono">${s8JumlahBeli}</span>!
+                                </p>
+                                <div id="s8RightVal" class="font-mono text-base font-extrabold text-emerald-700 dark:text-emerald-400 pt-1">
+                                    Hasil Benar: Rp ${rightProfit.toLocaleString('id-ID')} (Untung Akurat!)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide9() {
+            const pipeline = [
+                {
+                    num: 1,
+                    varName: "totalHarga",
+                    formula: "Assign totalHarga = hargaJual * jumlahBeli",
+                    calc: "15000 * 4 = 60000",
+                    desc: "Langkah 1: Menghitung omzet kotor (subtotal belanja sebelum diskon) dengan mengalikan harga jual satuan dan jumlah beli."
+                },
+                {
+                    num: 2,
+                    varName: "nominalDiskon",
+                    formula: "Assign nominalDiskon = totalHarga * (persenDiskon / 100)",
+                    calc: "60000 * (10 / 100) = 6000",
+                    desc: "Langkah 2: Menghitung nilai rupiah potongan diskon berdasarkan variabel totalHarga yang baru saja dihitung di Langkah 1."
+                },
+                {
+                    num: 3,
+                    varName: "totalBayar",
+                    formula: "Assign totalBayar = totalHarga - nominalDiskon",
+                    calc: "60000 - 6000 = 54000",
+                    desc: "Langkah 3: Menghitung uang bersih yang wajib dibayarkan pelanggan ke kasir setelah dipotong nominal diskon."
+                },
+                {
+                    num: 4,
+                    varName: "totalModal",
+                    formula: "Assign totalModal = hargaModal * jumlahBeli",
+                    calc: "10000 * 4 = 40000",
+                    desc: "Langkah 4: Menghitung total modal kulakan (HPP) untuk seluruh barang yang keluar pada transaksi tersebut."
+                },
+                {
+                    num: 5,
+                    varName: "labaBersih",
+                    formula: "Assign labaBersih = totalBayar - totalModal",
+                    calc: "54000 - 40000 = 14000",
+                    desc: "Langkah 5: Menghitung keuntungan bersih transaksi dengan mengurangi uang bersih yang masuk (totalBayar) dengan totalModal."
+                }
+            ];
+
+            const cur = pipeline[s9Step];
+
+            let stepBtns = '';
+            for (let i = 0; i < pipeline.length; i++) {
+                const active = s9Step === i;
+                stepBtns += `
+                    <button type="button" onclick="setS9Step(${i})" class="p-3 rounded-2xl border text-left transition ${active ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700'}">
+                        <div class="text-[10px] font-bold ${active ? 'text-indigo-200' : 'text-indigo-600 dark:text-indigo-400'}">Rumus #${i + 1}</div>
+                        <div class="font-mono text-xs font-extrabold mt-0.5 truncate">${pipeline[i].varName}</div>
+                    </button>
+                `;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 2 • Rantai Perhitungan Berurutan (Sequence of Assigns)</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">5 Rumus Berantai Kalkulator "Warung Digital"</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Perhatikan bagaimana kelima blok ${term('assign', 'Assign')} ini saling bergantung secara berurutan: Anda tidak bisa menghitung <span class="font-mono">labaBersih</span> di Rumus #5 sebelum menghitung <span class="font-mono">totalBayar</span> di Rumus #3 dan <span class="font-mono">totalModal</span> di Rumus #4! Klik Rumus #1 sampai #5:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+                        ${stepBtns}
+                    </div>
+
+                    <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 grid grid-cols-1 lg:grid-cols-12 gap-5 items-center my-auto">
+                        <div class="lg:col-span-6 fg-canvas rounded-2xl p-4 border border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center gap-2">
+                            <span class="text-[11px] font-bold text-slate-400 uppercase">Blok Assign Ke-${cur.num} di Flowgorithm</span>
+                            <svg class="w-full max-w-[310px] h-auto" viewBox="0 0 340 54">
+                                <rect x="6" y="4" width="328" height="46" fill="#fef08a" stroke="#a16207" stroke-width="2.4"/>
+                                <text x="170" y="32" text-anchor="middle" fill="#713f12" font-weight="700" font-size="11.2">${cur.formula}</text>
+                            </svg>
+                            <div class="px-3 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-mono text-xs font-extrabold mt-1">
+                                Simulasi Angka: ${cur.calc}
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-6 space-y-2.5">
+                            <span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">Urutan Eksekusi Ke-${cur.num} dari 5</span>
+                            <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Menghitung Variabel <span class="font-mono text-indigo-600 dark:text-indigo-400">${cur.varName}</span></h3>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${cur.desc}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide10() {
+            return `
+                <div class="slide-enter flex flex-col justify-center h-full my-auto">
+                    <div class="p-8 sm:p-12 rounded-3xl bg-gradient-to-br from-indigo-600 to-slate-900 text-white space-y-6 shadow-lg">
+                        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/15 text-indigo-100 text-xs font-extrabold uppercase tracking-wider">
+                            <i class="fa-solid fa-bridge"></i>
+                            <span>Jembatan Antar Topik • Modul 2 Menuju Modul 3</span>
+                        </div>
+
+                        <h2 class="text-2xl sm:text-4xl font-extrabold leading-tight">
+                            Komputer sudah berhasil menghitung angka Laba Bersih dan Total Harga. Namun bagaimana cara komputer menilai "Apakah Transaksi Ini Untung?" atau "Apakah Belanja Mencapai Syarat Promo?"
+                        </h2>
+
+                        <p class="text-indigo-100 text-sm sm:text-base leading-relaxed max-w-3xl">
+                            Jika Operasi Aritmatika menghasilkan <strong>angka</strong>, maka <strong>Operasi Logika Relasional (Pembanding)</strong> membandingkan dua nilai dan menghasilkan jawaban <strong>Ya (<span class="font-mono">True</span>)</strong> atau <strong>Tidak (<span class="font-mono">False</span>)</strong>. Mari kita pelajari di <strong>Modul 3 (Slide 11 s/d 13)</strong>!
+                        </p>
+
+                        <div class="pt-2">
+                            <button type="button" onclick="changeSlide(1)" class="px-5 py-3 rounded-xl bg-white text-indigo-700 hover:bg-indigo-50 font-extrabold text-xs sm:text-sm transition inline-flex items-center gap-2 shadow-sm">
+                                <span>Masuk ke Modul 3: Operasi Logika Relasional</span>
+                                <i class="fa-solid fa-arrow-right text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function evaluateRelational(a, b, op) {
+            if (op === '==') return a === b;
+            if (op === '!=') return a !== b;
+            if (op === '>') return a > b;
+            if (op === '<') return a < b;
+            if (op === '>=') return a >= b;
+            if (op === '<=') return a <= b;
+            return false;
+        }
+
+        function renderSlide11() {
+            const relOps = [
+                { op: '>', name: "Lebih Besar Dari (>)", caseText: "labaBersih > 0 (Cek apakah toko untung)" },
+                { op: '<', name: "Lebih Kecil Dari (<)", caseText: "labaBersih < 0 (Cek apakah toko merugi)" },
+                { op: '>=', name: "Lebih Besar atau Sama Dengan (>=)", caseText: "totalHarga >= 50000 (Syarat minimal diskon)" },
+                { op: '<=', name: "Lebih Kecil atau Sama Dengan (<=)", caseText: "jumlahBeli <= stokGudang (Cek stok cukup)" },
+                { op: '==', name: "Sama Dengan Pembanding (==)", caseText: "jumlahBeli == 10 (Cek beli pas 10 item)" },
+                { op: '!=', name: "Tidak Sama Dengan (!= atau <>)", caseText: "persenDiskon != 0 (Cek ada diskon aktif)" }
+            ];
+
+            const boolResult = evaluateRelational(s11ValA, s11ValB, s11SelectedOp);
+            const activeMeta = relOps.find(function (r) { return r.op === s11SelectedOp; }) || relOps[2];
+
+            const opButtons = relOps.map(function (r) {
+                const active = s11SelectedOp === r.op;
+                return `
+                    <button type="button" onclick="setS11Op('${r.op}')" class="p-3 rounded-2xl border text-left transition ${active ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:border-indigo-400'}">
+                        <div class="font-mono text-base font-extrabold ${active ? 'text-amber-300' : 'text-indigo-600 dark:text-indigo-400'}">${escapeHtml(r.op)}</div>
+                        <div class="text-[11px] font-bold mt-0.5 line-clamp-1">${escapeHtml(r.name.split(' (')[0])}</div>
+                    </button>
+                `;
+            }).join('');
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 3 • Membandingkan Dua Nilai di Komputer</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">6 Operator Logika ${term('relasional', 'Relasional')} (Hasil Selalu ${term('boolean', 'True / False')})</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Operator relasional bekerja seperti timbangan pembanding: ia membandingkan <strong>Nilai Kiri</strong> dan <strong>Nilai Kanan</strong>, lalu mengeluarkan jawaban ${term('boolean', 'Boolean')} berupa <strong><span class="font-mono text-emerald-600">true</span> (Benar)</strong> atau <strong><span class="font-mono text-rose-600">false</span> (Salah)</strong>. Uji ke-6 operator di bawah ini:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+                        ${opButtons}
+                    </div>
+
+                    <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-4 my-auto">
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                            <div class="md:col-span-4 p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <label class="text-[11px] font-bold text-slate-400 block mb-1">Nilai A (Sebelah Kiri):</label>
+                                <input type="number" step="5000" value="${s11ValA}" oninput="updateS11Vals('a', this.value)" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-sm font-extrabold">
+                            </div>
+
+                            <div class="md:col-span-4 text-center space-y-1">
+                                <span class="text-xs font-bold text-slate-400 uppercase block">Operator Pembanding</span>
+                                <span class="inline-block px-5 py-2 rounded-2xl bg-indigo-600 text-white font-mono text-xl font-extrabold">${escapeHtml(s11SelectedOp)}</span>
+                            </div>
+
+                            <div class="md:col-span-4 p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <label class="text-[11px] font-bold text-slate-400 block mb-1">Nilai B (Sebelah Kanan):</label>
+                                <input type="number" step="5000" value="${s11ValB}" oninput="updateS11Vals('b', this.value)" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-sm font-extrabold">
+                            </div>
+                        </div>
+
+                        <div id="s11ResultCard" class="p-4 rounded-2xl border-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${boolResult ? 'bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-500' : 'bg-rose-50/70 dark:bg-rose-950/30 border-rose-400'}">
+                            <div>
+                                <div class="text-xs font-extrabold uppercase ${boolResult ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'}">${escapeHtml(activeMeta.name)}</div>
+                                <div id="s11ExprSummary" class="font-mono text-sm sm:text-base font-extrabold text-slate-900 dark:text-white mt-0.5">
+                                    Apakah ${s11ValA} ${escapeHtml(s11SelectedOp)} ${s11ValB} ?
+                                </div>
+                                <p class="text-xs text-slate-600 dark:text-slate-300 mt-0.5">Contoh di Warung Digital: <span class="font-mono font-bold">${escapeHtml(activeMeta.caseText)}</span></p>
+                            </div>
+                            <div id="s11BoolBadge" class="px-5 py-2.5 rounded-2xl font-mono text-lg font-extrabold shrink-0 text-center ${boolResult ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'}">
+                                ${boolResult ? 'true (BENAR)' : 'false (SALAH)'}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide12() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 3 • Perbedaan Krusial Simbol Sama Dengan</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Jangan Tertukar: Satu Sama Dengan (<span class="font-mono">=</span>) vs Dua Sama Dengan (${term('equality', '==')})</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Di dalam Flowgorithm (dan nantinya di bahasa PHP pada Minggu 6), simbol <span class="font-mono font-bold">=</span> dan <span class="font-mono font-bold">==</span> memiliki tugas yang sangat berbeda. Bahkan dalam 1 blok ${term('assign', 'Assign')} yang menyimpan hasil perbandingan ke variabel ${term('boolean', 'Boolean')}, keduanya bisa muncul berdampingan!
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 my-auto">
+                        <!-- Kiri: = (Pengisi Nilai / Assignment) -->
+                        <div class="p-5 rounded-3xl bg-amber-50/70 dark:bg-amber-950/25 border-2 border-amber-400 dark:border-amber-700 flex flex-col justify-between gap-4">
+                            <div class="space-y-2">
+                                <span class="text-xs font-extrabold px-2.5 py-1 rounded-lg bg-amber-200/80 text-amber-900 dark:bg-amber-900 dark:text-amber-200">
+                                    1. Satu Sama Dengan ( = ) -> Pengisi Laci
+                                </span>
+                                <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Menyimpan Nilai ke Dalam Variabel</h3>
+                                <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    Berfungsi sebagai <strong>perintah pengisian (Assignment)</strong>: memasukkan nilai dari sebelah kanan ke dalam laci variabel di sebelah kiri.
+                                </p>
+                            </div>
+
+                            <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-800 font-mono text-xs sm:text-sm space-y-1.5">
+                                <div class="text-slate-400">// Mengisi angka 10 ke laci jumlahBeli:</div>
+                                <div class="font-extrabold text-amber-700 dark:text-amber-400">Assign jumlahBeli = 10</div>
+                                <div class="text-xs font-sans text-slate-500">Artinya: "Masukkan angka 10 ke dalam laci jumlahBeli!"</div>
+                            </div>
+                        </div>
+
+                        <!-- Kanan: == (Pembanding Kesamaan / Equality) -->
+                        <div class="p-5 rounded-3xl bg-indigo-50/70 dark:bg-indigo-950/25 border-2 border-indigo-400 dark:border-indigo-700 flex flex-col justify-between gap-4">
+                            <div class="space-y-2">
+                                <span class="text-xs font-extrabold px-2.5 py-1 rounded-lg bg-indigo-200/80 text-indigo-900 dark:bg-indigo-900 dark:text-indigo-200">
+                                    2. Dua Sama Dengan ( == ) -> Pertanyaan Pembanding
+                                </span>
+                                <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Mengecek Apakah Dua Nilai Sama Persis</h3>
+                                <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    Berfungsi sebagai <strong>pertanyaan pembanding (${term('equality', 'Equality')})</strong>: mengecek apakah nilai di kiri sama dengan nilai di kanan, tanpa mengubah isi variabelnya.
+                                </p>
+                            </div>
+
+                            <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-indigo-300 dark:border-indigo-800 font-mono text-xs sm:text-sm space-y-1.5">
+                                <div class="text-slate-400">// Mengecek apakah jumlahBeli bernilai 10:</div>
+                                <div class="font-extrabold text-indigo-600 dark:text-indigo-400">Assign dapatBonus = (jumlahBeli == 10)</div>
+                                <div class="text-xs font-sans text-slate-500">Artinya: "Cek apakah <span class="font-mono">jumlahBeli == 10</span> (True/False), lalu simpan jawabannya (<span class="font-mono">=</span>) ke laci Boolean <span class="font-mono">dapatBonus</span>!"</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide13() {
+            const totalHarga = s13Jual * s13Qty;
+            const nominalDiskon = totalHarga * (s13DiskonPct / 100);
+            const totalBayar = totalHarga - nominalDiskon;
+            const totalModal = s13Modal * s13Qty;
+            const labaBersih = totalBayar - totalModal;
+
+            const layakPromo = totalHarga >= 50000;
+            const apakahUntung = labaBersih > 0;
+            const apakahRugi = labaBersih < 0;
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 3 • Sandbox Integrasi Aritmatika &amp; Relasional</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Simulasi Kalkulator Modal-Laba &amp; Detektor Status Transaksi</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                            Ubah angka <strong>Harga Modal</strong>, <strong>Harga Jual</strong>, <strong>Jumlah Beli</strong>, atau <strong>Diskon (%)</strong> di bawah ini (coba besarkan diskon hingga 50%!) untuk melihat bagaimana rumus aritmatika dan variabel ${term('boolean', 'Boolean')} bekerja serentak:
+                        </p>
+                    </div>
+
+                    <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-4 my-auto">
+                        <!-- 4 Input Slider / Number -->
+                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                            <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <label class="text-[11px] font-bold text-slate-400 block mb-1">1. hargaModal (HPP):</label>
+                                <input type="number" step="1000" value="${s13Modal}" oninput="updateS13Sandbox('modal', this.value)" class="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-xs sm:text-sm font-extrabold">
+                            </div>
+                            <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <label class="text-[11px] font-bold text-slate-400 block mb-1">2. hargaJual Satuan:</label>
+                                <input type="number" step="1000" value="${s13Jual}" oninput="updateS13Sandbox('jual', this.value)" class="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-xs sm:text-sm font-extrabold text-indigo-600 dark:text-indigo-400">
+                            </div>
+                            <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <label class="text-[11px] font-bold text-slate-400 block mb-1">3. jumlahBeli (Qty):</label>
+                                <input type="number" min="1" value="${s13Qty}" oninput="updateS13Sandbox('qty', this.value)" class="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-xs sm:text-sm font-extrabold text-sky-600 dark:text-sky-400">
+                            </div>
+                            <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <label class="text-[11px] font-bold text-slate-400 block mb-1">4. persenDiskon (%):</label>
+                                <input type="number" min="0" max="90" step="5" value="${s13DiskonPct}" oninput="updateS13Sandbox('diskon', this.value)" class="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-xs sm:text-sm font-extrabold text-amber-600 dark:text-amber-400">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                            <!-- Kiri: Hasil Operasi Aritmatika -->
+                            <div class="lg:col-span-6 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
+                                <div class="text-xs font-extrabold text-indigo-600 dark:text-indigo-400 uppercase">A. Hasil 5 Blok Assign Aritmatika (Angka):</div>
+                                <div id="s13ArithBox" class="space-y-1.5 font-mono text-xs">
+                                    <div class="flex justify-between"><span>totalHarga = ${s13Jual} * ${s13Qty}</span><strong>Rp ${totalHarga.toLocaleString('id-ID')}</strong></div>
+                                    <div class="flex justify-between text-amber-600 dark:text-amber-400"><span>nominalDiskon (${s13DiskonPct}%)</span><strong>-Rp ${nominalDiskon.toLocaleString('id-ID')}</strong></div>
+                                    <div class="flex justify-between text-sky-600 dark:text-sky-400"><span>totalBayar (Uang Masuk)</span><strong>Rp ${totalBayar.toLocaleString('id-ID')}</strong></div>
+                                    <div class="flex justify-between text-slate-500"><span>totalModal = ${s13Modal} * ${s13Qty}</span><strong>Rp ${totalModal.toLocaleString('id-ID')}</strong></div>
+                                    <div class="flex justify-between pt-1.5 border-t border-slate-200 dark:border-slate-800 text-sm font-extrabold ${labaBersih >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">
+                                        <span>labaBersih = totalBayar - totalModal</span>
+                                        <span>Rp ${labaBersih.toLocaleString('id-ID')}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Kanan: Hasil Operasi Relasional (Boolean) -->
+                            <div class="lg:col-span-6 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
+                                <div class="text-xs font-extrabold text-purple-600 dark:text-purple-400 uppercase">B. Hasil 3 Blok Assign Relasional (Boolean):</div>
+                                <div id="s13RelBox" class="space-y-2 font-mono text-xs">
+                                    <div class="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 flex items-center justify-between">
+                                        <span>layakPromo = (totalHarga &gt;= 50000)</span>
+                                        <span class="px-2.5 py-0.5 rounded font-extrabold ${layakPromo ? 'bg-emerald-600 text-white' : 'bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-300'}">${layakPromo}</span>
+                                    </div>
+                                    <div class="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 flex items-center justify-between">
+                                        <span>apakahUntung = (labaBersih &gt; 0)</span>
+                                        <span class="px-2.5 py-0.5 rounded font-extrabold ${apakahUntung ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'}">${apakahUntung}</span>
+                                    </div>
+                                    <div class="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 flex items-center justify-between">
+                                        <span>apakahRugi = (labaBersih &lt; 0)</span>
+                                        <span class="px-2.5 py-0.5 rounded font-extrabold ${apakahRugi ? 'bg-rose-600 text-white' : 'bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-300'}">${apakahRugi}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide14() {
+            return `
+                <div class="slide-enter flex flex-col justify-center h-full my-auto">
+                    <div class="p-8 sm:p-12 rounded-3xl bg-gradient-to-br from-indigo-600 to-slate-900 text-white space-y-6 shadow-lg">
+                        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/15 text-indigo-100 text-xs font-extrabold uppercase tracking-wider">
+                            <i class="fa-solid fa-flask"></i>
+                            <span>Jembatan Antar Topik • Modul 3 Menuju Modul 4 (Praktikum Simulator)</span>
+                        </div>
+
+                        <h2 class="text-2xl sm:text-4xl font-extrabold leading-tight">
+                            Saatnya Menguji Flowchart Kalkulator Harga, Diskon, &amp; Modal-Laba di Laboratorium Virtual Flowgorithm!
+                        </h2>
+
+                        <p class="text-indigo-100 text-sm sm:text-base leading-relaxed max-w-3xl">
+                            Di <strong>Modul 4 (Slide 15 s/d 18)</strong>, Anda akan mempraktikkan langsung: (1) <strong>Live Simulator Flowgorithm</strong> dengan input manual satu per satu dan 6 blok <span class="font-mono">Assign</span> beruntun, (2) <strong>Merakit Ekspresi Rumus Assign di Kanvas</strong>, serta (3) <strong>Menyusun 8 Langkah Sequence Kalkulasi</strong>.
+                        </p>
+
+                        <div class="pt-2">
+                            <button type="button" onclick="changeSlide(1)" class="px-5 py-3 rounded-xl bg-white text-indigo-700 hover:bg-indigo-50 font-extrabold text-xs sm:text-sm transition inline-flex items-center gap-2 shadow-sm">
+                                <span>Mulai Simulasi 1: Live IDE Kalkulator Warung Digital</span>
+                                <i class="fa-solid fa-arrow-right text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide15() {
+            const getNodeClass = function (idx) {
+                if (simStepIndex !== idx) return 'fg-node';
+                if (simWaitingVar) return 'fg-node fg-node-waiting';
+                return 'fg-node fg-node-active';
+            };
+
+            let chatHtml = '';
+            if (simChatLog.length === 0) {
+                chatHtml = `<div class="text-slate-400 text-center my-auto font-sans text-xs py-6">Tekan tombol <strong>Run Otomatis</strong> atau <strong>Step</strong> di atas. Masukkan data produk, harga modal, harga jual, jumlah beli, dan diskon satu per satu lalu amati bagaimana 6 blok <strong>Assign</strong> menghitung semuanya!</div>`;
+            } else {
+                chatHtml = simChatLog.map(function (msg) {
+                    if (msg.type === 'out') {
+                        return `<div class="self-start bg-emerald-100 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-800 text-emerald-950 dark:text-emerald-200 px-3 py-1.5 rounded-xl rounded-bl-xs font-semibold">${msg.html}</div>`;
+                    } else if (msg.type === 'in') {
+                        return `<div class="self-end bg-indigo-100 dark:bg-indigo-950/80 border border-indigo-300 dark:border-indigo-800 text-indigo-950 dark:text-indigo-200 px-3 py-1.5 rounded-xl rounded-br-xs font-semibold">${escapeHtml(msg.text)}</div>`;
+                    } else {
+                        return `<div class="text-xs text-indigo-600 dark:text-indigo-400 font-bold">${escapeHtml(msg.text)}</div>`;
+                    }
+                }).join('');
+            }
+
+            let chips = [];
+            let placeholder = 'Menunggu giliran blok Input...';
+            let promptLabel = 'Kotak Input Console (Aktif saat eksekusi berhenti di blok Input):';
+            if (simWaitingVar === 'namaProduk') {
+                chips = ['Kopi Susu Aren', 'Roti Bakar Cokelat', 'Paket Sembako'];
+                placeholder = 'Ketik nama produk...';
+                promptLabel = '1. Input namaProduk (String):';
+            } else if (simWaitingVar === 'hargaModal') {
+                chips = ['9000', '10000', '45000'];
+                placeholder = 'Ketik harga modal / HPP satuan...';
+                promptLabel = '2. Input hargaModal (Real/Integer - modal kulakan 1 barang):';
+            } else if (simWaitingVar === 'hargaJual') {
+                chips = ['15000', '18000', '60000'];
+                placeholder = 'Ketik harga jual satuan ke pembeli...';
+                promptLabel = '3. Input hargaJual (Real/Integer - harga jual 1 barang):';
+            } else if (simWaitingVar === 'jumlahBeli') {
+                chips = ['2', '4', '5'];
+                placeholder = 'Ketik jumlah unit dibeli...';
+                promptLabel = '4. Input jumlahBeli (Integer - kuantitas beli):';
+            } else if (simWaitingVar === 'persenDiskon') {
+                chips = ['0', '10', '20', '50 (Uji Rugi)'];
+                placeholder = 'Ketik persentase diskon (misal 10)...';
+                promptLabel = '5. Input persenDiskon (Real - angka persen diskon tanpa simbol %):';
+            }
+
+            const chipsHtml = chips.map(function (c) {
+                return `<button type="button" onclick="fillSimQuickChip('${c}')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-indigo-100 dark:bg-slate-800 dark:hover:bg-indigo-950 text-slate-700 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700 transition">${c}</button>`;
+            }).join('');
+
+            const fmtMem = function (v, isStr, isBool) {
+                if (v === null) return '<em>uninitialized</em>';
+                if (isBool) return v ? '<span class="px-1.5 py-0.5 rounded bg-emerald-600 text-white">true</span>' : '<span class="px-1.5 py-0.5 rounded bg-rose-600 text-white">false</span>';
+                if (isStr) return v === '' ? '""' : '"' + escapeHtml(v) + '"';
+                return Number(v).toLocaleString('id-ID');
+            };
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-3">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 4 • Simulasi Praktik 1 dari 3 (Sub-CPMK 1.2)</span>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Live Simulator Flowgorithm: Kalkulator Harga, Diskon &amp; Modal-Laba</h2>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2 shrink-0">
+                            <button type="button" onclick="runFullFgSim()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-xs">
+                                <i class="fa-solid fa-play"></i>
+                                <span>Run Otomatis</span>
+                            </button>
+                            <button type="button" onclick="stepFgSim()" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-xs">
+                                <i class="fa-solid fa-forward-step"></i>
+                                <span>Step (Per Blok)</span>
+                            </button>
+                            <button type="button" onclick="resetFgSim()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs transition">
+                                <i class="fa-solid fa-rotate-left mr-1"></i>Reset
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200">
+                        ${simBannerText}
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch my-auto">
+                        <!-- Kiri: Flowchart Canvas -->
+                        <div class="lg:col-span-5 fg-canvas rounded-2xl border border-slate-200 dark:border-slate-800 p-2.5 flex flex-col items-center justify-center">
+                            <div class="text-[10px] font-bold text-slate-400 uppercase mb-1">Flowchart Kalkulator Modal &amp; Laba (15 Blok)</div>
+                            <svg class="w-full max-w-[290px] h-auto" viewBox="0 0 320 490">
+                                <line x1="160" y1="22" x2="160" y2="466" stroke="#64748b" stroke-width="2"/>
+
+                                <g class="${getNodeClass(0)}" onclick="stepToOrFocusNode()">
+                                    <rect x="100" y="2" width="120" height="20" rx="10" fill="#f3e8ff" stroke="#7e22ce" stroke-width="1.8"/>
+                                    <text x="160" y="16" text-anchor="middle" fill="#581c87" font-size="10" font-weight="700">Main</text>
+                                </g>
+
+                                <g class="${getNodeClass(1)}" onclick="stepToOrFocusNode()">
+                                    <polygon points="24,28 296,28 308,40 296,52 24,52 12,40" fill="#fef9c3" stroke="#b45309" stroke-width="1.8"/>
+                                    <text x="160" y="44" text-anchor="middle" fill="#78350f" font-size="9.2" font-weight="700">Declare Variabel Input, Hitung, &amp; Boolean</text>
+                                </g>
+
+                                <g class="${getNodeClass(2)}" onclick="stepToOrFocusNode()">
+                                    <polygon points="50,58 282,58 270,80 38,80" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.8"/>
+                                    <text x="160" y="73" text-anchor="middle" fill="#0c4a6e" font-size="9.8" font-weight="700">Input namaProduk</text>
+                                </g>
+
+                                <g class="${getNodeClass(3)}" onclick="stepToOrFocusNode()">
+                                    <polygon points="50,86 282,86 270,108 38,108" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.8"/>
+                                    <text x="160" y="101" text-anchor="middle" fill="#0c4a6e" font-size="9.8" font-weight="700">Input hargaModal</text>
+                                </g>
+
+                                <g class="${getNodeClass(4)}" onclick="stepToOrFocusNode()">
+                                    <polygon points="50,114 282,114 270,136 38,136" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.8"/>
+                                    <text x="160" y="129" text-anchor="middle" fill="#0c4a6e" font-size="9.8" font-weight="700">Input hargaJual</text>
+                                </g>
+
+                                <g class="${getNodeClass(5)}" onclick="stepToOrFocusNode()">
+                                    <polygon points="50,142 282,142 270,164 38,164" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.8"/>
+                                    <text x="160" y="157" text-anchor="middle" fill="#0c4a6e" font-size="9.8" font-weight="700">Input jumlahBeli</text>
+                                </g>
+
+                                <g class="${getNodeClass(6)}" onclick="stepToOrFocusNode()">
+                                    <polygon points="50,170 282,170 270,192 38,192" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.8"/>
+                                    <text x="160" y="185" text-anchor="middle" fill="#0c4a6e" font-size="9.8" font-weight="700">Input persenDiskon</text>
+                                </g>
+
+                                <g class="${getNodeClass(7)}" onclick="stepToOrFocusNode()">
+                                    <rect x="28" y="200" width="264" height="22" fill="#fef08a" stroke="#a16207" stroke-width="1.8"/>
+                                    <text x="160" y="215" text-anchor="middle" fill="#713f12" font-size="9.5" font-weight="700">Assign totalHarga = hargaJual * jumlahBeli</text>
+                                </g>
+
+                                <g class="${getNodeClass(8)}" onclick="stepToOrFocusNode()">
+                                    <rect x="16" y="228" width="288" height="22" fill="#fef08a" stroke="#a16207" stroke-width="1.8"/>
+                                    <text x="160" y="243" text-anchor="middle" fill="#713f12" font-size="9.2" font-weight="700">Assign nominalDiskon = totalHarga * (persenDiskon/100)</text>
+                                </g>
+
+                                <g class="${getNodeClass(9)}" onclick="stepToOrFocusNode()">
+                                    <rect x="24" y="256" width="272" height="22" fill="#fef08a" stroke="#a16207" stroke-width="1.8"/>
+                                    <text x="160" y="271" text-anchor="middle" fill="#713f12" font-size="9.5" font-weight="700">Assign totalBayar = totalHarga - nominalDiskon</text>
+                                </g>
+
+                                <g class="${getNodeClass(10)}" onclick="stepToOrFocusNode()">
+                                    <rect x="28" y="284" width="264" height="22" fill="#fef08a" stroke="#a16207" stroke-width="1.8"/>
+                                    <text x="160" y="299" text-anchor="middle" fill="#713f12" font-size="9.5" font-weight="700">Assign totalModal = hargaModal * jumlahBeli</text>
+                                </g>
+
+                                <g class="${getNodeClass(11)}" onclick="stepToOrFocusNode()">
+                                    <rect x="28" y="312" width="264" height="22" fill="#fef08a" stroke="#a16207" stroke-width="1.8"/>
+                                    <text x="160" y="327" text-anchor="middle" fill="#713f12" font-size="9.5" font-weight="700">Assign labaBersih = totalBayar - totalModal</text>
+                                </g>
+
+                                <g class="${getNodeClass(12)}" onclick="stepToOrFocusNode()">
+                                    <rect x="28" y="340" width="264" height="22" fill="#fef08a" stroke="#a16207" stroke-width="1.8"/>
+                                    <text x="160" y="355" text-anchor="middle" fill="#713f12" font-size="9.5" font-weight="700">Assign apakahUntung = (labaBersih &gt; 0)</text>
+                                </g>
+
+                                <g class="${getNodeClass(13)}" onclick="stepToOrFocusNode()">
+                                    <polygon points="34,370 296,370 282,394 20,394" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/>
+                                    <text x="160" y="386" text-anchor="middle" fill="#14532d" font-size="9.5" font-weight="700">Output Struk, Laba Bersih &amp; apakahUntung</text>
+                                </g>
+
+                                <g class="${getNodeClass(14)}" onclick="stepToOrFocusNode()">
+                                    <rect x="100" y="466" width="120" height="20" rx="10" fill="#f3e8ff" stroke="#7e22ce" stroke-width="1.8"/>
+                                    <text x="160" y="480" text-anchor="middle" fill="#581c87" font-size="10" font-weight="700">End</text>
+                                </g>
+                            </svg>
+                        </div>
+
+                        <!-- Kanan: Console & Variable Watch -->
+                        <div class="lg:col-span-7 flex flex-col justify-between gap-3">
+                            <!-- Console Window -->
+                            <div class="rounded-2xl border-2 ${simWaitingVar ? 'border-indigo-600 shadow-sm' : 'border-slate-200 dark:border-slate-800'} overflow-hidden bg-white dark:bg-slate-900">
+                                <div class="bg-slate-100 dark:bg-slate-800 px-3.5 py-2 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                                    <span class="text-xs font-extrabold text-slate-700 dark:text-slate-200">Console Window (Input &amp; Struk Hasil Kalkulasi)</span>
+                                    ${simWaitingVar ? '<span class="px-2 py-0.5 rounded bg-indigo-600 text-white text-[10px] font-extrabold animate-pulse">MENUNGGU INPUT KASIR</span>' : ''}
+                                </div>
+
+                                <div id="fgConsoleChat" class="p-3 bg-slate-50 dark:bg-slate-950/60 min-h-[100px] max-h-[135px] overflow-y-auto flex flex-col gap-2 font-mono text-xs">
+                                    ${chatHtml}
+                                </div>
+
+                                <form onsubmit="submitManualConsoleInput(event)" class="p-2.5 border-t border-slate-200 dark:border-slate-800">
+                                    <div class="text-xs font-bold ${simWaitingVar ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'} mb-1">
+                                        ${promptLabel}
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <input id="fgConsoleInputBox" type="text" ${simWaitingVar ? '' : 'disabled'} placeholder="${placeholder}" class="flex-1 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50">
+                                        <button type="submit" ${simWaitingVar ? '' : 'disabled'} class="px-4 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white font-bold text-xs transition shrink-0">
+                                            Enter ↵
+                                        </button>
+                                    </div>
+                                    ${chips.length > 0 ? `<div class="mt-1.5 flex flex-wrap items-center gap-1.5"><span class="text-[11px] font-semibold text-slate-400">Ketik cepat:</span>${chipsHtml}</div>` : ''}
+                                    ${simInputError ? `<div class="mt-1.5 p-2 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs font-bold">${escapeHtml(simInputError)}</div>` : ''}
+                                </form>
+                            </div>
+
+                            <!-- Variable Watch Window -->
+                            <div class="rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden bg-white dark:bg-slate-900">
+                                <div class="bg-slate-100 dark:bg-slate-800 px-3.5 py-1.5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between text-xs">
+                                    <span class="font-extrabold text-slate-700 dark:text-slate-200">Variable Watch Window (Pantau Perubahan Isi Laci)</span>
+                                    <span class="text-[11px] text-slate-400">Input + 6 Blok Assign</span>
+                                </div>
+                                <div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5 p-2.5 font-mono text-[11px]">
+                                    <div class="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800">
+                                        <span class="text-slate-400 block">namaProduk (String)</span>
+                                        <span class="font-bold text-rose-600 dark:text-rose-400">${fmtMem(simMemory.namaProduk, true, false)}</span>
+                                    </div>
+                                    <div class="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800">
+                                        <span class="text-slate-400 block">hargaModal / hargaJual</span>
+                                        <span class="font-bold text-indigo-600 dark:text-indigo-400">${fmtMem(simMemory.hargaModal)} / ${fmtMem(simMemory.hargaJual)}</span>
+                                    </div>
+                                    <div class="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800">
+                                        <span class="text-slate-400 block">jumlahBeli / diskon%</span>
+                                        <span class="font-bold text-sky-600 dark:text-sky-400">${fmtMem(simMemory.jumlahBeli)} / ${fmtMem(simMemory.persenDiskon)}%</span>
+                                    </div>
+                                    <div class="p-2 rounded-xl bg-amber-50/60 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
+                                        <span class="text-slate-400 block">totalHarga / Diskon</span>
+                                        <span class="font-bold text-amber-700 dark:text-amber-300">${fmtMem(simMemory.totalHarga)} / -${fmtMem(simMemory.nominalDiskon)}</span>
+                                    </div>
+                                    <div class="p-2 rounded-xl bg-amber-50/60 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
+                                        <span class="text-slate-400 block">totalBayar / Modal</span>
+                                        <span class="font-bold text-amber-700 dark:text-amber-300">${fmtMem(simMemory.totalBayar)} / ${fmtMem(simMemory.totalModal)}</span>
+                                    </div>
+                                    <div class="p-2 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-800">
+                                        <span class="text-slate-400 block">labaBersih | Untung?</span>
+                                        <span class="font-extrabold text-emerald-700 dark:text-emerald-300">${fmtMem(simMemory.labaBersih)} | ${fmtMem(simMemory.apakahUntung, false, true)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderFormulaSlotSvg(slotNum, formulaCode, placeholderText) {
+            const isSelected = activeBuilderSlot === slotNum;
+            const strokeColor = isSelected ? '#4f46e5' : '#94a3b8';
+            const bgFill = isSelected ? '#eef2ff' : '#f8fafc';
+
+            if (!formulaCode) {
+                return `
+                    <rect x="18" y="0" width="284" height="36" rx="8" fill="${bgFill}" stroke="${strokeColor}" stroke-width="2" stroke-dasharray="6,4"/>
+                    <text x="160" y="23" text-anchor="middle" fill="${strokeColor}" font-size="10.5" font-weight="700">+ ${placeholderText}</text>
+                `;
+            }
+
+            const labels = {
+                'F_TOTAL_HARGA': 'totalHarga = hargaJual * jumlahBeli',
+                'F_DISKON': 'nominalDiskon = totalHarga * (persenDiskon / 100)',
+                'F_BAYAR': 'totalBayar = totalHarga - nominalDiskon',
+                'F_MODAL': 'totalModal = hargaModal * jumlahBeli',
+                'F_LABA': 'labaBersih = totalBayar - totalModal'
+            };
+
+            return `
+                <rect x="14" y="0" width="292" height="36" fill="#fef08a" stroke="#a16207" stroke-width="2"/>
+                <text x="160" y="23" text-anchor="middle" fill="#713f12" font-size="10.2" font-weight="700">${labels[formulaCode] || formulaCode}</text>
+            `;
+        }
+
+        function renderSlide16() {
+            const slotTasks = {
+                1: "Tugas Slot 1: Rumus menghitung Omzet Kotor (totalHarga)",
+                2: "Tugas Slot 2: Rumus menghitung Rupiah Potongan Diskon (nominalDiskon)",
+                3: "Tugas Slot 3: Rumus menghitung Tagihan Bersih Pembeli (totalBayar)",
+                4: "Tugas Slot 4: Rumus menghitung Total Modal Kulakan (totalModal)",
+                5: "Tugas Slot 5: Rumus menghitung Keuntungan Bersih (labaBersih)"
+            };
+
+            let slotTabs = '';
+            for (let i = 1; i <= 5; i++) {
+                const active = activeBuilderSlot === i;
+                slotTabs += `
+                    <button type="button" onclick="selectBuilderSlot(${i})" class="px-3 py-1.5 rounded-xl font-bold text-xs transition ${active ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">
+                        Slot Assign #${i}
+                    </button>
+                `;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 4 • Simulasi Praktik 2 dari 3</span>
+                            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Rakit 5 Blok Rumus Assign secara Berurutan di Kanvas</h2>
+                        </div>
+                        <button type="button" onclick="resetBuilderCanvas()" class="self-start sm:self-center px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-rose-600 dark:text-rose-400 font-bold text-xs transition">
+                            <i class="fa-solid fa-trash-can mr-1"></i>Kosongkan Kanvas
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <!-- Kanvas Kiri -->
+                        <div class="lg:col-span-5 fg-canvas rounded-3xl border border-slate-200 dark:border-slate-800 p-4 flex flex-col items-center justify-center">
+                            <svg class="w-full max-w-[290px] h-auto" viewBox="0 0 320 355">
+                                <line x1="160" y1="26" x2="160" y2="322" stroke="#64748b" stroke-width="2.2"/>
+
+                                <polygon points="46,4 284,4 272,28 34,28" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.8"/>
+                                <text x="160" y="20" text-anchor="middle" fill="#0c4a6e" font-size="10.2" font-weight="700">Input hargaModal, hargaJual, qty, diskon</text>
+
+                                <g transform="translate(0, 38)" class="cursor-pointer" onclick="selectBuilderSlot(1)">
+                                    ${renderFormulaSlotSvg(1, builderSlots[1], 'Slot 1: Hitung totalHarga')}
+                                </g>
+                                <g transform="translate(0, 82)" class="cursor-pointer" onclick="selectBuilderSlot(2)">
+                                    ${renderFormulaSlotSvg(2, builderSlots[2], 'Slot 2: Hitung nominalDiskon')}
+                                </g>
+                                <g transform="translate(0, 126)" class="cursor-pointer" onclick="selectBuilderSlot(3)">
+                                    ${renderFormulaSlotSvg(3, builderSlots[3], 'Slot 3: Hitung totalBayar')}
+                                </g>
+                                <g transform="translate(0, 170)" class="cursor-pointer" onclick="selectBuilderSlot(4)">
+                                    ${renderFormulaSlotSvg(4, builderSlots[4], 'Slot 4: Hitung totalModal')}
+                                </g>
+                                <g transform="translate(0, 214)" class="cursor-pointer" onclick="selectBuilderSlot(5)">
+                                    ${renderFormulaSlotSvg(5, builderSlots[5], 'Slot 5: Hitung labaBersih')}
+                                </g>
+
+                                <polygon points="40,264 290,264 276,292 26,292" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/>
+                                <text x="160" y="282" text-anchor="middle" fill="#14532d" font-size="10.2" font-weight="700">Output Struk Tagihan &amp; Laba Bersih</text>
+
+                                <rect x="95" y="322" width="130" height="24" rx="12" fill="#f3e8ff" stroke="#7e22ce" stroke-width="2"/>
+                                <text x="160" y="338" text-anchor="middle" fill="#581c87" font-size="11" font-weight="700">End</text>
+                            </svg>
+                        </div>
+
+                        <!-- Pilihan Rumus Kanan -->
+                        <div class="lg:col-span-7 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-4">
+                            <div class="space-y-3.5">
+                                <div class="flex flex-wrap gap-2">
+                                    ${slotTabs}
+                                </div>
+
+                                <div class="p-3.5 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800">
+                                    <div class="font-extrabold text-indigo-900 dark:text-indigo-200 text-sm">${escapeHtml(slotTasks[activeBuilderSlot])}</div>
+                                    <p class="text-xs text-indigo-700 dark:text-indigo-300 mt-0.5">Klik kartu ekspresi blok Assign yang tepat untuk dipasang ke Slot #${activeBuilderSlot}:</p>
+                                </div>
+
+                                <div class="space-y-2 font-mono text-xs">
+                                    <button type="button" onclick="assignFormulaToSlot('F_BAYAR')" class="w-full text-left p-3 rounded-xl border-2 border-amber-300 bg-white dark:bg-slate-900 hover:bg-amber-50 font-bold transition">
+                                        Assign totalBayar = totalHarga - nominalDiskon
+                                    </button>
+                                    <button type="button" onclick="assignFormulaToSlot('F_TOTAL_HARGA')" class="w-full text-left p-3 rounded-xl border-2 border-amber-300 bg-white dark:bg-slate-900 hover:bg-amber-50 font-bold transition">
+                                        Assign totalHarga = hargaJual * jumlahBeli
+                                    </button>
+                                    <button type="button" onclick="assignFormulaToSlot('F_LABA')" class="w-full text-left p-3 rounded-xl border-2 border-amber-300 bg-white dark:bg-slate-900 hover:bg-amber-50 font-bold transition">
+                                        Assign labaBersih = totalBayar - totalModal
+                                    </button>
+                                    <button type="button" onclick="assignFormulaToSlot('F_DISKON')" class="w-full text-left p-3 rounded-xl border-2 border-amber-300 bg-white dark:bg-slate-900 hover:bg-amber-50 font-bold transition">
+                                        Assign nominalDiskon = totalHarga * (persenDiskon / 100)
+                                    </button>
+                                    <button type="button" onclick="assignFormulaToSlot('F_MODAL')" class="w-full text-left p-3 rounded-xl border-2 border-amber-300 bg-white dark:bg-slate-900 hover:bg-amber-50 font-bold transition">
+                                        Assign totalModal = hargaModal * jumlahBeli
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="space-y-2">
+                                <button type="button" onclick="checkBuilderAnswer()" class="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm transition shadow-xs">
+                                    Periksa Urutan 5 Rumus Assign
+                                </button>
+                                ${builderFeedback.text ? `<div class="p-3 rounded-xl text-xs font-bold text-center ${builderFeedback.type === 'success' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'}">${escapeHtml(builderFeedback.text)}</div>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function getMiniSymbolSvg(type, label) {
+            if (type === 'Main' || type === 'End') {
+                return `<svg width="108" height="26" viewBox="0 0 108 26" class="shrink-0"><rect x="4" y="2" width="100" height="22" rx="11" fill="#f3e8ff" stroke="#7e22ce" stroke-width="1.8"/><text x="54" y="17" text-anchor="middle" font-size="9.2" font-weight="700" fill="#581c87">${label}</text></svg>`;
+            }
+            if (type === 'Declare') {
+                return `<svg width="108" height="26" viewBox="0 0 108 26" class="shrink-0"><polygon points="12,2 96,2 105,13 96,24 12,24 3,13" fill="#fef9c3" stroke="#b45309" stroke-width="1.8"/><text x="54" y="17" text-anchor="middle" font-size="9.2" font-weight="700" fill="#78350f">${label}</text></svg>`;
+            }
+            if (type === 'Input') {
+                return `<svg width="108" height="26" viewBox="0 0 108 26" class="shrink-0"><polygon points="12,2 104,2 96,24 4,24" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.8"/><text x="54" y="17" text-anchor="middle" font-size="9.2" font-weight="700" fill="#0c4a6e">${label}</text></svg>`;
+            }
+            if (type === 'Assign') {
+                return `<svg width="108" height="26" viewBox="0 0 108 26" class="shrink-0"><rect x="4" y="2" width="100" height="22" fill="#fef08a" stroke="#a16207" stroke-width="1.8"/><text x="54" y="17" text-anchor="middle" font-size="9.2" font-weight="700" fill="#713f12">${label}</text></svg>`;
+            }
+            if (type === 'Output') {
+                return `<svg width="108" height="26" viewBox="0 0 108 26" class="shrink-0"><polygon points="12,2 104,2 96,24 4,24" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/><text x="54" y="17" text-anchor="middle" font-size="9.2" font-weight="700" fill="#14532d">${label}</text></svg>`;
+            }
+            return '';
+        }
+
+        function renderSlide17() {
+            let rowsHtml = '';
+            for (let index = 0; index < calcStepsOrder.length; index++) {
+                const item = calcStepsOrder[index];
+                const isPosCorrect = item.id === index + 1;
+                let borderClass = 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900';
+                let statusBadge = '';
+
+                if (calcShowValidation) {
+                    if (isPosCorrect) {
+                        borderClass = 'border-emerald-500 bg-emerald-50/40 dark:bg-emerald-950/30';
+                        statusBadge = '<span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 text-[11px] font-bold">✓ Tepat</span>';
+                    } else {
+                        borderClass = 'border-rose-400 bg-rose-50/40 dark:bg-rose-950/30';
+                        statusBadge = '<span class="px-2 py-0.5 rounded bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 text-[11px] font-bold">✗ Geser</span>';
+                    }
+                }
+
+                rowsHtml += `
+                    <div draggable="true" ondragstart="onCalcDragStart(event, ${index})" ondragover="onCalcDragOver(event, ${index})" ondragleave="onCalcDragLeave(event)" ondrop="onCalcDrop(event, ${index})" ondragend="onCalcDragEnd()" class="draggable-step border-2 ${borderClass} rounded-2xl p-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                            <span class="text-slate-400 font-extrabold text-sm px-1 cursor-grab select-none">⋮⋮</span>
+                            <span class="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center shrink-0">${index + 1}</span>
+                            ${getMiniSymbolSvg(item.type, item.label)}
+                            <span class="text-xs font-semibold text-slate-800 dark:text-slate-200 leading-snug">${escapeHtml(item.text)}</span>
+                        </div>
+                        <div class="flex items-center justify-end gap-1.5 shrink-0">
+                            ${statusBadge}
+                            <button type="button" onclick="moveCalcStep(${index}, -1)" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-indigo-600 hover:text-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs transition" title="Geser Naik">▲</button>
+                            <button type="button" onclick="moveCalcStep(${index}, 1)" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-indigo-600 hover:text-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs transition" title="Geser Turun">▼</button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-3.5">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 4 • Simulasi Praktik 3 dari 3</span>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Susun 8 Langkah Algoritma Kalkulator Modal &amp; Laba</h2>
+                        </div>
+                        <span class="text-xs font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200 dark:border-indigo-800 px-3 py-1 rounded-xl">
+                            Tarik kartu (Drag &amp; Drop) atau klik ▲ / ▼
+                        </span>
+                    </div>
+
+                    <div class="space-y-1.5 my-auto">
+                        ${rowsHtml}
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-3">
+                        <button type="button" onclick="checkCalcOrder()" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm transition shadow-xs">
+                            Periksa Urutan Kalkulasi
+                        </button>
+                        <button type="button" onclick="shuffleCalcSteps()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs sm:text-sm transition">
+                            Acak Ulang
+                        </button>
+                        ${calcFeedbackText ? `<span class="text-xs sm:text-sm font-bold text-indigo-600 dark:text-indigo-400">${escapeHtml(calcFeedbackText)}</span>` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide18() {
+            const renderFb = function (qNum) {
+                const fb = selfCheckFeedback[qNum];
+                if (!fb) return '';
+                const cls = fb.ok
+                    ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200'
+                    : 'bg-rose-50 dark:bg-rose-950/50 border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-200';
+                return `<div class="mt-2 p-2.5 rounded-xl border text-xs font-bold ${cls}">${escapeHtml(fb.msg)}</div>`;
+            };
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Penutup &amp; Evaluasi Mandiri Pertemuan 3</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Uji Pemahaman Sub-CPMK 1.2 &amp; Persiapan Pertemuan 4</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Uji penguasaan Operasi Aritmatika dan Logika Relasional Anda melalui 3 soal evaluasi di bawah ini:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <div class="lg:col-span-7 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-3.5">
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Cek Pengetahuan Mandiri (Klik Jawaban yang Tepat)</h3>
+
+                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <div class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white mb-2">1. Jika <span class="font-mono">hargaJual = 15000</span>, <span class="font-mono">hargaModal = 10000</span>, dan <span class="font-mono">jumlahBeli = 3</span>, berapakah hasil dari rumus TANPA kurung <span class="font-mono">hargaJual - hargaModal * jumlahBeli</span>?</div>
+                                <div class="flex flex-wrap gap-2">
+                                    <button type="button" onclick="answerSelfCheck(1, true, 'Tepat! Karena perkalian memiliki prioritas lebih tinggi, komputer menghitung 10000 * 3 = 30000 dulu, lalu 15000 - 30000 = -15000. Itulah mengapa wajib memakai tanda kurung!')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 font-mono font-semibold text-xs">-15000 (Karena * dihitung lebih dulu)</button>
+                                    <button type="button" onclick="answerSelfCheck(1, false, 'Kurang tepat. Angka 15000 hanya didapat jika memakai tanda kurung: (15000 - 10000) * 3.')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 font-mono font-semibold text-xs">15000</button>
+                                </div>
+                                ${renderFb(1)}
+                            </div>
+
+                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <div class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white mb-2">2. Jika Warung Digital memiliki <strong>20 bungkus</strong> keripik dan ingin dimasukkan ke dalam kotak paket yang masing-masing berisi <strong>6 bungkus</strong>, ekspresi mana yang menghitung <strong>sisa bungkus eceran</strong>?</div>
+                                <div class="flex flex-wrap gap-2">
+                                    <button type="button" onclick="answerSelfCheck(2, true, 'Benar! Operator Modulo (% atau Mod) mencari sisa bagi: 20 dibagi 6 dapat 3 kotak (18 bungkus) dan menyisakan 2 bungkus.')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 font-mono font-semibold text-xs">sisa = 20 % 6 (Hasil: 2)</button>
+                                    <button type="button" onclick="answerSelfCheck(2, false, 'Pembagian biasa (/) menghasilkan 3.333, bukan sisa bungkus utuh.')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 font-mono font-semibold text-xs">sisa = 20 / 6</button>
+                                </div>
+                                ${renderFb(2)}
+                            </div>
+
+                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <div class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white mb-2">3. Apa tipe data dan nilai dari variabel <span class="font-mono">layakDiskon</span> setelah menjalankan <span class="font-mono">Assign layakDiskon = (totalHarga &gt;= 50000)</span> jika <span class="font-mono">totalHarga</span> bernilai <span class="font-mono">45000</span>?</div>
+                                <div class="flex flex-wrap gap-2">
+                                    <button type="button" onclick="answerSelfCheck(3, true, 'Sempurna! Operasi relasional (>=) selalu menghasilkan nilai bertipe Boolean, dan karena 45000 kurang dari 50000 maka nilainya adalah false.')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 font-semibold text-xs">Bertipe Boolean dengan nilai false</button>
+                                    <button type="button" onclick="answerSelfCheck(3, false, 'Operasi relasional tidak menghasilkan angka selisih, melainkan nilai logika True atau False.')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 font-semibold text-xs">Bertipe Integer dengan nilai -5000</button>
+                                </div>
+                                ${renderFb(3)}
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-5 flex flex-col justify-between gap-4">
+                            <div class="p-6 rounded-3xl bg-slate-900 text-white space-y-3">
+                                <span class="inline-block px-2.5 py-0.5 rounded-md bg-indigo-500/30 text-indigo-300 font-bold text-[11px] uppercase tracking-wider">
+                                    Tugas Praktikum Mandiri Minggu 3
+                                </span>
+                                <h3 class="text-base sm:text-lg font-extrabold leading-snug">
+                                    Bangun File <span class="font-mono text-indigo-300">KalkulatorModalLaba_WarungDigital.fprg</span>
+                                </h3>
+                                <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                                    Kembangkan file Flowgorithm Minggu 2 Anda dengan menambahkan input <span class="font-mono text-amber-300">hargaModal</span> dan <span class="font-mono text-amber-300">persenDiskon</span>, lalu tambahkan blok <strong>Assign</strong> untuk menghitung <span class="font-mono text-emerald-300">totalHarga</span>, <span class="font-mono text-emerald-300">nominalDiskon</span>, <span class="font-mono text-emerald-300">totalBayar</span>, <span class="font-mono text-emerald-300">totalModal</span>, <span class="font-mono text-emerald-300">labaBersih</span>, serta status <span class="font-mono text-emerald-300">apakahUntung</span>!
+                                </p>
+                            </div>
+
+                            <div class="p-5 rounded-3xl bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 space-y-2">
+                                <span class="inline-block px-2.5 py-0.5 rounded-md bg-indigo-600 text-white font-bold text-[11px]">MINGGU DEPAN • PERTEMUAN 4 (Sub-CPMK 1.3 • 3%)</span>
+                                <h3 class="font-extrabold text-slate-900 dark:text-white text-sm sm:text-base">Logika Percabangan (If, If-Else, Nested If)</h3>
+                                <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    Ekspresi relasional (<span class="font-mono">totalHarga &gt;= 50000</span> dan <span class="font-mono">stok &gt;= jumlahBeli</span>) yang kita pelajari hari ini akan langsung kita masukkan ke dalam simbol Belah Ketupat (<strong>If-Else</strong>) minggu depan untuk mengotomatisasi pemberian diskon bersyarat dan validasi stok habis!
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        const SLIDES = [
+            { id: 1, category: "Modul 1 • Orientasi", title: "Operasi Aritmatika & Logika Relasional (Sub-CPMK 1.2)", render: renderSlide1 },
+            { id: 2, category: "Modul 1 • Konteks Bisnis", title: "Mengapa Kasir Digital Wajib Menghitung Modal (HPP) & Laba?", render: renderSlide2 },
+            { id: 3, category: "Modul 1 • Peta Variabel", title: "Inspektor Variabel Input vs Variabel Assign Warung Digital", render: renderSlide3 },
+            { id: 4, category: "Jembatan Topik 1 ke 2", title: "Menuju Blok Assign & Operator Aritmatika di Flowgorithm", render: renderSlide4 },
+            { id: 5, category: "Modul 2 • Blok Assign", title: "Cara Kerja Blok Assign (Evaluasi Kanan, Simpan ke Kiri)", render: renderSlide5 },
+            { id: 6, category: "Modul 2 • 5 Operator", title: "Laboratorium 5 Operator Aritmatika (+, -, *, /, %)", render: renderSlide6 },
+            { id: 7, category: "Modul 2 • Rumus Diskon", title: "Cara Menghitung Persentase Diskon & Tipe Data Real", render: renderSlide7 },
+            { id: 8, category: "Modul 2 • Prioritas ()", title: "Hukum Prioritas Operator (Precedence) & Tanda Kurung ()", render: renderSlide8 },
+            { id: 9, category: "Modul 2 • Rantai Rumus", title: "5 Rumus Berantai Kalkulator Transaksi Warung Digital", render: renderSlide9 },
+            { id: 10, category: "Jembatan Topik 2 ke 3", title: "Dari Perhitungan Angka Menuju Pembanding Relasional", render: renderSlide10 },
+            { id: 11, category: "Modul 3 • 6 Relasional", title: "Laboratorium 6 Operator Logika Relasional (True / False)", render: renderSlide11 },
+            { id: 12, category: "Modul 3 • = vs ==", title: "Perbedaan Pengisi Nilai (=) vs Pembanding Kesamaan (==)", render: renderSlide12 },
+            { id: 13, category: "Modul 3 • Sandbox", title: "Sandbox Terpadu Kalkulator Modal-Laba & Status Boolean", render: renderSlide13 },
+            { id: 14, category: "Jembatan Topik 3 ke 4", title: "Masuk ke 3 Simulator Praktik Flowgorithm Minggu 3", render: renderSlide14 },
+            { id: 15, category: "Modul 4 • Simulasi 1", title: "Live Simulator Flowgorithm: Kalkulator Harga, Diskon & Laba", render: renderSlide15 },
+            { id: 16, category: "Modul 4 • Simulasi 2", title: "Rakit 5 Blok Rumus Assign di Kanvas Flowgorithm", render: renderSlide16 },
+            { id: 17, category: "Modul 4 • Simulasi 3", title: "Drag & Drop 8 Langkah Sequence Kalkulasi Modal-Laba", render: renderSlide17 },
+            { id: 18, category: "Evaluasi & Penutup", title: "Uji Pemahaman Sub-CPMK 1.2 & Persiapan Minggu 4", render: renderSlide18 }
+        ];
+
+        function renderCurrentSlide() {
+            const slide = SLIDES[currentSlideIndex];
+            const viewport = document.getElementById('slideViewport');
+            viewport.innerHTML = slide.render();
+
+            const pct = Math.round(((currentSlideIndex + 1) / TOTAL_SLIDES) * 100);
+            document.getElementById('topProgressBar').style.width = pct + '%';
+            document.getElementById('slideCounterBadge').textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES;
+            document.getElementById('mobileFooterCounter').textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES;
+            document.getElementById('slideCategoryPill').textContent = slide.category;
+            document.getElementById('headerSlideTitle').textContent = slide.title;
+
+            const prevBtn = document.getElementById('prevSlideBtn');
+            const nextBtn = document.getElementById('nextSlideBtn');
+            const nextBtnText = document.getElementById('nextBtnText');
+
+            prevBtn.disabled = currentSlideIndex === 0;
+            if (currentSlideIndex === TOTAL_SLIDES - 1) {
+                nextBtnText.textContent = "Selesai";
+                nextBtn.disabled = true;
+            } else {
+                nextBtnText.textContent = "Selanjutnya";
+                nextBtn.disabled = false;
+            }
+
+            renderDotsAndDrawer();
+
+            if (currentSlideIndex === 14 && simWaitingVar) {
+                const inputEl = document.getElementById('fgConsoleInputBox');
+                if (inputEl) inputEl.focus();
+            }
+        }
+
+        function renderDotsAndDrawer() {
+            const dotsContainer = document.getElementById('slideDotsContainer');
+            let dotsHtml = '';
+            let drawerHtml = '';
+
+            for (let idx = 0; idx < SLIDES.length; idx++) {
+                const s = SLIDES[idx];
+                const isActive = idx === currentSlideIndex;
+                const dotClass = isActive
+                    ? 'w-6 bg-indigo-600 dark:bg-indigo-400'
+                    : 'w-2 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400';
+
+                dotsHtml += `<button type="button" onclick="goToSlide(${idx})" title="${escapeHtml(s.title)}" class="h-2 rounded-full transition-all ${dotClass}"></button>`;
+
+                const itemClass = isActive
+                    ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 font-bold'
+                    : 'hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-300';
+                const badgeClass = isActive
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500';
+
+                drawerHtml += `
+                    <button type="button" onclick="selectSlideFromDrawer(${idx})" class="w-full text-left p-3 rounded-xl transition flex items-start gap-3 ${itemClass}">
+                        <span class="w-6 h-6 rounded-lg text-xs font-extrabold flex items-center justify-center shrink-0 ${badgeClass}">${s.id}</span>
+                        <div class="min-w-0">
+                            <div class="text-[10px] uppercase tracking-wider opacity-75">${escapeHtml(s.category)}</div>
+                            <div class="text-xs sm:text-sm truncate">${escapeHtml(s.title)}</div>
+                        </div>
+                    </button>
+                `;
+            }
+
+            dotsContainer.innerHTML = dotsHtml;
+            document.getElementById('drawerSlideList').innerHTML = drawerHtml;
+        }
+
+        function selectSlideFromDrawer(index) {
+            goToSlide(index);
+            toggleSlideDrawer();
+        }
+
+        function changeSlide(direction) {
+            const nextIdx = currentSlideIndex + direction;
+            if (nextIdx >= 0 && nextIdx < TOTAL_SLIDES) {
+                if (simAutoTimer) clearTimeout(simAutoTimer);
+                currentSlideIndex = nextIdx;
+                renderCurrentSlide();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function goToSlide(index) {
+            if (index >= 0 && index < TOTAL_SLIDES) {
+                if (simAutoTimer) clearTimeout(simAutoTimer);
+                currentSlideIndex = index;
+                renderCurrentSlide();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function toggleSlideDrawer() {
+            const drawer = document.getElementById('slideDrawer');
+            const backdrop = document.getElementById('slideDrawerBackdrop');
+            const isClosed = drawer.classList.contains('-translate-x-full');
+
+            if (isClosed) {
+                backdrop.classList.remove('hidden');
+                setTimeout(function () {
+                    backdrop.classList.remove('opacity-0');
+                }, 10);
+                drawer.classList.remove('-translate-x-full');
+            } else {
+                backdrop.classList.add('opacity-0');
+                drawer.classList.add('-translate-x-full');
+                setTimeout(function () {
+                    backdrop.classList.add('hidden');
+                }, 200);
+            }
+        }
+
+        function setS2StoryMode(mode) {
+            s2StoryMode = mode;
+            renderCurrentSlide();
+        }
+
+        function selectS3Var(key) {
+            s3VarKey = key;
+            renderCurrentSlide();
+        }
+
+        function setS5Phase(p) {
+            s5AssignPhase = p;
+            renderCurrentSlide();
+        }
+
+        function setS6Op(op) {
+            s6OpKey = op;
+            renderCurrentSlide();
+        }
+
+        function updateS7DiscountSim(field, val) {
+            const num = parseFloat(val) || 0;
+            if (field === 'total') s7TotalBelanja = Math.max(0, num);
+            if (field === 'persen') s7PersenDiskon = Math.min(100, Math.max(0, num));
+
+            const exactDiscount = s7TotalBelanja * (s7PersenDiskon / 100);
+            const finalBayar = s7TotalBelanja - exactDiscount;
+            const resEl = document.getElementById('s7ResultText');
+            if (resEl) {
+                resEl.textContent = 'Diskon = Rp ' + exactDiscount.toLocaleString('id-ID') + ' | Total Bayar = Rp ' + finalBayar.toLocaleString('id-ID');
+            }
+        }
+
+        function updateS8Precedence(field, val) {
+            const num = parseInt(val, 10) || 0;
+            if (field === 'modal') s8HargaModal = num;
+            if (field === 'jual') s8HargaJual = num;
+            if (field === 'qty') s8JumlahBeli = Math.max(1, num);
+
+            const wrongProfit = s8HargaJual - (s8HargaModal * s8JumlahBeli);
+            const rightProfit = (s8HargaJual - s8HargaModal) * s8JumlahBeli;
+
+            const ws = document.getElementById('s8WrongSteps');
+            if (ws) ws.innerHTML = `Komputer mengalikan <span class="font-mono">${s8HargaModal} * ${s8JumlahBeli} = ${s8HargaModal * s8JumlahBeli}</span> dulu, baru menghitung <span class="font-mono">${s8HargaJual} - ${s8HargaModal * s8JumlahBeli}</span>!`;
+            const wv = document.getElementById('s8WrongVal');
+            if (wv) wv.textContent = 'Hasil Salah: Rp ' + wrongProfit.toLocaleString('id-ID') + ' (Seolah Rugi!)';
+
+            const rs = document.getElementById('s8RightSteps');
+            if (rs) rs.innerHTML = `Komputer mengurangi dalam kurung <span class="font-mono">(${s8HargaJual} - ${s8HargaModal}) = ${s8HargaJual - s8HargaModal}</span> dulu, lalu dikali <span class="font-mono">${s8JumlahBeli}</span>!`;
+            const rv = document.getElementById('s8RightVal');
+            if (rv) rv.textContent = 'Hasil Benar: Rp ' + rightProfit.toLocaleString('id-ID') + ' (Untung Akurat!)';
+        }
+
+        function setS9Step(idx) {
+            s9Step = idx;
+            renderCurrentSlide();
+        }
+
+        function setS11Op(op) {
+            s11SelectedOp = op;
+            renderCurrentSlide();
+        }
+
+        function updateS11Vals(which, val) {
+            const num = parseFloat(val) || 0;
+            if (which === 'a') s11ValA = num;
+            if (which === 'b') s11ValB = num;
+            renderCurrentSlide();
+        }
+
+        function updateS13Sandbox(field, val) {
+            const num = parseFloat(val) || 0;
+            if (field === 'modal') s13Modal = Math.max(0, num);
+            if (field === 'jual') s13Jual = Math.max(0, num);
+            if (field === 'qty') s13Qty = Math.max(1, parseInt(val, 10) || 1);
+            if (field === 'diskon') s13DiskonPct = Math.min(95, Math.max(0, num));
+            renderCurrentSlide();
+        }
+
+        // Handlers Slide 15: Live Simulator Kalkulator Modal, Diskon & Laba (15 Blok)
+        function resetFgSim() {
+            if (simAutoTimer) clearTimeout(simAutoTimer);
+            simIsAuto = false;
+            simStepIndex = -1;
+            simWaitingVar = null;
+            simMemory = {
+                namaProduk: null,
+                hargaModal: null,
+                hargaJual: null,
+                jumlahBeli: null,
+                persenDiskon: null,
+                totalHarga: null,
+                nominalDiskon: null,
+                totalBayar: null,
+                totalModal: null,
+                labaBersih: null,
+                apakahUntung: null
+            };
+            simChatLog = [];
+            simInputError = '';
+            simBannerText = 'Klik tombol Run Otomatis atau Step di kanan atas untuk menjalankan simulasi flowchart kalkulator modal, diskon, dan laba Warung Digital.';
+            renderCurrentSlide();
+        }
+
+        function stepToOrFocusNode() {
+            if (simWaitingVar) {
+                const inputBox = document.getElementById('fgConsoleInputBox');
+                if (inputBox) inputBox.focus();
+                return;
+            }
+            stepFgSim();
+        }
+
+        function fillSimQuickChip(val) {
+            const cleaned = val.replace(/\s*\(.*?\)\s*/g, '');
+            const inputBox = document.getElementById('fgConsoleInputBox');
+            if (inputBox) {
+                inputBox.value = cleaned;
+                inputBox.focus();
+            }
+        }
+
+        function stepFgSim() {
+            if (simWaitingVar) {
+                simInputError = 'Ketik dulu nilai untuk "' + simWaitingVar + '" pada kotak Console lalu tekan Enter!';
+                renderCurrentSlide();
+                return;
+            }
+            if (simStepIndex >= 14) {
+                resetFgSim();
+            }
+            simStepIndex++;
+            executeFgStep(simStepIndex);
+        }
+
+        function executeFgStep(step) {
+            simInputError = '';
+            if (step === 0) {
+                simChatLog = [];
+                simBannerText = 'Blok 1 [Main]: Memulai eksekusi program kalkulator transaksi Warung Digital.';
+            } else if (step === 1) {
+                simMemory.namaProduk = '';
+                simMemory.hargaModal = 0;
+                simMemory.hargaJual = 0;
+                simMemory.jumlahBeli = 0;
+                simMemory.persenDiskon = 0;
+                simMemory.totalHarga = 0;
+                simMemory.nominalDiskon = 0;
+                simMemory.totalBayar = 0;
+                simMemory.totalModal = 0;
+                simMemory.labaBersih = 0;
+                simMemory.apakahUntung = false;
+                simBannerText = 'Blok 2 [Declare]: Menyiapkan seluruh laci variabel Input, variabel Hitung (Real), dan apakahUntung (Boolean).';
+            } else if (step === 2) {
+                simWaitingVar = 'namaProduk';
+                simChatLog.push({ type: 'out', html: 'Masukkan nama produk:' });
+                simChatLog.push({ id: 'w_nama', type: 'wait', text: '⏳ Menunggu Input namaProduk (String)...' });
+                simBannerText = 'Blok 3 [Input namaProduk]: Ketik nama produk di Console kanan lalu tekan Enter ↵.';
+            } else if (step === 3) {
+                simWaitingVar = 'hargaModal';
+                simChatLog.push({ type: 'out', html: 'Masukkan harga modal / HPP satuan (Rp):' });
+                simChatLog.push({ id: 'w_modal', type: 'wait', text: '⏳ Menunggu Input hargaModal (angka)...' });
+                simBannerText = 'Blok 4 [Input hargaModal]: Ketik modal kulakan 1 barang (contoh: 9000) lalu tekan Enter ↵.';
+            } else if (step === 4) {
+                simWaitingVar = 'hargaJual';
+                simChatLog.push({ type: 'out', html: 'Masukkan harga jual satuan (Rp):' });
+                simChatLog.push({ id: 'w_jual', type: 'wait', text: '⏳ Menunggu Input hargaJual (angka)...' });
+                simBannerText = 'Blok 5 [Input hargaJual]: Ketik harga jual satuan ke pembeli (contoh: 15000) lalu tekan Enter ↵.';
+            } else if (step === 5) {
+                simWaitingVar = 'jumlahBeli';
+                simChatLog.push({ type: 'out', html: 'Masukkan jumlah beli (pcs):' });
+                simChatLog.push({ id: 'w_qty', type: 'wait', text: '⏳ Menunggu Input jumlahBeli (Integer)...' });
+                simBannerText = 'Blok 6 [Input jumlahBeli]: Ketik jumlah unit yang dibeli (contoh: 4) lalu tekan Enter ↵.';
+            } else if (step === 6) {
+                simWaitingVar = 'persenDiskon';
+                simChatLog.push({ type: 'out', html: 'Masukkan persentase diskon (0 - 90):' });
+                simChatLog.push({ id: 'w_diskon', type: 'wait', text: '⏳ Menunggu Input persenDiskon (angka)...' });
+                simBannerText = 'Blok 7 [Input persenDiskon]: Ketik angka persen diskon (contoh: 10) lalu tekan Enter ↵.';
+            } else if (step === 7) {
+                simMemory.totalHarga = simMemory.hargaJual * simMemory.jumlahBeli;
+                simBannerText = 'Blok 8 [Assign #1]: Menghitung totalHarga = ' + simMemory.hargaJual + ' * ' + simMemory.jumlahBeli + ' = Rp ' + simMemory.totalHarga.toLocaleString('id-ID') + '.';
+            } else if (step === 8) {
+                simMemory.nominalDiskon = simMemory.totalHarga * (simMemory.persenDiskon / 100);
+                simBannerText = 'Blok 9 [Assign #2]: Menghitung nominalDiskon = ' + simMemory.totalHarga + ' * (' + simMemory.persenDiskon + ' / 100) = Rp ' + simMemory.nominalDiskon.toLocaleString('id-ID') + '.';
+            } else if (step === 9) {
+                simMemory.totalBayar = simMemory.totalHarga - simMemory.nominalDiskon;
+                simBannerText = 'Blok 10 [Assign #3]: Menghitung totalBayar = ' + simMemory.totalHarga + ' - ' + simMemory.nominalDiskon + ' = Rp ' + simMemory.totalBayar.toLocaleString('id-ID') + '.';
+            } else if (step === 10) {
+                simMemory.totalModal = simMemory.hargaModal * simMemory.jumlahBeli;
+                simBannerText = 'Blok 11 [Assign #4]: Menghitung totalModal = ' + simMemory.hargaModal + ' * ' + simMemory.jumlahBeli + ' = Rp ' + simMemory.totalModal.toLocaleString('id-ID') + '.';
+            } else if (step === 11) {
+                simMemory.labaBersih = simMemory.totalBayar - simMemory.totalModal;
+                simBannerText = 'Blok 12 [Assign #5]: Menghitung labaBersih = ' + simMemory.totalBayar + ' - ' + simMemory.totalModal + ' = Rp ' + simMemory.labaBersih.toLocaleString('id-ID') + '.';
+            } else if (step === 12) {
+                simMemory.apakahUntung = simMemory.labaBersih > 0;
+                simBannerText = 'Blok 13 [Assign Relasional]: Mengecek apakah labaBersih (' + simMemory.labaBersih + ') > 0 -> menghasilkan Boolean ' + simMemory.apakahUntung + '!';
+            } else if (step === 13) {
+                simChatLog.push({
+                    type: 'out',
+                    html: '=== STRUK & LAPORAN LABA WARUNG DIGITAL ===<br>Produk: ' + escapeHtml(simMemory.namaProduk) + ' (' + simMemory.jumlahBeli + 'x)<br>Total Harga: Rp ' + simMemory.totalHarga.toLocaleString('id-ID') + '<br>Diskon (' + simMemory.persenDiskon + '%): -Rp ' + simMemory.nominalDiskon.toLocaleString('id-ID') + '<br><strong>Total Bayar: Rp ' + simMemory.totalBayar.toLocaleString('id-ID') + '</strong><br>Total Modal HPP: Rp ' + simMemory.totalModal.toLocaleString('id-ID') + '<br><strong>Laba Bersih: Rp ' + simMemory.labaBersih.toLocaleString('id-ID') + ' | Status Untung: ' + simMemory.apakahUntung + '</strong>'
+                });
+                simBannerText = 'Blok 14 [Output]: Menampilkan rincian struk pelanggan sekaligus laporan laba bersih dan status apakahUntung.';
+            } else if (step === 14) {
+                simIsAuto = false;
+                simBannerText = 'Blok 15 [End]: Simulasi kalkulasi aritmatika dan logika relasional selesai dengan tuntas!';
+            }
+
+            renderCurrentSlide();
+            const chatBox = document.getElementById('fgConsoleChat');
+            if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+
+            if (simIsAuto && !simWaitingVar && step < 14) {
+                simAutoTimer = setTimeout(function () {
+                    stepFgSim();
+                }, 650);
+            }
+        }
+
+        function submitManualConsoleInput(e) {
+            e.preventDefault();
+            if (!simWaitingVar) return;
+            const inputBox = document.getElementById('fgConsoleInputBox');
+            const rawVal = inputBox ? inputBox.value.trim() : '';
+
+            if (rawVal === '') {
+                simInputError = 'Input "' + simWaitingVar + '" tidak boleh kosong!';
+                renderCurrentSlide();
+                return;
+            }
+
+            if (simWaitingVar === 'namaProduk') {
+                simMemory.namaProduk = rawVal;
+                simChatLog = simChatLog.filter(function (m) { return m.id !== 'w_nama'; });
+                simChatLog.push({ type: 'in', text: 'namaProduk = "' + rawVal + '"' });
+            } else {
+                if (!/^\d+(\.\d+)?$/.test(rawVal)) {
+                    simInputError = 'Type Mismatch Error: Masukkan angka murni tanpa huruf Rp atau tanda baca lainnya!';
+                    renderCurrentSlide();
+                    return;
+                }
+                const numVal = parseFloat(rawVal);
+                if (simWaitingVar === 'hargaModal') {
+                    simMemory.hargaModal = numVal;
+                    simChatLog = simChatLog.filter(function (m) { return m.id !== 'w_modal'; });
+                    simChatLog.push({ type: 'in', text: 'hargaModal = ' + numVal });
+                } else if (simWaitingVar === 'hargaJual') {
+                    simMemory.hargaJual = numVal;
+                    simChatLog = simChatLog.filter(function (m) { return m.id !== 'w_jual'; });
+                    simChatLog.push({ type: 'in', text: 'hargaJual = ' + numVal });
+                } else if (simWaitingVar === 'jumlahBeli') {
+                    simMemory.jumlahBeli = Math.max(1, Math.round(numVal));
+                    simChatLog = simChatLog.filter(function (m) { return m.id !== 'w_qty'; });
+                    simChatLog.push({ type: 'in', text: 'jumlahBeli = ' + simMemory.jumlahBeli });
+                } else if (simWaitingVar === 'persenDiskon') {
+                    simMemory.persenDiskon = numVal;
+                    simChatLog = simChatLog.filter(function (m) { return m.id !== 'w_diskon'; });
+                    simChatLog.push({ type: 'in', text: 'persenDiskon = ' + numVal + '%' });
+                }
+            }
+
+            simWaitingVar = null;
+            simInputError = '';
+            renderCurrentSlide();
+
+            if (simIsAuto) {
+                simAutoTimer = setTimeout(function () {
+                    stepFgSim();
+                }, 450);
+            }
+        }
+
+        function runFullFgSim() {
+            if (simAutoTimer) clearTimeout(simAutoTimer);
+            simStepIndex = -1;
+            simWaitingVar = null;
+            simChatLog = [];
+            simInputError = '';
+            simIsAuto = true;
+            stepFgSim();
+        }
+
+        // Handlers Slide 16: Rakit 5 Blok Assign
+        function selectBuilderSlot(slotNum) {
+            activeBuilderSlot = slotNum;
+            renderCurrentSlide();
+        }
+
+        function assignFormulaToSlot(formulaCode) {
+            builderSlots[activeBuilderSlot] = formulaCode;
+            builderFeedback = { type: '', text: '' };
+            if (activeBuilderSlot < 5) {
+                activeBuilderSlot++;
+            }
+            renderCurrentSlide();
+        }
+
+        function checkBuilderAnswer() {
+            if (
+                builderSlots[1] === 'F_TOTAL_HARGA' &&
+                builderSlots[2] === 'F_DISKON' &&
+                builderSlots[3] === 'F_BAYAR' &&
+                builderSlots[4] === 'F_MODAL' &&
+                builderSlots[5] === 'F_LABA'
+            ) {
+                builderFeedback = {
+                    type: 'success',
+                    text: 'Sempurna (5/5 Tepat)! Rantai perhitungan Assign dari totalHarga -> nominalDiskon -> totalBayar -> totalModal -> labaBersih sudah 100% akurat!'
+                };
+            } else {
+                builderFeedback = {
+                    type: 'error',
+                    text: 'Urutan rumus belum tepat. Pastikan: Slot 1 (totalHarga) -> Slot 2 (nominalDiskon) -> Slot 3 (totalBayar) -> Slot 4 (totalModal) -> Slot 5 (labaBersih).'
+                };
+            }
+            renderCurrentSlide();
+        }
+
+        function resetBuilderCanvas() {
+            builderSlots = { 1: '', 2: '', 3: '', 4: '', 5: '' };
+            activeBuilderSlot = 1;
+            builderFeedback = { type: '', text: '' };
+            renderCurrentSlide();
+        }
+
+        // Handlers Slide 17: Drag & Drop 8 Langkah Kalkulasi
+        function shuffleCalcSteps() {
+            calcStepsOrder = [...CORRECT_CALC_STEPS].sort(function () { return Math.random() - 0.5; });
+            calcShowValidation = false;
+            calcFeedbackText = '';
+            renderCurrentSlide();
+        }
+
+        function moveCalcStep(index, direction) {
+            const target = index + direction;
+            if (target < 0 || target >= calcStepsOrder.length) return;
+            const moved = calcStepsOrder.splice(index, 1)[0];
+            calcStepsOrder.splice(target, 0, moved);
+            calcShowValidation = false;
+            calcFeedbackText = '';
+            renderCurrentSlide();
+        }
+
+        function onCalcDragStart(e, index) {
+            draggedCalcIndex = index;
+            if (e.currentTarget) e.currentTarget.classList.add('dragging');
+            if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function onCalcDragOver(e, index) {
+            e.preventDefault();
+            if (index !== draggedCalcIndex && e.currentTarget) {
+                e.currentTarget.classList.add('drag-over');
+            }
+        }
+
+        function onCalcDragLeave(e) {
+            if (e.currentTarget) e.currentTarget.classList.remove('drag-over');
+        }
+
+        function onCalcDrop(e, targetIndex) {
+            e.preventDefault();
+            if (draggedCalcIndex !== null && draggedCalcIndex !== targetIndex) {
+                const moved = calcStepsOrder.splice(draggedCalcIndex, 1)[0];
+                calcStepsOrder.splice(targetIndex, 0, moved);
+                calcShowValidation = false;
+                calcFeedbackText = '';
+                renderCurrentSlide();
+            }
+            draggedCalcIndex = null;
+        }
+
+        function onCalcDragEnd() {
+            draggedCalcIndex = null;
+            document.querySelectorAll('.draggable-step').forEach(function (el) {
+                el.classList.remove('dragging', 'drag-over');
+            });
+        }
+
+        function checkCalcOrder() {
+            calcShowValidation = true;
+            let correctCount = 0;
+            for (let i = 0; i < calcStepsOrder.length; i++) {
+                if (calcStepsOrder[i].id === i + 1) correctCount++;
+            }
+            if (correctCount === calcStepsOrder.length) {
+                calcFeedbackText = 'Luar Biasa (8/8 Tepat)! Alur kalkulasi harga, diskon, modal, dan laba bersih sudah 100% runtut!';
+            } else {
+                calcFeedbackText = 'Baru ' + correctCount + '/8 langkah yang tepat. Geser baris bertanda "✗ Geser".';
+            }
+            renderCurrentSlide();
+        }
+
+        function answerSelfCheck(qNum, isOk, msg) {
+            selfCheckFeedback[qNum] = { ok: isOk, msg: msg };
+            renderCurrentSlide();
+        }
+
+        // Modal Istilah & Kamus Lengkap
+        function showTerm(key) {
+            const item = GLOSSARY_DB[key];
+            if (!item) return;
+
+            document.getElementById('termCategoryBadge').textContent = item.category;
+            document.getElementById('termTitle').textContent = item.title;
+            document.getElementById('termMainDesc').textContent = item.main;
+            document.getElementById('termDetailDesc').textContent = item.detail;
+            document.getElementById('termSourceName').textContent = "Sumber: " + item.source;
+
+            const modal = document.getElementById('termModalBackdrop');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeTermModal() {
+            const modal = document.getElementById('termModalBackdrop');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function openGlossaryIndex() {
+            document.getElementById('glossarySearchInput').value = '';
+            renderGlossaryList('');
+            const modal = document.getElementById('glossaryModalBackdrop');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeGlossaryIndex() {
+            const modal = document.getElementById('glossaryModalBackdrop');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function selectGlossaryTerm(key) {
+            closeGlossaryIndex();
+            showTerm(key);
+        }
+
+        function renderGlossaryList(query) {
+            const q = String(query || '').trim().toLowerCase();
+            const allKeys = Object.keys(GLOSSARY_DB);
+            const matchedKeys = [];
+
+            for (let i = 0; i < allKeys.length; i++) {
+                const k = allKeys[i];
+                const item = GLOSSARY_DB[k];
+                if (
+                    item.title.toLowerCase().indexOf(q) !== -1 ||
+                    item.category.toLowerCase().indexOf(q) !== -1 ||
+                    item.main.toLowerCase().indexOf(q) !== -1
+                ) {
+                    matchedKeys.push(k);
+                }
+            }
+
+            const container = document.getElementById('glossaryListGrid');
+            if (matchedKeys.length === 0) {
+                container.innerHTML = '<div class="col-span-2 text-center py-8 text-xs text-slate-500">Istilah tidak ditemukan.</div>';
+                return;
+            }
+
+            let html = '';
+            for (let i = 0; i < matchedKeys.length; i++) {
+                const k = matchedKeys[i];
+                const item = GLOSSARY_DB[k];
+                html += `
+                    <button type="button" onclick="selectGlossaryTerm('${k}')" class="text-left p-4 rounded-2xl bg-slate-50 hover:bg-indigo-50/60 dark:bg-slate-800/50 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800 transition space-y-1">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">${escapeHtml(item.category)}</span>
+                            <span class="text-[10px] text-slate-400">${escapeHtml(item.source)}</span>
+                        </div>
+                        <div class="text-sm font-extrabold text-slate-900 dark:text-white">${escapeHtml(item.title)}</div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">${escapeHtml(item.main)}</p>
+                    </button>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function toggleTheme() {
+            const htmlEl = document.documentElement;
+            const icon = document.getElementById('themeIcon');
+            htmlEl.classList.toggle('dark');
+            const isDark = htmlEl.classList.contains('dark');
+            icon.className = isDark ? 'fa-solid fa-sun text-amber-400 text-sm' : 'fa-solid fa-moon text-sm';
+        }
+
+        document.addEventListener('keydown', function (e) {
+            const activeTag = document.activeElement && document.activeElement.tagName
+                ? document.activeElement.tagName.toLowerCase()
+                : '';
+            if (activeTag === 'input' || activeTag === 'textarea') return;
+
+            if (e.key === 'ArrowRight') changeSlide(1);
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+            if (e.key === 'Escape') {
+                closeTermModal();
+                closeGlossaryIndex();
+            }
+        });
+
+        window.onload = function () {
+            renderCurrentSlide();
+        };
+    </script>
+</body>
+</html>
