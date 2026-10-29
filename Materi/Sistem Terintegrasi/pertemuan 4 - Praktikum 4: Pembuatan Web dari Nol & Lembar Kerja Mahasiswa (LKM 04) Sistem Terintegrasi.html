@@ -439,7 +439,7 @@
                 "require_once __DIR__ . '/../config/koneksi.php';",
                 "/** @var PDO $pdo */",
                 "",
-                "$kunciKiriman = trim((string)($_SERVER['HTTP_X_API_KEY'] ?? ($_GET['api_key'] ?? '')));",
+                "$kunciKiriman = trim((string)($_SERVER['HTTP_X_API_KEY'] ?? ''));",
                 "$stKey = $pdo->prepare('SELECT * FROM api_keys WHERE api_key = :k AND status_aktif = 1 LIMIT 1');",
                 "$stKey->execute([':k' => $kunciKiriman]);",
                 "$mitra = $stKey->fetch();",
@@ -481,7 +481,7 @@
                 "    exit;",
                 "}",
                 "",
-                "$kunciKiriman = trim((string)($_SERVER['HTTP_X_API_KEY'] ?? ($_GET['api_key'] ?? ($_POST['api_key'] ?? ''))));",
+                "$kunciKiriman = trim((string)($_SERVER['HTTP_X_API_KEY'] ?? ''));",
                 "$stKey = $pdo->prepare('SELECT * FROM api_keys WHERE api_key = :k AND status_aktif = 1 LIMIT 1');",
                 "$stKey->execute([':k' => $kunciKiriman]);",
                 "$mitra = $stKey->fetch();",
@@ -555,7 +555,7 @@
                 "    exit;",
                 "}",
                 "",
-                "$kunciKiriman = trim((string)($_SERVER['HTTP_X_API_KEY'] ?? ($_GET['api_key'] ?? ($_POST['api_key'] ?? ''))));",
+                "$kunciKiriman = trim((string)($_SERVER['HTTP_X_API_KEY'] ?? ''));",
                 "$stKey = $pdo->prepare('SELECT * FROM api_keys WHERE api_key = :k AND status_aktif = 1 LIMIT 1');",
                 "$stKey->execute([':k' => $kunciKiriman]);",
                 "$mitra = $stKey->fetch();",
@@ -709,8 +709,8 @@
             htdocs: { title: "Folder htdocs (C:\\xampp\\htdocs)", category: "Lokasi Proyek Web", main: "Folder utama di dalam XAMPP tempat menyimpan folder aplikasi web agar dapat dibuka di browser via http://localhost/.", detail: "Pada praktikum ini kita membuat struktur foldernya dari awal.", source: "Slide 4" },
             log_stok: { title: "Kartu Stok Digital (log_stok)", category: "Audit & Kontrol Internal", main: "Tabel di db_gudang yang merekam setiap kejadian barang masuk/keluar lengkap dengan jam, jumlah, sisa stok, dan nomor bukti struknya.", detail: "Berfungsi untuk audit stok dan menolak nomor bukti yang dikirim dua kali (Anti-Duplikat).", source: "Slide 5" },
             api_keys_tbl: { title: "Kunci Akses Cabang (api_keys)", category: "Tata Kelola Cabang", main: "Tabel di db_gudang yang menyimpan kode kunci (X-API-KEY) milik setiap cabang beserta saklar status_aktif (1 = Aktif, 0 = Mati).", detail: "Memudahkan manajer memblokir akses 1 cabang tanpa mengganggu cabang lain.", source: "Slide 6" },
-            kontrak_api: { title: "SOP Kontrak Layanan API (API Spec)", category: "Desain Integrasi Bisnis", main: "Kesepakatan tertulis mengenai 5 komponen: Nama Layanan, Aksi & Alamat Pintu, Syarat Data Kiriman, Balasan Sukses, dan Aturan Penolakan Bisnis.", detail: "Dirumuskan secara mandiri pada Form Isian 3 (Slide 16).", source: "Slide 15" },
-            peer_review: { title: "Evaluasi Silang (Peer Review)", category: "Kolaborasi Tim", main: "Kegiatan saling memeriksa rancangan Kontrak Layanan API bersama teman pasangan lab untuk menemukan celah aturan bisnis.", detail: "Dicatat pada Form Isian 4 (Slide 18).", source: "Slide 17" }
+            kontrak_api: { title: "SOP Kontrak Layanan API (API Spec)", category: "Desain Integrasi Bisnis", main: "Kesepakatan tertulis mengenai 6 kolom: Resource, Method, URL, Header, Body, dan Respons (sukses &amp; error).", detail: "Dirumuskan secara mandiri pada Form Isian 3 (Slide 16).", source: "Slide 15" },
+            peer_review: { title: "Evaluasi Silang (Peer Review)", category: "Kolaborasi Tim", main: "Kegiatan saling memeriksa rancangan Kontrak Layanan API dengan teman yang ditentukan dosen (tukar silang) untuk menemukan celah aturan bisnis.", detail: "Dicatat pada Form Isian 4 (Slide 18).", source: "Slide 17" }
         };
 
         function escapeHtml(str) {
@@ -792,7 +792,7 @@
                 { nama: '', method: 'POST', filename: 'stok-masuk.php',  body: '', sukses: '', e400_on: true,  e400_ket: 'Qty <= 0 atau kode barang kosong',      e401_on: true,  e401_ket: 'Kunci API tidak dikirim / saklar mati', e404_on: true,  e404_ket: 'Kode barang tidak terdaftar', e409_on: false, e409_ket: '' }
             ],
             pr_1_status: '', pr_1_catatan: '', pr_2_status: '', pr_2_catatan: '',
-            pr_3_status: '', pr_3_catatan: '', pr_4_status: '', pr_4_catatan: '',
+            pr_3_status: '', pr_3_catatan: '', pr_4_status: '', pr_4_catatan: '', pr_reviewer: '', pr_tindak: '',
             umkm_nama: '', umkm_bidang: '', umkm_masalah: '',
             umkm_ep1_nama: '', umkm_ep1_url: '', umkm_ep1_aturan: '',
             umkm_ep2_nama: '', umkm_ep2_url: '', umkm_ep2_aturan: ''
@@ -806,7 +806,7 @@
             umkmEditing: true, umkmMinimized: false
         };
 
-        function isIdentitasComplete() { return !!(formState.nama.trim() && formState.nim.trim() && formState.kelas.trim() && formState.tgl.trim() && formState.pasangan_nama.trim()); }
+        function isIdentitasComplete() { return !!(formState.nama.trim() && formState.nim.trim() && formState.kelas.trim() && formState.tgl.trim()); }
 
         function isExpComplete() {
             return !!(formState.exp_1_sebelum.trim() && formState.exp_1_sesudah.trim() && formState.exp_1_mengapa.trim() &&
@@ -823,7 +823,7 @@
 
         function isPeerComplete() {
             const st = [formState.pr_1_status, formState.pr_2_status, formState.pr_3_status, formState.pr_4_status];
-            return st.every(function (s) { return s === 'Ya' || s === 'Revisi'; });
+            return (formState.pr_reviewer || '').trim() !== '' && st.every(function (s) { return s === 'Ya' || s === 'Revisi'; });
         }
 
         function isUmkmComplete() { return true; }
@@ -847,8 +847,7 @@
                 if (!formState.nama.trim()) { uiWizard.identitasEditing = true; renderCurrentSlide(); highlightEmptyInput('inp_nama', 'Nama Lengkap wajib diisi.'); return false; }
                 if (!formState.nim.trim()) { uiWizard.identitasEditing = true; renderCurrentSlide(); highlightEmptyInput('inp_nim', 'NIM wajib diisi.'); return false; }
                 if (!formState.kelas.trim()) { uiWizard.identitasEditing = true; renderCurrentSlide(); highlightEmptyInput('inp_kelas', 'Kelas wajib diisi.'); return false; }
-                if (!formState.pasangan_nama.trim()) { uiWizard.identitasEditing = true; renderCurrentSlide(); highlightEmptyInput('inp_pasangan_nama', 'Nama Pasangan wajib diisi.'); return false; }
-                uiWizard.identitasEditing = false;
+                                uiWizard.identitasEditing = false;
                 return true;
             }
             if (slideIdx === 13) {
@@ -905,6 +904,8 @@
                         return false;
                     }
                 }
+                if (!(formState.pr_reviewer || '').trim()) { uiWizard.peerEditing = true; renderCurrentSlide(); highlightEmptyInput('inp_pr_reviewer', 'Nama reviewer wajib diisi (rekan yang menguji kontrak Anda).'); return false; }
+                if (!(formState.pr_tindak || '').trim()) { uiWizard.peerEditing = true; renderCurrentSlide(); highlightEmptyInput('inp_pr_tindak', 'Tindak lanjut penulis wajib diisi.'); return false; }
                 uiWizard.peerEditing = false;
                 return true;
             }
@@ -1051,7 +1052,7 @@
                             <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 space-y-3.5">
                                 <div><span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Pola Belajar Problem Solving</span><h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white mt-0.5">Tahapan Praktikum Hari Ini</h3></div>
                                 <div class="space-y-2.5 text-xs">
-                                    <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 flex items-center gap-3"><span class="w-7 h-7 rounded-lg bg-emerald-600 text-white font-extrabold flex items-center justify-center shrink-0">1</span><div><strong class="text-slate-900 dark:text-white block">Peran Tim &amp; Identitas (Slide 2–3)</strong><span class="text-slate-500">Pahami peran kolaborasi lalu isi Form 1.</span></div></div>
+                                    <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 flex items-center gap-3"><span class="w-7 h-7 rounded-lg bg-emerald-600 text-white font-extrabold flex items-center justify-center shrink-0">1</span><div><strong class="text-slate-900 dark:text-white block">Peran Penulis–Reviewer &amp; Identitas (Slide 2–3)</strong><span class="text-slate-500">Pahami peran kolaborasi lalu isi Form 1.</span></div></div>
                                     <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 flex items-center gap-3"><span class="w-7 h-7 rounded-lg bg-emerald-600 text-white font-extrabold flex items-center justify-center shrink-0">2</span><div><strong class="text-slate-900 dark:text-white block">Bangun Web Gudang &amp; Kasir (Slide 4–12)</strong><span class="text-slate-500">Buat folder, jalankan 2 SQL, buat 6 file web.</span></div></div>
                                     <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 flex items-center gap-3"><span class="w-7 h-7 rounded-lg bg-emerald-600 text-white font-extrabold flex items-center justify-center shrink-0">3</span><div><strong class="text-slate-900 dark:text-white block">Misi Investigasi &amp; Desain Kontrak (Slide 13–18)</strong><span class="text-slate-500">Form 2, 3, &amp; 4 dengan panduan di slide sebelum.</span></div></div>
                                     <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 flex items-center gap-3"><span class="w-7 h-7 rounded-lg bg-indigo-600 text-white font-extrabold flex items-center justify-center shrink-0">4</span><div><strong class="text-slate-900 dark:text-white block">Solusi UMKM &amp; Berkas Pengumpulan (Slide 19–21)</strong><span class="text-slate-500">Form 5 (opsional) &amp; unduh semua berkas.</span></div></div>
@@ -1067,8 +1068,8 @@
                 <div class="slide-enter flex flex-col justify-between h-full gap-6">
                     <div class="space-y-1.5">
                         <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Penjelasan Sebelum Mengisi Form 1</span>
-                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Mengapa Perancangan Kontrak API Wajib Berpasangan?</h2>
-                        <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">Integrasi sistem selalu melibatkan <strong>dua pihak yang bekerja sama</strong>. Karena itu, pada Form 1 Anda wajib mencantumkan identitas Anda sekaligus identitas <strong>Pasangan Kolaborasi (${term('peer_review', 'Peer Reviewer')})</strong>:</p>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Mengapa Kontrak API Anda Perlu Diuji Orang Lain?</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">Integrasi sistem selalu melibatkan <strong>dua pihak</strong>: penyedia layanan dan pengguna layanan. Praktikum ini <strong>dikerjakan sendiri</strong>. Pada tahap Form 4, kontrak Anda akan <strong>ditukar silang</strong> dengan teman lain yang ditentukan dosen (${term('peer_review', 'Peer Review')}):</p>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-auto">
                         <div class="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-t-4 border-emerald-600 border-x border-b border-slate-200 dark:border-slate-800 space-y-2.5">
@@ -1077,9 +1078,9 @@
                             <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">Anda bertugas membangun simulasi web, melakukan investigasi, lalu merumuskan 4 Kontrak Layanan API versi Anda sendiri.</p>
                         </div>
                         <div class="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-t-4 border-indigo-600 border-x border-b border-slate-200 dark:border-slate-800 space-y-2.5">
-                            <span class="px-2.5 py-1 rounded-lg bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 text-xs font-extrabold">PERAN 2 · PENGUJI KRITIS (PASANGAN LAB)</span>
+                            <span class="px-2.5 py-1 rounded-lg bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 text-xs font-extrabold">PERAN 2 · PENGUJI KRITIS (REKAN PENUKAR)</span>
                             <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Mencari Celah pada Rancangan Anda</h3>
-                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">Pasangan di sebelah Anda berperan sebagai perwakilan tim Kasir yang akan menguji dan mengkritisi rancangan Kontrak API Anda.</p>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">Rekan penukar berperan sebagai perwakilan tim Kasir yang akan menguji dan mengkritisi rancangan Kontrak API Anda (dan sebaliknya, Anda menguji kontrak miliknya).</p>
                         </div>
                     </div>
                     <div class="p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 text-xs"><i class="fa-solid fa-arrow-right text-indigo-600 mr-1.5"></i>Klik <strong>Selanjutnya</strong> untuk mengisi Form 1.</div>
@@ -1094,21 +1095,21 @@
             if (isEditing) {
                 bodyHtml = `
                     <div class="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border-2 border-emerald-600 shadow-md space-y-4">
-                        ${renderWizardCardHeader('Form 1', 'Identitas Mahasiswa & Pasangan Kolaborasi', isSaved, true, false, '', '')}
+                        ${renderWizardCardHeader('Form 1', 'Identitas Mahasiswa', isSaved, true, false, '', '')}
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100 dark:border-slate-800">
                             <div><label class="text-xs font-bold block mb-1">Nama Lengkap Anda *</label><input type="text" id="inp_nama" value="${escapeHtml(formState.nama)}" oninput="updateField('nama', this.value)" placeholder="Ketik nama lengkap..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm font-semibold"></div>
                             <div><label class="text-xs font-bold block mb-1">NIM *</label><input type="text" id="inp_nim" value="${escapeHtml(formState.nim)}" oninput="updateField('nim', this.value)" placeholder="Ketik NIM..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm font-mono font-semibold"></div>
                             <div><label class="text-xs font-bold block mb-1">Kelas / Semester *</label><input type="text" id="inp_kelas" value="${escapeHtml(formState.kelas)}" oninput="updateField('kelas', this.value)" placeholder="Ketik kelas..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm"></div>
                             <div><label class="text-xs font-bold block mb-1">Tanggal Praktikum *</label><input type="date" id="inp_tgl" value="${escapeHtml(formState.tgl)}" oninput="updateField('tgl', this.value)" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm font-mono"></div>
-                            <div><label class="text-xs font-bold text-indigo-700 block mb-1">Nama Rekan Pasangan *</label><input type="text" id="inp_pasangan_nama" value="${escapeHtml(formState.pasangan_nama)}" oninput="updateField('pasangan_nama', this.value)" placeholder="Ketik nama rekan..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm font-semibold"></div>
-                            <div><label class="text-xs font-bold text-indigo-700 block mb-1">NIM Rekan (Opsional)</label><input type="text" id="inp_pasangan_nim" value="${escapeHtml(formState.pasangan_nim)}" oninput="updateField('pasangan_nim', this.value)" placeholder="Ketik NIM rekan..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm font-mono"></div>
+                            <div><label class="text-xs font-bold text-indigo-700 block mb-1">Calon Reviewer (opsional, boleh diisi nanti)</label><input type="text" id="inp_pasangan_nama" value="${escapeHtml(formState.pasangan_nama)}" oninput="updateField('pasangan_nama', this.value)" placeholder="Ketik nama rekan..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm font-semibold"></div>
+                            <div><label class="text-xs font-bold text-indigo-700 block mb-1">NIM Reviewer (Opsional)</label><input type="text" id="inp_pasangan_nim" value="${escapeHtml(formState.pasangan_nim)}" oninput="updateField('pasangan_nim', this.value)" placeholder="Ketik NIM rekan..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm font-mono"></div>
                         </div>
                         <div class="flex justify-end pt-1"><button type="button" onclick="saveIdentitasLkm4()" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-extrabold transition flex items-center gap-2 shadow-sm"><i class="fa-solid fa-check"></i><span>Simpan Identitas</span></button></div>
                     </div>`;
             } else {
                 bodyHtml = `
                     <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-emerald-300 dark:border-emerald-800 space-y-3">
-                        ${renderWizardCardHeader('Form 1', formState.nama + ' (' + formState.nim + ') • Rekan: ' + formState.pasangan_nama, true, false, isMin, 'uiWizard.identitasEditing=true;renderCurrentSlide();', 'uiWizard.identitasMinimized=!uiWizard.identitasMinimized;renderCurrentSlide();')}
+                        ${renderWizardCardHeader('Form 1', formState.nama + ' (' + formState.nim + ')' + (formState.pasangan_nama ? ' • Calon reviewer: ' + formState.pasangan_nama : ''), true, false, isMin, 'uiWizard.identitasEditing=true;renderCurrentSlide();', 'uiWizard.identitasMinimized=!uiWizard.identitasMinimized;renderCurrentSlide();')}
                         ${!isMin ? `<div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs sm:text-sm"><div><span class="text-slate-400 font-bold block">Mahasiswa:</span><strong>${escapeHtml(formState.nama)} (${escapeHtml(formState.nim)})</strong></div><div><span class="text-slate-400 font-bold block">Kelas:</span><span>${escapeHtml(formState.kelas)} • ${escapeHtml(formState.tgl)}</span></div><div><span class="text-slate-400 font-bold block">Reviewer:</span><strong>${escapeHtml(formState.pasangan_nama)}</strong></div></div>` : ''}
                     </div>`;
             }
@@ -1189,7 +1190,7 @@
             return `<div class="slide-enter flex flex-col justify-between h-full gap-4">
                 <div class="space-y-1"><span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Langkah Web 8 · File 5 dari 6</span><h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Buat Pintu Layanan Tambah Stok (<code class="font-mono">api/stok-masuk.php</code>)</h2></div>
                 <div class="my-auto">${renderCodeBox('php_5_api_stok_masuk', '📋 Salin stok-masuk.php')}</div>
-                <div class="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border-l-4 border-emerald-600 text-xs sm:text-sm text-slate-700 dark:text-slate-200"><strong>Web Gudang Selesai 100%!</strong> Tinggal 1 file terakhir di Slide 12.</div>
+                <div class="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border-l-4 border-emerald-600 text-xs sm:text-sm text-slate-700 dark:text-slate-200"><strong>Web Gudang Selesai 100%!</strong> Tinggal 1 file terakhir di Slide 12. <em>Petunjuk Misi 4: bandingkan file ini dengan stok-keluar.php. Adakah pemeriksaan yang berbeda?</em></div>
             </div>`;
         }
 
@@ -1205,7 +1206,8 @@
             const missions = [
                 { badge: "MISI INVESTIGASI 1", title: "Uji Potong Stok Normal & Amati Kartu Stok", steps: "1. Buka Web Kasir.\n2. Pilih '3. Lapor Barang Terjual'.\n3. Isi Kode: SP001, Qty: 2, Nomor Bukti: TRX-101, klik Kirim.", questionToThink: "Pertanyaan untuk Form 2 Misi 1:\nApa yang berubah pada stok & log_stok? Mengapa pencatatan bukti ini penting bagi pemilik bisnis?" },
                 { badge: "MISI INVESTIGASI 2", title: "Uji Struk Kembar (Anti-Duplikat)", steps: "1. Masih di Web Kasir, pilihan '3. Lapor Barang Terjual'.\n2. JANGAN ubah Nomor Bukti (tetap TRX-101).\n3. Klik Kirim sekali lagi!", questionToThink: "Pertanyaan untuk Form 2 Misi 2:\nMengapa permintaan kedua ditolak? Bagaimana sistem tahu itu kembar? Kerugian apa yang dicegah?" },
-                { badge: "MISI INVESTIGASI 3", title: "Uji Pencabutan Izin Cabang (Saklar OFF)", steps: "1. Buka Web Gudang.\n2. Pada tabel 'Daftar Izin Akses Cabang', klik 'Matikan (0)' pada kunci GDG-KEY-UTAMA-001.\n3. Kembali ke Web Kasir, klik Kirim Permintaan.\n4. ⚠️ PENTING: Setelah amati error 401, KLIK LAGI 'Nyalakan (1)' di Web Gudang agar Misi berikutnya tidak gagal!", questionToThink: "Pertanyaan untuk Form 2 Misi 3:\nApa respons yang muncul? Dalam situasi bisnis apa manajer perlu mematikan saklar cabang?" }
+                { badge: "MISI INVESTIGASI 3", title: "Uji Pencabutan Izin Cabang (Saklar OFF)", steps: "1. Buka Web Gudang.\n2. Pada tabel 'Daftar Izin Akses Cabang', klik 'Matikan (0)' pada kunci GDG-KEY-UTAMA-001.\n3. Kembali ke Web Kasir, klik Kirim Permintaan.\n4. ⚠️ PENTING: Setelah amati error 401, KLIK LAGI 'Nyalakan (1)' di Web Gudang agar Misi berikutnya tidak gagal!", questionToThink: "Pertanyaan untuk Form 2 Misi 3:\nApa respons yang muncul? Dalam situasi bisnis apa manajer perlu mematikan saklar cabang?" },
+            { badge: "MISI 4 · TANTANGAN", title: "Bandingkan Stok Keluar vs Stok Masuk", steps: "1. Di Web Kasir pilih '4. Lapor Barang Masuk'.\n2. Isi Kode: SP001, Qty: 5, Nomor Bukti: PO-501, klik Kirim.\n3. Klik Kirim sekali lagi tanpa mengubah apa pun.\n4. Lihat Web Gudang: stok dan log_stok. Bandingkan dengan hasil Misi 2.\n5. Jalankan Skrip Reset jika data kacau.", questionToThink: "Pertanyaan (jawaban masuk ke Form 3 Layanan #4 dan jadi bahan Peer Review):\nApakah stok-masuk berperilaku sama dengan stok-keluar saat nomor bukti dikirim dua kali? Apa risikonya bagi toko? Aturan penolakan apa (kode dan kondisi) yang perlu ditambahkan ke kontrak stok-masuk?" }
             ];
             const m = missions[activeMissionTab];
             let tabBtns = '';
@@ -1215,7 +1217,7 @@
             }
             return `
                 <div class="slide-enter flex flex-col justify-between h-full gap-3">
-                    <div class="space-y-1"><span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Penjelasan Sebelum Form 2</span><h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Lakukan 3 Misi Ini di Web Anda</h2><p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">Coba sendiri ketiga misi di browser agar bisa menjawab <strong>Form 2</strong> dengan kalimat Anda sendiri:</p></div>
+                    <div class="space-y-1"><span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Penjelasan Sebelum Form 2</span><h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Lakukan 3 Misi + 1 Tantangan di Web Anda</h2><p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">Coba sendiri ketiga misi di browser agar bisa menjawab <strong>Form 2</strong> dengan kalimat Anda sendiri:</p></div>
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">${tabBtns}</div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3 my-auto">
                         <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border space-y-1.5"><span class="text-xs font-extrabold uppercase text-emerald-700 dark:text-emerald-400">🛠️ Langkah Eksperimen:</span><div class="text-xs sm:text-sm text-slate-700 dark:text-slate-200 whitespace-pre-line leading-relaxed font-semibold">${escapeHtml(m.steps)}</div></div>
@@ -1282,7 +1284,7 @@
             }
             return `
                 <div class="slide-enter flex flex-col justify-between h-full gap-4">
-                    <div class="space-y-1"><span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Penjelasan Sebelum Form 3</span><h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Pahami 5 Kolom Ini Sebelum Merancang 4 Layanan</h2><p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">Klik setiap kolom di bawah agar Anda paham cara mengisinya:</p></div>
+                    <div class="space-y-1"><span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Penjelasan Sebelum Form 3</span><h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Pahami Kolom Ini Sebelum Merancang 4 Layanan (Header diisi sekali di Header Umum)</h2><p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">Klik setiap kolom di bawah agar Anda paham cara mengisinya:</p></div>
                     <div class="grid grid-cols-1 sm:grid-cols-5 gap-2">${btns}</div>
                     <div class="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-2 border-indigo-200 dark:border-indigo-800 my-auto space-y-3">
                         <h3 class="text-lg font-extrabold text-indigo-700 dark:text-indigo-300">${escapeHtml(c.name)}</h3>
@@ -1301,7 +1303,7 @@
                 { code: '404', label: 'Not Found', hint: 'Barang tidak terdaftar' },
                 { code: '409', label: 'Conflict', hint: 'Nomor referensi/struk sudah dipakai' }
             ];
-            const serviceHints = ["Layanan #1: Lihat seluruh katalog barang", "Layanan #2: Cek detail & stok 1 barang (by kode)", "Layanan #3: Lapor barang terjual (stok keluar)", "Layanan #4: Lapor barang datang / retur (stok masuk)"];
+            const serviceHints = ["Layanan #1: Lihat seluruh katalog barang", "Layanan #2: Cek detail & stok 1 barang (by kode)", "Layanan #3: Lapor barang terjual (stok keluar)", "Layanan #4: Lapor barang datang / retur (stok masuk). Ingat hasil Misi 4!"];
             let cardsHtml = '';
             for (let i = 0; i < 4; i++) {
                 const item = formState.ep[i];
@@ -1378,7 +1380,7 @@
                         </div>
                         <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Perancangan 4 Kontrak Layanan API</h2>
                         <div class="w-full h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden"><div class="h-full ${barColor} transition-all duration-300" style="width: ${barPct}%"></div></div>
-                        <p class="text-xs text-slate-500 dark:text-slate-400">Header kunci API diisi <strong>satu kali</strong> di bawah (berlaku untuk 4 endpoint).</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Header kunci API diisi <strong>satu kali</strong> di bawah. Gunakan <strong>hasil uji web Anda sendiri</strong> (no_referensi yang Anda pakai, sisa stok yang tampil di layar Anda). Contoh pola dari domain lain ada di Slide 16 Materi (Laundry).</p>
                     </div>
                     <div class="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800">
                         <label class="text-xs font-bold block mb-1.5">🔑 Header Umum (sama untuk keempat endpoint):</label>
@@ -1393,7 +1395,7 @@
 
         function renderSlide17() {
             return `<div class="slide-enter flex flex-col justify-between h-full gap-5">
-                <div class="space-y-1.5"><span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Penjelasan Sebelum Form 4 · Panduan Peer Review</span><h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Cara Memeriksa Kontrak API Bersama Rekan Pasangan</h2><p class="text-sm text-slate-600 dark:text-slate-300">Tunjukkan Form 3 Anda ke rekan pasangan, lalu periksa 4 pertanyaan evaluasi berikut:</p></div>
+                <div class="space-y-1.5"><span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Penjelasan Sebelum Form 4 · Panduan Peer Review</span><h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Cara Memeriksa Kontrak API Milik Rekan (Tukar Silang)</h2><p class="text-sm text-slate-600 dark:text-slate-300">Dosen menentukan rekan penukar Anda. Buka kontrak (dan web) milik rekan itu, lalu periksa 4 pertanyaan evaluasi berikut. Hasilnya Anda tulis di Form 4 <strong>milik penulis</strong>, di perangkat penulis:</p></div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 my-auto">
                     <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border space-y-1.5"><span class="text-xs font-extrabold text-indigo-600">1. KELENGKAPAN &amp; KONSISTENSI</span><h3 class="text-base font-extrabold text-slate-900 dark:text-white">Apakah nama data sudah konsisten?</h3><p class="text-xs text-slate-600 dark:text-slate-300">Periksa apakah istilah di Layanan #1 s.d. #4 seragam (tidak berganti antara "kode" dan "id_barang").</p></div>
                     <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border space-y-1.5"><span class="text-xs font-extrabold text-indigo-600">2. KEJELASAN ATURAN PENOLAKAN</span><h3 class="text-base font-extrabold text-slate-900 dark:text-white">Apakah celah risiko sudah ditutup?</h3><p class="text-xs text-slate-600 dark:text-slate-300">Apakah penolakan 400/401/404/409 sudah dicantumkan pada kondisi yang tepat?</p></div>
@@ -1430,10 +1432,10 @@
                     </tr>`;
                 }
                 bodyHtml = `<div class="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border-2 border-emerald-600 shadow-md space-y-3">
-                    ${renderWizardCardHeader('Form 4', 'Ceklis Peer Review Bersama ' + (formState.pasangan_nama || 'Rekan Pasangan'), isSaved, true, false, '', '')}
-                    <div class="p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-xs text-slate-700 dark:text-slate-200">📋 <strong>Instruksi:</strong> Isi bersama rekan. Pilih <strong>Ya</strong> atau <strong>Revisi</strong>. Jika <strong>Revisi</strong>, catatan wajib diisi perbaikan konkret.</div>
-                    <div class="overflow-x-auto rounded-xl border border-slate-300 dark:border-slate-700"><table class="w-full text-left text-xs"><thead class="bg-slate-100 dark:bg-slate-800"><tr><th class="p-2 w-8">No</th><th class="p-2">Aspek yang Diperiksa</th><th class="p-2 w-20">Status</th><th class="p-2">Catatan / Perbaikan</th></tr></thead><tbody>${rowsHtml}</tbody></table></div>
-                    <div class="flex justify-end pt-1"><button type="button" onclick="savePeerLkm4()" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-extrabold transition flex items-center gap-2 shadow-sm"><i class="fa-solid fa-check"></i><span>Simpan Peer Review</span></button></div>
+                    ${renderWizardCardHeader('Form 4', 'Ceklis Peer Review oleh ' + (formState.pr_reviewer || 'Rekan Reviewer'), isSaved, true, false, '', '')}
+                    <div class="p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-xs text-slate-700 dark:text-slate-200">📋 <strong>Instruksi:</strong> <strong>Diisi oleh rekan reviewer</strong> (bukan penulis) setelah ia menguji kontrak Anda. Pilih <strong>Ya</strong> atau <strong>Revisi</strong>. Jika <strong>Revisi</strong>, catatan wajib diisi perbaikan konkret.</div>
+                    <div><label class="text-xs font-bold block mb-1">Nama Reviewer (rekan yang mengisi ceklis ini) *</label><input type="text" id="inp_pr_reviewer" value="${escapeHtml(formState.pr_reviewer)}" oninput="updateField('pr_reviewer', this.value)" placeholder="Nama rekan reviewer" class="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-xs"></div><div class="overflow-x-auto rounded-xl border border-slate-300 dark:border-slate-700"><table class="w-full text-left text-xs"><thead class="bg-slate-100 dark:bg-slate-800"><tr><th class="p-2 w-8">No</th><th class="p-2">Aspek yang Diperiksa</th><th class="p-2 w-20">Status</th><th class="p-2">Catatan / Perbaikan</th></tr></thead><tbody>${rowsHtml}</tbody></table></div>
+                    <div><label class="text-xs font-bold block mb-1">Tindak Lanjut Penulis (diisi Anda, 1-3 kalimat) *</label><textarea id="inp_pr_tindak" rows="2" oninput="autoResizeTextarea(this); updateField('pr_tindak', this.value)" placeholder="Apa yang Anda perbaiki setelah menerima masukan reviewer?" class="auto-expand w-full p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-xs">${escapeHtml(formState.pr_tindak)}</textarea></div><div class="flex justify-end pt-1"><button type="button" onclick="savePeerLkm4()" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-extrabold transition flex items-center gap-2 shadow-sm"><i class="fa-solid fa-check"></i><span>Simpan Peer Review</span></button></div>
                 </div>`;
             } else {
                 bodyHtml = `<div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-emerald-300 dark:border-emerald-800">${renderWizardCardHeader('Form 4', 'Hasil Peer Review Telah Disimpan', true, false, isMin, 'uiWizard.peerEditing=true;renderCurrentSlide();', 'uiWizard.peerMinimized=!uiWizard.peerMinimized;renderCurrentSlide();')}</div>`;
@@ -1546,6 +1548,8 @@
                 prRows += `<tr><td style="font-weight:700;">${p}. ${prTitles[p - 1]}</td><td style="text-align:center; font-weight:700; color:${color};">${dash(status)}</td><td>${dash(formState['pr_' + p + '_catatan'])}</td></tr>`;
             }
 
+            prRows += `<tr><td style="font-weight:700;">Reviewer</td><td colspan="2">${dash(formState.pr_reviewer)}</td></tr><tr><td style="font-weight:700;">Tindak lanjut penulis</td><td colspan="2">${dash(formState.pr_tindak)}</td></tr>`;
+
             let imagesHtml = '';
             if (d.img_erd || d.img_sim) {
                 imagesHtml = `<div style="margin-top: 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">${d.img_erd ? `<div style="border:1px solid #cbd5e1; padding:6px; border-radius:6px;"><div style="font-size:9.5px; font-weight:700; margin-bottom:4px;">Bukti 1: ERD db_gudang</div><img src="${d.img_erd}" style="max-height:145px; width:100%; object-fit:contain;"></div>` : ''}${d.img_sim ? `<div style="border:1px solid #cbd5e1; padding:6px; border-radius:6px;"><div style="font-size:9.5px; font-weight:700; margin-bottom:4px;">Bukti 2: Web Gudang & Penguji Kasir</div><img src="${d.img_sim}" style="max-height:145px; width:100%; object-fit:contain;"></div>` : ''}</div>`;
@@ -1577,7 +1581,7 @@
                     <div style="font-size: 10.5px; font-weight: 800; margin-bottom: 4px; text-transform: uppercase;">1. Identitas Mahasiswa &amp; Reviewer</div>
                     <table class="pdf-table">
                         <tr><th style="width: 20%;">Nama Mahasiswa</th><td style="width: 30%; font-weight: 700;">${dash(d.nama)}</td><th style="width: 20%;">NIM</th><td style="width: 30%; font-family: monospace; font-weight: 700;">${dash(d.nim)}</td></tr>
-                        <tr><th>Kelas &amp; Tanggal</th><td>${dash(d.kelas)} (${dash(d.tgl)})</td><th>Rekan Reviewer</th><td>${dash(d.pasangan_nama)} ${d.pasangan_nim ? '(' + escapeHtml(d.pasangan_nim) + ')' : ''}</td></tr>
+                        <tr><th>Kelas &amp; Tanggal</th><td>${dash(d.kelas)} (${dash(d.tgl)})</td><th>Rekan Reviewer</th><td>${dash(d.pr_reviewer || d.pasangan_nama)}</td></tr>
                     </table>
                 </div>
 
@@ -1682,7 +1686,7 @@
                     { nama: '', method: 'POST', filename: 'stok-masuk.php',  body: '', sukses: '', e400_on: true,  e400_ket: 'Qty <= 0 atau kode barang kosong',      e401_on: true,  e401_ket: 'Kunci API tidak dikirim / saklar mati', e404_on: true,  e404_ket: 'Kode barang tidak terdaftar', e409_on: false, e409_ket: '' }
                 ],
                 pr_1_status: '', pr_1_catatan: '', pr_2_status: '', pr_2_catatan: '',
-                pr_3_status: '', pr_3_catatan: '', pr_4_status: '', pr_4_catatan: '',
+                pr_3_status: '', pr_3_catatan: '', pr_4_status: '', pr_4_catatan: '', pr_reviewer: '', pr_tindak: '',
                 umkm_nama: '', umkm_bidang: '', umkm_masalah: '',
                 umkm_ep1_nama: '', umkm_ep1_url: '', umkm_ep1_aturan: '',
                 umkm_ep2_nama: '', umkm_ep2_url: '', umkm_ep2_aturan: ''
@@ -1702,7 +1706,7 @@
 
         const SLIDES = [
             { id: 1, category: "Pengantar", title: "Pembuatan Web dari Nol, Investigasi Sistem & LKM 04 Mandiri", render: renderSlide1 },
-            { id: 2, category: "Penjelasan Form 1", title: "Mengapa Perancangan Kontrak API Wajib Berpasangan?", render: renderSlide2 },
+            { id: 2, category: "Penjelasan Form 1", title: "Mengapa Kontrak API Anda Perlu Diuji Orang Lain?", render: renderSlide2 },
             { id: 3, category: "Form Isian 1", title: "Data Diri Mahasiswa & Rekan Reviewer", render: renderSlide3 },
             { id: 4, category: "Langkah Web 1", title: "Nyalakan XAMPP & Buat 4 Folder di C:\\xampp\\htdocs", render: renderSlide4 },
             { id: 5, category: "Langkah Web 2", title: "Skrip SQL 1: Buat db_gudang, barang, & log_stok", render: renderSlide5 },
@@ -1717,7 +1721,7 @@
             { id: 14, category: "Form Isian 2", title: "Catatan Investigasi (Sebelum → Sesudah → Mengapa)", render: renderSlide14 },
             { id: 15, category: "Penjelasan Form 3", title: "Pahami 5 Kolom Sebelum Merancang Kontrak API", render: renderSlide15 },
             { id: 16, category: "Form Isian 3", title: "Perancangan 4 Kontrak Layanan API (Ramping + Progress)", render: renderSlide16 },
-            { id: 17, category: "Penjelasan Form 4", title: "Cara Memeriksa Kontrak API Bersama Rekan Pasangan", render: renderSlide17 },
+            { id: 17, category: "Penjelasan Form 4", title: "Cara Memeriksa Kontrak API Milik Rekan (Tukar Silang)", render: renderSlide17 },
             { id: 18, category: "Form Isian 4", title: "Ceklis Evaluasi Silang (Peer Review)", render: renderSlide18 },
             { id: 19, category: "Penjelasan Form 5 (Opsional)", title: "Rancangan Solusi Kontrak API untuk UMKM Sekitar", render: renderSlide19 },
             { id: 20, category: "Form Isian 5 (Bonus)", title: "BONUS: Rancangan Kontrak API pada UMKM Pilihan", render: renderSlide20 },
