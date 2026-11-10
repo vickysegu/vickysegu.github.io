@@ -1,0 +1,2560 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pertemuan 3: CSS Dasar - Styling, Tipografi & Box Model</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace']
+                    }
+                }
+            }
+        };
+    </script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Istilah teknis dengan warna teks bersih tanpa garis bawah atau ikon */
+        .tech-term {
+            color: #4f46e5;
+            font-weight: 700;
+            cursor: pointer;
+            transition: color 0.15s ease, opacity 0.15s ease;
+        }
+        .dark .tech-term {
+            color: #818cf8;
+        }
+        .tech-term:hover {
+            color: #3730a3;
+            opacity: 0.85;
+        }
+        .dark .tech-term:hover {
+            color: #a5b4fc;
+        }
+
+        .slide-enter {
+            animation: fadeSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes fadeSlide {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Kanvas terisolasi untuk merender HTML + CSS hasil ketikan mahasiswa */
+        .css-preview-canvas {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: #0f172a;
+            background-color: #ffffff;
+            line-height: 1.5;
+        }
+        .css-preview-canvas h1 { font-size: 1.5rem; font-weight: 800; margin-bottom: 0.35rem; }
+        .css-preview-canvas h2 { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.35rem; }
+        .css-preview-canvas h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.25rem; }
+        .css-preview-canvas p { font-size: 0.875rem; margin-bottom: 0.5rem; }
+        .css-preview-canvas ul { list-style: disc; padding-left: 1.25rem; margin-bottom: 0.5rem; font-size: 0.875rem; }
+        .css-preview-canvas table { width: 100%; border-collapse: separate; font-size: 0.82rem; }
+        .css-preview-canvas th, .css-preview-canvas td { border: 1px solid #cbd5e1; padding: 0.4rem 0.6rem; }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+        .dark ::-webkit-scrollbar-thumb { background: #334155; }
+    </style>
+    <!-- Style Dinamis untuk Live CSS Playground -->
+    <style id="dynamicScopedCss"></style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col justify-between transition-colors duration-200">
+
+    <!-- HEADER -->
+    <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800">
+        <div class="w-full h-1 bg-slate-100 dark:bg-slate-800">
+            <div id="topProgressBar" class="h-full bg-indigo-600 dark:bg-indigo-500 transition-all duration-300" style="width: 6%;"></div>
+        </div>
+
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+                <button type="button" onclick="toggleSlideDrawer()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition flex items-center gap-2 text-xs sm:text-sm font-bold shrink-0">
+                    <i class="fa-solid fa-list-ul text-indigo-600 dark:text-indigo-400"></i>
+                    <span class="hidden sm:inline">Daftar Slide</span>
+                    <span id="slideCounterBadge" class="px-2 py-0.5 text-xs rounded-lg bg-indigo-600 text-white font-bold">1 / 17</span>
+                </button>
+
+                <div class="hidden md:flex items-center gap-2.5 min-w-0">
+                    <span id="slideCategoryPill" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 shrink-0">
+                        Pengantar CSS
+                    </span>
+                    <h1 id="headerSlideTitle" class="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">
+                        Orientasi Pertemuan 3: Mempercantik Halaman dengan CSS3
+                    </h1>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 shrink-0">
+                <button type="button" onclick="openGlossaryIndex()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 text-xs sm:text-sm font-bold flex items-center gap-2 transition">
+                    <i class="fa-solid fa-book-open text-indigo-600 dark:text-indigo-400"></i>
+                    <span>Kamus Istilah</span>
+                </button>
+
+                <button type="button" onclick="toggleTheme()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center transition" title="Ganti Tema Layar">
+                    <i id="themeIcon" class="fa-solid fa-moon text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- DRAWER DAFTAR SLIDE -->
+    <div id="slideDrawerBackdrop" onclick="toggleSlideDrawer()" class="fixed inset-0 bg-slate-950/50 backdrop-blur-xs z-40 hidden opacity-0 transition-opacity duration-200"></div>
+    <aside id="slideDrawer" class="fixed top-0 left-0 bottom-0 w-80 sm:w-96 bg-white dark:bg-slate-900 z-50 shadow-2xl border-r border-slate-200 dark:border-slate-800 transform -translate-x-full transition-transform duration-200 flex flex-col">
+        <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Pertemuan 3</span>
+                <h2 class="text-base font-extrabold text-slate-900 dark:text-white mt-0.5">Daftar Materi CSS Dasar</h2>
+            </div>
+            <button type="button" onclick="toggleSlideDrawer()" class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div id="drawerSlideList" class="p-3.5 overflow-y-auto space-y-1 flex-1"></div>
+        <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 flex items-center justify-between">
+            <span>Gunakan tombol panah Kiri / Kanan</span>
+            <span class="font-bold">17 Slide</span>
+        </div>
+    </aside>
+
+    <!-- VIEWPORT UTAMA -->
+    <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 flex flex-col justify-center">
+        <div id="slideViewport" class="bg-white dark:bg-slate-900 rounded-3xl shadow-xs border border-slate-200/80 dark:border-slate-800 p-5 sm:p-8 lg:p-10 min-h-[560px] flex flex-col justify-between relative overflow-x-hidden">
+            <!-- Konten slide dirender secara dinamis -->
+        </div>
+    </main>
+
+    <!-- FOOTER NAVIGASI -->
+    <footer class="sticky bottom-0 z-20 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 py-3 px-4 sm:px-6">
+        <div class="max-w-6xl mx-auto flex items-center justify-between gap-4">
+            <button type="button" id="prevSlideBtn" onclick="changeSlide(-1)" class="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                <i class="fa-solid fa-arrow-left text-xs"></i>
+                <span>Sebelumnya</span>
+            </button>
+
+            <div id="slideDotsContainer" class="hidden md:flex items-center gap-1.5"></div>
+
+            <div class="md:hidden text-xs font-bold text-slate-500 dark:text-slate-400" id="mobileFooterCounter">
+                1 / 17
+            </div>
+
+            <button type="button" id="nextSlideBtn" onclick="changeSlide(1)" class="px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-indigo-600 hover:bg-indigo-700 text-white transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                <span id="nextBtnText">Selanjutnya</span>
+                <i class="fa-solid fa-arrow-right text-xs"></i>
+            </button>
+        </div>
+    </footer>
+
+    <!-- MODAL PENJELASAN ISTILAH -->
+    <div id="termModalBackdrop" onclick="closeTermModal()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl slide-enter">
+            <div class="flex items-start justify-between gap-4 mb-4">
+                <div>
+                    <span id="termCategoryBadge" class="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">Kategori</span>
+                    <h3 id="termTitle" class="text-xl font-extrabold text-slate-900 dark:text-white mt-1.5">Nama Istilah</h3>
+                </div>
+                <button type="button" onclick="closeTermModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <p id="termMainDesc" class="text-sm text-slate-700 dark:text-slate-200 leading-relaxed bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200/70 dark:border-slate-700/70"></p>
+                <p id="termDetailDesc" class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed px-1"></p>
+                <div class="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800 text-xs px-1">
+                    <span id="termSourceName" class="font-semibold text-slate-400">Referensi</span>
+                    <a id="termSourceUrl" href="#" target="_blank" rel="noopener noreferrer" class="font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1.5">
+                        <span>Baca di W3Schools</span>
+                        <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL KAMUS ISTILAH LENGKAP -->
+    <div id="glossaryModalBackdrop" onclick="closeGlossaryIndex()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-4xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden slide-enter">
+            <div class="p-5 sm:p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white">Kamus Istilah CSS Dasar (Rujukan W3Schools)</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Daftar properti, selektor, dan konsep Box Model pada Pertemuan 3.</p>
+                </div>
+                <button type="button" onclick="closeGlossaryIndex()" class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-sm"></i>
+                    <input id="glossarySearchInput" oninput="renderGlossaryList(this.value)" type="text" placeholder="Cari istilah seperti Selector, Specificity, Box Model, Padding, Margin, HEX..." class="w-full pl-10 pr-4 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+            <div id="glossaryListGrid" class="p-5 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+        </div>
+    </div>
+
+    <script>
+        // =========================================================================
+        // DATABASE KAMUS ISTILAH PERTEMUAN 3 (RUJUKAN W3SCHOOLS CSS)
+        // =========================================================================
+        const GLOSSARY_DB = {
+            css: {
+                title: "CSS (Cascading Style Sheets)",
+                category: "Konsep Inti",
+                main: "Bahasa desain standar yang mendeskripsikan bagaimana elemen-elemen HTML harus ditampilkan di layar, kertas, atau media lainnya.",
+                detail: "CSS menghemat banyak pekerjaan karena satu file style.css dapat mengatur tampilan warna, font, dan tata letak puluhan halaman web sekaligus.",
+                source: "W3Schools CSS Introduction",
+                url: "https://www.w3schools.com/css/css_intro.asp"
+            },
+            selector: {
+                title: "CSS Selector (Pemilih Elemen)",
+                category: "Sintaks CSS",
+                main: "Pola penunjuk yang digunakan untuk memilih elemen HTML mana yang ingin diberi gaya tampilan.",
+                detail: "Tiga selektor paling dasar adalah selektor nama tag (contoh: h1, p), selektor ID dengan tanda pagar (#header), dan selektor Class dengan tanda titik (.kartu-produk).",
+                source: "W3Schools CSS Selectors",
+                url: "https://www.w3schools.com/css/css_selectors.asp"
+            },
+            declaration: {
+                title: "CSS Declaration (Deklarasi Gaya)",
+                category: "Sintaks CSS",
+                main: "Pasangan pengaturan properti dan nilainya (property: value;) yang ditulis di dalam kurung kurawal { }.",
+                detail: "Setiap deklarasi wajib dipisahkan dengan tanda titik koma (;), misalnya color: white; background-color: indigo;.",
+                source: "W3Schools CSS Syntax",
+                url: "https://www.w3schools.com/css/css_syntax.asp"
+            },
+            external_css: {
+                title: "External CSS (<link rel='stylesheet'>)",
+                category: "Metode Penyisipan",
+                main: "Metode penulisan kode CSS di dalam file terpisah berekstensi .css (misal: css/style.css) yang dihubungkan ke file HTML melalui tag <link> di dalam <head>.",
+                detail: "Merupakan cara paling bersih dan direkomendasikan W3Schools untuk proyek nyata karena memisahkan struktur HTML dari desain CSS.",
+                source: "W3Schools How To Add CSS",
+                url: "https://www.w3schools.com/css/css_howto.asp"
+            },
+            internal_css: {
+                title: "Internal CSS (Elemen <style>)",
+                category: "Metode Penyisipan",
+                main: "Penulisan aturan CSS langsung di dalam bagian <head> dokumen HTML menggunakan pasangan tag <style> ... </style>.",
+                detail: "Cocok digunakan jika satu halaman tunggal memiliki gaya khusus yang tidak dipakai oleh halaman lain.",
+                source: "W3Schools How To Add CSS",
+                url: "https://www.w3schools.com/css/css_howto.asp"
+            },
+            inline_css: {
+                title: "Inline CSS (Atribut style='...')",
+                category: "Metode Penyisipan",
+                main: "Penulisan properti CSS langsung pada tag pembuka elemen HTML menggunakan atribut style.",
+                detail: "Sebaiknya dihindari untuk penggunaan massal karena mencampur kode desain dengan struktur HTML sehingga sulit dirawat.",
+                source: "W3Schools How To Add CSS",
+                url: "https://www.w3schools.com/css/css_howto.asp"
+            },
+            specificity: {
+                title: "CSS Specificity & Cascading Order",
+                category: "Konsep Inti",
+                main: "Sistem bobot prioritas yang digunakan browser untuk menentukan aturan CSS mana yang menang ketika ada dua atau lebih aturan yang menunjuk ke elemen yang sama.",
+                detail: "Urutan kekuatan dari yang tertinggi ke terendah: Inline style (1000) > ID Selector #id (100) > Class Selector .class (10) > Element Selector tag (1).",
+                source: "W3Schools CSS Specificity",
+                url: "https://www.w3schools.com/css/css_specificity.asp"
+            },
+            hex_color: {
+                title: "Kode Warna HEX & RGB/RGBA",
+                category: "Warna & Visual",
+                main: "Cara mendefinisikan warna secara presisi di CSS menggunakan 6 digit heksadesimal (#RRGGBB) atau nilai campuran Red, Green, Blue (rgb).",
+                detail: "Format rgba(r, g, b, alpha) menambahkan parameter ke-4 berupa tingkat transparansi (0.0 transparan penuh hingga 1.0 pekat penuh).",
+                source: "W3Schools CSS Colors",
+                url: "https://www.w3schools.com/css/css_colors.asp"
+            },
+            background: {
+                title: "Properti CSS Background",
+                category: "Warna & Visual",
+                main: "Kumpulan properti untuk mengatur latar belakang elemen, seperti warna dasar (background-color), gambar latar (background-image), dan gradasi warna (linear-gradient).",
+                detail: "Saat menggunakan gambar latar pada banner UMKM, gunakan background-size: cover agar gambar menyesuaikan lebar kotak secara proporsional.",
+                source: "W3Schools CSS Backgrounds",
+                url: "https://www.w3schools.com/css/css_background.asp"
+            },
+            typography: {
+                title: "CSS Fonts & Typography",
+                category: "Tipografi",
+                main: "Pengaturan jenis huruf (font-family), ukuran huruf (font-size), ketebalan huruf (font-weight), serta jarak antarbaris kalimat (line-height).",
+                detail: "Selalu tuliskan daftar font cadangan (font stack) seperti font-family: 'Poppins', Arial, sans-serif; untuk berjaga-jaga jika font utama gagal dimuat.",
+                source: "W3Schools CSS Fonts",
+                url: "https://www.w3schools.com/css/css_font.asp"
+            },
+            rem_unit: {
+                title: "Satuan Ukuran CSS (px, rem, %)",
+                category: "Tipografi & Dimensi",
+                main: "Unit pengukuran di dalam CSS. Piksel (px) bersifat tetap, persen (%) relatif terhadap elemen induk, sedangkan rem relatif terhadap ukuran font dasar halaman (1rem umumnya = 16px).",
+                detail: "Penggunaan rem pada ukuran teks dan persen pada lebar elemen sangat membantu agar halaman web mudah beradaptasi di berbagai layar.",
+                source: "W3Schools CSS Units",
+                url: "https://www.w3schools.com/css/css_units.asp"
+            },
+            box_model: {
+                title: "CSS Box Model",
+                category: "Arsitektur Ruang",
+                main: "Konsep dasar CSS yang memandang setiap elemen HTML sebagai sebuah kotak berlapis yang terdiri dari Content (isi), Padding (bantalan dalam), Border (garis tepi), dan Margin (jarak luar).",
+                detail: "Memahami Box Model adalah kunci utama agar elemen halaman web tidak saling bertabrakan atau menempel sempit.",
+                source: "W3Schools CSS Box Model",
+                url: "https://www.w3schools.com/css/css_boxmodel.asp"
+            },
+            padding: {
+                title: "CSS Padding (Ruang Bantalan Dalam)",
+                category: "Arsitektur Ruang",
+                main: "Ruang kosong di antara isi konten (teks/gambar) dan garis tepi (border) di bagian DALAM kotak elemen.",
+                detail: "Padding ikut berwarna sesuai background-color elemen tersebut. Menambahkan padding membuat kartu produk terlihat lega dan nyaman dibaca.",
+                source: "W3Schools CSS Padding",
+                url: "https://www.w3schools.com/css/css_padding.asp"
+            },
+            margin: {
+                title: "CSS Margin (Jarak Dorong Luar)",
+                category: "Arsitektur Ruang",
+                main: "Ruang kosong transparan di LUAR garis tepi (border) yang berfungsi mendorong elemen lain agar tidak saling menempel.",
+                detail: "Trik populer: margin: 0 auto; digunakan pada kotak yang memiliki lebar tertentu (max-width) agar posisinya berada tepat di tengah layar.",
+                source: "W3Schools CSS Margin",
+                url: "https://www.w3schools.com/css/css_margin.asp"
+            },
+            border_prop: {
+                title: "CSS Border, Border-Radius & Box-Shadow",
+                category: "Warna & Visual",
+                main: "Properti untuk memberi garis bingkai (border), melengkungkan sudut kotak (border-radius), dan menambahkan efek bayangan lembut (box-shadow).",
+                detail: "Kombinasi ketiganya adalah resep utama untuk mengubah blok <article> polos menjadi desain Kartu Produk UMKM yang modern.",
+                source: "W3Schools CSS Borders",
+                url: "https://www.w3schools.com/css/css_border.asp"
+            },
+            box_sizing: {
+                title: "Properti box-sizing: border-box",
+                category: "Arsitektur Ruang",
+                main: "Aturan CSS yang memastikan lebar (width) sebuah kotak sudah mencakup ketebalan padding dan border di dalamnya.",
+                detail: "Tanpa border-box, kotak selebar 300px yang diberi padding 20px akan membengkak menjadi 340px dan merusak susunan halaman.",
+                source: "W3Schools CSS Box Sizing",
+                url: "https://www.w3schools.com/css/css3_boxsizing.asp"
+            },
+            display_prop: {
+                title: "Properti display (block, inline, inline-block)",
+                category: "Arsitektur Ruang",
+                main: "Properti yang mengatur bagaimana sebuah elemen ditampilkan dan berinteraksi dengan elemen di sekitarnya.",
+                detail: "display: inline-block sangat sering dipakai pada tombol tautan <a> agar tetap bisa berjajar ke samping namun bisa diatur padding atas-bawahnya.",
+                source: "W3Schools CSS Layout - display",
+                url: "https://www.w3schools.com/css/css_display_visibility.asp"
+            },
+            pseudo_hover: {
+                title: "Pseudo-class :hover",
+                category: "Interaksi Visual",
+                main: "Penanda keadaan khusus pada selektor CSS (contoh: .tombol:hover) yang aktif ketika pengguna mengarahkan kursor mouse ke atas elemen tersebut.",
+                detail: "Memberikan umpan balik visual instan kepada pengunjung bahwa sebuah tombol atau kartu produk dapat diklik.",
+                source: "W3Schools CSS Pseudo-classes",
+                url: "https://www.w3schools.com/css/css_pseudo_classes.asp"
+            }
+        };
+
+        function escapeHtml(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function term(key, customLabel) {
+            const item = GLOSSARY_DB[key];
+            if (!item) return escapeHtml(customLabel || key);
+            const label = customLabel || item.title.split(' (')[0];
+            return '<span class="tech-term" onclick="showTerm(\'' + key + '\')">' + escapeHtml(label) + '</span>';
+        }
+
+        // Fungsi untuk mengisolasi CSS ketikan mahasiswa agar hanya berdampak pada kotak pratinjau
+        function scopeStudentCss(rawCss, scopeSelector) {
+            const cleaned = String(rawCss || '').replace(/\/\*[\s\S]*?\*\//g, '');
+            return cleaned.replace(/([^{}@]+)\{/g, function(match, selectorGroup) {
+                const prefixed = selectorGroup.split(',').map(function(s) {
+                    const sel = s.trim();
+                    if (!sel) return '';
+                    if (sel === 'body' || sel === 'html') return scopeSelector;
+                    return scopeSelector + ' ' + sel;
+                }).filter(Boolean).join(', ');
+                return prefixed + ' {';
+            });
+        }
+
+        function applyScopedCss(scopeSelector, rawCss) {
+            const styleEl = document.getElementById('dynamicScopedCss');
+            if (styleEl) {
+                styleEl.textContent = scopeStudentCss(rawCss, scopeSelector);
+            }
+        }
+
+        // =========================================================================
+        // STATE GLOBAL PERTEMUAN 3
+        // =========================================================================
+        let currentSlideIndex = 0;
+        const TOTAL_SLIDES = 17;
+
+        // Slide 1: Toggle CSS Aktif / Mati
+        let s1CssEnabled = true;
+
+        // Slide 2: Bedah Anatomi Sintaks CSS
+        let s2SelectedPart = 'selector'; // 'selector' | 'curly' | 'property' | 'colon' | 'value' | 'semicolon'
+        let s2MissingSemicolon = false;
+
+        // Slide 3: 3 Metode Penyisipan CSS
+        let s3Method = 'external'; // 'external' | 'internal' | 'inline'
+
+        // Slide 4: CSS Selectors Dasar (Tag, #id, .class)
+        const S4_PRESETS = {
+            tag: "/* 1. Element Selector (Mengubah semua tag h3 dan p) */\nh3 {\n  color: #1e1b4b;\n  font-size: 18px;\n}\np {\n  color: #475569;\n}",
+            class_sel: "/* 2. Class Selector (Diawali titik . untuk banyak kartu) */\n.kartu-produk {\n  background-color: #eef2ff;\n  border: 2px solid #6366f1;\n  padding: 12px;\n  border-radius: 10px;\n  margin-bottom: 10px;\n}\n.harga {\n  color: #4f46e5;\n  font-weight: 800;\n}",
+            id_sel: "/* 3. ID Selector (Diawali pagar # khusus 1 elemen unik) */\n#banner-utama {\n  background-color: #1e1b4b;\n  color: #ffffff;\n  padding: 14px;\n  border-radius: 10px;\n  margin-bottom: 12px;\n}\n#banner-utama h3 {\n  color: #a5b4fc;\n}"
+        };
+        let s4ActivePreset = 'class_sel';
+        let s4LiveCss = S4_PRESETS.class_sel;
+
+        // Slide 5: Specificity & Cascading
+        const S5_PRESETS = {
+            tag_only: "/* Bobot Nilai = 1 (Element Selector) */\nh3 {\n  color: #dc2626; /* Merah */\n}",
+            add_class: "/* Class (.judul-menu = 10) MENANG melawan Tag (h3 = 1) */\n.judul-menu {\n  color: #2563eb; /* Biru menang! */\n}\nh3 {\n  color: #dc2626; /* Merah kalah walau ditulis di bawah */\n}",
+            add_id: "/* ID (#spesial = 100) MENANG melawan Class (10) & Tag (1) */\n#spesial {\n  color: #059669; /* Hijau menang mutlak! */\n}\n.judul-menu {\n  color: #2563eb;\n}\nh3 {\n  color: #dc2626;\n}"
+        };
+        let s5ActivePreset = 'add_class';
+        let s5LiveCss = S5_PRESETS.add_class;
+
+        // Slide 6: Warna CSS (HEX, RGB, Kontras)
+        const S6_PRESETS = {
+            good_contrast: "/* Kontras Baik: Teks gelap di atas latar terang */\n.kotak-promo {\n  background-color: #fef3c7; /* Kuning lembut */\n  color: #78350f; /* Cokelat tua tegas */\n  border: 2px solid #f59e0b;\n  padding: 16px;\n  border-radius: 12px;\n}\n.label-diskon {\n  background-color: #dc2626;\n  color: #ffffff;\n  padding: 4px 10px;\n  border-radius: 6px;\n}",
+            dark_elegance: "/* Tema Gelap Elegan dengan HEX & RGBA */\n.kotak-promo {\n  background-color: #0f172a;\n  color: #f8fafc;\n  border: 2px solid rgba(99, 102, 241, 0.6);\n  padding: 16px;\n  border-radius: 12px;\n}\n.label-diskon {\n  background-color: #4f46e5;\n  color: #ffffff;\n  padding: 4px 10px;\n  border-radius: 6px;\n}",
+            bad_contrast: "/* Contoh Kontras Buruk (Sulit Dibaca Pengunjung!) */\n.kotak-promo {\n  background-color: #fef08a; /* Kuning terang */\n  color: #fde047; /* Teks kuning pucat (Jangan ditiru) */\n  padding: 16px;\n  border-radius: 12px;\n}"
+        };
+        let s6ActivePreset = 'good_contrast';
+        let s6LiveCss = S6_PRESETS.good_contrast;
+
+        // Slide 7: CSS Backgrounds & Gradients
+        const S7_PRESETS = {
+            solid: ".hero-umkm {\n  background-color: #312e81;\n  color: #ffffff;\n  padding: 24px;\n  border-radius: 14px;\n}",
+            gradient: ".hero-umkm {\n  background-image: linear-gradient(135deg, #4f46e5, #0f172a);\n  color: #ffffff;\n  padding: 24px;\n  border-radius: 14px;\n}",
+            warm_coffee: ".hero-umkm {\n  background-image: linear-gradient(120deg, #78350f, #451a03);\n  color: #fef3c7;\n  border: 2px solid #d97706;\n  padding: 24px;\n  border-radius: 14px;\n}"
+        };
+        let s7ActivePreset = 'gradient';
+        let s7LiveCss = S7_PRESETS.gradient;
+
+        // Slide 8: Tipografi & CSS Fonts
+        const S8_PRESETS = {
+            sans_modern: ".artikel-produk {\n  font-family: 'Plus Jakarta Sans', Arial, sans-serif;\n  line-height: 1.6;\n}\n.judul-produk {\n  font-size: 22px;\n  font-weight: 800;\n  color: #1e1b4b;\n}\n.deskripsi {\n  font-size: 14px;\n  color: #475569;\n}",
+            serif_klasik: ".artikel-produk {\n  font-family: Georgia, 'Times New Roman', serif;\n  line-height: 1.7;\n}\n.judul-produk {\n  font-size: 24px;\n  font-weight: 700;\n  font-style: italic;\n  color: #78350f;\n}\n.deskripsi {\n  font-size: 15px;\n  color: #334155;\n}",
+            mono_teknis: ".artikel-produk {\n  font-family: 'JetBrains Mono', monospace;\n  line-height: 1.5;\n}\n.judul-produk {\n  font-size: 18px;\n  font-weight: 700;\n  color: #047857;\n}\n.deskripsi {\n  font-size: 13px;\n  color: #334155;\n}"
+        };
+        let s8ActivePreset = 'sans_modern';
+        let s8LiveCss = S8_PRESETS.sans_modern;
+
+        // =========================================================================
+        // RENDER SLIDE 1 S/D 8
+        // =========================================================================
+
+        function renderSlide1() {
+            const sampleCss = s1CssEnabled
+                ? `.kartu-demo { background: linear-gradient(135deg, #ffffff, #f8fafc); border: 2px solid #e0e7ff; border-radius: 16px; padding: 18px; box-shadow: 0 10px 20px -5px rgba(79, 70, 229, 0.12); }
+                   .badge-demo { display: inline-block; background: #eef2ff; color: #4f46e5; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 99px; margin-bottom: 8px; }
+                   .judul-demo { color: #0f172a; font-size: 20px; font-weight: 800; margin-bottom: 4px; }
+                   .harga-demo { color: #4f46e5; font-size: 18px; font-weight: 800; margin: 10px 0; }
+                   .btn-demo { background: #4f46e5; color: #ffffff; border: none; padding: 8px 16px; border-radius: 10px; font-weight: 700; font-size: 12px; cursor: pointer; }`
+                : ``;
+
+            setTimeout(function() {
+                applyScopedCss('#s1PreviewCanvas', sampleCss);
+            }, 0);
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center my-auto">
+                        <div class="lg:col-span-7 space-y-4">
+                            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 text-xs font-bold border border-indigo-200/60 dark:border-indigo-800/60">
+                                <span>Pertemuan 3 dari 16 • Fokus Desain Visual Front-End</span>
+                            </div>
+
+                            <h2 class="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white leading-tight tracking-tight">
+                                Menghidupkan Kerangka HTML dengan <span class="text-indigo-600 dark:text-indigo-400">CSS Dasar</span>
+                            </h2>
+
+                            <p class="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Pada Pertemuan 2, Anda telah berhasil membangun kerangka halaman profil UMKM menggunakan HTML murni. Hari ini kita mempelajari ${term('css', 'CSS (Cascading Style Sheets)')} untuk memberi warna identitas usaha, mengatur tipografi, serta menata jarak ruang menggunakan konsep ${term('box_model', 'CSS Box Model')}.
+                            </p>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
+                                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80">
+                                    <div class="text-xs font-extrabold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">1. Warna &amp; Tipografi</div>
+                                    <p class="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
+                                        Memilih kombinasi warna latar dan teks yang kontras, serta mengatur jenis dan ukuran huruf menggunakan ${term('typography', 'CSS Fonts')}.
+                                    </p>
+                                </div>
+                                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80">
+                                    <div class="text-xs font-extrabold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">2. Spacing &amp; Box Model</div>
+                                    <p class="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
+                                        Mengubah elemen HTML yang saling menempel menjadi komponen Kartu Produk modern dengan ${term('padding', 'padding')}, ${term('border_prop', 'border-radius')}, dan ${term('margin', 'margin')}.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-5">
+                            <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 space-y-4">
+                                <div class="flex items-center justify-between gap-2">
+                                    <div>
+                                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Simulasi Transformasi</span>
+                                        <h3 class="text-base font-extrabold text-slate-900 dark:text-white">HTML yang Sama, Tampilan Berbeda</h3>
+                                    </div>
+                                    <button type="button" onclick="toggleS1Css()" class="px-3 py-1.5 rounded-xl text-xs font-bold transition ${s1CssEnabled ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200'}">
+                                        ${s1CssEnabled ? 'CSS: AKTIF' : 'CSS: NONAKTIF'}
+                                    </button>
+                                </div>
+
+                                <div id="s1PreviewCanvas" class="css-preview-canvas p-4 rounded-2xl border border-slate-200">
+                                    <div class="kartu-demo">
+                                        <span class="badge-demo">Menu Terlaris</span>
+                                        <h3 class="judul-demo">Kopi Arabika Gayo 250g</h3>
+                                        <p>Biji kopi pilihan dari dataran tinggi Aceh dengan cita rasa cokelat dan rempah alami.</p>
+                                        <div class="harga-demo">Rp 65.000</div>
+                                        <button type="button" class="btn-demo">Pesan Sekarang</button>
+                                    </div>
+                                </div>
+
+                                <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                                    Coba klik tombol <strong>CSS: AKTIF / NONAKTIF</strong> di atas. Struktur tag HTML di dalamnya tidak berubah sedikit pun, hanya file CSS-nya yang dinyalakan atau dimatikan!
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide2() {
+            const parts = {
+                selector: {
+                    label: "1. Selector (Pemilih Elemen): h1",
+                    desc: "Menunjuk elemen HTML mana yang ingin diubah tampilannya. Di sini kita memilih semua elemen judul <h1> di halaman."
+                },
+                curly: {
+                    label: "2. Blok Kurung Kurawal: { ... }",
+                    desc: "Membungkus seluruh aturan deklarasi gaya untuk selektor tersebut. Wajib dibuka dengan { dan ditutup dengan }."
+                },
+                property: {
+                    label: "3. Property (Atribut Gaya): color & font-size",
+                    desc: "Aspek visual yang ingin diatur, seperti color (warna teks), background-color (warna latar), atau font-size (ukuran huruf)."
+                },
+                colon: {
+                    label: "4. Pemisah Titik Dua ( : )",
+                    desc: "Memisahkan nama properti di sebelah kiri dengan nilai pengaturannya di sebelah kanan."
+                },
+                value: {
+                    label: "5. Value (Nilai Pengaturan): #4f46e5 & 24px",
+                    desc: "Nilai yang diberikan pada properti tersebut. Untuk ukuran angka di CSS, jangan lupa menulis satuannya (seperti px atau rem) tanpa spasi."
+                },
+                semicolon: {
+                    label: "6. Akhiran Titik Koma ( ; )",
+                    desc: "Penutup wajib di akhir setiap baris deklarasi. Jika lupa menulis titik koma (;), maka baris aturan CSS di bawahnya akan gagal dibaca oleh browser!"
+                }
+            };
+
+            const cur = parts[s2SelectedPart];
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Aturan Penulisan W3Schools</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Anatomi Sintaks CSS: ${term('selector', 'Selector')} &amp; ${term('declaration', 'Declaration Block')}</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Berbeda dengan HTML yang menggunakan kurung siku <code class="font-mono">&lt;...&gt;</code>, CSS ditulis menggunakan pola <code class="font-mono font-bold">selector { property: value; }</code>.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <!-- Bedah Sintaks Interaktif -->
+                        <div class="lg:col-span-7 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-4">
+                            <div>
+                                <div class="text-xs font-bold text-slate-500 dark:text-slate-400 mb-3">Klik setiap bagian kode CSS di bawah ini untuk melihat perannya:</div>
+                                <div class="p-4 rounded-2xl bg-slate-900 text-white font-mono text-sm sm:text-base flex flex-wrap items-center justify-center gap-1.5">
+                                    <button type="button" onclick="setS2Part('selector')" class="px-2.5 py-1.5 rounded-xl font-bold transition ${s2SelectedPart === 'selector' ? 'bg-indigo-600 text-white ring-2 ring-indigo-400' : 'bg-slate-800 text-amber-300 hover:bg-slate-700'}">h1</button>
+                                    <button type="button" onclick="setS2Part('curly')" class="px-2.5 py-1.5 rounded-xl font-bold transition ${s2SelectedPart === 'curly' ? 'bg-indigo-600 text-white ring-2 ring-indigo-400' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">{</button>
+                                    <button type="button" onclick="setS2Part('property')" class="px-2.5 py-1.5 rounded-xl font-bold transition ${s2SelectedPart === 'property' ? 'bg-indigo-600 text-white ring-2 ring-indigo-400' : 'bg-slate-800 text-sky-300 hover:bg-slate-700'}">color</button>
+                                    <button type="button" onclick="setS2Part('colon')" class="px-2 py-1.5 rounded-xl font-bold transition ${s2SelectedPart === 'colon' ? 'bg-indigo-600 text-white ring-2 ring-indigo-400' : 'bg-slate-800 text-white hover:bg-slate-700'}">:</button>
+                                    <button type="button" onclick="setS2Part('value')" class="px-2.5 py-1.5 rounded-xl font-bold transition ${s2SelectedPart === 'value' ? 'bg-indigo-600 text-white ring-2 ring-indigo-400' : 'bg-slate-800 text-emerald-300 hover:bg-slate-700'}">#4f46e5</button>
+                                    <button type="button" onclick="setS2Part('semicolon')" class="px-2.5 py-1.5 rounded-xl font-bold transition ${s2SelectedPart === 'semicolon' ? 'bg-rose-600 text-white ring-2 ring-rose-300' : 'bg-slate-800 text-rose-400 hover:bg-slate-700'}">;</button>
+                                    <button type="button" onclick="setS2Part('property')" class="px-2.5 py-1.5 rounded-xl font-bold transition ${s2SelectedPart === 'property' ? 'bg-indigo-600 text-white ring-2 ring-indigo-400' : 'bg-slate-800 text-sky-300 hover:bg-slate-700'}">font-size</button>
+                                    <button type="button" onclick="setS2Part('colon')" class="px-2 py-1.5 rounded-xl font-bold transition ${s2SelectedPart === 'colon' ? 'bg-indigo-600 text-white ring-2 ring-indigo-400' : 'bg-slate-800 text-white hover:bg-slate-700'}">:</button>
+                                    <button type="button" onclick="setS2Part('value')" class="px-2.5 py-1.5 rounded-xl font-bold transition ${s2SelectedPart === 'value' ? 'bg-indigo-600 text-white ring-2 ring-indigo-400' : 'bg-slate-800 text-emerald-300 hover:bg-slate-700'}">24px</button>
+                                    <button type="button" onclick="setS2Part('semicolon')" class="px-2.5 py-1.5 rounded-xl font-bold transition ${s2SelectedPart === 'semicolon' ? 'bg-rose-600 text-white ring-2 ring-rose-300' : 'bg-slate-800 text-rose-400 hover:bg-slate-700'}">;</button>
+                                    <button type="button" onclick="setS2Part('curly')" class="px-2.5 py-1.5 rounded-xl font-bold transition ${s2SelectedPart === 'curly' ? 'bg-indigo-600 text-white ring-2 ring-indigo-400' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">}</button>
+                                </div>
+                            </div>
+
+                            <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <div class="text-xs font-extrabold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">${escapeHtml(cur.label)}</div>
+                                <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">${escapeHtml(cur.desc)}</p>
+                            </div>
+
+                            <div class="p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-800/60 text-xs text-slate-700 dark:text-slate-300">
+                                <strong>Komentar pada CSS:</strong> Gunakan <code class="font-mono font-bold">/* catatan Anda */</code> untuk memberi keterangan di dalam file CSS tanpa dieksekusi oleh browser.
+                            </div>
+                        </div>
+
+                        <!-- Simulator Lupa Titik Koma -->
+                        <div class="lg:col-span-5 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-4">
+                            <div class="space-y-1.5">
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="text-xs font-bold text-rose-600 dark:text-rose-400">Eksperimen Kesalahan Pemula</span>
+                                    <button type="button" onclick="toggleS2Semicolon()" class="px-3 py-1 rounded-lg text-xs font-bold transition ${s2MissingSemicolon ? 'bg-rose-600 text-white' : 'bg-emerald-600 text-white'}">
+                                        ${s2MissingSemicolon ? 'Kondisi: Lupa Titik Koma (;)' : 'Kondisi: Sintaks Benar'}
+                                    </button>
+                                </div>
+                                <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Apa Akibatnya Jika Lupa Titik Koma (<span class="font-mono">;</span>)?</h3>
+                            </div>
+
+                            <div class="p-4 rounded-2xl bg-slate-900 text-slate-100 font-mono text-xs space-y-1">
+                                <div class="text-amber-300">.kotak-toko {</div>
+                                <div class="pl-4">background-color: #1e1b4b${s2MissingSemicolon ? ' <span class="text-rose-400 font-bold">&lt;-- Lupa ;</span>' : ';'}</div>
+                                <div class="pl-4 ${s2MissingSemicolon ? 'line-through text-rose-400' : 'text-emerald-300'}">color: #ffffff;</div>
+                                <div class="pl-4 text-sky-300">padding: 16px;</div>
+                                <div class="text-amber-300">}</div>
+                            </div>
+
+                            <div class="p-4 rounded-2xl border transition ${s2MissingSemicolon ? 'bg-white text-slate-900 border-rose-300' : 'bg-indigo-950 text-white border-indigo-700'}">
+                                <div class="text-[10px] font-bold uppercase opacity-75 mb-1">Hasil Render .kotak-toko:</div>
+                                <div class="text-sm font-extrabold">Kedai Kopi Nusantara</div>
+                                ${s2MissingSemicolon
+                                    ? '<p class="text-[11px] text-rose-600 mt-1.5 font-semibold">Karena baris pertama lupa ditutup dengan titik koma (;), browser menggabungkan baris 1 dan baris 2 sehingga keduanya dianggap rusak dan gagal diterapkan!</p>'
+                                    : '<p class="text-[11px] text-indigo-200 mt-1.5">Seluruh properti (warna latar gelap, teks putih, dan padding 16px) diterapkan dengan sempurna.</p>'}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide3() {
+            const methods = {
+                external: {
+                    badge: "Standar Proyek UMKM (Paling Direkomendasikan)",
+                    title: "1. External CSS (File Terpisah css/style.css)",
+                    desc: "Seluruh aturan desain disimpan di dalam file khusus bernama style.css, lalu dipanggil di dalam <head> file HTML menggunakan tag <link>.",
+                    pros: "Jika website UMKM Anda memiliki 5 halaman (Beranda, Katalog, Promo, Tentang, Kontak), cukup ubah 1 file style.css maka warna seluruh halaman ikut berubah serentak.",
+                    codeHtml: `<!-- File: index.html -->\n<!DOCTYPE html>\n<html>\n<head>\n  <title>Katalog UMKM</title>\n  <link rel="stylesheet" href="css/style.css">\n</head>\n<body>\n  <h1 class="judul">Kopi Lereng Gunung</h1>\n</body>\n</html>`,
+                    codeCss: `/* File terpisah: css/style.css */\n.judul {\n  color: #4f46e5;\n  text-align: center;\n}`
+                },
+                internal: {
+                    badge: "Untuk Pengujian Satu Halaman Tunggal",
+                    title: "2. Internal CSS (Tag <style> di dalam <head>)",
+                    desc: "Aturan CSS ditulis langsung di bagian atas dokumen HTML di dalam elemen <style> ... </style>.",
+                    pros: "Praktis untuk latihan cepat dalam satu file, namun jika jumlah halaman bertambah, Anda harus menyalin ulang kode CSS yang sama ke setiap file HTML.",
+                    codeHtml: `<!-- File: index.html -->\n<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    .judul {\n      color: #4f46e5;\n      text-align: center;\n    }\n  </style>\n</head>\n<body>\n  <h1 class="judul">Kopi Lereng Gunung</h1>\n</body>\n</html>`,
+                    codeCss: `/* Tidak ada file .css terpisah.\n   Kode CSS menyatu di dalam tag <style> pada file index.html */`
+                },
+                inline: {
+                    badge: "Hanya untuk Pengecualian Darurat",
+                    title: "3. Inline CSS (Atribut style='...' pada Tag HTML)",
+                    desc: "Properti CSS disisipkan langsung sebagai atribut pada satu elemen HTML tertentu.",
+                    pros: "Memiliki prioritas tertinggi, tetapi membuat kode HTML menjadi sangat berantakan dan sulit diperbarui jika terdapat puluhan produk di katalog.",
+                    codeHtml: `<!-- File: index.html -->\n<body>\n  <h1 style="color: #4f46e5; text-align: center;">\n    Kopi Lereng Gunung\n  </h1>\n</body>`,
+                    codeCss: `/* Tidak menggunakan selektor.\n   Properti ditulis langsung di dalam atribut style="..." */`
+                }
+            };
+
+            const cur = methods[s3Method];
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Arsitektur File Proyek</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">3 Cara Menghubungkan CSS ke Dokumen HTML</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            W3Schools membagi cara penyisipan CSS menjadi ${term('external_css', 'External CSS')}, ${term('internal_css', 'Internal CSS')}, dan ${term('inline_css', 'Inline CSS')}.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        <button type="button" onclick="setS3Method('external')" class="p-3.5 rounded-2xl border text-left transition ${s3Method === 'external' ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800'}">
+                            <div class="text-[11px] font-bold ${s3Method === 'external' ? 'text-indigo-200' : 'text-emerald-600 dark:text-emerald-400'}">Paling Direkomendasikan</div>
+                            <div class="text-sm font-extrabold mt-0.5">1. External CSS (&lt;link&gt;)</div>
+                        </button>
+                        <button type="button" onclick="setS3Method('internal')" class="p-3.5 rounded-2xl border text-left transition ${s3Method === 'internal' ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800'}">
+                            <div class="text-[11px] font-bold ${s3Method === 'internal' ? 'text-indigo-200' : 'text-indigo-600 dark:text-indigo-400'}">Satu File Tunggal</div>
+                            <div class="text-sm font-extrabold mt-0.5">2. Internal CSS (&lt;style&gt;)</div>
+                        </button>
+                        <button type="button" onclick="setS3Method('inline')" class="p-3.5 rounded-2xl border text-left transition ${s3Method === 'inline' ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800'}">
+                            <div class="text-[11px] font-bold ${s3Method === 'inline' ? 'text-indigo-200' : 'text-amber-600 dark:text-amber-400'}">Khusus 1 Elemen</div>
+                            <div class="text-sm font-extrabold mt-0.5">3. Inline CSS (style="...")</div>
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <div class="lg:col-span-5 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-4">
+                            <div class="space-y-2">
+                                <span class="text-[11px] font-bold px-2.5 py-1 rounded-md bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">${escapeHtml(cur.badge)}</span>
+                                <h3 class="text-base font-extrabold text-slate-900 dark:text-white pt-1">${escapeHtml(cur.title)}</h3>
+                                <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${escapeHtml(cur.desc)}</p>
+                            </div>
+
+                            <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                                <strong class="text-slate-900 dark:text-white block mb-1">Mengapa memilih cara ini?</strong>
+                                ${escapeHtml(cur.pros)}
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-7 grid grid-cols-1 gap-3">
+                            <div class="p-4 rounded-2xl bg-slate-900 text-slate-100 font-mono text-xs flex flex-col">
+                                <div class="text-emerald-400 font-bold mb-1.5">// Struktur Kode HTML</div>
+                                <pre class="text-slate-200 whitespace-pre-wrap leading-relaxed">${escapeHtml(cur.codeHtml)}</pre>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-slate-900 text-slate-100 font-mono text-xs flex flex-col">
+                                <div class="text-sky-400 font-bold mb-1.5">// Aturan Kode CSS</div>
+                                <pre class="text-amber-300 whitespace-pre-wrap leading-relaxed">${escapeHtml(cur.codeCss)}</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide4() {
+            setTimeout(function() {
+                applyScopedCss('#s4PreviewCanvas', s4LiveCss);
+            }, 0);
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Menargetkan Elemen HTML</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">3 ${term('selector', 'CSS Selectors')} Utama: Elemen, <span class="font-mono">.class</span>, dan <span class="font-mono">#id</span></h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Bagaimana cara memberi warna berbeda pada satu kartu promo tanpa mengubah warna semua kartu lainnya? Gunakan selektor <strong>Class (<span class="font-mono">.nama-class</span>)</strong> atau <strong>ID (<span class="font-mono">#nama-id</span>)</strong>.
+                        </p>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="text-xs font-bold text-slate-500">Pilih Skenario Selektor:</span>
+                        <button type="button" onclick="setS4Preset('tag')" class="px-3.5 py-1.5 rounded-xl font-mono text-xs font-bold transition ${s4ActivePreset === 'tag' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">1. Selektor Tag (h3, p)</button>
+                        <button type="button" onclick="setS4Preset('class_sel')" class="px-3.5 py-1.5 rounded-xl font-mono text-xs font-bold transition ${s4ActivePreset === 'class_sel' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">2. Selektor .class (Banyak Kartu)</button>
+                        <button type="button" onclick="setS4Preset('id_sel')" class="px-3.5 py-1.5 rounded-xl font-mono text-xs font-bold transition ${s4ActivePreset === 'id_sel' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">3. Selektor #id (1 Elemen Unik)</button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <!-- Editor CSS Live (Tanpa Ruang Hitam Kosong) -->
+                        <div class="lg:col-span-6 p-4 sm:p-5 rounded-3xl bg-slate-900 text-slate-100 font-mono text-xs flex flex-col gap-2.5">
+                            <div class="flex items-center justify-between text-indigo-400">
+                                <span>/* File: style.css (Edit Langsung) */</span>
+                                <span class="text-emerald-400 font-bold">Live CSS</span>
+                            </div>
+                            <textarea id="s4CssInput" spellcheck="false" oninput="updateS4Css(this.value)" class="w-full flex-1 min-h-[210px] bg-slate-950 text-emerald-300 font-mono text-xs p-3.5 rounded-2xl border border-slate-800 focus:outline-none focus:border-indigo-500 resize-y leading-relaxed">${escapeHtml(s4LiveCss)}</textarea>
+                            <div class="text-[11px] text-slate-400 font-sans pt-1">
+                                <strong>Ingat:</strong> Tag ditulis langsung (<code class="text-amber-300">h3</code>), Class diawali titik (<code class="text-amber-300">.kartu-produk</code>), dan ID diawali tanda pagar (<code class="text-amber-300">#banner-utama</code>).
+                            </div>
+                        </div>
+
+                        <!-- Pratinjau HTML + Struktur Elemen -->
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-3">
+                            <div class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Hasil Tampilan di Browser:</div>
+
+                            <div id="s4PreviewCanvas" class="css-preview-canvas p-4 rounded-2xl border border-slate-200 flex-1">
+                                <div id="banner-utama">
+                                    <h3>Banner Utama Toko (#banner-utama)</h3>
+                                    <p>Selamat datang di katalog resmi UMKM kami.</p>
+                                </div>
+                                <div class="kartu-produk">
+                                    <h3>Kopi Arabika Gayo (.kartu-produk)</h3>
+                                    <p class="harga">Rp 65.000 (.harga)</p>
+                                </div>
+                                <div class="kartu-produk">
+                                    <h3>Kopi Robusta Temanggung (.kartu-produk)</h3>
+                                    <p class="harga">Rp 45.000 (.harga)</p>
+                                </div>
+                            </div>
+
+                            <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 font-mono text-[11px] text-slate-500 dark:text-slate-400">
+                                Struktur HTML: <span class="text-indigo-600 dark:text-indigo-400">&lt;div id="banner-utama"&gt;</span> dan 2 buah <span class="text-emerald-600 dark:text-emerald-400">&lt;div class="kartu-produk"&gt;</span>.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide5() {
+            setTimeout(function() {
+                applyScopedCss('#s5PreviewCanvas', s5LiveCss);
+            }, 0);
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Aturan Prioritas CSS</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">${term('specificity', 'CSS Specificity')}: Siapa yang Menang Saat Aturan Bentrok?</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Sering kali pemula bingung: <em>"Saya sudah mengubah warna <code class="font-mono">h3</code> menjadi merah di baris paling bawah, tapi kenapa warnanya tetap biru?"</em> Jawabannya adalah bobot <strong>Specificity</strong>.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-2.5">
+                        <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 text-center">
+                            <div class="text-xs font-bold text-slate-400">Peringkat 3 (Bobot: 1)</div>
+                            <div class="font-mono text-sm font-extrabold text-slate-800 dark:text-white mt-0.5">Tag Elemen (h3)</div>
+                        </div>
+                        <div class="p-3 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-center">
+                            <div class="text-xs font-bold text-indigo-600 dark:text-indigo-400">Peringkat 2 (Bobot: 10)</div>
+                            <div class="font-mono text-sm font-extrabold text-indigo-700 dark:text-indigo-300 mt-0.5">Class (.judul-menu)</div>
+                        </div>
+                        <div class="p-3 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-center">
+                            <div class="text-xs font-bold text-emerald-600 dark:text-emerald-400">Peringkat 1 (Bobot: 100)</div>
+                            <div class="font-mono text-sm font-extrabold text-emerald-700 dark:text-emerald-300 mt-0.5">ID (#spesial)</div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <div class="lg:col-span-6 p-4 sm:p-5 rounded-3xl bg-slate-900 text-slate-100 font-mono text-xs flex flex-col gap-2.5">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <span class="text-indigo-400">/* Uji Pertarungan Selektor: */</span>
+                                <div class="flex gap-1">
+                                    <button type="button" onclick="setS5Preset('tag_only')" class="px-2.5 py-1 rounded-lg text-[11px] font-bold ${s5ActivePreset === 'tag_only' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-300'}">1. Hanya h3</button>
+                                    <button type="button" onclick="setS5Preset('add_class')" class="px-2.5 py-1 rounded-lg text-[11px] font-bold ${s5ActivePreset === 'add_class' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-300'}">2. Lawan .class</button>
+                                    <button type="button" onclick="setS5Preset('add_id')" class="px-2.5 py-1 rounded-lg text-[11px] font-bold ${s5ActivePreset === 'add_id' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-300'}">3. Lawan #id</button>
+                                </div>
+                            </div>
+                            <textarea id="s5CssInput" spellcheck="false" oninput="updateS5Css(this.value)" class="w-full flex-1 min-h-[190px] bg-slate-950 text-emerald-300 font-mono text-xs p-3.5 rounded-2xl border border-slate-800 focus:outline-none focus:border-indigo-500 resize-y leading-relaxed">${escapeHtml(s5LiveCss)}</textarea>
+                        </div>
+
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-3">
+                            <div class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Elemen HTML yang Diuji:</div>
+
+                            <div class="p-3 rounded-xl bg-slate-900 text-amber-300 font-mono text-xs">
+                                &lt;h3 class="judul-menu" id="spesial"&gt;Kopi Susu Gula Aren&lt;/h3&gt;
+                            </div>
+
+                            <div id="s5PreviewCanvas" class="css-preview-canvas p-5 rounded-2xl border border-slate-200 flex-1 flex flex-col justify-center items-center text-center">
+                                <h3 class="judul-menu" id="spesial" style="font-size: 24px; font-weight: 800;">Kopi Susu Gula Aren</h3>
+                                <p style="margin-top: 6px; color: #64748b;">Perhatikan warna teks judul di atas saat Anda menekan tombol 1, 2, dan 3.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide6() {
+            setTimeout(function() {
+                applyScopedCss('#s6PreviewCanvas', s6LiveCss);
+            }, 0);
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Identitas Visual UMKM</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Sistem Warna CSS (${term('hex_color', 'HEX, RGB/RGBA')}) &amp; Kontras Keterbacaan</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Properti <code class="font-mono font-bold">color</code> mengatur warna huruf, sedangkan <code class="font-mono font-bold">background-color</code> mengatur warna latar kotak. Pastikan keduanya memiliki kontras yang tinggi agar mudah dibaca.
+                        </p>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="text-xs font-bold text-slate-500">Uji Skema Warna:</span>
+                        <button type="button" onclick="setS6Preset('good_contrast')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${s6ActivePreset === 'good_contrast' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">1. Kontras Terang &amp; Hangat</button>
+                        <button type="button" onclick="setS6Preset('dark_elegance')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${s6ActivePreset === 'dark_elegance' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">2. Kontras Gelap Modern</button>
+                        <button type="button" onclick="setS6Preset('bad_contrast')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${s6ActivePreset === 'bad_contrast' ? 'bg-rose-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">3. Contoh Kontras Buruk (Hindari!)</button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <div class="lg:col-span-6 p-4 sm:p-5 rounded-3xl bg-slate-900 text-slate-100 font-mono text-xs flex flex-col gap-2.5">
+                            <div class="flex items-center justify-between text-indigo-400">
+                                <span>/* Edit kode warna HEX / RGBA di bawah ini: */</span>
+                                <span class="text-emerald-400 font-bold">Live CSS</span>
+                            </div>
+                            <textarea id="s6CssInput" spellcheck="false" oninput="updateS6Css(this.value)" class="w-full flex-1 min-h-[210px] bg-slate-950 text-emerald-300 font-mono text-xs p-3.5 rounded-2xl border border-slate-800 focus:outline-none focus:border-indigo-500 resize-y leading-relaxed">${escapeHtml(s6LiveCss)}</textarea>
+                        </div>
+
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-3">
+                            <div class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Hasil Pratinjau Kartu Promo:</div>
+
+                            <div id="s6PreviewCanvas" class="css-preview-canvas p-4 rounded-2xl border border-slate-200 flex-1 flex flex-col justify-center">
+                                <div class="kotak-promo">
+                                    <span class="label-diskon">PROMO AKHIR PEKAN</span>
+                                    <h3 style="margin-top: 10px;">Paket Bundling Kopi &amp; Croissant</h3>
+                                    <p style="margin-top: 4px;">Hemat Rp 15.000 khusus pemesanan langsung melalui website katalog kami.</p>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-3 gap-2 text-[11px] font-mono">
+                                <div class="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800"><strong>HEX:</strong> #4f46e5</div>
+                                <div class="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800"><strong>RGB:</strong> rgb(79,70,229)</div>
+                                <div class="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800"><strong>RGBA:</strong> rgba(..., 0.5)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide7() {
+            setTimeout(function() {
+                applyScopedCss('#s7PreviewCanvas', s7LiveCss);
+            }, 0);
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Menghias Header &amp; Banner</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">${term('background', 'CSS Backgrounds')} &amp; Gradasi Warna (<span class="font-mono">linear-gradient</span>)</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Untuk membuat bagian <code class="font-mono">&lt;header&gt;</code> atau banner profil UMKM tampak profesional meskipun belum memiliki foto beresolusi tinggi, kita dapat memadukan <code class="font-mono font-bold">background-color</code> atau <code class="font-mono font-bold">linear-gradient()</code>.
+                        </p>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="text-xs font-bold text-slate-500">Pilih Gaya Banner:</span>
+                        <button type="button" onclick="setS7Preset('solid')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${s7ActivePreset === 'solid' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">1. Warna Solid</button>
+                        <button type="button" onclick="setS7Preset('gradient')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${s7ActivePreset === 'gradient' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">2. Linear Gradient Modern</button>
+                        <button type="button" onclick="setS7Preset('warm_coffee')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${s7ActivePreset === 'warm_coffee' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">3. Nuansa Hangat Kopi</button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <div class="lg:col-span-6 p-4 sm:p-5 rounded-3xl bg-slate-900 text-slate-100 font-mono text-xs flex flex-col gap-2.5">
+                            <div class="flex items-center justify-between text-indigo-400">
+                                <span>/* Edit properti background di bawah ini: */</span>
+                                <span class="text-emerald-400 font-bold">Live CSS</span>
+                            </div>
+                            <textarea id="s7CssInput" spellcheck="false" oninput="updateS7Css(this.value)" class="w-full flex-1 min-h-[195px] bg-slate-950 text-emerald-300 font-mono text-xs p-3.5 rounded-2xl border border-slate-800 focus:outline-none focus:border-indigo-500 resize-y leading-relaxed">${escapeHtml(s7LiveCss)}</textarea>
+                        </div>
+
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-3">
+                            <div class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Pratinjau Header Profil UMKM:</div>
+
+                            <div id="s7PreviewCanvas" class="css-preview-canvas p-4 rounded-2xl border border-slate-200 flex-1 flex flex-col justify-center">
+                                <header class="hero-umkm">
+                                    <h1>Roastery Kopi Lereng Gunung</h1>
+                                    <p style="margin-bottom: 0; opacity: 0.9;">Menyajikan biji kopi pilihan nusantara sejak 2021 — Disangrai segar setiap pekan.</p>
+                                </header>
+                            </div>
+
+                            <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-300">
+                                Jika menggunakan foto latar (<code class="font-mono">background-image: url('img/toko.jpg');</code>), tambahkan <code class="font-mono font-bold">background-size: cover;</code> dan <code class="font-mono font-bold">background-position: center;</code>.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide8() {
+            setTimeout(function() {
+                applyScopedCss('#s8PreviewCanvas', s8LiveCss);
+            }, 0);
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Kenyamanan Membaca</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">${term('typography', 'Tipografi & CSS Fonts')} (<span class="font-mono">font-family</span>, <span class="font-mono">font-size</span>, <span class="font-mono">line-height</span>)</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Secara bawaan, browser menampilkan font <em>Times New Roman</em> yang terkesan kaku. Dengan CSS, kita dapat mengubah keluarga huruf, ukuran (${term('rem_unit', 'px / rem')}), ketebalan (<code class="font-mono">font-weight</code>), dan jarak antarbaris (<code class="font-mono">line-height</code>).
+                        </p>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="text-xs font-bold text-slate-500">Pilih Karakter Tipografi:</span>
+                        <button type="button" onclick="setS8Preset('sans_modern')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${s8ActivePreset === 'sans_modern' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">1. Sans-Serif Modern (Bersih)</button>
+                        <button type="button" onclick="setS8Preset('serif_klasik')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${s8ActivePreset === 'serif_klasik' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">2. Serif Klasik (Tradisional)</button>
+                        <button type="button" onclick="setS8Preset('mono_teknis')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${s8ActivePreset === 'mono_teknis' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">3. Monospace (Industrial)</button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <div class="lg:col-span-6 p-4 sm:p-5 rounded-3xl bg-slate-900 text-slate-100 font-mono text-xs flex flex-col gap-2.5">
+                            <div class="flex items-center justify-between text-indigo-400">
+                                <span>/* Edit aturan font di bawah ini: */</span>
+                                <span class="text-emerald-400 font-bold">Live CSS</span>
+                            </div>
+                            <textarea id="s8CssInput" spellcheck="false" oninput="updateS8Css(this.value)" class="w-full flex-1 min-h-[210px] bg-slate-950 text-emerald-300 font-mono text-xs p-3.5 rounded-2xl border border-slate-800 focus:outline-none focus:border-indigo-500 resize-y leading-relaxed">${escapeHtml(s8LiveCss)}</textarea>
+                        </div>
+
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-3">
+                            <div class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Pratinjau Deskripsi Produk UMKM:</div>
+
+                            <div id="s8PreviewCanvas" class="css-preview-canvas p-5 rounded-2xl border border-slate-200 flex-1 flex flex-col justify-center">
+                                <article class="artikel-produk">
+                                    <h3 class="judul-produk">Kopi Arabika Gayo — Spesialti</h3>
+                                    <p class="deskripsi">Dipetik langsung oleh petani lokal pada ketinggian 1.400 mdpl. Memiliki perpaduan rasa cokelat hitam, gula aren, dan tingkat keasaman yang lembut sehingga nyaman dinikmati setiap pagi.</p>
+                                </article>
+                            </div>
+
+                            <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-300">
+                                <strong>Tips W3Schools:</strong> Gunakan <code class="font-mono font-bold">line-height: 1.5</code> hingga <code class="font-mono font-bold">1.7</code> pada paragraf deskripsi agar baris kalimat tidak terlihat terlalu rapat.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // === TEMPELKAN BAGIAN 2 TEPAT DI BAWAH BARIS INI ===
+        // =========================================================================
+        // STATE & PRESET SLIDE 9 S/D 17 (BAGIAN 2)
+        // =========================================================================
+
+        // Slide 9: CSS Text (text-align, text-decoration, text-transform, letter-spacing)
+        const S9_PRESETS = {
+            nav_clean: "/* Menghilangkan garis bawah link menu navigasi */\n.nav-umkm {\n  text-align: center;\n  background-color: #f8fafc;\n  padding: 12px;\n  border-radius: 10px;\n}\n.nav-umkm a {\n  text-decoration: none;\n  text-transform: uppercase;\n  letter-spacing: 1px;\n  font-weight: 700;\n  color: #4f46e5;\n  margin: 0 10px;\n}",
+            judul_tengah: "/* Perataan tengah & transformasi huruf kapital */\n.judul-seksi {\n  text-align: center;\n  text-transform: uppercase;\n  letter-spacing: 2px;\n  color: #1e1b4b;\n}\n.sub-seksi {\n  text-align: center;\n  color: #64748b;\n}",
+            harga_coret: "/* Efek harga coret dengan text-decoration */\n.harga-lama {\n  text-decoration: line-through;\n  color: #ef4444;\n  margin-right: 8px;\n}\n.harga-promo {\n  text-decoration: underline;\n  font-weight: 800;\n  color: #059669;\n}"
+        };
+        let s9ActivePreset = 'nav_clean';
+        let s9LiveCss = S9_PRESETS.nav_clean;
+
+        // Slide 10: CSS Box Model Interactive Inspector
+        let s10ActiveLayer = 'padding'; // 'content' | 'padding' | 'border' | 'margin' | 'boxsizing'
+        let s10PadVal = 20;
+        let s10BorderVal = 4;
+        let s10MarginVal = 16;
+        let s10BorderBox = true;
+
+        // Slide 11: Eksperimen Padding vs Margin
+        const S11_PRESETS = {
+            no_space: "/* Tanpa Padding & Tanpa Margin (Teks & Kartu Menempel Sempit!) */\n.kartu-uji {\n  background-color: #eef2ff;\n  border: 2px solid #4f46e5;\n  padding: 0px;\n  margin-bottom: 0px;\n}",
+            only_padding: "/* Diberi Padding 18px (Dalam Lega, Tapi Antar-Kartu Masih Nempel) */\n.kartu-uji {\n  background-color: #eef2ff;\n  border: 2px solid #4f46e5;\n  padding: 18px;\n  margin-bottom: 0px;\n  border-radius: 10px;\n}",
+            ideal_both: "/* Kombinasi Ideal: Padding 18px (Dalam) + Margin 16px (Luar) */\n.kartu-uji {\n  background-color: #ffffff;\n  border: 2px solid #4f46e5;\n  padding: 18px;\n  margin-bottom: 16px;\n  border-radius: 12px;\n}"
+        };
+        let s11ActivePreset = 'ideal_both';
+        let s11LiveCss = S11_PRESETS.ideal_both;
+
+        // Slide 12: Border, Border-Radius & Box-Shadow
+        const S12_PRESETS = {
+            modern_card: "/* Kartu Produk Modern dengan Sudut Halus & Bayangan Lembut */\n.kartu-katalog {\n  background-color: #ffffff;\n  border: 1px solid #e2e8f0;\n  border-radius: 16px;\n  padding: 20px;\n  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.1);\n}",
+            promo_dashed: "/* Kupon Promo dengan Garis Putus-putus (dashed) */\n.kartu-katalog {\n  background-color: #fffbeb;\n  border: 2px dashed #f59e0b;\n  border-radius: 12px;\n  padding: 20px;\n  box-shadow: none;\n}",
+            sharp_bold: "/* Gaya Tegas dengan Aksen Border Kiri Tebal */\n.kartu-katalog {\n  background-color: #f8fafc;\n  border: 1px solid #cbd5e1;\n  border-left: 6px solid #4f46e5;\n  border-radius: 6px;\n  padding: 20px;\n}"
+        };
+        let s12ActivePreset = 'modern_card';
+        let s12LiveCss = S12_PRESETS.modern_card;
+
+        // Slide 13: Dimensi (width, max-width) & Properti display
+        const S13_PRESETS = {
+            inline_block_btn: "/* Mengubah <a> menjadi tombol berjajar dengan inline-block */\n.wadah-aksi {\n  max-width: 460px;\n  margin: 0 auto;\n  padding: 16px;\n  background-color: #f8fafc;\n  border: 1px solid #e2e8f0;\n  border-radius: 12px;\n}\n.tombol-menu {\n  display: inline-block;\n  background-color: #4f46e5;\n  color: #ffffff;\n  text-decoration: none;\n  padding: 8px 16px;\n  border-radius: 8px;\n  margin-right: 8px;\n  font-size: 13px;\n  font-weight: 700;\n}",
+            block_full: "/* display: block membuat tombol memanjang 1 baris penuh */\n.wadah-aksi {\n  max-width: 460px;\n  margin: 0 auto;\n  padding: 16px;\n}\n.tombol-menu {\n  display: block;\n  background-color: #0f172a;\n  color: #ffffff;\n  text-decoration: none;\n  text-align: center;\n  padding: 10px;\n  border-radius: 8px;\n  margin-bottom: 8px;\n  font-size: 13px;\n  font-weight: 700;\n}",
+            inline_raw: "/* display: inline bawaan <a> (Padding atas-bawah tidak rapi) */\n.tombol-menu {\n  display: inline;\n  background-color: #e0e7ff;\n  color: #3730a3;\n  padding: 2px 6px;\n}"
+        };
+        let s13ActivePreset = 'inline_block_btn';
+        let s13LiveCss = S13_PRESETS.inline_block_btn;
+
+        // Slide 14: Styling Tabel Harga, Input Form & Pseudo-class :hover
+        const S14_PRESETS = {
+            table_style: "/* Merapikan Tabel Katalog dengan border-collapse */\n.tabel-umkm {\n  width: 100%;\n  border-collapse: collapse;\n  margin-bottom: 14px;\n}\n.tabel-umkm th {\n  background-color: #4f46e5;\n  color: #ffffff;\n  text-align: left;\n  padding: 10px;\n}\n.tabel-umkm td {\n  border-bottom: 1px solid #e2e8f0;\n  padding: 9px 10px;\n}\n.tabel-umkm tr:hover {\n  background-color: #eef2ff;\n}",
+            button_hover: "/* Efek Interaktif Saat Kursor Menyentuh Tombol (:hover) */\n.btn-pesan {\n  background-color: #4f46e5;\n  color: #ffffff;\n  border: none;\n  padding: 10px 20px;\n  border-radius: 10px;\n  font-weight: 700;\n  cursor: pointer;\n  transition: 0.2s;\n}\n.btn-pesan:hover {\n  background-color: #312e81;\n  box-shadow: 0 6px 15px rgba(79, 70, 229, 0.35);\n}",
+            input_focus: "/* Mempercantik Kotak Input Form Pemesanan */\n.input-umkm {\n  width: 100%;\n  box-sizing: border-box;\n  padding: 9px 12px;\n  border: 2px solid #cbd5e1;\n  border-radius: 8px;\n  margin-bottom: 10px;\n  outline: none;\n}\n.input-umkm:focus {\n  border-color: #4f46e5;\n  background-color: #f8fafc;\n}"
+        };
+        let s14ActivePreset = 'table_style';
+        let s14LiveCss = S14_PRESETS.table_style + "\n\n" + S14_PRESETS.button_hover;
+
+        // Slide 15: Latihan Praktik Terpadu 5 Tahap (Rumpang Awal -> Pemeriksa Otomatis)
+        let s15Step = 0;
+        let s15CheckFeedback = null;
+        const S15_TASKS = [
+            {
+                stepTitle: "Tahap 1: Mengatur Gaya Dasar Halaman & Header UMKM",
+                scenario: "Ubahlah tampilan dasar halaman dan bagian kepala (<header class='header-toko'>) agar memiliki identitas warna yang jelas dan teks rata tengah.",
+                starter: "/* Lengkapi aturan CSS Tahap 1 di bawah ini */\nbody {\n  \n}\n\n.header-toko {\n  \n}",
+                solution: "body {\n  font-family: sans-serif;\n  background-color: #f8fafc;\n  color: #0f172a;\n}\n\n.header-toko {\n  background-color: #1e1b4b;\n  color: #ffffff;\n  padding: 20px;\n  text-align: center;\n  border-radius: 12px;\n}",
+                checks: [
+                    { label: "Menulis properti font-family pada selektor body", regex: /body\s*\{[^}]*font-family\s*:/i },
+                    { label: "Mengatur background-color pada .header-toko", regex: /\.header-toko\s*\{[^}]*background(-color)?\s*:/i },
+                    { label: "Mengatur warna teks (color) pada .header-toko", regex: /\.header-toko\s*\{[^}]*color\s*:/i },
+                    { label: "Menambahkan ruang dalam (padding) pada .header-toko", regex: /\.header-toko\s*\{[^}]*padding\s*:/i },
+                    { label: "Meratakan teks ke tengah (text-align: center)", regex: /\.header-toko\s*\{[^}]*text-align\s*:\s*center/i }
+                ]
+            },
+            {
+                stepTitle: "Tahap 2: Merapikan Menu Navigasi (<nav class='nav-toko'>)",
+                scenario: "Hilangkan garis bawah bawaan pada tautan menu navigasi (.nav-toko a), beri jarak antar-tautan, dan ubah hurufnya menjadi tebal.",
+                starter: "/* Lengkapi aturan CSS Tahap 2 di bawah ini */\n.nav-toko {\n  text-align: center;\n  padding: 12px;\n  margin: 12px 0;\n}\n\n.nav-toko a {\n  \n}",
+                solution: ".nav-toko {\n  text-align: center;\n  background-color: #eef2ff;\n  padding: 12px;\n  margin: 12px 0;\n  border-radius: 10px;\n}\n\n.nav-toko a {\n  text-decoration: none;\n  color: #4f46e5;\n  font-weight: bold;\n  margin: 0 12px;\n}",
+                checks: [
+                    { label: "Menghilangkan garis bawah link (text-decoration: none)", regex: /\.nav-toko\s+a\s*\{[^}]*text-decoration\s*:\s*none/i },
+                    { label: "Mengatur warna teks tautan (color) pada .nav-toko a", regex: /\.nav-toko\s+a\s*\{[^}]*color\s*:/i },
+                    { label: "Menebalkan huruf tautan (font-weight)", regex: /\.nav-toko\s+a\s*\{[^}]*font-weight\s*:/i },
+                    { label: "Memberi jarak luar/dalam (margin atau padding) pada .nav-toko a", regex: /\.nav-toko\s+a\s*\{[^}]*(margin|padding)/i },
+                    { label: "Mengatur background-color pada .nav-toko", regex: /\.nav-toko\s*\{[^}]*background(-color)?\s*:/i }
+                ]
+            },
+            {
+                stepTitle: "Tahap 3: Mendesain Kartu Produk dengan Box Model (.kartu-produk)",
+                scenario: "Terapkan konsep Box Model pada .kartu-produk agar memiliki warna latar putih, garis tepi (border), sudut membulat (border-radius), bantalan dalam (padding), dan jarak antar-kartu (margin-bottom).",
+                starter: "/* Lengkapi Box Model .kartu-produk & .harga-produk */\n.kartu-produk {\n  \n}\n\n.harga-produk {\n  \n}",
+                solution: ".kartu-produk {\n  background-color: #ffffff;\n  border: 1px solid #cbd5e1;\n  border-radius: 14px;\n  padding: 18px;\n  margin-bottom: 14px;\n  box-shadow: 0 4px 12px rgba(0,0,0,0.06);\n}\n\n.harga-produk {\n  color: #4f46e5;\n  font-size: 18px;\n  font-weight: 800;\n}",
+                checks: [
+                    { label: "Memberi garis tepi (border) pada .kartu-produk", regex: /\.kartu-produk\s*\{[^}]*border\s*:/i },
+                    { label: "Melengkungkan sudut (border-radius) pada .kartu-produk", regex: /\.kartu-produk\s*\{[^}]*border-radius\s*:/i },
+                    { label: "Memberi ruang dalam (padding) pada .kartu-produk", regex: /\.kartu-produk\s*\{[^}]*padding\s*:/i },
+                    { label: "Memberi jarak luar (margin / margin-bottom) pada .kartu-produk", regex: /\.kartu-produk\s*\{[^}]*margin(-bottom)?\s*:/i },
+                    { label: "Menonjolkan warna dan ukuran .harga-produk (color & font-weight)", regex: /\.harga-produk\s*\{[^}]*color\s*:[\s\S]*font-weight\s*:/i }
+                ]
+            },
+            {
+                stepTitle: "Tahap 4: Menghias Tabel Daftar Harga (.tabel-harga)",
+                scenario: "Gabungkan garis ganda tabel menggunakan border-collapse: collapse, lalu beri warna latar pada judul kolom (.tabel-harga th) dan padding pada sel (.tabel-harga td).",
+                starter: "/* Lengkapi aturan CSS Tabel Harga di bawah ini */\n.tabel-harga {\n  width: 100%;\n  \n}\n\n.tabel-harga th {\n  \n}\n\n.tabel-harga td {\n  \n}",
+                solution: ".tabel-harga {\n  width: 100%;\n  border-collapse: collapse;\n  margin-bottom: 16px;\n}\n\n.tabel-harga th {\n  background-color: #312e81;\n  color: #ffffff;\n  padding: 10px;\n  text-align: left;\n}\n\n.tabel-harga td {\n  padding: 10px;\n  border-bottom: 1px solid #e2e8f0;\n}",
+                checks: [
+                    { label: "Menyatukan garis tabel dengan border-collapse: collapse", regex: /\.tabel-harga\s*\{[^}]*border-collapse\s*:\s*collapse/i },
+                    { label: "Memberi warna latar (background-color) pada .tabel-harga th", regex: /\.tabel-harga\s+th\s*\{[^}]*background(-color)?\s*:/i },
+                    { label: "Memberi warna teks kontras (color) pada .tabel-harga th", regex: /\.tabel-harga\s+th\s*\{[^}]*color\s*:/i },
+                    { label: "Memberi padding pada .tabel-harga th", regex: /\.tabel-harga\s+th\s*\{[^}]*padding\s*:/i },
+                    { label: "Memberi padding dan border pada .tabel-harga td", regex: /\.tabel-harga\s+td\s*\{[^}]*padding\s*:/i }
+                ]
+            },
+            {
+                stepTitle: "Tahap 5: Mempercantik Input Form & Efek :hover Tombol",
+                scenario: "Atur kotak isian (.input-pesan) agar rapi menggunakan box-sizing: border-box dan padding, lalu buat tombol kirim (.btn-kirim) berubah warna saat disentuh kursor (.btn-kirim:hover).",
+                starter: "/* Lengkapi CSS Form & Tombol Hover di bawah ini */\n.input-pesan {\n  width: 100%;\n  \n}\n\n.btn-kirim {\n  \n}\n\n.btn-kirim:hover {\n  \n}",
+                solution: ".input-pesan {\n  width: 100%;\n  box-sizing: border-box;\n  padding: 10px;\n  border: 1px solid #cbd5e1;\n  border-radius: 8px;\n  margin-bottom: 10px;\n}\n\n.btn-kirim {\n  background-color: #4f46e5;\n  color: #ffffff;\n  padding: 10px 18px;\n  border: none;\n  border-radius: 8px;\n  font-weight: bold;\n  cursor: pointer;\n}\n\n.btn-kirim:hover {\n  background-color: #312e81;\n}",
+                checks: [
+                    { label: "Menambahkan box-sizing: border-box pada .input-pesan", regex: /\.input-pesan\s*\{[^}]*box-sizing\s*:\s*border-box/i },
+                    { label: "Memberi padding dan border pada .input-pesan", regex: /\.input-pesan\s*\{[^}]*padding\s*:/i },
+                    { label: "Mengatur background-color dan color pada .btn-kirim", regex: /\.btn-kirim\s*\{[^}]*background(-color)?\s*:[\s\S]*color\s*:/i },
+                    { label: "Memberi padding dan border-radius pada .btn-kirim", regex: /\.btn-kirim\s*\{[^}]*padding\s*:[\s\S]*border-radius\s*:/i },
+                    { label: "Membuat efek perubahan warna pada .btn-kirim:hover", regex: /\.btn-kirim:hover\s*\{[^}]*background(-color)?\s*:/i }
+                ]
+            }
+        ];
+        let s15UserCodes = S15_TASKS.map(function(t) { return t.starter; });
+
+        // Slide 16: Tugas Rumah Mandiri (3 Tab Detail)
+        let s16ActiveTab = 'rubrik'; // 'rubrik' | 'arsitektur' | 'generator'
+        let s16UmkmName = 'Roastery Kopi Lereng Gunung';
+        let s16ThemeColor = '#4f46e5';
+        let s16AccentColor = '#fef3c7';
+        let s16CopyNotice = '';
+        let s16CheckItems = { 1: false, 2: false, 3: false, 4: false, 5: false, 6: false };
+
+        // Slide 17: Kesimpulan & Refleksi Diri
+        let s17OpenKeys = { 1: false, 2: false, 3: false };
+
+        // =========================================================================
+        // FUNGSI RENDER SLIDE 9 S/D 17
+        // =========================================================================
+
+        function renderSlide9() {
+            setTimeout(function() {
+                applyScopedCss('#s9PreviewCanvas', s9LiveCss);
+            }, 0);
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Dekorasi &amp; Perataan Teks</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Pengaturan Teks: <span class="font-mono">text-align</span>, <span class="font-mono">text-decoration</span> &amp; <span class="font-mono">text-transform</span></h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Saat kita membuat tautan navigasi <code class="font-mono">&lt;a&gt;</code>, browser otomatis memberi garis bawah biru. Properti <code class="font-mono font-bold">text-decoration: none;</code> digunakan untuk menghapus garis bawah tersebut agar menu terlihat bersih.
+                        </p>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="text-xs font-bold text-slate-500">Pilih Skenario CSS Text:</span>
+                        <button type="button" onclick="setS9Preset('nav_clean')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${s9ActivePreset === 'nav_clean' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">1. Menu Navigasi Tanpa Garis Bawah</button>
+                        <button type="button" onclick="setS9Preset('judul_tengah')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${s9ActivePreset === 'judul_tengah' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">2. Judul Rata Tengah &amp; Huruf Kapital</button>
+                        <button type="button" onclick="setS9Preset('harga_coret')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${s9ActivePreset === 'harga_coret' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">3. Dekorasi Harga Coret</button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <div class="lg:col-span-6 p-4 sm:p-5 rounded-3xl bg-slate-900 text-slate-100 font-mono text-xs flex flex-col gap-2.5">
+                            <div class="flex items-center justify-between text-indigo-400">
+                                <span>/* Edit properti teks di bawah ini: */</span>
+                                <span class="text-emerald-400 font-bold">Live CSS</span>
+                            </div>
+                            <textarea id="s9CssInput" spellcheck="false" oninput="updateS9Css(this.value)" class="w-full flex-1 min-h-[210px] bg-slate-950 text-emerald-300 font-mono text-xs p-3.5 rounded-2xl border border-slate-800 focus:outline-none focus:border-indigo-500 resize-y leading-relaxed">${escapeHtml(s9LiveCss)}</textarea>
+                        </div>
+
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-3">
+                            <div class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Hasil Tampilan di Browser:</div>
+
+                            <div id="s9PreviewCanvas" class="css-preview-canvas p-5 rounded-2xl border border-slate-200 flex-1 flex flex-col justify-center space-y-4">
+                                <nav class="nav-umkm">
+                                    <a href="#profil" onclick="return false;">Beranda</a>
+                                    <a href="#katalog" onclick="return false;">Katalog</a>
+                                    <a href="#pesan" onclick="return false;">Pemesanan</a>
+                                </nav>
+                                <div>
+                                    <h3 class="judul-seksi">Katalog Spesial Pekan Ini</h3>
+                                    <p class="sub-seksi">Pilih menu favorit Anda dengan harga terbaik:</p>
+                                </div>
+                                <div style="text-align: center;">
+                                    <span class="harga-lama">Rp 65.000</span>
+                                    <span class="harga-promo">Rp 52.000</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide10() {
+            const layers = {
+                content: {
+                    title: "1. Content Area (Isi Utama Elemen)",
+                    desc: "Bagian paling dalam tempat teks, judul, atau gambar produk berada. Ukurannya diatur menggunakan properti width dan height."
+                },
+                padding: {
+                    title: "2. Padding (Ruang Bantalan Dalam)",
+                    desc: "Jarak bersih di antara teks Content dan garis tepi Border. Padding ikut memiliki warna sesuai background-color elemen tersebut."
+                },
+                border: {
+                    title: "3. Border (Garis Bingkai Kotak)",
+                    desc: "Garis tepi yang mengelilingi Padding dan Content. Diatur dengan format singkat: border: ketebalan gaya warna (contoh: 2px solid #4f46e5)."
+                },
+                margin: {
+                    title: "4. Margin (Jarak Dorong Luar)",
+                    desc: "Ruang transparan di luar garis Border yang berfungsi memisahkan satu kartu produk dengan kartu produk lainnya agar tidak saling menempel."
+                },
+                boxsizing: {
+                    title: "5. Properti Penting: box-sizing: border-box",
+                    desc: "Jika aktif, lebar total kotak dikunci tetap stabil karena padding dan border dihitung ke dalam, bukan menambah bengkak ukuran luar kotak."
+                }
+            };
+
+            const cur = layers[s10ActiveLayer];
+            const contentWidth = 220;
+            const totalRenderedWidth = s10BorderBox
+                ? contentWidth
+                : contentWidth + (s10PadVal * 2) + (s10BorderVal * 2);
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Pondasi Tata Ruang CSS</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Membedah 4 Lapisan ${term('box_model', 'CSS Box Model')}</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Di dalam CSS, setiap elemen HTML dianggap sebagai sebuah kotak berlapis. Klik masing-masing lapisan atau geser ukurannya untuk melihat cara kerjanya.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <!-- Visualizer Box Model Berlapis -->
+                        <div class="lg:col-span-7 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-4">
+                            <div class="flex flex-wrap gap-1.5">
+                                <button type="button" onclick="setS10Layer('margin')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition ${s10ActiveLayer === 'margin' ? 'bg-amber-500 text-white' : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700'}">Margin (Luar)</button>
+                                <button type="button" onclick="setS10Layer('border')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition ${s10ActiveLayer === 'border' ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700'}">Border (Tepi)</button>
+                                <button type="button" onclick="setS10Layer('padding')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition ${s10ActiveLayer === 'padding' ? 'bg-emerald-600 text-white' : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700'}">Padding (Dalam)</button>
+                                <button type="button" onclick="setS10Layer('content')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition ${s10ActiveLayer === 'content' ? 'bg-sky-600 text-white' : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700'}">Content (Isi)</button>
+                                <button type="button" onclick="setS10Layer('boxsizing')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition ${s10ActiveLayer === 'boxsizing' ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900' : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700'}">box-sizing</button>
+                            </div>
+
+                            <!-- Diagram Kotak Berlapis -->
+                            <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center min-h-[220px]">
+                                <!-- Margin Layer -->
+                                <div onclick="setS10Layer('margin')" style="padding: ${s10MarginVal}px;" class="cursor-pointer rounded-2xl border-2 border-dashed ${s10ActiveLayer === 'margin' ? 'border-amber-500 bg-amber-100/70 dark:bg-amber-950/50' : 'border-amber-300 bg-amber-50/50 dark:bg-amber-950/20'} transition-all">
+                                    <div class="text-[10px] font-mono font-bold text-amber-700 dark:text-amber-300 mb-1 text-center">MARGIN (${s10MarginVal}px)</div>
+                                    <!-- Border Layer -->
+                                    <div onclick="event.stopPropagation(); setS10Layer('border')" style="border-width: ${s10BorderVal}px;" class="cursor-pointer rounded-xl border-solid ${s10ActiveLayer === 'border' ? 'border-indigo-600' : 'border-indigo-500'} bg-emerald-50 dark:bg-emerald-950/40 transition-all">
+                                        <!-- Padding Layer -->
+                                        <div onclick="event.stopPropagation(); setS10Layer('padding')" style="padding: ${s10PadVal}px;" class="cursor-pointer rounded-lg ${s10ActiveLayer === 'padding' ? 'bg-emerald-200/70 dark:bg-emerald-900/50' : 'bg-emerald-100/60 dark:bg-emerald-950/30'} transition-all">
+                                            <div class="text-[10px] font-mono font-bold text-emerald-800 dark:text-emerald-300 mb-1 text-center">PADDING (${s10PadVal}px)</div>
+                                            <!-- Content Layer -->
+                                            <div onclick="event.stopPropagation(); setS10Layer('content')" class="cursor-pointer px-4 py-3 rounded-lg bg-sky-600 text-white text-center shadow-xs">
+                                                <div class="text-xs font-extrabold">CONTENT (Isi Teks / Gambar)</div>
+                                                <div class="text-[10px] font-mono opacity-90">width: 220px | Total Lebar: ${totalRenderedWidth}px</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Slider Pengatur Ukuran -->
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                                <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                    <div class="flex justify-between font-bold mb-1"><span>Padding:</span><span class="font-mono text-emerald-600">${s10PadVal}px</span></div>
+                                    <input type="range" min="4" max="32" value="${s10PadVal}" oninput="updateS10Sliders('pad', this.value)" class="w-full accent-emerald-600">
+                                </div>
+                                <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                    <div class="flex justify-between font-bold mb-1"><span>Border:</span><span class="font-mono text-indigo-600">${s10BorderVal}px</span></div>
+                                    <input type="range" min="1" max="12" value="${s10BorderVal}" oninput="updateS10Sliders('border', this.value)" class="w-full accent-indigo-600">
+                                </div>
+                                <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                    <div class="flex justify-between font-bold mb-1"><span>Margin:</span><span class="font-mono text-amber-600">${s10MarginVal}px</span></div>
+                                    <input type="range" min="4" max="28" value="${s10MarginVal}" oninput="updateS10Sliders('margin', this.value)" class="w-full accent-amber-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Penjelasan & Kode Box Model -->
+                        <div class="lg:col-span-5 flex flex-col justify-between gap-4">
+                            <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-extrabold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Penjelasan Lapisan</span>
+                                    <button type="button" onclick="toggleS10BoxSizing()" class="px-2.5 py-1 rounded-lg font-mono text-[11px] font-bold ${s10BorderBox ? 'bg-emerald-600 text-white' : 'bg-amber-500 text-white'}">
+                                        box-sizing: ${s10BorderBox ? 'border-box' : 'content-box'}
+                                    </button>
+                                </div>
+                                <h3 class="text-base font-extrabold text-slate-900 dark:text-white">${escapeHtml(cur.title)}</h3>
+                                <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${escapeHtml(cur.desc)}</p>
+                            </div>
+
+                            <div class="p-4 sm:p-5 rounded-3xl bg-slate-900 text-slate-100 font-mono text-xs flex-1 flex flex-col justify-center space-y-1.5">
+                                <div class="text-indigo-400 font-bold">/* Kode CSS Hasil Pengaturan Anda: */</div>
+                                <div class="text-amber-300">.kartu-produk {</div>
+                                <div class="pl-4">width: <span class="text-sky-300">220px</span>;</div>
+                                <div class="pl-4">padding: <span class="text-emerald-300">${s10PadVal}px</span>;</div>
+                                <div class="pl-4">border: <span class="text-indigo-300">${s10BorderVal}px solid #4f46e5</span>;</div>
+                                <div class="pl-4">margin: <span class="text-amber-300">${s10MarginVal}px</span>;</div>
+                                <div class="pl-4">box-sizing: <span class="text-rose-300">${s10BorderBox ? 'border-box' : 'content-box'}</span>;</div>
+                                <div class="text-amber-300">}</div>
+                                <div class="text-[11px] text-slate-400 font-sans pt-2 border-t border-slate-800">
+                                    Lebar akhir di layar: <strong>${totalRenderedWidth}px</strong> ${s10BorderBox ? '(Tetap 220px karena border-box aktif)' : '(Membengkak karena padding + border ditambah di luar 220px)'}.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide11() {
+            setTimeout(function() {
+                applyScopedCss('#s11PreviewCanvas', s11LiveCss);
+            }, 0);
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Perbedaan Paling Sering Ditanyakan</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Kapan Menggunakan ${term('padding', 'Padding')} vs Kapan Menggunakan ${term('margin', 'Margin')}?</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Ingat aturan sederhana ini: Gunakan <strong>Padding</strong> jika teks terlalu mepet ke garis tepi kotak, dan gunakan <strong>Margin</strong> jika dua kotak kartu saling menempel rapat.
+                        </p>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="text-xs font-bold text-slate-500">Bandingkan 3 Kondisi:</span>
+                        <button type="button" onclick="setS11Preset('no_space')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${s11ActivePreset === 'no_space' ? 'bg-rose-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">1. Tanpa Padding &amp; Margin (Sempit)</button>
+                        <button type="button" onclick="setS11Preset('only_padding')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${s11ActivePreset === 'only_padding' ? 'bg-amber-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">2. Hanya Diberi Padding</button>
+                        <button type="button" onclick="setS11Preset('ideal_both')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${s11ActivePreset === 'ideal_both' ? 'bg-emerald-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">3. Kombinasi Padding + Margin (Ideal)</button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <div class="lg:col-span-6 p-4 sm:p-5 rounded-3xl bg-slate-900 text-slate-100 font-mono text-xs flex flex-col gap-2.5">
+                            <div class="flex items-center justify-between text-indigo-400">
+                                <span>/* Ubah angka padding dan margin-bottom: */</span>
+                                <span class="text-emerald-400 font-bold">Live CSS</span>
+                            </div>
+                            <textarea id="s11CssInput" spellcheck="false" oninput="updateS11Css(this.value)" class="w-full flex-1 min-h-[210px] bg-slate-950 text-emerald-300 font-mono text-xs p-3.5 rounded-2xl border border-slate-800 focus:outline-none focus:border-indigo-500 resize-y leading-relaxed">${escapeHtml(s11LiveCss)}</textarea>
+                        </div>
+
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-3">
+                            <div class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Hasil Tampilan 2 Kartu Berurutan:</div>
+
+                            <div id="s11PreviewCanvas" class="css-preview-canvas p-4 rounded-2xl border border-slate-200 flex-1 flex flex-col justify-center">
+                                <div class="kartu-uji">
+                                    <h3>Kartu Produk 1: Kopi Gayo</h3>
+                                    <p style="margin-bottom: 0;">Perhatikan jarak teks ini ke garis tepi kotak biru.</p>
+                                </div>
+                                <div class="kartu-uji">
+                                    <h3>Kartu Produk 2: Kopi Toraja</h3>
+                                    <p style="margin-bottom: 0;">Perhatikan jarak pemisah antara Kartu 1 dan Kartu 2 ini.</p>
+                                </div>
+                            </div>
+
+                            <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-300">
+                                <strong>Penulisan Singkat (Shorthand):</strong> <code class="font-mono font-bold">padding: 12px 20px;</code> berarti atas-bawah <code class="font-mono">12px</code> serta kiri-kanan <code class="font-mono">20px</code>.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide12() {
+            setTimeout(function() {
+                applyScopedCss('#s12PreviewCanvas', s12LiveCss);
+            }, 0);
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Estetika Komponen Kartu</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">${term('border_prop', 'Border, Border-Radius & Box-Shadow')}</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Tiga properti ini adalah kunci untuk membuat kartu produk UMKM tampak berdimensi: <code class="font-mono font-bold">border</code> memberi garis tepi, <code class="font-mono font-bold">border-radius</code> memperhalus sudut tajam, dan <code class="font-mono font-bold">box-shadow</code> memberi efek bayangan timbul.
+                        </p>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="text-xs font-bold text-slate-500">Pilih Gaya Kartu:</span>
+                        <button type="button" onclick="setS12Preset('modern_card')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${s12ActivePreset === 'modern_card' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">1. Kartu Modern + Shadow Halus</button>
+                        <button type="button" onclick="setS12Preset('promo_dashed')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${s12ActivePreset === 'promo_dashed' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">2. Bingkai Kupon (dashed)</button>
+                        <button type="button" onclick="setS12Preset('sharp_bold')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${s12ActivePreset === 'sharp_bold' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">3. Aksen Garis Kiri (border-left)</button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <div class="lg:col-span-6 p-4 sm:p-5 rounded-3xl bg-slate-900 text-slate-100 font-mono text-xs flex flex-col gap-2.5">
+                            <div class="flex items-center justify-between text-indigo-400">
+                                <span>/* Edit border, radius, dan shadow: */</span>
+                                <span class="text-emerald-400 font-bold">Live CSS</span>
+                            </div>
+                            <textarea id="s12CssInput" spellcheck="false" oninput="updateS12Css(this.value)" class="w-full flex-1 min-h-[210px] bg-slate-950 text-emerald-300 font-mono text-xs p-3.5 rounded-2xl border border-slate-800 focus:outline-none focus:border-indigo-500 resize-y leading-relaxed">${escapeHtml(s12LiveCss)}</textarea>
+                        </div>
+
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-3">
+                            <div class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Pratinjau Kartu Katalog UMKM:</div>
+
+                            <div id="s12PreviewCanvas" class="css-preview-canvas p-6 rounded-2xl border border-slate-200 flex-1 flex flex-col justify-center">
+                                <article class="kartu-katalog">
+                                    <h3 style="color: #1e1b4b;">Paket Hampers Kopi Nusantara</h3>
+                                    <p style="color: #475569;">Berisi 2 kemasan biji kopi pilihan (Arabika Gayo &amp; Robusta Lampung) lengkap dengan boks eksklusif.</p>
+                                    <div style="font-weight: 800; color: #4f46e5; font-size: 16px;">Rp 120.000 / Paket</div>
+                                </article>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide13() {
+            setTimeout(function() {
+                applyScopedCss('#s13PreviewCanvas', s13LiveCss);
+            }, 0);
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Kontrol Ukuran &amp; Aliran Elemen</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Properti <span class="font-mono">max-width</span> &amp; ${term('display_prop', 'display (block, inline, inline-block)')}</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Elemen tautan <code class="font-mono">&lt;a&gt;</code> secara bawaan bersifat <code class="font-mono">inline</code> sehingga bantalan atas-bawahnya tidak rapi saat dijadikan tombol. Mengubahnya menjadi <code class="font-mono font-bold">display: inline-block;</code> membuat tombol tampak utuh dan tetap bisa berjajar ke samping!
+                        </p>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="text-xs font-bold text-slate-500">Uji Nilai Properti display:</span>
+                        <button type="button" onclick="setS13Preset('inline_block_btn')" class="px-3.5 py-1.5 rounded-xl font-mono text-xs font-bold transition ${s13ActivePreset === 'inline_block_btn' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">1. display: inline-block (Tombol Berjajar)</button>
+                        <button type="button" onclick="setS13Preset('block_full')" class="px-3.5 py-1.5 rounded-xl font-mono text-xs font-bold transition ${s13ActivePreset === 'block_full' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">2. display: block (Penuh ke Bawah)</button>
+                        <button type="button" onclick="setS13Preset('inline_raw')" class="px-3.5 py-1.5 rounded-xl font-mono text-xs font-bold transition ${s13ActivePreset === 'inline_raw' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">3. display: inline (Bawaan &lt;a&gt;)</button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <div class="lg:col-span-6 p-4 sm:p-5 rounded-3xl bg-slate-900 text-slate-100 font-mono text-xs flex flex-col gap-2.5">
+                            <div class="flex items-center justify-between text-indigo-400">
+                                <span>/* Edit properti display dan max-width: */</span>
+                                <span class="text-emerald-400 font-bold">Live CSS</span>
+                            </div>
+                            <textarea id="s13CssInput" spellcheck="false" oninput="updateS13Css(this.value)" class="w-full flex-1 min-h-[210px] bg-slate-950 text-emerald-300 font-mono text-xs p-3.5 rounded-2xl border border-slate-800 focus:outline-none focus:border-indigo-500 resize-y leading-relaxed">${escapeHtml(s13LiveCss)}</textarea>
+                        </div>
+
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-3">
+                            <div class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Hasil Render Wadah &amp; Tombol Tautan:</div>
+
+                            <div id="s13PreviewCanvas" class="css-preview-canvas p-5 rounded-2xl border border-slate-200 flex-1 flex flex-col justify-center">
+                                <div class="wadah-aksi">
+                                    <h3>Hubungi &amp; Pesan Produk Kami</h3>
+                                    <p>Pilih saluran pemesanan resmi UMKM di bawah ini:</p>
+                                    <a href="#wa" onclick="return false;" class="tombol-menu">Pesan via WhatsApp</a>
+                                    <a href="#katalog" onclick="return false;" class="tombol-menu">Unduh Daftar Harga</a>
+                                </div>
+                            </div>
+
+                            <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-300">
+                                Kombinasi <code class="font-mono font-bold">max-width: 900px;</code> dan <code class="font-mono font-bold">margin: 0 auto;</code> adalah rumus standar untuk menengahkan wadah utama halaman di layar laptop.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide14() {
+            setTimeout(function() {
+                applyScopedCss('#s14PreviewCanvas', s14LiveCss);
+            }, 0);
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Menghias Tabel, Form &amp; Tombol</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Tabel <span class="font-mono">border-collapse</span>, Input Form &amp; Efek ${term('pseudo_hover', ':hover')}</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Pada Pertemuan 2, tabel HTML memiliki garis ganda yang kaku dan tombol belum merespons kursor. Gunakan <code class="font-mono font-bold">border-collapse: collapse;</code> untuk tabel dan <code class="font-mono font-bold">:hover</code> untuk efek sentuh interaktif.
+                        </p>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="text-xs font-bold text-slate-500">Fokus Kode CSS:</span>
+                        <button type="button" onclick="setS14Preset('table_style')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${s14ActivePreset === 'table_style' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">1. Tabel Harga + Hover Baris</button>
+                        <button type="button" onclick="setS14Preset('button_hover')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${s14ActivePreset === 'button_hover' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">2. Tombol Pesan (:hover)</button>
+                        <button type="button" onclick="setS14Preset('input_focus')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${s14ActivePreset === 'input_focus' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">3. Input Form (:focus)</button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <div class="lg:col-span-6 p-4 sm:p-5 rounded-3xl bg-slate-900 text-slate-100 font-mono text-xs flex flex-col gap-2.5">
+                            <div class="flex items-center justify-between text-indigo-400">
+                                <span>/* Edit CSS Tabel, Input &amp; Tombol: */</span>
+                                <span class="text-emerald-400 font-bold">Live CSS</span>
+                            </div>
+                            <textarea id="s14CssInput" spellcheck="false" oninput="updateS14Css(this.value)" class="w-full flex-1 min-h-[220px] bg-slate-950 text-emerald-300 font-mono text-xs p-3.5 rounded-2xl border border-slate-800 focus:outline-none focus:border-indigo-500 resize-y leading-relaxed">${escapeHtml(s14LiveCss)}</textarea>
+                        </div>
+
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-3">
+                            <div class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Uji Arahkan Kursor ke Tabel &amp; Tombol di Bawah Ini:</div>
+
+                            <div id="s14PreviewCanvas" class="css-preview-canvas p-4 rounded-2xl border border-slate-200 flex-1 flex flex-col justify-center">
+                                <table class="tabel-umkm">
+                                    <thead>
+                                        <tr>
+                                            <th>Kode</th>
+                                            <th>Menu UMKM</th>
+                                            <th>Harga</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>KP-01</td>
+                                            <td>Kopi Susu Gula Aren</td>
+                                            <td>Rp 18.000</td>
+                                        </tr>
+                                        <tr>
+                                            <td>KP-02</td>
+                                            <td>Arabika Gayo 250g</td>
+                                            <td>Rp 65.000</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                <input type="text" class="input-umkm" placeholder="Klik di sini untuk uji efek :focus pada input nama...">
+                                <div>
+                                    <button type="button" class="btn-pesan">Arahkan Kursor ke Tombol Ini (:hover)</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide15() {
+            const task = S15_TASKS[s15Step];
+            const currentCode = s15UserCodes[s15Step];
+
+            let combinedCss = '';
+            for (let i = 0; i <= s15Step; i++) {
+                combinedCss += '\n' + s15UserCodes[i];
+            }
+
+            setTimeout(function() {
+                applyScopedCss('#s15PreviewCanvas', combinedCss);
+            }, 0);
+
+            let passedCount = 0;
+            const checkListHtml = task.checks.map(function(chk, idx) {
+                const passed = chk.regex.test(currentCode);
+                if (passed) passedCount++;
+                return `
+                    <li id="s15CheckItem_${idx}" class="flex items-start gap-2 text-xs p-2 rounded-xl border transition ${passed ? 'bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 font-bold' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400'}">
+                        <i id="s15CheckIcon_${idx}" class="fa-solid ${passed ? 'fa-circle-check text-emerald-600' : 'fa-circle-dot text-slate-300'} mt-0.5 shrink-0"></i>
+                        <span>${escapeHtml(chk.label)}</span>
+                    </li>
+                `;
+            }).join('');
+
+            const stepButtonsHtml = S15_TASKS.map(function(t, idx) {
+                const isAct = idx === s15Step;
+                return `
+                    <button type="button" onclick="setS15Step(${idx})" class="px-3 py-1.5 rounded-xl text-xs font-bold transition shrink-0 ${isAct ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'}">
+                        Tahap ${idx + 1}
+                    </button>
+                `;
+            }).join('');
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Workshop Praktik Terpadu di Kelas</span>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Latihan Runtut 5 Tahap: Menghias Halaman UMKM</h2>
+                        </div>
+                        <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+                            ${stepButtonsHtml}
+                        </div>
+                    </div>
+
+                    <!-- Box Instruksi Soal & Checklist Kriteria -->
+                    <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-3">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div>
+                                <h3 class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white">${escapeHtml(task.stepTitle)}</h3>
+                                <p class="text-xs text-slate-600 dark:text-slate-300 mt-0.5">${escapeHtml(task.scenario)}</p>
+                            </div>
+                            <span id="s15ScoreBadge" class="self-start sm:self-center px-3 py-1 rounded-full text-xs font-extrabold shrink-0 ${passedCount === task.checks.length ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300'}">
+                                Skor Tahap ${s15Step + 1}: ${passedCount} / ${task.checks.length} Benar
+                            </span>
+                        </div>
+
+                        <ul class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                            ${checkListHtml}
+                        </ul>
+                    </div>
+
+                    <!-- Editor Kode & Pratinjau Halaman -->
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch my-auto">
+                        <div class="lg:col-span-6 p-4 rounded-3xl bg-slate-900 text-slate-100 font-mono text-xs flex flex-col gap-2.5">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <span class="text-indigo-400 font-bold">/* Ketik Jawaban CSS Tahap ${s15Step + 1}: */</span>
+                                <div class="flex items-center gap-1.5">
+                                    <button type="button" onclick="checkS15Code()" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-sans font-bold text-[11px]">Periksa Kode</button>
+                                    <button type="button" onclick="fillS15Solution()" class="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-sans font-bold text-[11px]">Kunci Jawaban</button>
+                                    <button type="button" onclick="clearS15Editor()" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-sans font-bold text-[11px]">Reset</button>
+                                </div>
+                            </div>
+
+                            <textarea id="s15CodeInput" spellcheck="false" oninput="updateS15Code(this.value)" class="w-full flex-1 min-h-[190px] bg-slate-950 text-emerald-300 font-mono text-xs p-3.5 rounded-2xl border border-slate-800 focus:outline-none focus:border-indigo-500 resize-y leading-relaxed">${escapeHtml(currentCode)}</textarea>
+
+                            ${s15CheckFeedback ? `
+                                <div class="p-2.5 rounded-xl font-sans text-xs font-bold ${s15CheckFeedback.ok ? 'bg-emerald-950/90 text-emerald-300 border border-emerald-700' : 'bg-amber-950/90 text-amber-300 border border-amber-700'}">
+                                    ${escapeHtml(s15CheckFeedback.msg)}
+                                </div>
+                            ` : ''}
+                        </div>
+
+                        <div class="lg:col-span-6 p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-2">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Pratinjau Gabungan Halaman UMKM:</span>
+                                <span class="text-[11px] font-mono text-slate-400">index.html + style.css</span>
+                            </div>
+
+                            <div id="s15PreviewCanvas" class="css-preview-canvas p-4 rounded-2xl border border-slate-200 flex-1 max-h-[260px] overflow-y-auto">
+                                <header class="header-toko">
+                                    <h1>Kedai Roti &amp; Kopi Klasik</h1>
+                                    <p style="margin-bottom:0;">Hangat dari oven setiap pagi sejak 2019</p>
+                                </header>
+                                <nav class="nav-toko">
+                                    <a href="#katalog" onclick="return false;">Katalog</a>
+                                    <a href="#harga" onclick="return false;">Daftar Harga</a>
+                                    <a href="#pesan" onclick="return false;">Form Pesan</a>
+                                </nav>
+                                <article class="kartu-produk">
+                                    <h3>Roti Sourdough Gandum</h3>
+                                    <p>Difermentasi alami selama 24 jam dengan tekstur renyah di luar dan lembut di dalam.</p>
+                                    <div class="harga-produk">Rp 42.000</div>
+                                </article>
+                                <table class="tabel-harga">
+                                    <thead>
+                                        <tr><th>Kode</th><th>Nama Menu</th><th>Harga</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr><td>RT-01</td><td>Roti Sourdough</td><td>Rp 42.000</td></tr>
+                                        <tr><td>KP-02</td><td>Es Kopi Klasik</td><td>Rp 18.000</td></tr>
+                                    </tbody>
+                                </table>
+                                <form onsubmit="return false;">
+                                    <input type="text" class="input-pesan" placeholder="Masukkan nama pemesan...">
+                                    <button type="button" class="btn-kirim">Kirim Pesanan</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide16() {
+            const generatedCss = `/* =====================================================
+   FILE: css/style.css
+   Proyek Halaman Profil & Katalog UMKM: ${s16UmkmName}
+   Pertemuan 3 - CSS Dasar & Box Model
+   ===================================================== */
+
+/* 1. Reset Dasar & Tipografi Halaman */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', Arial, sans-serif;
+  background-color: #f8fafc;
+  color: #0f172a;
+  line-height: 1.6;
+  margin: 0;
+  padding: 20px;
+}
+
+/* Wadah Utama agar Rapi di Tengah Layar */
+main, header, nav, footer {
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* 2. Gaya Header & Identitas UMKM */
+header {
+  background-color: ${s16ThemeColor};
+  color: #ffffff;
+  text-align: center;
+  padding: 28px 20px;
+  border-radius: 16px;
+  margin-bottom: 14px;
+}
+
+/* 3. Gaya Navigasi Tanpa Garis Bawah */
+nav {
+  background-color: #ffffff;
+  text-align: center;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+nav a {
+  text-decoration: none;
+  color: ${s16ThemeColor};
+  font-weight: 700;
+  margin: 0 12px;
+}
+
+nav a:hover {
+  text-decoration: underline;
+}
+
+/* 4. Box Model Seksi & Kartu Produk UMKM */
+section {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+}
+
+.kartu-produk {
+  background-color: ${s16AccentColor};
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 14px;
+}
+
+/* 5. Tabel Daftar Harga Katalog */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+th {
+  background-color: ${s16ThemeColor};
+  color: #ffffff;
+  text-align: left;
+  padding: 12px;
+}
+
+td {
+  border-bottom: 1px solid #e2e8f0;
+  padding: 10px 12px;
+}
+
+/* 6. Formulir Pemesanan & Efek :hover Tombol */
+input[type="text"],
+input[type="number"],
+input[type="date"],
+select,
+textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  margin-top: 4px;
+  margin-bottom: 12px;
+}
+
+button[type="submit"] {
+  background-color: ${s16ThemeColor};
+  color: #ffffff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+button[type="submit"]:hover {
+  opacity: 0.9;
+}
+
+footer {
+  text-align: center;
+  color: #64748b;
+  font-size: 14px;
+  padding: 16px;
+}`;
+
+            let tabContent = '';
+            if (s16ActiveTab === 'rubrik') {
+                const specs = [
+                    { id: 1, weight: "15%", title: "1. Integrasi External CSS (<link>)", desc: "Membuat file terpisah di dalam folder css/style.css dan menghubungkannya ke dalam <head> file index.html hasil Pertemuan 2." },
+                    { id: 2, weight: "15%", title: "2. Palet Warna Identitas & Kontras", desc: "Menerapkan skema warna yang selaras dengan jenis UMKM (HEX/RGB) pada <header>, <nav>, dan latar halaman dengan kontras teks yang jelas." },
+                    { id: 3, weight: "15%", title: "3. Tipografi & Tautan Navigasi", desc: "Mengatur font-family, ukuran heading, line-height paragraf, serta menghapus garis bawah menu <nav> menggunakan text-decoration: none." },
+                    { id: 4, weight: "25%", title: "4. Penerapan CSS Box Model & Kartu Produk", desc: "Menggunakan class (misal: .kartu-produk) yang menerapkan padding, border, border-radius, margin-bottom, box-shadow, dan box-sizing: border-box." },
+                    { id: 5, weight: "15%", title: "5. Styling Tabel Harga Katalog", desc: "Menghilangkan garis ganda tabel dengan border-collapse: collapse, memberi warna header <th>, padding sel <td>, dan efek tr:hover." },
+                    { id: 6, weight: "15%", title: "6. Styling Formulir & Tombol Interaktif (:hover)", desc: "Merapikan kotak input/select/textarea agar seragam serta menambahkan perubahan warna pada tombol kirim saat disentuh kursor (:hover)." }
+                ];
+
+                const cards = specs.map(function(sp) {
+                    const checked = s16CheckItems[sp.id];
+                    return `
+                        <div onclick="toggleS16Check(${sp.id})" class="cursor-pointer p-4 rounded-2xl border transition flex items-start gap-3 ${checked ? 'bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-400' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-indigo-300'}">
+                            <div class="w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 mt-0.5 ${checked ? 'bg-emerald-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}">
+                                <i class="fa-solid fa-check"></i>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center justify-between gap-2">
+                                    <h4 class="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">${escapeHtml(sp.title)}</h4>
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 shrink-0">Bobot ${sp.weight}</span>
+                                </div>
+                                <p class="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">${escapeHtml(sp.desc)}</p>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                tabContent = `
+                    <div class="space-y-4">
+                        <div class="p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200/80 dark:border-indigo-800/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div>
+                                <div class="text-xs font-extrabold uppercase tracking-wider text-indigo-700 dark:text-indigo-300">Instruksi Utama Tugas Rumah Pertemuan 3</div>
+                                <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-200 mt-0.5">
+                                    Lanjutkan proyek <strong>Halaman Profil &amp; Katalog UMKM</strong> yang telah Anda buat pada Pertemuan 2. Tambahkan file <code class="font-mono font-bold">css/style.css</code> dan terapkan 6 komponen penilaian di bawah ini (klik kartu untuk menandai progres Anda):
+                                </p>
+                            </div>
+                            <button type="button" onclick="copyS16AssignmentText()" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shrink-0">
+                                <i class="fa-regular fa-copy mr-1.5"></i>Salin Rincian Tugas
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            ${cards}
+                        </div>
+                    </div>
+                `;
+            } else if (s16ActiveTab === 'arsitektur') {
+                tabContent = `
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+                        <div class="lg:col-span-5 p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3">
+                            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">1. Susunan Folder Proyek Wajib</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Cara Menyimpan File CSS</h3>
+                            <div class="p-4 rounded-xl bg-slate-900 text-slate-100 font-mono text-xs space-y-1.5">
+                                <div class="text-amber-300 font-bold"><i class="fa-solid fa-folder-open mr-1.5"></i>proyek-umkm/</div>
+                                <div class="pl-5 text-emerald-300"><i class="fa-brands fa-html5 mr-1.5"></i>index.html <span class="text-slate-400">(File dari Pert. 2)</span></div>
+                                <div class="pl-5 text-amber-300 font-bold"><i class="fa-solid fa-folder-open mr-1.5"></i>css/</div>
+                                <div class="pl-10 text-sky-300 font-bold"><i class="fa-brands fa-css3-alt mr-1.5"></i>style.css <span class="text-emerald-400">&lt;-- Buat file ini</span></div>
+                                <div class="pl-5 text-amber-300 font-bold"><i class="fa-solid fa-folder mr-1.5"></i>img/</div>
+                                <div class="pl-10 text-slate-300"><i class="fa-regular fa-image mr-1.5"></i>produk-1.jpg</div>
+                            </div>
+                            <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs text-slate-600 dark:text-slate-300">
+                                <strong>Baris Penghubung di dalam <code class="font-mono">&lt;head&gt;</code> file <code class="font-mono">index.html</code>:</strong>
+                                <div class="mt-1.5 p-2 rounded bg-slate-900 text-emerald-300 font-mono text-[11px]">&lt;link rel="stylesheet" href="css/style.css"&gt;</div>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-7 p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3">
+                            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">2. Peta Target Visual Halaman UMKM</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Daftar Selektor yang Perlu Anda Buat</h3>
+                            <div class="space-y-2 text-xs">
+                                <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-2">
+                                    <span class="font-mono font-bold text-indigo-600 dark:text-indigo-400">header { ... }</span>
+                                    <span class="text-slate-600 dark:text-slate-300">Warna latar brand UMKM, teks putih rata tengah, padding 24px, border-radius.</span>
+                                </div>
+                                <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-2">
+                                    <span class="font-mono font-bold text-indigo-600 dark:text-indigo-400">nav &amp; nav a { ... }</span>
+                                    <span class="text-slate-600 dark:text-slate-300">Menghapus garis bawah link (text-decoration: none), jarak antar menu, efek :hover.</span>
+                                </div>
+                                <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-2">
+                                    <span class="font-mono font-bold text-indigo-600 dark:text-indigo-400">.kartu-produk { ... }</span>
+                                    <span class="text-slate-600 dark:text-slate-300">Tambahkan class="kartu-produk" pada tag &lt;article&gt; produk di HTML, lalu beri Box Model.</span>
+                                </div>
+                                <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-2">
+                                    <span class="font-mono font-bold text-indigo-600 dark:text-indigo-400">table, th, td { ... }</span>
+                                    <span class="text-slate-600 dark:text-slate-300">Gunakan border-collapse: collapse, beri warna latar pada &lt;th&gt; dan padding pada &lt;td&gt;.</span>
+                                </div>
+                                <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-2">
+                                    <span class="font-mono font-bold text-indigo-600 dark:text-indigo-400">input, select, button { ... }</span>
+                                    <span class="text-slate-600 dark:text-slate-300">Lebar penuh (width: 100%; box-sizing: border-box), padding nyaman, dan tombol :hover.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                tabContent = `
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+                        <div class="lg:col-span-5 p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4">
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Sesuaikan Template Awal <span class="font-mono">style.css</span></h3>
+                            <div>
+                                <label class="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1">Nama UMKM Temuan Anda:</label>
+                                <input type="text" value="${escapeHtml(s16UmkmName)}" oninput="s16UmkmName = this.value; renderCurrentSlide();" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold">
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1.5">Pilih Warna Tema Utama UMKM:</label>
+                                <div class="grid grid-cols-3 gap-2">
+                                    <button type="button" onclick="setS16Palette('#4f46e5', '#eef2ff')" class="p-2 rounded-xl border text-xs font-bold ${s16ThemeColor === '#4f46e5' ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-slate-200 dark:border-slate-700'}">Biru Indigo</button>
+                                    <button type="button" onclick="setS16Palette('#78350f', '#fef3c7')" class="p-2 rounded-xl border text-xs font-bold ${s16ThemeColor === '#78350f' ? 'border-amber-700 bg-amber-50 text-amber-900' : 'border-slate-200 dark:border-slate-700'}">Cokelat Kopi</button>
+                                    <button type="button" onclick="setS16Palette('#047857', '#ecfdf5')" class="p-2 rounded-xl border text-xs font-bold ${s16ThemeColor === '#047857' ? 'border-emerald-600 bg-emerald-50 text-emerald-800' : 'border-slate-200 dark:border-slate-700'}">Hijau Segar</button>
+                                </div>
+                            </div>
+                            <button type="button" onclick="copyS16StarterCss()" class="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold transition">
+                                <i class="fa-regular fa-copy mr-1.5"></i>Salin Kode Awal css/style.css
+                            </button>
+                            ${s16CopyNotice ? `<div class="text-xs font-bold text-emerald-600 dark:text-emerald-400">${escapeHtml(s16CopyNotice)}</div>` : ''}
+                        </div>
+
+                        <div class="lg:col-span-7 p-4 rounded-2xl bg-slate-900 text-slate-100 font-mono text-xs flex flex-col">
+                            <div class="text-indigo-400 font-bold mb-2">/* Pratinjau Kode Awal: css/style.css */</div>
+                            <pre class="text-emerald-300 overflow-y-auto max-h-[270px] whitespace-pre-wrap leading-relaxed">${escapeHtml(generatedCss)}</pre>
+                        </div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Penugasan Mandiri Mahasiswa</span>
+                            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Tugas Rumah: Mempercantik Website UMKM dengan CSS</h2>
+                        </div>
+                        <div class="flex gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl self-start shrink-0">
+                            <button type="button" onclick="setS16Tab('rubrik')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${s16ActiveTab === 'rubrik' ? 'bg-indigo-600 text-white' : 'text-slate-600 dark:text-slate-300'}">1. Soal &amp; 6 Kriteria</button>
+                            <button type="button" onclick="setS16Tab('arsitektur')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${s16ActiveTab === 'arsitektur' ? 'bg-indigo-600 text-white' : 'text-slate-600 dark:text-slate-300'}">2. Panduan Folder &amp; Selektor</button>
+                            <button type="button" onclick="setS16Tab('generator')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${s16ActiveTab === 'generator' ? 'bg-indigo-600 text-white' : 'text-slate-600 dark:text-slate-300'}">3. Template style.css</button>
+                        </div>
+                    </div>
+
+                    <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 my-auto">
+                        ${tabContent}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide17() {
+            const questions = [
+                {
+                    id: 1,
+                    title: "1. Mengapa External CSS jauh lebih unggul daripada Inline CSS?",
+                    question: "Jika sebuah katalog UMKM memiliki 20 kartu produk, apa masalah yang muncul jika kita menulis warna dan padding menggunakan atribut style='...' di setiap tag HTML dibandingkan menggunakan 1 class di file style.css?",
+                    answer: "Dengan External CSS dan selektor .kartu-produk, kita cukup menulis aturan desain 1 kali di file style.css. Jika pemilik UMKM ingin mengganti warna bingkai seluruh produk, kita cukup mengubah 1 baris di style.css tanpa harus mengedit 20 elemen HTML satu per satu."
+                },
+                {
+                    id: 2,
+                    title: "2. Bagaimana membedakan fungsi Padding dan Margin saat mendesain kartu?",
+                    question: "Ketika melihat teks judul dan harga di dalam kartu produk terlihat menempel rapat ke garis bingkai (border) kartu, properti manakah yang harus ditambah: padding atau margin?",
+                    answer: "Kita harus menambah PADDING, karena padding mengatur jarak bantalan di bagian dalam antara isi teks dan garis border. Sedangkan MARGIN digunakan untuk memberi jarak dorong di bagian luar agar satu kartu tidak menempel dengan kartu lainnya."
+                },
+                {
+                    id: 3,
+                    title: "3. Persiapan Menuju Pertemuan 4 (CSS Lanjutan: Layout Responsif)",
+                    question: "Setelah seluruh kartu produk UMKM memiliki warna, font, dan Box Model yang rapi, mengapa kartu-kartu tersebut masih berderet satu kolom ke bawah?",
+                    answer: "Karena elemen seperti <article> dan <div> bersifat block-level yang secara bawaan selalu turun ke baris baru. Minggu depan pada Pertemuan 4, kita akan mempelajari Flexbox dan CSS Grid untuk menyusun kartu-kartu produk tersebut menjadi katalog multi-kolom yang responsif di layar HP maupun laptop!"
+                }
+            ];
+
+            const cardsHtml = questions.map(function(q) {
+                const isOpen = s17OpenKeys[q.id];
+                return `
+                    <div class="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-3">
+                        <div class="space-y-1.5">
+                            <div class="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">${escapeHtml(q.title)}</div>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">${escapeHtml(q.question)}</p>
+                        </div>
+                        <div class="pt-2 border-t border-slate-200/70 dark:border-slate-700/70">
+                            <button type="button" onclick="toggleS17Reflection(${q.id})" class="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1.5">
+                                <i class="fa-regular ${isOpen ? 'fa-eye-slash' : 'fa-lightbulb'}"></i>
+                                <span>${isOpen ? 'Sembunyikan Kunci Konsep' : 'Lihat Kunci Konsep'}</span>
+                            </button>
+                            ${isOpen ? `<div class="mt-2.5 p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">${escapeHtml(q.answer)}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Penutup Pertemuan 3</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Kesimpulan Inti &amp; Refleksi Pemahaman CSS Dasar</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Ringkasan prinsip desain visual CSS3 sebelum kita melangkah ke penyusunan tata letak responsif (Flexbox &amp; Grid) pada pertemuan berikutnya.
+                        </p>
+                    </div>
+
+                    <div class="p-4 sm:p-5 rounded-3xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-800/60">
+                        <div class="text-xs font-extrabold uppercase tracking-wider text-indigo-700 dark:text-indigo-300 mb-3">
+                            <i class="fa-solid fa-bookmark mr-1.5"></i>3 Kesimpulan Utama Pertemuan 3
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-indigo-100 dark:border-slate-800">
+                                <div class="text-xs font-extrabold text-slate-900 dark:text-white">1. Selektor &amp; External CSS</div>
+                                <p class="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
+                                    Pisahkan kode desain di dalam <code class="font-mono">css/style.css</code> dan targetkan elemen secara rapi menggunakan selektor Tag, <code class="font-mono">.class</code>, serta <code class="font-mono">#id</code>.
+                                </p>
+                            </div>
+                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-indigo-100 dark:border-slate-800">
+                                <div class="text-xs font-extrabold text-slate-900 dark:text-white">2. Harmoni Warna &amp; Tipografi</div>
+                                <p class="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
+                                    Gunakan kontras warna yang jelas antara latar dan teks, pilih <code class="font-mono">font-family</code> yang bersih, dan atur <code class="font-mono">line-height</code> agar deskripsi produk nyaman dibaca.
+                                </p>
+                            </div>
+                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-indigo-100 dark:border-slate-800">
+                                <div class="text-xs font-extrabold text-slate-900 dark:text-white">3. Penguasaan Box Model</div>
+                                <p class="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
+                                    Setiap komponen web tersusun atas Content, <code class="font-mono">padding</code> (ruang dalam), <code class="font-mono">border</code> (bingkai), dan <code class="font-mono">margin</code> (jarak luar) dengan pengaman <code class="font-mono">box-sizing: border-box</code>.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2 my-auto">
+                        <div class="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                            Pertanyaan Refleksi Diri &amp; Diskusi Kelas
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            ${cardsHtml}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // =========================================================================
+        // DAFTAR SLIDE & MESIN NAVIGASI UTAMA
+        // =========================================================================
+        const SLIDES = [
+            { id: 1, category: "Orientasi", title: "Orientasi Pertemuan 3: Menghidupkan HTML dengan CSS Dasar", render: renderSlide1 },
+            { id: 2, category: "Sintaks CSS", title: "Anatomi Sintaks CSS: Selector, Property, Value & Titik Koma", render: renderSlide2 },
+            { id: 3, category: "Arsitektur File", title: "3 Cara Menghubungkan CSS: External, Internal & Inline", render: renderSlide3 },
+            { id: 4, category: "Selektor CSS", title: "CSS Selectors Dasar: Elemen Tag, .class, dan #id", render: renderSlide4 },
+            { id: 5, category: "Prioritas Gaya", title: "CSS Specificity & Cascading: Aturan Mana yang Menang?", render: renderSlide5 },
+            { id: 6, category: "Warna & Kontras", title: "Sistem Warna CSS (HEX, RGB/RGBA) & Kontras Keterbacaan", render: renderSlide6 },
+            { id: 7, category: "Latar & Banner", title: "CSS Backgrounds & Gradasi Warna (linear-gradient)", render: renderSlide7 },
+            { id: 8, category: "Tipografi", title: "Tipografi & CSS Fonts (font-family, font-size, line-height)", render: renderSlide8 },
+            { id: 9, category: "Format Teks", title: "Pengaturan Teks: text-align, text-decoration & text-transform", render: renderSlide9 },
+            { id: 10, category: "Box Model", title: "Konsep Inti CSS Box Model & box-sizing: border-box", render: renderSlide10 },
+            { id: 11, category: "Box Model", title: "Eksperimen Padding (Ruang Dalam) vs Margin (Jarak Luar)", render: renderSlide11 },
+            { id: 12, category: "Estetika Kartu", title: "Garis Tepi (border), Sudut (border-radius) & Bayangan (box-shadow)", render: renderSlide12 },
+            { id: 13, category: "Dimensi & Aliran", title: "Properti max-width & display (block, inline, inline-block)", render: renderSlide13 },
+            { id: 14, category: "Komponen Katalog", title: "Menghias Tabel (border-collapse), Input Form & Efek :hover", render: renderSlide14 },
+            { id: 15, category: "Workshop Kelas", title: "Latihan Praktik Terpadu 5 Tahap: Menghias Katalog UMKM", render: renderSlide15 },
+            { id: 16, category: "Tugas Mandiri", title: "Tugas Rumah: Mendesain style.css untuk Website UMKM Temuan", render: renderSlide16 },
+            { id: 17, category: "Refleksi", title: "Kesimpulan Inti & Refleksi Pemahaman Pertemuan 3", render: renderSlide17 }
+        ];
+
+        function renderCurrentSlide() {
+            const slide = SLIDES[currentSlideIndex];
+            const viewport = document.getElementById('slideViewport');
+            viewport.innerHTML = slide.render();
+
+            const pct = Math.round(((currentSlideIndex + 1) / TOTAL_SLIDES) * 100);
+            document.getElementById('topProgressBar').style.width = pct + '%';
+            document.getElementById('slideCounterBadge').textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES;
+            document.getElementById('mobileFooterCounter').textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES;
+            document.getElementById('slideCategoryPill').textContent = slide.category;
+            document.getElementById('headerSlideTitle').textContent = slide.title;
+
+            const prevBtn = document.getElementById('prevSlideBtn');
+            const nextBtn = document.getElementById('nextSlideBtn');
+            const nextBtnText = document.getElementById('nextBtnText');
+
+            prevBtn.disabled = currentSlideIndex === 0;
+            if (currentSlideIndex === TOTAL_SLIDES - 1) {
+                nextBtnText.textContent = "Selesai";
+                nextBtn.disabled = true;
+            } else {
+                nextBtnText.textContent = "Selanjutnya";
+                nextBtn.disabled = false;
+            }
+
+            renderDotsAndDrawer();
+        }
+
+        function renderDotsAndDrawer() {
+            const dotsContainer = document.getElementById('slideDotsContainer');
+            let dotsHtml = '';
+            let drawerHtml = '';
+
+            for (let idx = 0; idx < SLIDES.length; idx++) {
+                const s = SLIDES[idx];
+                const isActive = idx === currentSlideIndex;
+                const dotClass = isActive
+                    ? 'w-7 bg-indigo-600 dark:bg-indigo-400'
+                    : 'w-2 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400';
+
+                dotsHtml += `<button type="button" onclick="goToSlide(${idx})" title="${escapeHtml(s.title)}" class="h-2 rounded-full transition-all ${dotClass}"></button>`;
+
+                const itemClass = isActive
+                    ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 font-bold'
+                    : 'hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-300';
+                const badgeClass = isActive
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500';
+
+                drawerHtml += `
+                    <button type="button" onclick="selectSlideFromDrawer(${idx})" class="w-full text-left p-3 rounded-xl transition flex items-start gap-3 ${itemClass}">
+                        <span class="w-6 h-6 rounded-lg text-xs font-extrabold flex items-center justify-center shrink-0 ${badgeClass}">${s.id}</span>
+                        <div class="min-w-0">
+                            <div class="text-[10px] uppercase tracking-wider opacity-75">${escapeHtml(s.category)}</div>
+                            <div class="text-xs sm:text-sm truncate">${escapeHtml(s.title)}</div>
+                        </div>
+                    </button>
+                `;
+            }
+
+            dotsContainer.innerHTML = dotsHtml;
+            document.getElementById('drawerSlideList').innerHTML = drawerHtml;
+        }
+
+        function selectSlideFromDrawer(index) {
+            goToSlide(index);
+            toggleSlideDrawer();
+        }
+
+        function changeSlide(direction) {
+            const nextIdx = currentSlideIndex + direction;
+            if (nextIdx >= 0 && nextIdx < TOTAL_SLIDES) {
+                currentSlideIndex = nextIdx;
+                renderCurrentSlide();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function goToSlide(index) {
+            if (index >= 0 && index < TOTAL_SLIDES) {
+                currentSlideIndex = index;
+                renderCurrentSlide();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function toggleSlideDrawer() {
+            const drawer = document.getElementById('slideDrawer');
+            const backdrop = document.getElementById('slideDrawerBackdrop');
+            const isClosed = drawer.classList.contains('-translate-x-full');
+
+            if (isClosed) {
+                backdrop.classList.remove('hidden');
+                setTimeout(function () {
+                    backdrop.classList.remove('opacity-0');
+                }, 10);
+                drawer.classList.remove('-translate-x-full');
+            } else {
+                backdrop.classList.add('opacity-0');
+                drawer.classList.add('-translate-x-full');
+                setTimeout(function () {
+                    backdrop.classList.add('hidden');
+                }, 200);
+            }
+        }
+
+        // =========================================================================
+        // EVENT HANDLERS SLIDE 1 S/D 17
+        // =========================================================================
+
+        // Slide 1
+        function toggleS1Css() {
+            s1CssEnabled = !s1CssEnabled;
+            renderCurrentSlide();
+        }
+
+        // Slide 2
+        function setS2Part(part) {
+            s2SelectedPart = part;
+            renderCurrentSlide();
+        }
+        function toggleS2Semicolon() {
+            s2MissingSemicolon = !s2MissingSemicolon;
+            renderCurrentSlide();
+        }
+
+        // Slide 3
+        function setS3Method(m) {
+            s3Method = m;
+            renderCurrentSlide();
+        }
+
+        // Slide 4
+        function setS4Preset(key) {
+            s4ActivePreset = key;
+            s4LiveCss = S4_PRESETS[key];
+            renderCurrentSlide();
+        }
+        function updateS4Css(val) {
+            s4LiveCss = val;
+            applyScopedCss('#s4PreviewCanvas', val);
+        }
+
+        // Slide 5
+        function setS5Preset(key) {
+            s5ActivePreset = key;
+            s5LiveCss = S5_PRESETS[key];
+            renderCurrentSlide();
+        }
+        function updateS5Css(val) {
+            s5LiveCss = val;
+            applyScopedCss('#s5PreviewCanvas', val);
+        }
+
+        // Slide 6
+        function setS6Preset(key) {
+            s6ActivePreset = key;
+            s6LiveCss = S6_PRESETS[key];
+            renderCurrentSlide();
+        }
+        function updateS6Css(val) {
+            s6LiveCss = val;
+            applyScopedCss('#s6PreviewCanvas', val);
+        }
+
+        // Slide 7
+        function setS7Preset(key) {
+            s7ActivePreset = key;
+            s7LiveCss = S7_PRESETS[key];
+            renderCurrentSlide();
+        }
+        function updateS7Css(val) {
+            s7LiveCss = val;
+            applyScopedCss('#s7PreviewCanvas', val);
+        }
+
+        // Slide 8
+        function setS8Preset(key) {
+            s8ActivePreset = key;
+            s8LiveCss = S8_PRESETS[key];
+            renderCurrentSlide();
+        }
+        function updateS8Css(val) {
+            s8LiveCss = val;
+            applyScopedCss('#s8PreviewCanvas', val);
+        }
+
+        // Slide 9
+        function setS9Preset(key) {
+            s9ActivePreset = key;
+            s9LiveCss = S9_PRESETS[key];
+            renderCurrentSlide();
+        }
+        function updateS9Css(val) {
+            s9LiveCss = val;
+            applyScopedCss('#s9PreviewCanvas', val);
+        }
+
+        // Slide 10
+        function setS10Layer(layer) {
+            s10ActiveLayer = layer;
+            renderCurrentSlide();
+        }
+        function updateS10Sliders(type, val) {
+            const num = parseInt(val, 10) || 0;
+            if (type === 'pad') { s10PadVal = num; s10ActiveLayer = 'padding'; }
+            if (type === 'border') { s10BorderVal = num; s10ActiveLayer = 'border'; }
+            if (type === 'margin') { s10MarginVal = num; s10ActiveLayer = 'margin'; }
+            renderCurrentSlide();
+        }
+        function toggleS10BoxSizing() {
+            s10BorderBox = !s10BorderBox;
+            s10ActiveLayer = 'boxsizing';
+            renderCurrentSlide();
+        }
+
+        // Slide 11
+        function setS11Preset(key) {
+            s11ActivePreset = key;
+            s11LiveCss = S11_PRESETS[key];
+            renderCurrentSlide();
+        }
+        function updateS11Css(val) {
+            s11LiveCss = val;
+            applyScopedCss('#s11PreviewCanvas', val);
+        }
+
+        // Slide 12
+        function setS12Preset(key) {
+            s12ActivePreset = key;
+            s12LiveCss = S12_PRESETS[key];
+            renderCurrentSlide();
+        }
+        function updateS12Css(val) {
+            s12LiveCss = val;
+            applyScopedCss('#s12PreviewCanvas', val);
+        }
+
+        // Slide 13
+        function setS13Preset(key) {
+            s13ActivePreset = key;
+            s13LiveCss = S13_PRESETS[key];
+            renderCurrentSlide();
+        }
+        function updateS13Css(val) {
+            s13LiveCss = val;
+            applyScopedCss('#s13PreviewCanvas', val);
+        }
+
+        // Slide 14
+        function setS14Preset(key) {
+            s14ActivePreset = key;
+            s14LiveCss = S14_PRESETS[key];
+            renderCurrentSlide();
+        }
+        function updateS14Css(val) {
+            s14LiveCss = val;
+            applyScopedCss('#s14PreviewCanvas', val);
+        }
+
+        // Slide 15 (Workshop 5 Tahap)
+        function setS15Step(idx) {
+            s15Step = idx;
+            s15CheckFeedback = null;
+            renderCurrentSlide();
+        }
+        function updateS15Code(val) {
+            s15UserCodes[s15Step] = val;
+            let combined = '';
+            for (let i = 0; i <= s15Step; i++) {
+                combined += '\n' + s15UserCodes[i];
+            }
+            applyScopedCss('#s15PreviewCanvas', combined);
+
+            const task = S15_TASKS[s15Step];
+            let passedCount = 0;
+            task.checks.forEach(function(chk, idx) {
+                const ok = chk.regex.test(val);
+                if (ok) passedCount++;
+                const itemEl = document.getElementById('s15CheckItem_' + idx);
+                const iconEl = document.getElementById('s15CheckIcon_' + idx);
+                if (itemEl && iconEl) {
+                    itemEl.className = 'flex items-start gap-2 text-xs p-2 rounded-xl border transition ' +
+                        (ok ? 'bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 font-bold'
+                            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400');
+                    iconEl.className = 'fa-solid ' + (ok ? 'fa-circle-check text-emerald-600' : 'fa-circle-dot text-slate-300') + ' mt-0.5 shrink-0';
+                }
+            });
+
+            const badgeEl = document.getElementById('s15ScoreBadge');
+            if (badgeEl) {
+                badgeEl.textContent = 'Skor Tahap ' + (s15Step + 1) + ': ' + passedCount + ' / ' + task.checks.length + ' Benar';
+            }
+        }
+        function checkS15Code() {
+            const task = S15_TASKS[s15Step];
+            const code = s15UserCodes[s15Step];
+            const missing = [];
+            task.checks.forEach(function(c) {
+                if (!c.regex.test(code)) missing.push(c.label);
+            });
+            if (missing.length === 0) {
+                s15CheckFeedback = {
+                    ok: true,
+                    msg: 'Luar biasa! Seluruh 5 kriteria CSS pada Tahap ' + (s15Step + 1) + ' sudah tepat. Silakan lanjut ke tahap berikutnya!'
+                };
+            } else {
+                s15CheckFeedback = {
+                    ok: false,
+                    msg: 'Masih ada ' + missing.length + ' kriteria yang belum terpenuhi, antara lain: ' + missing[0] + '.'
+                };
+            }
+            renderCurrentSlide();
+        }
+        function fillS15Solution() {
+            s15UserCodes[s15Step] = S15_TASKS[s15Step].solution;
+            s15CheckFeedback = {
+                ok: true,
+                msg: 'Kunci jawaban Tahap ' + (s15Step + 1) + ' ditampilkan. Pelajari struktur properti dan titik komanya!'
+            };
+            renderCurrentSlide();
+        }
+        function clearS15Editor() {
+            s15UserCodes[s15Step] = S15_TASKS[s15Step].starter;
+            s15CheckFeedback = null;
+            renderCurrentSlide();
+        }
+
+        // Slide 16 (Tugas Rumah Mandiri)
+        function setS16Tab(tab) {
+            s16ActiveTab = tab;
+            s16CopyNotice = '';
+            renderCurrentSlide();
+        }
+        function toggleS16Check(id) {
+            s16CheckItems[id] = !s16CheckItems[id];
+            renderCurrentSlide();
+        }
+        function setS16Palette(mainColor, accColor) {
+            s16ThemeColor = mainColor;
+            s16AccentColor = accColor;
+            renderCurrentSlide();
+        }
+        function copyTextToClipboard(text) {
+            const area = document.createElement('textarea');
+            area.value = text;
+            document.body.appendChild(area);
+            area.select();
+            document.execCommand('copy');
+            document.body.removeChild(area);
+        }
+        function copyS16AssignmentText() {
+            const txt = [
+                "TUGAS RUMAH PERTEMUAN 3 - CSS DASAR & BOX MODEL",
+                "Studi Kasus: Menghias Halaman Profil & Katalog UMKM (" + s16UmkmName + ")",
+                "",
+                "6 Komponen Penilaian Wajib pada File css/style.css:",
+                "1. Integrasi External CSS (15%): Menghubungkan css/style.css ke <head> index.html menggunakan <link rel='stylesheet'>.",
+                "2. Palet Warna & Kontras (15%): Mengatur background-color dan color yang kontras pada body, header, dan nav.",
+                "3. Tipografi & Tautan (15%): Mengatur font-family, line-height, dan menghapus garis bawah menu (text-decoration: none).",
+                "4. CSS Box Model Kartu Produk (25%): Menerapkan padding, border, border-radius, margin-bottom, box-shadow, dan box-sizing: border-box.",
+                "5. Tabel Harga Katalog (15%): Menggunakan border-collapse: collapse, pewarnaan <th>, dan padding <td>.",
+                "6. Input Form & Efek :hover (15%): Merapikan input/select/textarea dan memberi efek perubahan warna pada tombol (:hover)."
+            ].join('\n');
+            copyTextToClipboard(txt);
+            alert('Rincian soal Tugas Rumah Pertemuan 3 berhasil disalin ke papan klip!');
+        }
+        function copyS16StarterCss() {
+            const pre = document.querySelector('#slideViewport pre');
+            if (pre) {
+                copyTextToClipboard(pre.textContent);
+                s16CopyNotice = 'Kode template css/style.css berhasil disalin! Tempelkan di VS Code Anda.';
+                renderCurrentSlide();
+            }
+        }
+
+        // Slide 17
+        function toggleS17Reflection(id) {
+            s17OpenKeys[id] = !s17OpenKeys[id];
+            renderCurrentSlide();
+        }
+
+        // =========================================================================
+        // MODAL KAMUS ISTILAH & TEMA LAYAR
+        // =========================================================================
+        function showTerm(key) {
+            const item = GLOSSARY_DB[key];
+            if (!item) return;
+
+            document.getElementById('termCategoryBadge').textContent = item.category;
+            document.getElementById('termTitle').textContent = item.title;
+            document.getElementById('termMainDesc').textContent = item.main;
+            document.getElementById('termDetailDesc').textContent = item.detail;
+            document.getElementById('termSourceName').textContent = "Sumber: " + item.source;
+            document.getElementById('termSourceUrl').href = item.url;
+
+            const modal = document.getElementById('termModalBackdrop');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeTermModal() {
+            const modal = document.getElementById('termModalBackdrop');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function openGlossaryIndex() {
+            document.getElementById('glossarySearchInput').value = '';
+            renderGlossaryList('');
+            const modal = document.getElementById('glossaryModalBackdrop');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeGlossaryIndex() {
+            const modal = document.getElementById('glossaryModalBackdrop');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function selectGlossaryTerm(key) {
+            closeGlossaryIndex();
+            showTerm(key);
+        }
+
+        function renderGlossaryList(query) {
+            const q = String(query || '').trim().toLowerCase();
+            const allKeys = Object.keys(GLOSSARY_DB);
+            const matchedKeys = [];
+
+            for (let i = 0; i < allKeys.length; i++) {
+                const k = allKeys[i];
+                const item = GLOSSARY_DB[k];
+                if (
+                    item.title.toLowerCase().indexOf(q) !== -1 ||
+                    item.category.toLowerCase().indexOf(q) !== -1 ||
+                    item.main.toLowerCase().indexOf(q) !== -1
+                ) {
+                    matchedKeys.push(k);
+                }
+            }
+
+            const container = document.getElementById('glossaryListGrid');
+            if (matchedKeys.length === 0) {
+                container.innerHTML = '<div class="col-span-2 text-center py-8 text-xs text-slate-500">Istilah tidak ditemukan.</div>';
+                return;
+            }
+
+            let html = '';
+            for (let i = 0; i < matchedKeys.length; i++) {
+                const k = matchedKeys[i];
+                const item = GLOSSARY_DB[k];
+                html += `
+                    <button type="button" onclick="selectGlossaryTerm('${k}')" class="text-left p-4 rounded-2xl bg-slate-50 hover:bg-indigo-50/60 dark:bg-slate-800/50 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800 transition space-y-1">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">${escapeHtml(item.category)}</span>
+                            <span class="text-[10px] text-slate-400">${escapeHtml(item.source)}</span>
+                        </div>
+                        <div class="text-sm font-extrabold text-slate-900 dark:text-white">${escapeHtml(item.title)}</div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">${escapeHtml(item.main)}</p>
+                    </button>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function toggleTheme() {
+            const htmlEl = document.documentElement;
+            const icon = document.getElementById('themeIcon');
+            htmlEl.classList.toggle('dark');
+            const isDark = htmlEl.classList.contains('dark');
+            icon.className = isDark ? 'fa-solid fa-sun text-amber-400 text-sm' : 'fa-solid fa-moon text-sm';
+        }
+
+        document.addEventListener('keydown', function (e) {
+            const activeTag = document.activeElement && document.activeElement.tagName
+                ? document.activeElement.tagName.toLowerCase()
+                : '';
+            if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') return;
+
+            if (e.key === 'ArrowRight') changeSlide(1);
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+            if (e.key === 'Escape') {
+                closeTermModal();
+                closeGlossaryIndex();
+            }
+        });
+
+        window.onload = function () {
+            renderCurrentSlide();
+        };
+    </script>
+</body>
+</html>
