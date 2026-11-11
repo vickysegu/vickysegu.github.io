@@ -1,0 +1,2162 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>Pertemuan 2: Membangun Halaman Profil & Katalog UMKM dengan HTML5</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace']
+                    }
+                }
+            }
+        };
+    </script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            touch-action: manipulation;
+        }
+
+        /* Istilah teknis dengan warna teks bersih */
+        .tech-term {
+            color: #4f46e5;
+            font-weight: 700;
+            cursor: pointer;
+            transition: color 0.15s ease, opacity 0.15s ease;
+        }
+        .dark .tech-term {
+            color: #818cf8;
+        }
+        .tech-term:hover {
+            color: #3730a3;
+            opacity: 0.85;
+        }
+        .dark .tech-term:hover {
+            color: #a5b4fc;
+        }
+
+        .slide-enter {
+            animation: fadeSlide 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes fadeSlide {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Mode Layar Penuh (Full-Screen Workspace) */
+        .workspace-fullscreen {
+            position: fixed !important;
+            inset: 0.5rem !important;
+            z-index: 45 !important;
+            max-width: none !important;
+            margin: 0 !important;
+            min-height: calc(100vh - 1rem) !important;
+            border-radius: 1.25rem !important;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.55) !important;
+            overflow-y: auto !important;
+        }
+
+        /* Mencegah auto-zoom liar di iOS/Android saat mengetik kode */
+        textarea.code-editor-area {
+            font-size: 13px;
+            line-height: 1.55;
+            tab-size: 2;
+        }
+        @media (max-width: 640px) {
+            textarea.code-editor-area {
+                font-size: 14px;
+            }
+        }
+
+        /* Kanvas Pratinjau Browser Murni */
+        .html-preview-canvas {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: #0f172a;
+            background-color: #ffffff;
+            line-height: 1.55;
+            font-size: 0.875rem;
+        }
+        .html-preview-canvas h1 { font-size: 1.45rem; font-weight: 800; margin: 0 0 0.35rem 0; color: #0f172a; }
+        .html-preview-canvas h2 { font-size: 1.2rem; font-weight: 700; margin: 0.45rem 0 0.3rem 0; color: #1e293b; }
+        .html-preview-canvas h3 { font-size: 1.05rem; font-weight: 700; margin: 0.35rem 0 0.2rem 0; color: #1e293b; }
+        .html-preview-canvas h4 { font-size: 0.95rem; font-weight: 700; margin: 0.25rem 0; }
+        .html-preview-canvas h5 { font-size: 0.85rem; font-weight: 700; margin: 0.2rem 0; }
+        .html-preview-canvas h6 { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #475569; margin: 0.2rem 0; }
+        .html-preview-canvas p { margin: 0 0 0.5rem 0; }
+        .html-preview-canvas hr { border: 0; border-top: 2px solid #cbd5e1; margin: 0.6rem 0; }
+        .html-preview-canvas a { color: #2563eb; text-decoration: underline; font-weight: 600; cursor: pointer; }
+        .html-preview-canvas strong, .html-preview-canvas b { font-weight: 800; color: #0f172a; }
+        .html-preview-canvas em, .html-preview-canvas i { font-style: italic; }
+        .html-preview-canvas mark { background-color: #fef08a; color: #713f12; padding: 0.1rem 0.35rem; border-radius: 0.25rem; font-weight: 700; }
+        .html-preview-canvas del { color: #ef4444; text-decoration: line-through; margin-right: 0.35rem; }
+        .html-preview-canvas ins { color: #059669; text-decoration: underline; font-weight: 800; }
+        .html-preview-canvas small { font-size: 0.75rem; color: #64748b; }
+        .html-preview-canvas sub { vertical-align: sub; font-size: 0.7rem; }
+        .html-preview-canvas sup { vertical-align: super; font-size: 0.7rem; }
+        .html-preview-canvas ul { list-style-type: disc; padding-left: 1.35rem; margin: 0.35rem 0 0.55rem 0; }
+        .html-preview-canvas ol { list-style-type: decimal; padding-left: 1.35rem; margin: 0.35rem 0 0.55rem 0; }
+        .html-preview-canvas ol[type="A"] { list-style-type: upper-alpha; }
+        .html-preview-canvas ol[type="a"] { list-style-type: lower-alpha; }
+        .html-preview-canvas ol[type="I"] { list-style-type: upper-roman; }
+        .html-preview-canvas ol[type="i"] { list-style-type: lower-roman; }
+        .html-preview-canvas li { margin-bottom: 0.2rem; }
+        .html-preview-canvas table { width: 100%; border-collapse: collapse; margin: 0.45rem 0; font-size: 0.8rem; }
+        .html-preview-canvas th { background-color: #f1f5f9; color: #0f172a; font-weight: 800; text-align: left; border: 1px solid #cbd5e1; padding: 0.4rem 0.55rem; }
+        .html-preview-canvas td { border: 1px solid #cbd5e1; padding: 0.4rem 0.55rem; }
+        .html-preview-canvas label { display: inline-block; font-weight: 700; font-size: 0.8rem; color: #334155; margin-bottom: 0.2rem; cursor: pointer; }
+        .html-preview-canvas input[type="text"],
+        .html-preview-canvas input[type="number"],
+        .html-preview-canvas input[type="tel"],
+        .html-preview-canvas input[type="email"],
+        .html-preview-canvas input[type="date"],
+        .html-preview-canvas select,
+        .html-preview-canvas textarea {
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
+            border: 1px solid #94a3b8;
+            border-radius: 0.45rem;
+            padding: 0.4rem 0.6rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.82rem;
+            background-color: #ffffff;
+            color: #0f172a;
+        }
+        .html-preview-canvas input[type="radio"],
+        .html-preview-canvas input[type="checkbox"] {
+            accent-color: #4f46e5;
+            margin-right: 0.35rem;
+            cursor: pointer;
+        }
+        .html-preview-canvas button {
+            background-color: #4f46e5;
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 0.82rem;
+            padding: 0.45rem 1rem;
+            border-radius: 0.45rem;
+            border: none;
+            cursor: pointer;
+        }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+        .dark ::-webkit-scrollbar-thumb { background: #334155; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col justify-between transition-colors duration-200">
+
+    <!-- HEADER UTAMA -->
+    <header class="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800">
+        <div class="w-full h-1 bg-slate-100 dark:bg-slate-800">
+            <div id="topProgressBar" class="h-full bg-indigo-600 dark:bg-indigo-500 transition-all duration-300" style="width: 6%;"></div>
+        </div>
+
+        <div class="max-w-6xl mx-auto px-3 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+                <button type="button" onclick="toggleSlideDrawer()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition flex items-center gap-2 text-xs sm:text-sm font-bold shrink-0">
+                    <i class="fa-solid fa-bars-staggered text-indigo-600 dark:text-indigo-400"></i>
+                    <span class="hidden sm:inline">Alur Cerita</span>
+                    <span id="slideCounterBadge" class="px-2 py-0.5 text-xs rounded-lg bg-indigo-600 text-white font-bold">1 / 16</span>
+                </button>
+
+                <div class="hidden md:flex items-center gap-2 min-w-0">
+                    <span id="slideCategoryPill" class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 shrink-0">
+                        Babak 1: Teks &amp; Kerangka
+                    </span>
+                    <h1 id="headerSlideTitle" class="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">
+                        Masalah Teks Mentah vs Struktur HTML
+                    </h1>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                <div class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/70 dark:border-emerald-800/70 text-xs font-bold text-emerald-700 dark:text-emerald-300">
+                    <i class="fa-solid fa-flag-checkered"></i>
+                    <span id="posProgressBadge">Pos Praktik: 0 / 4</span>
+                </div>
+
+                <button type="button" onclick="openGlossaryIndex()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 text-xs sm:text-sm font-bold flex items-center gap-1.5 transition" title="Kamus Tag HTML">
+                    <i class="fa-solid fa-book-open text-indigo-600 dark:text-indigo-400"></i>
+                    <span class="hidden sm:inline">Kamus Tag</span>
+                </button>
+
+                <button type="button" onclick="toggleTheme()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center transition" title="Ganti Tema Layar">
+                    <i id="themeIcon" class="fa-solid fa-moon text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- DRAWER ALUR 16 SLIDE -->
+    <div id="slideDrawerBackdrop" onclick="toggleSlideDrawer()" class="fixed inset-0 bg-slate-950/50 backdrop-blur-xs z-40 hidden opacity-0 transition-opacity duration-200"></div>
+    <aside id="slideDrawer" class="fixed top-0 left-0 bottom-0 w-80 sm:w-96 bg-white dark:bg-slate-900 z-50 shadow-2xl border-r border-slate-200 dark:border-slate-800 transform -translate-x-full transition-transform duration-200 flex flex-col">
+        <div class="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Pertemuan 2 • Storyline UMKM</span>
+                <h2 class="text-base font-extrabold text-slate-900 dark:text-white mt-0.5">16 Langkah Merakit Website</h2>
+            </div>
+            <button type="button" onclick="toggleSlideDrawer()" class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div id="drawerSlideList" class="p-3 overflow-y-auto space-y-1 flex-1"></div>
+        <div class="p-3.5 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 flex items-center justify-between">
+            <button type="button" onclick="resetAllSavedState()" class="text-rose-600 dark:text-rose-400 font-bold hover:underline">Reset Progres Tersimpan</button>
+            <span class="font-bold">Auto-Save Aktif</span>
+        </div>
+    </aside>
+
+    <!-- VIEWPORT UTAMA SLIDE (3 SEKSI ADAPTIF) -->
+    <main class="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 py-4 flex flex-col justify-center">
+        <div id="slideViewport" class="bg-white dark:bg-slate-900 rounded-3xl shadow-xs border border-slate-200/80 dark:border-slate-800 p-4 sm:p-6 lg:p-7 min-h-[540px] flex flex-col justify-between relative overflow-x-hidden transition-all duration-200">
+            <!-- Dirender dinamis oleh renderCurrentSlide() -->
+        </div>
+    </main>
+
+    <!-- FOOTER NAVIGASI RAMAH IBU JARI (THUMB-FRIENDLY) -->
+    <footer class="sticky bottom-0 z-20 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 py-2.5 px-3 sm:px-6">
+        <div class="max-w-6xl mx-auto flex items-center justify-between gap-3">
+            <button type="button" id="prevSlideBtn" onclick="changeSlide(-1)" class="min-h-[42px] px-4 py-2 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                <i class="fa-solid fa-arrow-left text-xs"></i>
+                <span>Sebelumnya</span>
+            </button>
+
+            <div id="slideDotsContainer" class="hidden md:flex items-center gap-1.5 overflow-x-auto max-w-md py-1"></div>
+
+            <button type="button" onclick="toggleSlideDrawer()" class="md:hidden px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-extrabold text-slate-600 dark:text-slate-300" id="mobileFooterCounter">
+                Slide 1 / 16
+            </button>
+
+            <button type="button" id="nextSlideBtn" onclick="changeSlide(1)" class="min-h-[42px] px-5 py-2 rounded-xl font-bold text-xs sm:text-sm bg-indigo-600 hover:bg-indigo-700 text-white transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none shadow-xs">
+                <span id="nextBtnText">Selanjutnya</span>
+                <i class="fa-solid fa-arrow-right text-xs"></i>
+            </button>
+        </div>
+    </footer>
+
+    <!-- MODAL PENJELASAN ISTILAH TEKNIS -->
+    <div id="termModalBackdrop" onclick="closeTermModal()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl slide-enter">
+            <div class="flex items-start justify-between gap-4 mb-4">
+                <div>
+                    <span id="termCategoryBadge" class="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">Kategori</span>
+                    <h3 id="termTitle" class="text-xl font-extrabold text-slate-900 dark:text-white mt-1.5">Nama Istilah</h3>
+                </div>
+                <button type="button" onclick="closeTermModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <p id="termMainDesc" class="text-sm text-slate-700 dark:text-slate-200 leading-relaxed bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200/70 dark:border-slate-700/70"></p>
+                <p id="termDetailDesc" class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed px-1"></p>
+                <div class="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800 text-xs px-1">
+                    <span id="termSourceName" class="font-semibold text-slate-400">Referensi</span>
+                    <a id="termSourceUrl" href="#" target="_blank" rel="noopener noreferrer" class="font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1.5">
+                        <span>Baca di W3Schools</span>
+                        <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL INDEKS KAMUS TAG HTML -->
+    <div id="glossaryModalBackdrop" onclick="closeGlossaryIndex()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-4xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden slide-enter">
+            <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white">Kamus Tag &amp; Atribut HTML Dasar (W3Schools)</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Klik kartu di bawah untuk membaca penjelasan dan contoh penggunaannya.</p>
+                </div>
+                <button type="button" onclick="closeGlossaryIndex()" class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-sm"></i>
+                    <input id="glossarySearchInput" oninput="renderGlossaryList(this.value)" type="text" placeholder="Cari tag seperti h1, p, br, hr, strong, del, a, img, ul, table, form..." class="w-full pl-10 pr-4 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+            <div id="glossaryListGrid" class="p-5 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+        </div>
+    </div>
+
+    <script>
+        // =========================================================================
+        // 1. DATABASE KAMUS ISTILAH HTML5 (RUJUKAN W3SCHOOLS)
+        // =========================================================================
+        const GLOSSARY_DB = {
+            html: {
+                title: "HTML (HyperText Markup Language)",
+                category: "Konsep Inti",
+                main: "Bahasa penanda standar untuk memberi struktur pada informasi di halaman web menggunakan pasangan tag.",
+                detail: "Tanpa tag HTML, seluruh teks nama usaha, alamat, dan daftar menu akan digabung oleh browser menjadi satu paragraf rata.",
+                source: "W3Schools HTML Introduction",
+                url: "https://www.w3schools.com/html/html_intro.asp"
+            },
+            doctype: {
+                title: "<!DOCTYPE html>, <head> & <body>",
+                category: "Kerangka Dokumen",
+                main: "Tiga bagian utama file index.html: <!DOCTYPE html> sebagai penanda HTML5, <head> untuk judul Tab Browser (<title>), dan <body> untuk isi halaman.",
+                detail: "Semua elemen yang ingin dilihat oleh pelanggan (judul, foto produk, tabel harga, form) wajib ditulis di dalam <body>.",
+                source: "W3Schools HTML Basic",
+                url: "https://www.w3schools.com/html/html_basic.asp"
+            },
+            element: {
+                title: "Pasangan Tag Pembuka & Tag Penutup",
+                category: "Aturan Sintaks",
+                main: "Sebagian besar elemen HTML ditulis berpasangan: dibuka dengan <nama_tag> dan wajib ditutup dengan </nama_tag>.",
+                detail: "Ada juga beberapa Tag Kosong (Void Elements) yang berdiri sendiri tanpa tag penutup, yaitu <br>, <hr>, <img>, dan <input>.",
+                source: "W3Schools HTML Elements",
+                url: "https://www.w3schools.com/html/html_elements.asp"
+            },
+            heading: {
+                title: "Heading Bertingkat (<h1> s/d <h6>)",
+                category: "Tipografi Teks",
+                main: "Enam level judul di HTML. Gunakan <h1> untuk Nama Utama UMKM (cukup 1x per halaman), <h2> untuk Judul Bagian, dan <h3> untuk Nama Produk.",
+                detail: "Menyusun heading secara berurutan membantu pelanggan memindai isi katalog dengan cepat.",
+                source: "W3Schools HTML Headings",
+                url: "https://www.w3schools.com/html/html_headings.asp"
+            },
+            paragraph: {
+                title: "Paragraf (<p>), Pindah Baris (<br>) & Garis (<hr>)",
+                category: "Tipografi Teks",
+                main: "Browser mengabaikan tombol Enter di kode HTML (Whitespace Collapse). Gunakan <p> untuk paragraf baru, <br> untuk turun baris, dan <hr> untuk garis pemisah.",
+                detail: "<br> sangat berguna saat menuliskan alamat toko dan jam operasional agar tersusun rapi ke bawah.",
+                source: "W3Schools HTML Paragraphs",
+                url: "https://www.w3schools.com/html/html_paragraphs.asp"
+            },
+            formatting: {
+                title: "Penekanan Teks & Harga Promo (<strong>, <mark>, <del>, <ins>)",
+                category: "Tipografi Teks",
+                main: "Tag untuk menonjolkan kata kunci penting di katalog: <strong> (tebal), <em> (miring), <mark> (stabilo kuning), <del> (harga coret), dan <ins> (harga baru).",
+                detail: "Pasangan <del>Rp 75.000</del> <ins>Rp 65.000</ins> sangat efektif untuk menampilkan diskon produk UMKM.",
+                source: "W3Schools HTML Formatting",
+                url: "https://www.w3schools.com/html/html_formatting.asp"
+            },
+            attribute: {
+                title: "Atribut HTML (nama='nilai')",
+                category: "Aturan Sintaks",
+                main: "Pengaturan tambahan yang selalu ditulis di dalam tag pembuka dengan rumus nama='nilai'.",
+                detail: "Contoh: id='katalog' untuk memberi penanda unik pada bagian halaman, atau title='Info' untuk menampilkan keterangan saat disentuh mouse.",
+                source: "W3Schools HTML Attributes",
+                url: "https://www.w3schools.com/html/html_attributes.asp"
+            },
+            links: {
+                title: "Tautan Navigasi (<a href='...'> & target='_blank')",
+                category: "Tautan & Media",
+                main: "Tag <a> membuat teks yang bisa diklik untuk melompat ke bagian bawah halaman (href='#pesan') atau membuka WhatsApp di tab baru (target='_blank').",
+                detail: "Selalu gunakan target='_blank' untuk link ke luar website (seperti WhatsApp/Instagram) agar halaman katalog tidak tertutup.",
+                source: "W3Schools HTML Links",
+                url: "https://www.w3schools.com/html/html_links.asp"
+            },
+            images: {
+                title: "Foto Produk (<img src='...' alt='...' width='...'>)",
+                category: "Tautan & Media",
+                main: "Menampilkan gambar produk dari folder proyek menggunakan atribut src (lokasi file) dan alt (teks alternatif penyelamat).",
+                detail: "Jika nama file di src salah ketik atau internet pembeli lambat, teks pada atribut alt akan muncul menggantikan gambar.",
+                source: "W3Schools HTML Images",
+                url: "https://www.w3schools.com/html/html_images.asp"
+            },
+            lists: {
+                title: "Daftar Poin (<ul>) & Daftar Urut (<ol> + <li>)",
+                category: "Daftar & Tabel",
+                main: "<ul> membuat daftar poin keunggulan produk, sedangkan <ol> membuat daftar langkah pemesanan bernomor urut. Setiap baris wajib dibungkus <li>.",
+                detail: "Pada <ol>, Anda bisa mengubah gaya nomor dengan atribut type='1', type='A', atau type='i'.",
+                source: "W3Schools HTML Lists",
+                url: "https://www.w3schools.com/html/html_lists.asp"
+            },
+            tables: {
+                title: "Tabel Daftar Harga (<table>, <tr>, <th>, <td> & colspan)",
+                category: "Daftar & Tabel",
+                main: "Menyusun perbandingan harga produk menggunakan baris (<tr>), judul kolom (<th>), dan sel data (<td>).",
+                detail: "Atribut colspan='2' menggabungkan 2 kolom menjadi 1 sel lebar (biasanya dipakai pada baris Total di bagian bawah tabel).",
+                source: "W3Schools HTML Tables",
+                url: "https://www.w3schools.com/html/html_tables.asp"
+            },
+            forms: {
+                title: "Formulir & Input Dasar (<form>, <label>, <input>)",
+                category: "Formulir Pesanan",
+                main: "Mengumpulkan data pesanan pembeli menggunakan <input type='text'>, type='number' (jumlah beli), type='date', dan type='radio' / 'checkbox'.",
+                detail: "Pada tombol radio, semua pilihan dalam satu grup wajib memiliki atribut name yang sama agar hanya bisa dipilih satu.",
+                source: "W3Schools HTML Forms",
+                url: "https://www.w3schools.com/html/html_forms.asp"
+            },
+            input_attr: {
+                title: "Dropdown (<select>), Alamat (<textarea>) & Validasi required",
+                category: "Formulir Pesanan",
+                main: "<select> + <option> membuat menu lipat pilihan produk, <textarea> membuat kotak alamat multi-baris, dan atribut required mencegah form dikirim kosong.",
+                detail: "Tutup formulir dengan <button type='submit'>Kirim Pesanan</button> agar data siap diproses.",
+                source: "W3Schools HTML Form Elements",
+                url: "https://www.w3schools.com/html/html_form_elements.asp"
+            }
+        };
+
+        // =========================================================================
+        // 2. FUNGSI HELPER, PERSISTENCE & KENYAMANAN UX EDITOR (DESKTOP & MOBILE)
+        // =========================================================================
+        function escapeHtml(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function term(key, customLabel) {
+            const item = GLOSSARY_DB[key];
+            if (!item) return escapeHtml(customLabel || key);
+            const label = customLabel || item.title.split(' (')[0];
+            return '<span class="tech-term" onclick="showTerm(\'' + key + '\')">' + escapeHtml(label) + '</span>';
+        }
+
+        // Menghapus komentar <!-- ... --> agar tidak memicu Auto-Pass pada pemeriksa Regex
+        function stripHtmlComments(rawHtml) {
+            return String(rawHtml || '').replace(/<!--[\s\S]*?-->/g, '');
+        }
+
+        function copyTextToClipboard(text) {
+            const area = document.createElement('textarea');
+            area.value = text;
+            document.body.appendChild(area);
+            area.select();
+            document.execCommand('copy');
+            document.body.removeChild(area);
+        }
+
+        function downloadTextFile(filename, content) {
+            const blob = new Blob([content], { type: 'text/html;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Merender tag <img> secara visual tanpa bergantung pada file eksternal
+        function transformVirtualHtml(rawHtml) {
+            let processed = String(rawHtml || '');
+
+            const titleMatch = processed.match(/<title>([\s\S]*?)<\/title>/i);
+            if (titleMatch) {
+                const tabEl = document.getElementById('simBrowserTabTitle');
+                if (tabEl) tabEl.textContent = titleMatch[1].trim() || 'Untitled';
+            }
+
+            processed = processed.replace(/<img\b([^>]*)>/gi, function(fullTag, attrStr) {
+                const srcMatch = attrStr.match(/src\s*=\s*["']([^"']*)["']/i);
+                const altMatch = attrStr.match(/alt\s*=\s*["']([^"']*)["']/i);
+                const widthMatch = attrStr.match(/width\s*=\s*["']?(\d+)["']?/i);
+
+                const srcVal = srcMatch ? srcMatch[1].trim() : '';
+                const altVal = altMatch ? altMatch[1].trim() : '';
+                const widthPx = widthMatch ? Math.min(Math.max(parseInt(widthMatch[1], 10), 90), 320) : 185;
+
+                const isBrokenDemo = srcVal.toLowerCase().indexOf('salah') !== -1 || srcVal.toLowerCase().indexOf('broken') !== -1 || !srcVal;
+
+                if (!isBrokenDemo) {
+                    return `<div style="width:${widthPx}px; max-width:100%; background:linear-gradient(135deg,#78350f,#451a03); color:#fef3c7; border-radius:10px; padding:11px; margin:6px 0; text-align:center; box-shadow:0 4px 10px rgba(0,0,0,0.12); display:inline-block;">
+                        <i class="fa-solid fa-mug-hot" style="font-size:20px; margin-bottom:4px; color:#fcd34d;"></i>
+                        <div style="font-size:11px; font-weight:800; line-height:1.2;">${escapeHtml(altVal || 'Foto Produk UMKM')}</div>
+                        <div style="font-size:9px; font-family:monospace; opacity:0.8; margin-top:3px;">${escapeHtml(srcVal)} (${widthPx}px)</div>
+                    </div>`;
+                } else {
+                    return `<div style="border:2px dashed #f43f5e; background:#fff1f2; color:#881337; border-radius:8px; padding:9px 12px; margin:6px 0; display:inline-flex; align-items:center; gap:10px; max-width:100%;">
+                        <i class="fa-regular fa-file-image" style="font-size:20px; color:#e11d48;"></i>
+                        <div>
+                            <div style="font-size:10px; font-family:monospace; font-weight:800; color:#e11d48;">GAMBAR GAGAL DIMUAT (${escapeHtml(srcVal || 'src kosong')})</div>
+                            <div style="font-size:11px; font-weight:700;">Teks alt: "${escapeHtml(altVal || '(Atribut alt belum diisi!)')}"</div>
+                        </div>
+                    </div>`;
+                }
+            });
+
+            return processed;
+        }
+
+        // Dukungan tombol Tab untuk indentasi 2 spasi di semua textarea editor
+        function handleEditorKeydown(event, textareaEl) {
+            if (event.key === 'Tab') {
+                event.preventDefault();
+                insertTextAtCursor(textareaEl, '  ');
+            }
+        }
+
+        // Fungsi penyisip simbol cepat untuk Mobile Quick-Symbol Bar
+        function insertTextAtCursor(textareaEl, snippet) {
+            if (!textareaEl) return;
+            const start = textareaEl.selectionStart || 0;
+            const end = textareaEl.selectionEnd || 0;
+            const val = textareaEl.value;
+            textareaEl.value = val.substring(0, start) + snippet + val.substring(end);
+            textareaEl.selectionStart = textareaEl.selectionEnd = start + snippet.length;
+            textareaEl.focus();
+            textareaEl.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+
+        function insertQuickSymbol(textareaId, symbolType) {
+            const el = document.getElementById(textareaId);
+            if (!el) return;
+            const map = {
+                open: '<',
+                close: '>',
+                endtag: '</',
+                quote: '""',
+                equal: '=',
+                tab: '  ',
+                br: '<br>',
+                hr: '<hr>'
+            };
+            const textToInsert = map[symbolType] || '';
+            const start = el.selectionStart || 0;
+            insertTextAtCursor(el, textToInsert);
+            // Jika menyisipkan tanda kutip "", letakkan kursor di tengah-tengah kutip
+            if (symbolType === 'quote') {
+                el.selectionStart = el.selectionEnd = start + 1;
+            }
+        }
+
+        function buildQuickSymbolBarHtml(textareaId) {
+            return `
+                <div class="flex items-center gap-1 overflow-x-auto py-1 px-1 bg-slate-950/90 rounded-xl border border-slate-800 text-[11px] font-mono shrink-0">
+                    <span class="text-[10px] font-sans font-bold text-slate-400 px-1.5 shrink-0">Simbol Cepat:</span>
+                    <button type="button" onclick="insertQuickSymbol('${textareaId}', 'open')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-indigo-600 text-amber-300 hover:text-white font-bold transition shrink-0">&lt;</button>
+                    <button type="button" onclick="insertQuickSymbol('${textareaId}', 'close')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-indigo-600 text-amber-300 hover:text-white font-bold transition shrink-0">&gt;</button>
+                    <button type="button" onclick="insertQuickSymbol('${textareaId}', 'endtag')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-indigo-600 text-rose-300 hover:text-white font-bold transition shrink-0">&lt;/</button>
+                    <button type="button" onclick="insertQuickSymbol('${textareaId}', 'equal')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-indigo-600 text-sky-300 hover:text-white font-bold transition shrink-0">=</button>
+                    <button type="button" onclick="insertQuickSymbol('${textareaId}', 'quote')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-indigo-600 text-emerald-300 hover:text-white font-bold transition shrink-0">" "</button>
+                    <button type="button" onclick="insertQuickSymbol('${textareaId}', 'br')" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-indigo-600 text-slate-200 font-bold transition shrink-0">&lt;br&gt;</button>
+                    <button type="button" onclick="insertQuickSymbol('${textareaId}', 'hr')" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-indigo-600 text-slate-200 font-bold transition shrink-0">&lt;hr&gt;</button>
+                    <button type="button" onclick="insertQuickSymbol('${textareaId}', 'tab')" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-indigo-600 text-slate-300 font-sans font-bold transition shrink-0">Tab</button>
+                </div>
+            `;
+        }
+
+        // =========================================================================
+        // 3. STATE GLOBAL TERPUSAT & ENGINE TATA LETAK 3 SEKSI (DESKTOP & MOBILE)
+        // =========================================================================
+        let currentSlideIndex = 0;
+        const TOTAL_SLIDES = 16;
+        let isTopDeckCollapsed = false;
+        let isFullScreenStudio = false;
+        let mobileTheoryTab = 1; // 1: Cerita | 2: Rumus | 3: Misi
+        let mobileWorkspaceView = 'split'; // 'code' | 'preview' | 'split'
+        let previewFeedbackBanner = '';
+
+        const SLIDE_DATA = {};
+        let activeSlidePresets = {};
+        let userSlideCodes = {};
+
+        const POS_DATA = {};
+        let userPosCodes = {};
+        let posHintLevel = { pos1: 0, pos2: 0, pos3: 0, pos4: 0 }; // 0: None | 1: Rumus Hint | 2: Contoh Kode
+        let posDiagFeedback = { pos1: null, pos2: null, pos3: null, pos4: null };
+
+        // State khusus Slide 16 (Tugas Rumah 3 Seksi)
+        let hwActiveSectionTab = 1; // 1 s/d 5 (5 Bagian Halaman UMKM)
+        let homeworkHtmlCode = '';
+
+        function registerStorySlide(slideKey, config) {
+            SLIDE_DATA[slideKey] = config;
+            const firstKey = Object.keys(config.presets)[0];
+            activeSlidePresets[slideKey] = config.defaultPreset || firstKey;
+            userSlideCodes[slideKey] = config.presets[activeSlidePresets[slideKey]].code;
+        }
+
+        function registerPosSlide(posKey, config) {
+            POS_DATA[posKey] = config;
+            userPosCodes[posKey] = config.starter;
+        }
+
+        function saveAppState() {
+            try {
+                const payload = {
+                    slideIdx: currentSlideIndex,
+                    posCodes: userPosCodes,
+                    hwCode: homeworkHtmlCode
+                };
+                localStorage.setItem('p2_storyline_state_v2', JSON.stringify(payload));
+            } catch (e) {}
+        }
+
+        function loadAppState() {
+            try {
+                const raw = localStorage.getItem('p2_storyline_state_v2');
+                if (!raw) return;
+                const data = JSON.parse(raw);
+                if (typeof data.slideIdx === 'number' && data.slideIdx >= 0 && data.slideIdx < TOTAL_SLIDES) {
+                    currentSlideIndex = data.slideIdx;
+                }
+                if (data.posCodes && typeof data.posCodes === 'object') {
+                    Object.keys(data.posCodes).forEach(function(k) {
+                        if (data.posCodes[k] && POS_DATA[k]) {
+                            userPosCodes[k] = data.posCodes[k];
+                        }
+                    });
+                }
+                if (typeof data.hwCode === 'string' && data.hwCode.trim()) {
+                    homeworkHtmlCode = data.hwCode;
+                }
+            } catch (e) {}
+        }
+
+        function resetAllSavedState() {
+            if (!confirm('Reset seluruh progres ketikan Pos Praktik dan Tugas Rumah kembali ke awal?')) return;
+            try {
+                localStorage.removeItem('p2_storyline_state_v2');
+            } catch (e) {}
+            window.location.reload();
+        }
+
+        function applyFullScreenClass() {
+            const vp = document.getElementById('slideViewport');
+            if (!vp) return;
+            if (isFullScreenStudio) {
+                vp.classList.add('workspace-fullscreen');
+            } else {
+                vp.classList.remove('workspace-fullscreen');
+            }
+        }
+
+        function toggleFullScreenWorkspace() {
+            isFullScreenStudio = !isFullScreenStudio;
+            applyFullScreenClass();
+            renderCurrentSlide();
+        }
+
+        function toggleTopDeck() {
+            isTopDeckCollapsed = !isTopDeckCollapsed;
+            renderCurrentSlide();
+        }
+
+        function setMobileTheoryTab(tabNum) {
+            mobileTheoryTab = tabNum;
+            renderCurrentSlide();
+        }
+
+        function setMobileWorkspaceView(mode) {
+            mobileWorkspaceView = mode;
+            renderCurrentSlide();
+        }
+
+        // Renderer Utama untuk Slide Materi 3 Seksi (Atas: 3 Kolom Materi, Bawah Kiri: Kode, Bawah Kanan: Tampilan)
+        function renderThreeSectionSlide(slideKey) {
+            const cfg = SLIDE_DATA[slideKey];
+            const curPresetKey = activeSlidePresets[slideKey];
+            const currentCode = userSlideCodes[slideKey];
+            const presetObj = cfg.presets[curPresetKey];
+
+            const presetBtnsHtml = Object.keys(cfg.presets).map(function(k) {
+                const p = cfg.presets[k];
+                const isAct = k === curPresetKey;
+                return `
+                    <button type="button" onclick="selectSlidePreset('${slideKey}', '${k}')" class="px-3 py-1 rounded-xl text-xs font-bold transition shrink-0 ${isAct ? 'bg-indigo-600 text-white shadow-2xs' : 'bg-slate-800 hover:bg-slate-700 text-slate-300'}">
+                        ${escapeHtml(p.label)}
+                    </button>
+                `;
+            }).join('');
+
+            const showCodeCol = mobileWorkspaceView === 'split' || mobileWorkspaceView === 'code';
+            const showPrevCol = mobileWorkspaceView === 'split' || mobileWorkspaceView === 'preview';
+
+            setTimeout(function() {
+                updateStoryPreviewDOM(slideKey);
+            }, 0);
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-3.5">
+                    <!-- BAR JUDUL & KONTROL LIPAT MATERI / FULL-SCREEN -->
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-200/80 dark:border-slate-800">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[11px] font-extrabold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">${escapeHtml(cfg.chapterBadge)}</span>
+                                <span class="text-[11px] text-slate-400">•</span>
+                                <span class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">${escapeHtml(cfg.stepLabel)}</span>
+                            </div>
+                            <h2 class="text-lg sm:text-2xl font-extrabold text-slate-900 dark:text-white leading-tight mt-0.5">${cfg.titleHtml}</h2>
+                        </div>
+
+                        <div class="flex items-center gap-1.5 self-start sm:self-center shrink-0">
+                            <button type="button" onclick="toggleTopDeck()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center gap-1.5 transition">
+                                <i class="fa-solid ${isTopDeckCollapsed ? 'fa-chevron-down text-indigo-600' : 'fa-chevron-up text-indigo-600'} text-[11px]"></i>
+                                <span>${isTopDeckCollapsed ? 'Buka Materi Atas' : 'Lipat Materi'}</span>
+                            </button>
+                            <button type="button" onclick="toggleFullScreenWorkspace()" class="px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition ${isFullScreenStudio ? 'bg-rose-600 text-white border-rose-600' : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700'}">
+                                <i class="fa-solid ${isFullScreenStudio ? 'fa-compress' : 'fa-expand'} text-[11px]"></i>
+                                <span class="hidden sm:inline">${isFullScreenStudio ? 'Keluar Full-Screen' : 'Layar Penuh'}</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- SEKSI 1 (ATAS): MATERI 3 KOLOM YANG SALING MENYAMBUNG -->
+                    ${!isTopDeckCollapsed ? `
+                        <div class="space-y-2">
+                            <!-- Navigasi Pil Ringkas Khusus Layar HP (< 1024px) -->
+                            <div class="flex lg:hidden gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                                <button type="button" onclick="setMobileTheoryTab(1)" class="flex-1 py-1.5 rounded-lg text-xs font-extrabold transition ${mobileTheoryTab === 1 ? 'bg-white dark:bg-slate-900 text-amber-700 dark:text-amber-300 shadow-2xs' : 'text-slate-500'}">1. Cerita</button>
+                                <button type="button" onclick="setMobileTheoryTab(2)" class="flex-1 py-1.5 rounded-lg text-xs font-extrabold transition ${mobileTheoryTab === 2 ? 'bg-white dark:bg-slate-900 text-indigo-700 dark:text-indigo-300 shadow-2xs' : 'text-slate-500'}">2. Rumus Tag</button>
+                                <button type="button" onclick="setMobileTheoryTab(3)" class="flex-1 py-1.5 rounded-lg text-xs font-extrabold transition ${mobileTheoryTab === 3 ? 'bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-300 shadow-2xs' : 'text-slate-500'}">3. Misi Coba</button>
+                            </div>
+
+                            <!-- Grid 3 Kolom di Laptop, Tab Tunggal di HP -->
+                            <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 items-stretch">
+                                <!-- Kolom 1: Sambungan Cerita -->
+                                <div class="${mobileTheoryTab === 1 ? 'block' : 'hidden'} lg:block lg:col-span-4 p-3.5 rounded-2xl bg-amber-50/70 dark:bg-amber-950/25 border border-amber-200/80 dark:border-amber-800/60">
+                                    <div class="text-[11px] font-extrabold uppercase tracking-wider text-amber-800 dark:text-amber-300 flex items-center gap-1.5 mb-1">
+                                        <i class="fa-solid fa-link"></i>
+                                        <span>1. Sambungan Cerita &amp; Masalah</span>
+                                    </div>
+                                    <div class="text-xs text-slate-700 dark:text-slate-200 leading-relaxed">${cfg.storyConnectHtml}</div>
+                                </div>
+
+                                <!-- Kolom 2: Bedah Tag & Sintaks -->
+                                <div class="${mobileTheoryTab === 2 ? 'block' : 'hidden'} lg:block lg:col-span-5 p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/80 dark:border-indigo-800/60">
+                                    <div class="text-[11px] font-extrabold uppercase tracking-wider text-indigo-700 dark:text-indigo-300 flex items-center gap-1.5 mb-1">
+                                        <i class="fa-solid fa-code"></i>
+                                        <span>2. Solusi Tag &amp; Rumus Sintaks</span>
+                                    </div>
+                                    <div class="text-xs text-slate-700 dark:text-slate-200 leading-relaxed space-y-1.5">${cfg.syntaxRuleHtml}</div>
+                                </div>
+
+                                <!-- Kolom 3: Misi Coba Langsung -->
+                                <div class="${mobileTheoryTab === 3 ? 'block' : 'hidden'} lg:block lg:col-span-3 p-3.5 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/25 border border-emerald-200/80 dark:border-emerald-800/60 flex flex-col justify-between">
+                                    <div>
+                                        <div class="text-[11px] font-extrabold uppercase tracking-wider text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5 mb-1">
+                                            <i class="fa-solid fa-bullseye"></i>
+                                            <span>3. Misi Coba di Bawah</span>
+                                        </div>
+                                        <div class="text-xs text-slate-700 dark:text-slate-200 leading-relaxed">${cfg.missionHtml}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <!-- PENGALIH TAMPILAN WORKSPACE KHUSUS HP (< 1024px) -->
+                    <div class="flex lg:hidden items-center justify-between gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                        <button type="button" onclick="setMobileWorkspaceView('code')" class="flex-1 py-1.5 rounded-lg text-xs font-bold transition ${mobileWorkspaceView === 'code' ? 'bg-indigo-600 text-white' : 'text-slate-600 dark:text-slate-300'}"><i class="fa-solid fa-laptop-code mr-1"></i>Ketik Kode</button>
+                        <button type="button" onclick="setMobileWorkspaceView('preview')" class="flex-1 py-1.5 rounded-lg text-xs font-bold transition ${mobileWorkspaceView === 'preview' ? 'bg-indigo-600 text-white' : 'text-slate-600 dark:text-slate-300'}"><i class="fa-solid fa-eye mr-1"></i>Lihat Hasil</button>
+                        <button type="button" onclick="setMobileWorkspaceView('split')" class="flex-1 py-1.5 rounded-lg text-xs font-bold transition ${mobileWorkspaceView === 'split' ? 'bg-indigo-600 text-white' : 'text-slate-600 dark:text-slate-300'}"><i class="fa-solid fa-arrows-up-down mr-1"></i>Tumpuk</button>
+                    </div>
+
+                    <!-- SEKSI 2 (BAWAH KIRI: KODE) & SEKSI 3 (BAWAH KANAN: TAMPILAN) -->
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch my-auto flex-1">
+                        <!-- SEKSI 2: LIVE CODE EDITOR (BAWAH KIRI) -->
+                        <div class="${showCodeCol ? 'flex' : 'hidden'} lg:flex lg:col-span-6 p-3.5 sm:p-4 rounded-3xl bg-slate-900 text-slate-100 font-mono text-xs flex-col gap-2 border border-slate-800">
+                            <div class="flex flex-wrap items-center justify-between gap-1.5">
+                                <div class="flex items-center gap-1.5 overflow-x-auto pb-0.5">
+                                    ${presetBtnsHtml}
+                                </div>
+                                <div class="flex items-center gap-1 shrink-0">
+                                    <button type="button" onclick="copyStoryCode('${slideKey}')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-sans font-bold text-[11px]">Salin</button>
+                                    <button type="button" onclick="resetStoryCode('${slideKey}')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-sans font-bold text-[11px]">Reset</button>
+                                </div>
+                            </div>
+
+                            ${buildQuickSymbolBarHtml('storyTextarea_' + slideKey)}
+
+                            <textarea id="storyTextarea_${slideKey}" spellcheck="false" onkeydown="handleEditorKeydown(event, this)" oninput="onStoryCodeInput('${slideKey}', this.value)" class="code-editor-area w-full flex-1 ${isTopDeckCollapsed || isFullScreenStudio ? 'min-h-[280px]' : 'min-h-[185px]'} bg-slate-950 text-emerald-300 font-mono p-3.5 rounded-2xl border border-slate-800 focus:outline-none focus:border-indigo-500 resize-y">${escapeHtml(currentCode)}</textarea>
+
+                            <div class="text-[11px] text-slate-400 font-sans flex items-center gap-1.5">
+                                <i class="fa-regular fa-lightbulb text-amber-400 shrink-0"></i>
+                                <span class="truncate">${escapeHtml(presetObj.hint)}</span>
+                            </div>
+                        </div>
+
+                        <!-- SEKSI 3: LIVE BROWSER PREVIEW (BAWAH KANAN) -->
+                        <div class="${showPrevCol ? 'flex' : 'hidden'} lg:flex lg:col-span-6 rounded-3xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 flex-col overflow-hidden">
+                            <div class="px-3.5 py-2 bg-slate-200/80 dark:bg-slate-800 border-b border-slate-300/70 dark:border-slate-700 flex items-center justify-between gap-2">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <div class="flex gap-1.5 shrink-0">
+                                        <span class="w-2.5 h-2.5 rounded-full bg-rose-400"></span>
+                                        <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+                                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                                    </div>
+                                    <div class="px-3 py-0.5 rounded-lg bg-white dark:bg-slate-900 text-[11px] font-bold text-slate-700 dark:text-slate-200 truncate flex items-center gap-1.5 border border-slate-200 dark:border-slate-700">
+                                        <i class="fa-solid fa-store text-indigo-600 text-[10px]"></i>
+                                        <span id="simBrowserTabTitle">Profil &amp; Katalog UMKM</span>
+                                    </div>
+                                </div>
+                                <span class="text-[10px] font-mono text-slate-500 shrink-0">Hasil Tampilan</span>
+                            </div>
+
+                            <div id="storyPreview_${slideKey}" onclick="handlePreviewInteraction(event)" onsubmit="handlePreviewSubmit(event)" class="html-preview-canvas p-4 sm:p-5 flex-1 overflow-y-auto ${isTopDeckCollapsed || isFullScreenStudio ? 'max-h-[360px]' : 'max-h-[255px]'}">
+                            </div>
+
+                            <div id="storyFeedback_${slideKey}" class="px-4 py-2 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 text-[11px] text-slate-600 dark:text-slate-300 font-medium">
+                                ${previewFeedbackBanner ? escapeHtml(previewFeedbackBanner) : 'Setiap perubahan kode di sebelah kiri langsung diperbarui di jendela ini.'}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Renderer untuk 4 Slide Pos Praktik (3 Seksi + 2-Step Progressive Hint + Smart Diagnostic Error)
+        function renderPosSlide(posKey) {
+            const task = POS_DATA[posKey];
+            const code = userPosCodes[posKey];
+            const cleanCode = stripHtmlComments(code);
+            const hLevel = posHintLevel[posKey] || 0;
+            const diag = posDiagFeedback[posKey];
+
+            let passedCount = 0;
+            const checkListHtml = task.checks.map(function(chk, idx) {
+                const ok = chk.regex.test(cleanCode);
+                if (ok) passedCount++;
+                return `
+                    <div id="${posKey}_chk_${idx}" class="flex items-center gap-2 text-xs p-2 rounded-xl border transition ${ok ? 'bg-emerald-50/90 dark:bg-emerald-950/40 border-emerald-400 text-emerald-800 dark:text-emerald-200 font-bold' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400'}">
+                        <i id="${posKey}_ico_${idx}" class="fa-solid ${ok ? 'fa-circle-check text-emerald-600' : 'fa-circle-dot text-slate-300'} shrink-0"></i>
+                        <span class="truncate">${escapeHtml(chk.label)}</span>
+                    </div>
+                `;
+            }).join('');
+
+            const showCodeCol = mobileWorkspaceView === 'split' || mobileWorkspaceView === 'code';
+            const showPrevCol = mobileWorkspaceView === 'split' || mobileWorkspaceView === 'preview';
+
+            setTimeout(function() {
+                const prevEl = document.getElementById('posPreview_' + posKey);
+                if (prevEl) prevEl.innerHTML = transformVirtualHtml(code);
+                updateHeaderPosBadge();
+            }, 0);
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-3.5">
+                    <!-- SEKSI 1 (ATAS): INSTRUKSI POS PRAKTIK & 4 INDIKATOR TARGET -->
+                    <div class="p-3.5 sm:p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-3">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs font-extrabold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">${escapeHtml(task.badge)}</span>
+                                    <span class="text-[11px] px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 font-bold">Bebas Gunakan Nama UMKM Anda Sendiri!</span>
+                                </div>
+                                <h2 class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white mt-0.5">${escapeHtml(task.title)}</h2>
+                                <p class="text-xs text-slate-600 dark:text-slate-300 mt-0.5">${escapeHtml(task.scenario)}</p>
+                            </div>
+
+                            <div class="flex items-center gap-2 self-start sm:self-center shrink-0">
+                                <span id="${posKey}_score" class="px-3.5 py-1.5 rounded-full text-xs font-extrabold ${passedCount === task.checks.length ? 'bg-emerald-600 text-white' : 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300'}">
+                                    Skor: ${passedCount} / ${task.checks.length} Selesai
+                                </span>
+                                <button type="button" onclick="toggleFullScreenWorkspace()" class="px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition ${isFullScreenStudio ? 'bg-rose-600 text-white border-rose-600' : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700'}">
+                                    <i class="fa-solid ${isFullScreenStudio ? 'fa-compress' : 'fa-expand'} text-[11px]"></i>
+                                    <span class="hidden sm:inline">${isFullScreenStudio ? 'Keluar' : 'Full-Screen'}</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+                            ${checkListHtml}
+                        </div>
+
+                        ${hLevel >= 1 ? `
+                            <div class="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-800 text-xs text-amber-900 dark:text-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                <div><strong><i class="fa-solid fa-lightbulb mr-1"></i>Petunjuk Rumus Tag:</strong> <code class="font-mono font-bold">${escapeHtml(task.formulaHint)}</code></div>
+                                ${hLevel === 1 ? `<button type="button" onclick="unlockPosExample('${posKey}')" class="px-3 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-[11px] shrink-0 self-start sm:self-center">Masih Bingung? Isi Contoh Kode</button>` : ''}
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <!-- PENGALIH TAMPILAN WORKSPACE KHUSUS HP -->
+                    <div class="flex lg:hidden items-center justify-between gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                        <button type="button" onclick="setMobileWorkspaceView('code')" class="flex-1 py-1.5 rounded-lg text-xs font-bold transition ${mobileWorkspaceView === 'code' ? 'bg-indigo-600 text-white' : 'text-slate-600 dark:text-slate-300'}"><i class="fa-solid fa-laptop-code mr-1"></i>Ketik Kode</button>
+                        <button type="button" onclick="setMobileWorkspaceView('preview')" class="flex-1 py-1.5 rounded-lg text-xs font-bold transition ${mobileWorkspaceView === 'preview' ? 'bg-indigo-600 text-white' : 'text-slate-600 dark:text-slate-300'}"><i class="fa-solid fa-eye mr-1"></i>Lihat Hasil</button>
+                        <button type="button" onclick="setMobileWorkspaceView('split')" class="flex-1 py-1.5 rounded-lg text-xs font-bold transition ${mobileWorkspaceView === 'split' ? 'bg-indigo-600 text-white' : 'text-slate-600 dark:text-slate-300'}"><i class="fa-solid fa-arrows-up-down mr-1"></i>Tumpuk</button>
+                    </div>
+
+                    <!-- SEKSI 2 (KODE) & SEKSI 3 (TAMPILAN) -->
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch my-auto flex-1">
+                        <!-- Bawah Kiri: Editor Rumpang -->
+                        <div class="${showCodeCol ? 'flex' : 'hidden'} lg:flex lg:col-span-6 p-3.5 sm:p-4 rounded-3xl bg-slate-900 text-slate-100 font-mono text-xs flex-col gap-2 border border-slate-800">
+                            <div class="flex flex-wrap items-center justify-between gap-1.5">
+                                <span class="text-indigo-300 font-bold">&lt;!-- Editor Pos Praktik --&gt;</span>
+                                <div class="flex flex-wrap items-center gap-1.5">
+                                    <button type="button" onclick="checkPosDiagnostic('${posKey}')" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-sans font-bold text-[11px]">Periksa Kode</button>
+                                    <button type="button" onclick="triggerPosHint('${posKey}')" class="px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-sans font-bold text-[11px]"><i class="fa-regular fa-lightbulb mr-1"></i>Petunjuk Rumus</button>
+                                    <button type="button" onclick="copyPosCode('${posKey}')" class="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-sans font-bold text-[11px]">Salin</button>
+                                    <button type="button" onclick="resetPosCode('${posKey}')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-sans font-bold text-[11px]">Reset</button>
+                                </div>
+                            </div>
+
+                            ${buildQuickSymbolBarHtml('posTextarea_' + posKey)}
+
+                            <textarea id="posTextarea_${posKey}" spellcheck="false" onkeydown="handleEditorKeydown(event, this)" oninput="onPosCodeInput('${posKey}', this.value)" class="code-editor-area w-full flex-1 ${isFullScreenStudio ? 'min-h-[290px]' : 'min-h-[185px]'} bg-slate-950 text-emerald-300 font-mono p-3.5 rounded-2xl border border-slate-800 focus:outline-none focus:border-indigo-500 resize-y">${escapeHtml(code)}</textarea>
+
+                            ${diag ? `<div class="p-2.5 rounded-xl font-sans text-xs font-bold ${diag.ok ? 'bg-emerald-950 text-emerald-300 border border-emerald-700' : 'bg-rose-950 text-rose-200 border border-rose-700'}">${escapeHtml(diag.msg)}</div>` : ''}
+                        </div>
+
+                        <!-- Bawah Kanan: Pratinjau Hasil -->
+                        <div class="${showPrevCol ? 'flex' : 'hidden'} lg:flex lg:col-span-6 rounded-3xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 flex-col overflow-hidden">
+                            <div class="px-4 py-2 bg-slate-200/80 dark:bg-slate-800 border-b border-slate-300/70 dark:border-slate-700 flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-200">
+                                <span>Hasil Tampilan Pos Praktik Anda</span>
+                                <span class="text-[10px] font-mono text-slate-500">Live Preview</span>
+                            </div>
+                            <div id="posPreview_${posKey}" onclick="handlePreviewInteraction(event)" onsubmit="handlePreviewSubmit(event)" class="html-preview-canvas p-4 sm:p-5 flex-1 overflow-y-auto ${isFullScreenStudio ? 'max-h-[360px]' : 'max-h-[245px]'}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // =========================================================================
+        // 4. REGISTRASI SLIDE 1 S/D SLIDE 6 (BABAK 1: TEKS, KERANGKA & POS PRAKTIK 1)
+        // =========================================================================
+
+        // SLIDE 1: Masalah Teks Mentah vs Struktur HTML
+        registerStorySlide('s1', {
+            chapterBadge: "Babak 1 • Merakit Identitas Teks UMKM",
+            stepLabel: "Langkah 1 dari 16",
+            titleHtml: `Mengapa Teks Profil UMKM yang Diketik Mentah Hancur di Browser?`,
+            storyConnectHtml: `Kita memulai perjalanan hari ini dengan satu misi: membuat halaman web profil &amp; katalog untuk usaha <strong>Roastery Kopi Lereng Gunung</strong>. Namun saat pemilik toko mengetik nama usaha, alamat, dan daftar menu langsung di file <code class="font-mono">.html</code>, semua tulisannya malah menyatu jadi satu baris panjang!`,
+            syntaxRuleHtml: `Browser tidak mengerti mana judul dan mana paragraf jika tidak diberi ${term('html', 'Tag HTML')}. Setiap informasi harus dibungkus dengan <strong>Tag Pembuka</strong> (<code class="font-mono font-bold">&lt;nama_tag&gt;</code>) dan ditutup dengan <strong>Tag Penutup</strong> (<code class="font-mono font-bold">&lt;/nama_tag&gt;</code>).`,
+            missionHtml: `Klik tombol <strong>1. Teks Mentah (Rusak)</strong> dan <strong>2. Diberi Tag HTML</strong> di bawah kiri untuk membandingkan hasilnya. Lalu coba ubah nama tokonya di dalam tag <code class="font-mono">&lt;h1&gt;</code>!`,
+            defaultPreset: 'raw_broken',
+            presets: {
+                raw_broken: {
+                    label: "1. Teks Mentah (Rusak Menyatu)",
+                    hint: "Perhatikan di kanan: walaupun sudah di-Enter di kode, di browser semuanya menyatu!",
+                    code: `Roastery Kopi Lereng Gunung\nMenyajikan biji kopi pilihan nusantara yang disangrai segar setiap pekan.\n\nAlamat Kedai: Jl. Raya Pegunungan No. 18\nJam Buka: 08.00 - 21.00 WIB`
+                },
+                tagged_clean: {
+                    label: "2. Diberi Tag HTML (Terstruktur)",
+                    hint: "Dengan tag <h1>, <p>, dan <hr>, browser langsung memisahkan judul dan paragraf.",
+                    code: `<h1>Roastery Kopi Lereng Gunung</h1>\n<p>Menyajikan biji kopi pilihan nusantara yang disangrai segar setiap pekan.</p>\n<hr>\n<p><strong>Alamat Kedai:</strong> Jl. Raya Pegunungan No. 18</p>`
+                }
+            }
+        });
+
+        // SLIDE 2: Kerangka Dokumen (<!DOCTYPE html>, <head> vs <body>) & Bahaya Lupa Tag Penutup
+        registerStorySlide('s2', {
+            chapterBadge: "Babak 1 • Merakit Identitas Teks UMKM",
+            stepLabel: "Langkah 2 dari 16",
+            titleHtml: `Kerangka Dokumen ${term('doctype', 'index.html')} &amp; Aturan ${term('element', 'Tag Penutup')}`,
+            storyConnectHtml: `Pada Slide 1 kita melihat pentingnya tag HTML. Agar file <code class="font-mono font-bold">index.html</code> kita diakui sebagai halaman web standar, kita harus membungkusnya dengan kerangka <code class="font-mono">&lt;head&gt;</code> (untuk judul tab browser di atas) dan <code class="font-mono">&lt;body&gt;</code> (untuk isi kanvas).`,
+            syntaxRuleHtml: `Pastikan setiap tag pembuka ditutup dengan garis miring (<code class="font-mono font-bold">&lt;/h1&gt;</code>). Jika lupa menulis tag penutup <code class="font-mono">&lt;/h1&gt;</code>, maka seluruh kalimat di bawahnya akan ikut tersedot menjadi judul raksasa!`,
+            missionHtml: `Coba klik skenario <strong>2. Bug Lupa Menutup &lt;/h1&gt;</strong> di bawah kiri, lalu ketikkan <code class="font-mono font-bold">&lt;/h1&gt;</code> di akhir baris judul untuk menyembuhkan tampilannya!`,
+            defaultPreset: 'doc_valid',
+            presets: {
+                doc_valid: {
+                    label: "1. Kerangka Dokumen Benar",
+                    hint: "Ubah teks di dalam <title> untuk mengganti nama Tab Browser di kanan atas!",
+                    code: `<!DOCTYPE html>\n<html>\n<head>\n  <title>Katalog Kopi Lereng Gunung</title>\n</head>\n<body>\n  <!-- === FOKUS SLIDE INI: Pasangan <h1> dan </h1> === -->\n  <h1>Roastery Kopi Lereng Gunung</h1>\n  <p>Biji kopi lokal pilihan dengan sangrai segar setiap pekan.</p>\n</body>\n</html>`
+                },
+                bug_unclosed: {
+                    label: "2. Bug Lupa Menutup </h1>",
+                    hint: "Tambahkan </h1> di ujung kata 'Lereng Gunung' agar paragraf di bawahnya kembali normal!",
+                    code: `<!-- PERBAIKI KODE INI: Tambahkan </h1> di akhir baris judul -->\n<h1>Roastery Kopi Lereng Gunung\n\n<p>Kenapa kalimat deskripsi ini ikut menjadi huruf besar dan tebal? Karena tag h1 di atas belum ditutup!</p>`
+                }
+            }
+        });
+
+        // SLIDE 3: Menyusun Hierarki Judul (<h1> s/d <h6>)
+        registerStorySlide('s3', {
+            chapterBadge: "Babak 1 • Merakit Identitas Teks UMKM",
+            stepLabel: "Langkah 3 dari 16",
+            titleHtml: `Menyusun Tingkatan Judul dengan ${term('heading', '<h1>, <h2>, dan <h3>')}`,
+            storyConnectHtml: `Di Slide 2 kita sudah berhasil menampilkan judul utama toko memakai <code class="font-mono">&lt;h1&gt;</code>. Sekarang kita ingin menambahkan judul bagian <em>"Katalog Produk Unggulan"</em> dan nama-nama produk di bawahnya, tetapi ukurannya tentu tidak boleh sama besar dengan nama toko.`,
+            syntaxRuleHtml: `HTML menyediakan 6 level judul (<code class="font-mono font-bold">&lt;h1&gt;</code> paling besar s/d <code class="font-mono font-bold">&lt;h6&gt;</code> paling kecil). <strong>Aturan W3Schools:</strong> Gunakan <code class="font-mono">&lt;h1&gt;</code> hanya 1 kali untuk Nama Toko, <code class="font-mono">&lt;h2&gt;</code> untuk Judul Seksi/Bab, dan <code class="font-mono">&lt;h3&gt;</code> untuk Nama Produk.`,
+            missionHtml: `Pada editor di bawah, tambahkan satu produk baru ke-3 menggunakan tag <code class="font-mono font-bold">&lt;h3&gt;3. Kopi Susu Gula Aren&lt;/h3&gt;</code> di baris paling bawah!`,
+            defaultPreset: 'hierarchy_umkm',
+            presets: {
+                hierarchy_umkm: {
+                    label: "1. Hierarki Judul Katalog (h1 -> h2 -> h3)",
+                    hint: "Tambahkan <h3> baru di baris paling bawah untuk melihat susunan produknya.",
+                    code: `<h1>Roastery Kopi Lereng Gunung</h1>\n<p>Biji kopi lokal pilihan dengan sangrai segar setiap pekan.</p>\n\n<!-- === FOKUS SLIDE INI: Subjudul Bab (h2) & Nama Produk (h3) === -->\n<h2>Katalog Produk Unggulan</h2>\n<h3>1. Kopi Arabika Gayo 250g</h3>\n<h3>2. Kopi Robusta Temanggung 250g</h3>`
+                },
+                compare_h1_h6: {
+                    label: "2. Perbandingan Lengkap h1 s/d h6",
+                    hint: "Semakin besar angkanya (h6), semakin kecil ukuran huruf judulnya.",
+                    code: `<h1>Heading 1: Nama Utama UMKM</h1>\n<h2>Heading 2: Judul Bab Katalog</h2>\n<h3>Heading 3: Nama Item Produk</h3>\n<h4>Heading 4: Rincian Kemasan</h4>\n<h5>Heading 5: Catatan Tambahan</h5>\n<h6>Heading 6: Label Kaki Terkecil</h6>`
+                }
+            }
+        });
+
+        // SLIDE 4: Paragraf (<p>), Pindah Baris (<br>), & Garis Pemisah (<hr>)
+        registerStorySlide('s4', {
+            chapterBadge: "Babak 1 • Merakit Identitas Teks UMKM",
+            stepLabel: "Langkah 4 dari 16",
+            titleHtml: `Merapikan Alamat &amp; Jam Buka dengan ${term('paragraph', '<p>, <br>, dan <hr>')}`,
+            storyConnectHtml: `Menyambung dari Slide 3: judul toko dan subjudul katalog sudah rapi. Sekarang pemilik UMKM meminta kita menuliskan <strong>Alamat Kedai</strong> dan <strong>Jam Buka</strong> di bawah judul toko. Tapi saat kita mengetik 3 baris dan menekan Enter di editor, browser malah menyatukannya menjadi 1 baris lurus!`,
+            syntaxRuleHtml: `Browser selalu mengabaikan tombol Enter di kode HTML (<em>Whitespace Collapse</em>). Solusinya: gunakan tag kosong <code class="font-mono font-bold">&lt;br&gt;</code> di ujung baris untuk memaksa teks turun ke bawah, dan gunakan <code class="font-mono font-bold">&lt;hr&gt;</code> untuk menggambar garis pembatas mendatar.`,
+            missionHtml: `Pada Skenario 1 di bawah, teks alamat dan jam buka masih menyatu. Sisipkan tag <code class="font-mono font-bold">&lt;br&gt;</code> di akhir baris Alamat dan baris Senin-Jumat agar tersusun rapi ke bawah!`,
+            defaultPreset: 'with_br_hr',
+            presets: {
+                no_br_problem: {
+                    label: "1. Masalah: Tanpa <br> (Menyatu)",
+                    hint: "Ketik <br> di ujung baris pertama dan kedua agar teksnya turun ke baris baru!",
+                    code: `<h1>Roastery Kopi Lereng Gunung</h1>\n<!-- Tambahkan <br> di ujung setiap baris di bawah ini: -->\n<p>\n  Alamat: Jl. Raya Pegunungan No. 18\n  Senin - Jumat: 08.00 - 21.00 WIB\n  Sabtu - Minggu: 07.00 - 22.00 WIB\n</p>`
+                },
+                with_br_hr: {
+                    label: "2. Solusi: Rapi dengan <br> & <hr>",
+                    hint: "<br> dan <hr> adalah tag kosong (void element) sehingga tidak memiliki tag penutup.",
+                    code: `<h1>Roastery Kopi Lereng Gunung</h1>\n<p>Biji kopi lokal pilihan dengan sangrai segar setiap pekan.</p>\n\n<!-- === FOKUS SLIDE INI: Pindah baris <br> & Garis <hr> === -->\n<p>\n  Alamat: Jl. Raya Pegunungan No. 18<br>\n  Senin - Jumat: 08.00 - 21.00 WIB<br>\n  Sabtu - Minggu: 07.00 - 22.00 WIB\n</p>\n<hr>\n<h2>Katalog Produk Unggulan</h2>`
+                }
+            }
+        });
+
+        // SLIDE 5: Penekanan Teks & Harga Coret Promo (<strong>, <em>, <mark>, <del>, <ins>)
+        registerStorySlide('s5', {
+            chapterBadge: "Babak 1 • Merakit Identitas Teks UMKM",
+            stepLabel: "Langkah 5 dari 16",
+            titleHtml: `Menonjolkan Promo &amp; Harga Diskon dengan ${term('formatting', 'Tag Pemformatan')}`,
+            storyConnectHtml: `Alamat dan garis pemisah sudah terpasang di Slide 4. Kini pemilik UMKM mengeluh: <em>"Pelanggan mengira Rp 65.000 adalah harga biasa, padahal itu sedang diskon dari Rp 75.000! Tolong buat harga lamanya dicoret dan info Gratis Ongkir-nya diberi stabilo kuning."</em>`,
+            syntaxRuleHtml: `Gunakan 5 tag penekanan makna ini di dalam paragraf katalog Anda:<br>• <code class="font-mono font-bold">&lt;strong&gt;</code>: Teks penting (tebal) &nbsp; • <code class="font-mono font-bold">&lt;em&gt;</code>: Istilah miring<br>• <code class="font-mono font-bold">&lt;mark&gt;</code>: Stabilo kuning &nbsp; • <code class="font-mono font-bold">&lt;del&gt;</code>: Harga coret &nbsp; • <code class="font-mono font-bold">&lt;ins&gt;</code>: Harga promo`,
+            missionHtml: `Coba ubah angka di dalam <code class="font-mono">&lt;del&gt;</code> dan <code class="font-mono">&lt;ins&gt;</code> pada produk kedua di bawah, atau bungkus kata promo dengan tag <code class="font-mono font-bold">&lt;mark&gt;...&lt;/mark&gt;</code>!`,
+            defaultPreset: 'promo_complete',
+            presets: {
+                promo_complete: {
+                    label: "1. Katalog dengan Promo & Harga Coret",
+                    hint: "Perhatikan kombinasi <mark> untuk stabilo kuning serta <del> dan <ins> untuk harga diskon!",
+                    code: `<h2>Katalog Produk Unggulan</h2>\n<p>Promo Pekan Ini: <mark>Gratis Ongkir</mark> untuk pembelian minimal 2 pack!</p>\n\n<!-- === FOKUS SLIDE INI: <strong>, <em>, <del>, dan <ins> === -->\n<h3>1. Kopi Arabika Gayo 250g</h3>\n<p>Karakter rasa: <strong>Cokelat Hitam</strong> dengan aroma <em>rempah alami</em>.</p>\n<p>Harga Promo: <del>Rp 75.000</del> <ins>Rp 65.000</ins></p>\n\n<h3>2. Kopi Susu Gula Aren (Botol 1 Liter)</h3>\n<p>Harga Spesial: <del>Rp 65.000</del> <ins>Rp 55.000</ins></p>`
+                },
+                sub_sup_demo: {
+                    label: "2. Bonus: Tag <sub>, <sup> & <small>",
+                    hint: "<small> untuk catatan syarat & ketentuan kecil, <sup> untuk simbol derajat suhu.",
+                    code: `<p>Disangrai pada suhu presisi 205<sup>o</sup>C dengan kadar air H<sub>2</sub>O terjaga.</p>\n<p><small>*Syarat &amp; ketentuan promo berlaku selama persediaan masih ada.</small></p>`
+                }
+            }
+        });
+
+        // SLIDE 6: POS PRAKTIK 1 (Merakit Kepala & Promo UMKM)
+        registerPosSlide('pos1', {
+            badge: "Babak 1 • Pos Praktik 1 dari 4",
+            title: "Pos Praktik 1: Merakit Bagian Kepala & Promo UMKM Anda",
+            scenario: "Sekarang giliran Anda! Rakit bagian pertama halaman UMKM Anda sendiri (boleh memakai Kopi Lereng Gunung atau nama UMKM temuan Anda sendiri) dengan memenuhi 4 komponen tag di bawah ini:",
+            formulaHint: "<h1>Nama Toko</h1> <p>Teks <strong>penting</strong><br>Baris 2</p> <hr> <p><del>Harga Lama</del> <ins>Harga Baru</ins></p>",
+            starter: "<!-- 1. Tulis judul utama <h1> berisi Nama UMKM Anda: -->\n\n\n<!-- 2. Tulis paragraf <p> berisi deskripsi/alamat yang memuat <strong> dan pindah baris <br>: -->\n\n\n<!-- 3. Sisipkan garis pemisah mendatar <hr>: -->\n\n\n<!-- 4. Tulis nama produk <h3> beserta paragraf harga diskon dengan <del> dan <ins>: -->\n",
+            solution: "<h1>Roastery Kopi Lereng Gunung</h1>\n<p>\n  Menyajikan biji kopi pilihan dengan kualitas <strong>Sangrai Segar Setiap Pekan</strong>.<br>\n  Alamat: Jl. Raya Pegunungan No. 18 (Buka 08.00 - 21.00 WIB)\n</p>\n<hr>\n<h3>Kopi Arabika Gayo 250g</h3>\n<p>Harga Promo: <del>Rp 75.000</del> <ins>Rp 65.000</ins></p>",
+            checks: [
+                {
+                    label: "1. Judul utama <h1>...</h1>",
+                    regex: /<h1\b[^>]*>[\s\S]*?\S[\s\S]*?<\/h1>/i,
+                    errMsg: "Anda belum menulis judul utama toko dengan pasangan tag <h1>...</h1> (pastikan ada teks di dalamnya dan ditutup dengan </h1>)."
+                },
+                {
+                    label: "2. Paragraf <p> dengan <strong> & <br>",
+                    regex: /<p\b[^>]*>(?=[\s\S]*?<strong\b[^>]*>[\s\S]*?\S[\s\S]*?<\/strong>)(?=[\s\S]*?<br\b[^>]*>)[\s\S]*?<\/p>/i,
+                    errMsg: "Pastikan di dalam paragraf <p>...</p> Anda sudah menyertakan teks tebal <strong>...</strong> sekaligus tag pindah baris <br>."
+                },
+                {
+                    label: "3. Garis pemisah <hr>",
+                    regex: /<hr\b[^>]*>/i,
+                    errMsg: "Jangan lupa menyisipkan tag garis mendatar <hr> untuk memisahkan profil toko dan produk."
+                },
+                {
+                    label: "4. Harga coret <del> & harga promo <ins>",
+                    regex: /(?=[\s\S]*<del\b[^>]*>[\s\S]*?\S[\s\S]*?<\/del>)(?=[\s\S]*<ins\b[^>]*>[\s\S]*?\S[\s\S]*?<\/ins>)/i,
+                    errMsg: "Tampilkan harga diskon menggunakan pasangan <del>Rp ...</del> (harga lama dicoret) dan <ins>Rp ...</ins> (harga baru)."
+                }
+            ]
+        });
+
+        function renderSlide1() { return renderThreeSectionSlide('s1'); }
+        function renderSlide2() { return renderThreeSectionSlide('s2'); }
+        function renderSlide3() { return renderThreeSectionSlide('s3'); }
+        function renderSlide4() { return renderThreeSectionSlide('s4'); }
+        function renderSlide5() { return renderThreeSectionSlide('s5'); }
+        function renderSlide6() { return renderPosSlide('pos1'); }
+
+        // === TEMPELKAN BAGIAN 2 TEPAT DI BAWAH BARIS INI ===
+        // =========================================================================
+        // 5. REGISTRASI SLIDE 7 S/D SLIDE 13 (BABAK 2 & BABAK 3)
+        // =========================================================================
+
+        // SLIDE 7: Cara Kerja Atribut HTML (nama="nilai")
+        registerStorySlide('s7', {
+            chapterBadge: "Babak 2 • Menambahkan Kontak & Foto Produk",
+            stepLabel: "Langkah 7 dari 16",
+            titleHtml: `Mengenal Rumus ${term('attribute', 'Atribut HTML')} (<span class="font-mono">nama="nilai"</span>)`,
+            storyConnectHtml: `Di Babak 1 (Slide 1–6), kita sudah berhasil membuat judul toko, alamat, dan harga diskon. Selanjutnya kita ingin memasang <strong>tautan klik ke WhatsApp</strong> dan <strong>foto produk</strong>. Namun tag <code class="font-mono">&lt;a&gt;</code> dan <code class="font-mono">&lt;img&gt;</code> tidak bisa bekerja sendirian tanpa informasi tambahan berupa <strong>Atribut</strong>!`,
+            syntaxRuleHtml: `Atribut adalah pengaturan tambahan yang <strong>wajib ditulis di dalam tag pembuka</strong> dengan rumus:<br><code class="font-mono font-bold text-indigo-700 dark:text-indigo-300">&lt;tag nama_atribut="nilai"&gt;Isi&lt;/tag&gt;</code><br>Contoh: <code class="font-mono">id="katalog"</code> memberi nama panggilan unik pada sebuah elemen, sedangkan <code class="font-mono">title="..."</code> memunculkan pesan saat disentuh kursor.`,
+            missionHtml: `Arahkan kursor mouse Anda ke judul di kanan untuk melihat efek atribut <code class="font-mono">title</code>. Lalu klik Skenario 2 dan hapus kata <code class="font-mono font-bold">hidden</code> agar kupon rahasianya muncul!`,
+            defaultPreset: 'attr_basic',
+            presets: {
+                attr_basic: {
+                    label: "1. Atribut id, title & align",
+                    hint: "Sentuhkan kursor mouse ke atas judul di jendela kanan untuk melihat pesan dari atribut title!",
+                    code: `<h1>Roastery Kopi Lereng Gunung</h1>\n<hr>\n<!-- === FOKUS SLIDE INI: Atribut di dalam tag pembuka === -->\n<h2 id="katalog" title="Klik produk untuk memesan" align="center">\n  Katalog Produk Unggulan\n</h2>\n<p align="center">\n  Sentuh judul di atas dengan mouse untuk melihat efek atribut <strong>title</strong>.\n</p>`
+                },
+                attr_hidden_demo: {
+                    label: "2. Eksperimen Atribut hidden",
+                    hint: "Hapus kata 'hidden' di dalam tag <p hidden> agar kode voucher diskonnya tampil di layar!",
+                    code: `<h2>Promo Khusus Pengunjung Website</h2>\n<p>Salin kode voucher di bawah ini saat memesan:</p>\n\n<!-- HAPUS kata hidden di bawah ini agar vouchernya terlihat: -->\n<p hidden>Kode Voucher: <mark>KOPIHEMAT20</mark> (Potongan Rp 20.000)</p>`
+                }
+            }
+        });
+
+        // SLIDE 8: Membuat Tautan Navigasi (<a href="..."> & target="_blank")
+        registerStorySlide('s8', {
+            chapterBadge: "Babak 2 • Menambahkan Kontak & Foto Produk",
+            stepLabel: "Langkah 8 dari 16",
+            titleHtml: `Memasang Menu Lompat Halaman &amp; Link WhatsApp dengan ${term('links', '<a href=\"...\">')}`,
+            storyConnectHtml: `Setelah memahami cara menulis atribut di Slide 7, sekarang kita mengatasi keluhan berikutnya: <em>"Saat halaman katalog semakin panjang, pembeli malas menggulir layar jauh ke bawah, dan mereka butuh tombol klik langsung menuju WhatsApp admin toko."</em>`,
+            syntaxRuleHtml: `Gunakan tag <code class="font-mono font-bold">&lt;a&gt;</code> dengan atribut <code class="font-mono font-bold">href="tujuan"</code>:<br>• <strong>Lompat ke Bagian Bawah:</strong> <code class="font-mono">&lt;a href="#katalog"&gt;</code> akan melompat menuju elemen yang punya <code class="font-mono">id="katalog"</code>.<br>• <strong>Buka Tab Baru (WhatsApp/IG):</strong> Tambahkan <code class="font-mono font-bold">target="_blank"</code> agar website toko kita tidak tertutup.`,
+            missionHtml: `Coba <strong>KLIK langsung</strong> tautan berwarna biru di jendela pratinjau kanan dan perhatikan pesan simulasi di bagian bawah jendela pratinjau!`,
+            defaultPreset: 'nav_links',
+            presets: {
+                nav_links: {
+                    label: "1. Menu Navigasi #bookmark & Link WA",
+                    hint: "Klik salah satu tautan biru di jendela sebelah kanan untuk menguji cara kerjanya!",
+                    code: `<h1>Roastery Kopi Lereng Gunung</h1>\n\n<!-- === FOKUS SLIDE INI: Menu <a href> & target="_blank" === -->\n<p>\n  <a href="#katalog">Lihat Katalog</a> |\n  <a href="#pesan">Cara Pesan</a> |\n  <a href="https://wa.me/6281234567890" target="_blank">Chat WhatsApp Admin</a>\n</p>\n<hr>\n<h2 id="katalog">Katalog Produk Unggulan (id="katalog")</h2>\n<p>Saat pengunjung mengeklik 'Lihat Katalog', layar otomatis melompat ke judul ini.</p>`
+                },
+                missing_target: {
+                    label: "2. Bandingkan Tanpa target='_blank'",
+                    hint: "Tambahkan target='_blank' pada link Instagram di bawah agar membuka di tab baru!",
+                    code: `<p>\n  <!-- Tambahkan atribut target="_blank" di dalam tag <a> ini: -->\n  Kunjungi galeri kami di <a href="https://instagram.com/kopilereng">Instagram @kopilereng</a>\n</p>`
+                }
+            }
+        });
+
+        // SLIDE 9: Menampilkan Foto Produk (<img src="..." alt="..." width="...">)
+        registerStorySlide('s9', {
+            chapterBadge: "Babak 2 • Menambahkan Kontak & Foto Produk",
+            stepLabel: "Langkah 9 dari 16",
+            titleHtml: `Menampilkan Foto Produk UMKM dengan ${term('images', '<img src=\"...\" alt=\"...\">')}`,
+            storyConnectHtml: `Menu navigasi dan link WhatsApp sudah siap di Slide 8. Namun calon pembeli tentu ragu membeli jika hanya melihat tulisan harga tanpa melihat wujud kemasan kopinya. Sekarang kita tampilkan foto produk dari dalam subfolder <code class="font-mono font-bold">img/</code>!`,
+            syntaxRuleHtml: `Tag <code class="font-mono font-bold">&lt;img&gt;</code> adalah tag kosong (tanpa penutup <code class="font-mono">&lt;/img&gt;</code>) yang wajib memiliki 2 atribut utama:<br>• <code class="font-mono font-bold">src="img/nama-file.jpg"</code>: Lokasi penyimpanan foto.<br>• <code class="font-mono font-bold">alt="Deskripsi Foto"</code>: Teks penyelamat yang tampil jika foto gagal dimuat atau salah ketik.`,
+            missionHtml: `Klik Skenario <strong>2. Simulasi Salah Ketik src</strong> di bawah untuk melihat fungsi penyelamat <code class="font-mono">alt</code>, lalu perbaiki <code class="font-mono">src</code>-nya menjadi <code class="font-mono font-bold">img/kopi-gayo.jpg</code>!`,
+            defaultPreset: 'img_valid',
+            presets: {
+                img_valid: {
+                    label: "1. Foto Produk Normal (src + alt + width)",
+                    hint: "Ubah angka pada atribut width='200' menjadi '260' untuk melihat perubahan ukuran fotonya!",
+                    code: `<h2 id="katalog">Katalog Produk Unggulan</h2>\n\n<h3>1. Kopi Arabika Gayo 250g</h3>\n<!-- === FOKUS SLIDE INI: Tag <img> dengan src, alt, dan width === -->\n<img src="img/kopi-gayo.jpg" alt="Kemasan Kopi Arabika Gayo 250 Gram" width="200">\n<p>Karakter rasa: <strong>Cokelat Hitam</strong> &amp; rempah alami.</p>\n<p>Harga Promo: <del>Rp 75.000</del> <ins>Rp 65.000</ins></p>`
+                },
+                img_broken: {
+                    label: "2. Simulasi Salah Ketik src (Fungsi alt)",
+                    hint: "Ganti 'img/salah-nama.jpg' menjadi 'img/kopi-gayo.jpg' agar foto produknya tampil kembali!",
+                    code: `<h3>1. Kopi Arabika Gayo 250g</h3>\n<!-- Perhatikan saat nama file salah, teks di dalam alt muncul menyelamatkan info produk: -->\n<img src="img/salah-nama.jpg" alt="Kemasan Kopi Arabika Gayo 250 Gram" width="200">\n<p>Perbaiki nilai <strong>src</strong> di atas menjadi <strong>img/kopi-gayo.jpg</strong>!</p>`
+                }
+            }
+        });
+
+        // SLIDE 10: POS PRAKTIK 2 (Menambahkan Navigasi & Foto Produk)
+        registerPosSlide('pos2', {
+            badge: "Babak 2 • Pos Praktik 2 dari 4",
+            title: "Pos Praktik 2: Memasang Menu Navigasi & Foto Produk UMKM",
+            scenario: "Lanjutkan halaman UMKM Anda! Tambahkan tautan melompat halaman (#katalog), tautan eksternal WhatsApp/Maps (target='_blank'), bagian ber-atribut id='katalog', serta foto produk <img> lengkap dengan atribut alt:",
+            formulaHint: "<a href=\"#katalog\">Menu</a> <a href=\"https://...\" target=\"_blank\">WA</a> <h2 id=\"katalog\">Judul</h2> <img src=\"img/kopi.jpg\" alt=\"Deskripsi\">",
+            starter: "<!-- 1. Buat tautan <a href=\"#katalog\"> untuk melompat ke bagian katalog: -->\n\n\n<!-- 2. Buat tautan eksternal <a href=\"https://wa.me/628123\" target=\"_blank\"> menuju WhatsApp/Maps: -->\n\n\n<!-- 3. Buat subjudul <h2 id=\"katalog\"> sebagai tujuan lompatan menu: -->\n\n\n<!-- 4. Tampilkan foto produk <img src=\"img/kopi-gayo.jpg\" alt=\"...\" width=\"200\"> (wajib isi alt): -->\n",
+            solution: "<p>\n  <a href=\"#katalog\">Lihat Katalog Produk</a> |\n  <a href=\"https://wa.me/6281234567890\" target=\"_blank\">Pesan via WhatsApp</a>\n</p>\n<hr>\n<h2 id=\"katalog\">Katalog Produk Unggulan</h2>\n<h3>Kopi Arabika Gayo 250g</h3>\n<img src=\"img/kopi-gayo.jpg\" alt=\"Kemasan Kopi Arabika Gayo 250g\" width=\"200\">",
+            checks: [
+                {
+                    label: "1. Link bookmark <a href='#katalog'>",
+                    regex: /<a\b[^>]*href\s*=\s*["']#[^"']+["'][^>]*>[\s\S]*?\S[\s\S]*?<\/a>/i,
+                    errMsg: "Buat minimal 1 tautan internal yang diawali tanda pagar, misalnya: <a href=\"#katalog\">Lihat Katalog</a>."
+                },
+                {
+                    label: "2. Link eksternal dengan target='_blank'",
+                    regex: /<a\b(?=[^>]*\bhref\s*=\s*["'][^"']+["'])(?=[^>]*\btarget\s*=\s*["']_blank["'])[^>]*>[\s\S]*?\S[\s\S]*?<\/a>/i,
+                    errMsg: "Pastikan tautan WhatsApp/Instagram Anda dilengkapi atribut target=\"_blank\" di dalam tag <a> pembukanya."
+                },
+                {
+                    label: "3. Elemen tujuan ber-atribut id='...'",
+                    regex: /<[a-z0-9]+\b[^>]*\bid\s*=\s*["'][^"']+["'][^>]*>/i,
+                    errMsg: "Tambahkan atribut id=\"katalog\" pada tag <h2> atau bagian tujuan agar link #katalog punya tempat mendarat."
+                },
+                {
+                    label: "4. Foto <img src='...' alt='...'>",
+                    regex: /<img\b(?=[^>]*\bsrc\s*=\s*["'][^"']+["'])(?=[^>]*\balt\s*=\s*["'][^"']+["'])[^>]*>/i,
+                    errMsg: "Tulis tag <img> yang memiliki atribut src=\"img/kopi-gayo.jpg\" SEKALIGUS atribut alt=\"Deskripsi foto\" yang tidak kosong."
+                }
+            ]
+        });
+
+        // SLIDE 11: Menyusun Daftar Keunggulan (<ul>) & Cara Pesan (<ol>)
+        registerStorySlide('s11', {
+            chapterBadge: "Babak 3 • Daftar Informasi & Tabel Harga",
+            stepLabel: "Langkah 11 dari 16",
+            titleHtml: `Menyusun Daftar Poin &amp; Langkah Pesan dengan ${term('lists', '<ul>, <ol>, dan <li>')}`,
+            storyConnectHtml: `Di Babak 2 kita sudah berhasil menampilkan foto produk dan link WhatsApp. Sekarang pembeli bertanya: <em>"Apa saja keunggulan kopi di toko ini, dan bagaimana urutan langkah cara memesannya?"</em> Jika ditulis dalam paragraf biasa, poin-poin tersebut sulit dipindai mata.`,
+            syntaxRuleHtml: `HTML memiliki 2 jenis daftar yang di dalamnya wajib diisi dengan <code class="font-mono font-bold">&lt;li&gt;</code> (List Item):<br>• <code class="font-mono font-bold">&lt;ul&gt;</code> (Unordered List): Daftar simbol titik untuk rincian keunggulan usaha.<br>• <code class="font-mono font-bold">&lt;ol&gt;</code> (Ordered List): Daftar bernomor urut (<code class="font-mono">1, 2, 3</code> atau <code class="font-mono">type="A"</code>) untuk prosedur berurutan.`,
+            missionHtml: `Tambahkan 1 baris <code class="font-mono font-bold">&lt;li&gt;...&lt;/li&gt;</code> baru di dalam <code class="font-mono">&lt;ul&gt;</code> pada editor di bawah, atau ubah <code class="font-mono">type="1"</code> pada <code class="font-mono">&lt;ol&gt;</code> menjadi <code class="font-mono font-bold">type="A"</code>!`,
+            defaultPreset: 'ul_and_ol',
+            presets: {
+                ul_and_ol: {
+                    label: "1. Daftar Poin <ul> & Urutan <ol>",
+                    hint: "Setiap butir kalimat di dalam <ul> maupun <ol> wajib dibungkus dengan pasangan <li>...</li>.",
+                    code: `<!-- === FOKUS SLIDE INI: Daftar <ul> (Poin) & <ol> (Nomor) === -->\n<h3>Keunggulan Biji Kopi Kami (ul):</h3>\n<ul>\n  <li>100% Biji Kopi Petik Merah Asli</li>\n  <li>Disangrai Segar Setiap Awal Pekan</li>\n  <li>Bisa Request Giling Halus, Sedang, atau Biji Utuh</li>\n</ul>\n\n<h3>3 Langkah Mudah Pemesanan (ol):</h3>\n<ol type="1">\n  <li>Pilih produk pada tabel daftar harga di bawah</li>\n  <li>Isi formulir pemesanan pelanggan</li>\n  <li>Konfirmasi pembayaran via WhatsApp</li>\n</ol>`
+                },
+                ol_letter_type: {
+                    label: "2. Variasi Penomoran Huruf (type='A')",
+                    hint: "Coba ganti type='A' menjadi type='i' untuk melihat penomoran angka Romawi!",
+                    code: `<h3>Pilihan Paket Bundling Katalog (type="A"):</h3>\n<ol type="A">\n  <li>Paket Hemat Kopi Susu 1 Liter</li>\n  <li>Paket Hampers Boks Eksklusif</li>\n  <li>Paket Grosir Kedai &amp; Warkop</li>\n</ol>`
+                }
+            }
+        });
+
+        // SLIDE 12: Merakit Tabel Daftar Harga Katalog (<table>, <tr>, <th>, <td> & colspan)
+        registerStorySlide('s12', {
+            chapterBadge: "Babak 3 • Daftar Informasi & Tabel Harga",
+            stepLabel: "Langkah 12 dari 16",
+            titleHtml: `Merakit Tabel Daftar Harga Katalog dengan ${term('tables', '<table> & colspan')}`,
+            storyConnectHtml: `Pada langkah pertama cara pemesanan di Slide 11, kita meminta pembeli melihat <strong>Tabel Daftar Harga</strong>. Jika toko memiliki banyak varian produk dan ukuran kemasan, menyusunnya di dalam <code class="font-mono font-bold">&lt;table&gt;</code> membuat perbandingan harga jauh lebih rapi!`,
+            syntaxRuleHtml: `Tabel dirakit baris demi baris menggunakan <code class="font-mono font-bold">&lt;tr&gt;</code> (Table Row):<br>• Gunakan <code class="font-mono font-bold">&lt;th&gt;</code> untuk sel judul kolom di bagian atas (<code class="font-mono">&lt;thead&gt;</code>).<br>• Gunakan <code class="font-mono font-bold">&lt;td&gt;</code> untuk sel data produk (<code class="font-mono">&lt;tbody&gt;</code>).<br>• Gunakan <code class="font-mono font-bold">colspan="2"</code> untuk melebur 2 kolom menjadi 1 sel lebar pada baris Total.`,
+            missionHtml: `Perhatikan baris paling bawah tabel (<code class="font-mono">colspan="2"</code>). Coba klik Skenario 2 untuk melihat apa yang terjadi jika kita lupa menambahkan <code class="font-mono">colspan="2"</code>!`,
+            defaultPreset: 'table_with_colspan',
+            presets: {
+                table_with_colspan: {
+                    label: "1. Tabel Harga Rapi + colspan='2'",
+                    hint: "Atribut colspan='2' menggabungkan kolom Kode dan Nama Produk pada baris rekap terakhir.",
+                    code: `<h2>Tabel Daftar Harga Katalog</h2>\n<!-- === FOKUS SLIDE INI: <table>, <tr>, <th>, <td> & colspan === -->\n<table>\n  <thead>\n    <tr>\n      <th>Kode</th>\n      <th>Nama Produk UMKM</th>\n      <th>Harga</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>KP-01</td>\n      <td>Kopi Arabika Gayo (Pouch 250g)</td>\n      <td>Rp 65.000</td>\n    </tr>\n    <tr>\n      <td>KP-02</td>\n      <td>Kopi Robusta Temanggung (Pouch 250g)</td>\n      <td>Rp 45.000</td>\n    </tr>\n    <tr>\n      <td>KP-03</td>\n      <td>Kopi Susu Gula Aren (Botol 1 Liter)</td>\n      <td>Rp 55.000</td>\n    </tr>\n    <tr>\n      <td colspan="2"><strong>Total Varian Produk Aktif</strong></td>\n      <td><strong>3 Produk</strong></td>\n    </tr>\n  </tbody>\n</table>`
+                },
+                table_no_colspan: {
+                    label: "2. Masalah Jika Lupa colspan='2'",
+                    hint: "Tambahkan colspan='2' pada <td>Total Varian Produk Aktif</td> agar kolom kanannya tidak bolong!",
+                    code: `<table>\n  <thead>\n    <tr><th>Kode</th><th>Nama Produk UMKM</th><th>Harga</th></tr>\n  </thead>\n  <tbody>\n    <tr><td>KP-01</td><td>Kopi Arabika Gayo 250g</td><td>Rp 65.000</td></tr>\n    <!-- Baris di bawah ini hanya punya 2 <td> padahal tabel punya 3 kolom: -->\n    <tr>\n      <td><strong>Total Varian Produk Aktif</strong></td>\n      <td><strong>1 Produk</strong></td>\n    </tr>\n  </tbody>\n</table>`
+                }
+            }
+        });
+
+        // SLIDE 13: POS PRAKTIK 3 (Menyusun Daftar & Tabel Katalog Harga)
+        registerPosSlide('pos3', {
+            badge: "Babak 3 • Pos Praktik 3 dari 4",
+            title: "Pos Praktik 3: Menyusun Daftar Keunggulan & Tabel Harga UMKM",
+            scenario: "Lengkapi halaman UMKM Anda dengan daftar keunggulan (<ul>), langkah pemesanan (<ol>), serta tabel daftar harga (<table>) yang memuat judul kolom (<th>), baris data (<td>), dan penggabungan sel (colspan):",
+            formulaHint: "<ul><li>...</li></ul> <ol><li>...</li></ol> <table><tr><th>Judul</th></tr><tr><td colspan=\"2\">Total</td></tr></table>",
+            starter: "<!-- 1. Buat daftar poin <ul> berisi minimal 2 <li> keunggulan usaha Anda: -->\n\n\n<!-- 2. Buat daftar bernomor <ol> berisi minimal 2 <li> langkah cara pemesanan: -->\n\n\n<!-- 3. Buat <table> daftar harga yang memiliki <tr>, judul kolom <th>, sel data <td>, dan colspan=\"2\": -->\n",
+            solution: "<h3>Keunggulan Produk Kami:</h3>\n<ul>\n  <li>100% Biji Kopi Asli Tanpa Campuran</li>\n  <li>Disangrai Segar Setiap Pekan</li>\n</ul>\n<h3>Cara Pemesanan:</h3>\n<ol type=\"1\">\n  <li>Pilih produk pada tabel harga</li>\n  <li>Isi formulir pemesanan di bawah</li>\n</ol>\n<table>\n  <thead>\n    <tr>\n      <th>Kode</th>\n      <th>Nama Produk</th>\n      <th>Harga</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>KP-01</td>\n      <td>Kopi Arabika Gayo 250g</td>\n      <td>Rp 65.000</td>\n    </tr>\n    <tr>\n      <td colspan=\"2\"><strong>Total Produk Tersedia</strong></td>\n      <td><strong>1 Produk</strong></td>\n    </tr>\n  </tbody>\n</table>",
+            checks: [
+                {
+                    label: "1. Daftar poin <ul> + <li>",
+                    regex: /<ul\b[^>]*>[\s\S]*?<li\b[^>]*>[\s\S]*?\S[\s\S]*?<\/li>[\s\S]*?<\/ul>/i,
+                    errMsg: "Anda belum membuat daftar poin <ul>...</ul> yang di dalamnya berisi item <li>...</li>."
+                },
+                {
+                    label: "2. Daftar urut <ol> + <li>",
+                    regex: /<ol\b[^>]*>[\s\S]*?<li\b[^>]*>[\s\S]*?\S[\s\S]*?<\/li>[\s\S]*?<\/ol>/i,
+                    errMsg: "Anda belum membuat daftar bernomor urut <ol>...</ol> yang di dalamnya berisi item <li>...</li>."
+                },
+                {
+                    label: "3. Tabel <table> dengan <th> & <td>",
+                    regex: /<table\b[^>]*>(?=[\s\S]*?<th\b[^>]*>[\s\S]*?\S[\s\S]*?<\/th>)(?=[\s\S]*?<td\b[^>]*>[\s\S]*?\S[\s\S]*?<\/td>)[\s\S]*?<\/table>/i,
+                    errMsg: "Pastikan di dalam <table>...</table> Anda sudah menulis baris <tr> yang memuat sel judul <th> dan sel data <td>."
+                },
+                {
+                    label: "4. Penggabungan kolom colspan",
+                    regex: /<(?:td|th)\b[^>]*\bcolspan\s*=\s*["']?\d+["']?[^>]*>/i,
+                    errMsg: "Tambahkan atribut colspan=\"2\" pada salah satu sel <td> di baris bagian bawah tabel Anda."
+                }
+            ]
+        });
+
+        function renderSlide7() { return renderThreeSectionSlide('s7'); }
+        function renderSlide8() { return renderThreeSectionSlide('s8'); }
+        function renderSlide9() { return renderThreeSectionSlide('s9'); }
+        function renderSlide10() { return renderPosSlide('pos2'); }
+        function renderSlide11() { return renderThreeSectionSlide('s11'); }
+        function renderSlide12() { return renderThreeSectionSlide('s12'); }
+        function renderSlide13() { return renderPosSlide('pos3'); }
+
+        // === TEMPELKAN BAGIAN 3 TEPAT DI BAWAH BARIS INI ===
+// =========================================================================
+        // 6. REGISTRASI SLIDE 14 S/D SLIDE 16 (BABAK 4: FORMULIR & TUGAS RUMAH)
+        // =========================================================================
+
+        // SLIDE 14: Merakit Formulir Pemesanan (<form>, <label>, <input>, <select>, <textarea>, & required)
+        registerStorySlide('s14', {
+            chapterBadge: "Babak 4 • Formulir Pemesanan & Proyek Mandiri",
+            stepLabel: "Langkah 14 dari 16",
+            titleHtml: `Merakit Formulir Pemesanan dengan ${term('forms', '<form>, <input>')} &amp; ${term('input_attr', '<select>')}`,
+            storyConnectHtml: `Setelah melihat foto produk (Babak 2) dan tabel daftar harga (Babak 3), pembeli kini siap memesan! Agar mereka bisa langsung mengisi nama, memilih varian produk, menentukan jumlah beli, dan menuliskan alamat pengiriman, kita menutup bagian bawah halaman dengan elemen <strong>Formulir (<code class="font-mono">&lt;form&gt;</code>)</strong>.`,
+            syntaxRuleHtml: `Komponen wajib di dalam <code class="font-mono font-bold">&lt;form&gt;</code>:<br>• <code class="font-mono font-bold">&lt;label for="id"&gt;</code> + <code class="font-mono font-bold">&lt;input id="id" required&gt;</code>: Kotak isian (<code class="font-mono">type="text"</code>, <code class="font-mono">"number"</code>, <code class="font-mono">"radio"</code>) dengan pengaman <code class="font-mono">required</code> agar tidak bisa dikirim kosong.<br>• <code class="font-mono font-bold">&lt;select&gt;</code> + <code class="font-mono font-bold">&lt;option&gt;</code>: Menu lipat (dropdown) pilihan produk.<br>• <code class="font-mono font-bold">&lt;textarea&gt;</code> &amp; <code class="font-mono font-bold">&lt;button type="submit"&gt;</code>: Kotak alamat panjang dan tombol kirim.`,
+            missionHtml: `Coba klik langsung tombol <strong>Kirim Pesanan</strong> di jendela pratinjau kanan saat kolom Nama masih kosong untuk melihat cegatan otomatis dari atribut <code class="font-mono font-bold">required</code>!`,
+            defaultPreset: 'form_complete',
+            presets: {
+                form_complete: {
+                    label: "1. Form Pemesanan Lengkap (Input + Select + Textarea)",
+                    hint: "Klik tombol 'Kirim Pesanan' di kanan untuk menguji validasi required dan simulasi pengiriman data!",
+                    code: `<h2>Formulir Pemesanan Pelanggan</h2>\n<!-- === FOKUS SLIDE INI: <form>, <label>, <input required>, <select>, <textarea> === -->\n<form>\n  <label for="nama">1. Nama Lengkap Pemesan (Wajib):</label>\n  <input type="text" id="nama" name="nama" placeholder="Ketik nama lengkap Anda..." required>\n\n  <label for="produk">2. Pilih Varian Produk (&lt;select&gt;):</label>\n  <select id="produk" name="produk">\n    <option value="Arabika Gayo">Kopi Arabika Gayo 250g (Rp 65.000)</option>\n    <option value="Robusta Temanggung">Kopi Robusta Temanggung 250g (Rp 45.000)</option>\n    <option value="Kopi Susu 1L">Kopi Susu Gula Aren 1L (Rp 55.000)</option>\n  </select>\n\n  <label for="jumlah">3. Jumlah Pesanan (Pcs):</label>\n  <input type="number" id="jumlah" name="jumlah" min="1" value="1" required>\n\n  <label for="alamat">4. Alamat Lengkap &amp; Catatan (&lt;textarea&gt;):</label>\n  <textarea id="alamat" name="alamat" rows="2" placeholder="Jl. Merdeka No. 10..."></textarea>\n\n  <button type="submit">Kirim Pesanan Sekarang</button>\n</form>`
+                },
+                radio_checkbox_demo: {
+                    label: "2. Pilihan Radio (Pilih 1) vs Checkbox (Pilih Banyak)",
+                    hint: "Pada type='radio', atribut name wajib sama persis (name='gilingan') agar hanya bisa dipilih salah satu.",
+                    code: `<form>\n  <p><strong>Pilih Tingkat Gilingan Kopi (Radio - Pilih Satu):</strong></p>\n  <label><input type="radio" name="gilingan" value="Biji Utuh" checked> Biji Utuh</label><br>\n  <label><input type="radio" name="gilingan" value="Giling Halus"> Bubuk Halus</label>\n  <hr>\n  <p><strong>Tambahan Kemasan (Checkbox - Boleh Pilih Banyak):</strong></p>\n  <label><input type="checkbox" name="ekstra" value="Box Hampers" checked> Tambah Box Hampers (+Rp 10.000)</label><br>\n  <label><input type="checkbox" name="ekstra" value="Kartu Ucapan"> Tambah Kartu Ucapan Gratis</label>\n</form>`
+                }
+            }
+        });
+
+        // SLIDE 15: POS PRAKTIK 4 (Merakit Formulir Pemesanan Pelanggan)
+        registerPosSlide('pos4', {
+            badge: "Babak 4 • Pos Praktik 4 dari 4 (Penyelesaian Akhir)",
+            title: "Pos Praktik 4: Merakit Formulir Pemesanan UMKM Anda",
+            scenario: "Sempurnakan bagian paling bawah halaman UMKM Anda dengan merakit elemen <form> yang memiliki kotak input wajib isi (required), menu dropdown produk (<select> + <option>), kotak catatan alamat (<textarea>), dan tombol kirim (<button>):",
+            formulaHint: "<form> <label>Nama</label> <input type=\"text\" required> <select><option>Produk</option></select> <textarea></textarea> <button type=\"submit\">Kirim</button> </form>",
+            starter: "<form>\n  <!-- 1. Buat <label> dan <input type=\"text\" required> untuk Nama Pemesan: -->\n  \n\n  <!-- 2. Buat dropdown <select> yang di dalamnya berisi minimal 2 pilihan <option>: -->\n  \n\n  <!-- 3. Buat kotak catatan/alamat <textarea>...</textarea>: -->\n  \n\n  <!-- 4. Buat tombol kirim <button type=\"submit\">...</button>: -->\n  \n</form>",
+            solution: "<form>\n  <label for=\"pemesan\">Nama Lengkap Pemesan:</label>\n  <input type=\"text\" id=\"pemesan\" name=\"pemesan\" placeholder=\"Ketik nama Anda\" required>\n\n  <label for=\"menu\">Pilih Produk UMKM:</label>\n  <select id=\"menu\" name=\"menu\">\n    <option value=\"Arabika Gayo\">Kopi Arabika Gayo 250g (Rp 65.000)</option>\n    <option value=\"Kopi Susu 1L\">Kopi Susu Gula Aren 1L (Rp 55.000)</option>\n  </select>\n\n  <label for=\"alamat\">Alamat Pengiriman:</label>\n  <textarea id=\"alamat\" name=\"alamat\" rows=\"2\" placeholder=\"Alamat lengkap...\"></textarea>\n\n  <button type=\"submit\">Kirim Pesanan Sekarang</button>\n</form>",
+            checks: [
+                {
+                    label: "1. Input dengan atribut required",
+                    regex: /<input\b(?=[^>]*\brequired\b)[^>]*>/i,
+                    errMsg: "Pastikan Anda sudah menulis tag <input> yang memiliki atribut validasi required di dalamnya (contoh: <input type=\"text\" required>)."
+                },
+                {
+                    label: "2. Dropdown <select> + <option>",
+                    regex: /<select\b[^>]*>[\s\S]*?<option\b[^>]*>[\s\S]*?\S[\s\S]*?<\/option>[\s\S]*?<\/select>/i,
+                    errMsg: "Buat menu pilihan produk dengan pasangan <select>...</select> yang di dalamnya memuat minimal satu <option>Nama Produk</option>."
+                },
+                {
+                    label: "3. Kotak alamat <textarea>",
+                    regex: /<textarea\b[^>]*>[\s\S]*?<\/textarea>/i,
+                    errMsg: "Tambahkan kotak alamat pengiriman menggunakan pasangan tag <textarea>...</textarea> (jangan lupa tag penutup </textarea>)."
+                },
+                {
+                    label: "4. Tombol <button type='submit'>",
+                    regex: /<button\b[^>]*>[\s\S]*?\S[\s\S]*?<\/button>/i,
+                    errMsg: "Tutup formulir Anda dengan tombol kirim menggunakan pasangan <button type=\"submit\">Kirim Pesanan</button>."
+                }
+            ]
+        });
+
+        function renderSlide14() { return renderThreeSectionSlide('s14'); }
+        function renderSlide15() { return renderPosSlide('pos4'); }
+
+        // =========================================================================
+        // 7. SLIDE 16: TUGAS RUMAH MANDIRI 3 SEKSI (BERSIH TANPA IMPOR POS 1-4)
+        // =========================================================================
+        const HOMEWORK_STARTER_HTML = `<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Profil & Katalog Resmi UMKM</title>
+</head>
+<body>
+
+  <!-- =================================================================
+       BAGIAN 1: KEPALA & IDENTITAS USAHA (20 POIN)
+       Wajib memuat: <h1> Nama UMKM, <p> deskripsi, <br> alamat/jam buka, dan garis <hr>
+       ================================================================= -->
+  
+
+
+  <!-- =================================================================
+       BAGIAN 2: ETALASE PRODUK, PROMO & KONTAK (20 POIN)
+       Wajib memuat: <h2>/<h3>, <strong>/<mark>, <del> & <ins> harga diskon,
+       link eksternal <a href="..." target="_blank">, dan minimal 2 foto <img src="..." alt="...">
+       ================================================================= -->
+  
+
+
+  <!-- =================================================================
+       BAGIAN 3: DAFTAR KEUNGGULAN & CARA PESAN (20 POIN)
+       Wajib memuat: Daftar poin <ul> + <li> dan daftar nomor urut <ol> + <li>
+       ================================================================= -->
+  
+
+
+  <!-- =================================================================
+       BAGIAN 4: TABEL DAFTAR HARGA LENGKAP (20 POIN)
+       Wajib memuat: <table>, judul kolom <th>, minimal 3 baris produk <td>, dan atribut colspan
+       ================================================================= -->
+  
+
+
+  <!-- =================================================================
+       BAGIAN 5: FORMULIR PEMESANAN PELANGGAN (20 POIN)
+       Wajib memuat: <form>, <label>, <input required>, <select>+<option>, <textarea>, dan <button>
+       ================================================================= -->
+  
+
+</body>
+</html>`;
+
+        const HOMEWORK_SECTIONS_SPEC = [
+            {
+                id: 1,
+                shortTitle: "Bagian 1: Identitas",
+                fullTitle: "Bagian 1 — Kepala & Identitas Usaha UMKM (Bobot: 20 Poin)",
+                instruction: "Tuliskan nama UMKM pilihan Anda menggunakan judul utama <h1>, jelaskan profil singkatnya dengan paragraf <p>, tuliskan alamat serta jam operasional menggunakan pindah baris <br>, lalu pisahkan dengan garis mendatar <hr>.",
+                weight: 20,
+                badges: [
+                    { label: "<h1> Nama Toko", test: function(c) { return /<h1\b[^>]*>[\s\S]*?\S[\s\S]*?<\/h1>/i.test(c); } },
+                    { label: "<p> Paragraf", test: function(c) { return /<p\b[^>]*>[\s\S]*?\S[\s\S]*?<\/p>/i.test(c); } },
+                    { label: "<br> Pindah Baris", test: function(c) { return /<br\b[^>]*>/i.test(c); } },
+                    { label: "<hr> Garis Batas", test: function(c) { return /<hr\b[^>]*>/i.test(c); } }
+                ]
+            },
+            {
+                id: 2,
+                shortTitle: "Bagian 2: Produk & Foto",
+                fullTitle: "Bagian 2 — Etalase Produk, Harga Promo & Kontak (Bobot: 20 Poin)",
+                instruction: "Tampilkan minimal 2 produk unggulan menggunakan subjudul <h2>/<h3>, tonjolkan keunggulan dengan <strong>/<mark>, tampilkan harga diskon (<del> & <ins>), pasang 1 link WhatsApp/IG (<a target='_blank'>), serta tampilkan minimal 2 foto <img src='...' alt='...'>.",
+                weight: 20,
+                badges: [
+                    { label: "<h2> / <h3>", test: function(c) { return /<h[23]\b[^>]*>[\s\S]*?\S[\s\S]*?<\/h[23]>/i.test(c); } },
+                    { label: "<strong> / <mark>", test: function(c) { return /<(?:strong|em|mark)\b[^>]*>[\s\S]*?\S[\s\S]*?<\/(?:strong|em|mark)>/i.test(c); } },
+                    { label: "<del> & <ins>", test: function(c) { return /<del\b[^>]*>[\s\S]*?\S[\s\S]*?<\/del>/i.test(c) && /<ins\b[^>]*>[\s\S]*?\S[\s\S]*?<\/ins>/i.test(c); } },
+                    { label: "<a target='_blank'>", test: function(c) { return /<a\b[^>]*target\s*=\s*["']_blank["'][^>]*>[\s\S]*?<\/a>/i.test(c); } },
+                    { label: "Min. 2x <img alt>", test: function(c) {
+                        const m = c.match(/<img\b(?=[^>]*\bsrc\s*=\s*["'][^"']+["'])(?=[^>]*\balt\s*=\s*["'][^"']+["'])[^>]*>/gi);
+                        return m && m.length >= 2;
+                    }}
+                ]
+            },
+            {
+                id: 3,
+                shortTitle: "Bagian 3: Daftar",
+                fullTitle: "Bagian 3 — Daftar Keunggulan & Langkah Pemesanan (Bobot: 20 Poin)",
+                instruction: "Buatlah 1 daftar poin tidak berurutan (<ul> berisi minimal 2 item <li>) untuk menjelaskan keunggulan UMKM, dan 1 daftar bernomor urut (<ol> berisi minimal 2 item <li>) untuk menjelaskan urutan cara pemesanan.",
+                weight: 20,
+                badges: [
+                    { label: "<ul> + Min. 2 <li>", test: function(c) {
+                        const ulMatch = c.match(/<ul\b[^>]*>([\s\S]*?)<\/ul>/i);
+                        if (!ulMatch) return false;
+                        const liCount = (ulMatch[1].match(/<li\b[^>]*>[\s\S]*?\S[\s\S]*?<\/li>/gi) || []).length;
+                        return liCount >= 2;
+                    }},
+                    { label: "<ol> + Min. 2 <li>", test: function(c) {
+                        const olMatch = c.match(/<ol\b[^>]*>([\s\S]*?)<\/ol>/i);
+                        if (!olMatch) return false;
+                        const liCount = (olMatch[1].match(/<li\b[^>]*>[\s\S]*?\S[\s\S]*?<\/li>/gi) || []).length;
+                        return liCount >= 2;
+                    }}
+                ]
+            },
+            {
+                id: 4,
+                shortTitle: "Bagian 4: Tabel Harga",
+                fullTitle: "Bagian 4 — Tabel Daftar Harga Katalog Lengkap (Bobot: 20 Poin)",
+                instruction: "Susunlah tabel perbandingan harga produk (<table>) yang memiliki baris judul kolom (<th>), minimal 3 baris data produk (<tr> yang berisi <td>), serta 1 baris rekap di bagian bawah yang menggabungkan kolom dengan atribut colspan.",
+                weight: 20,
+                badges: [
+                    { label: "<table> & <th>", test: function(c) { return /<table\b[^>]*>[\s\S]*?<th\b[^>]*>[\s\S]*?\S[\s\S]*?<\/th>[\s\S]*?<\/table>/i.test(c); } },
+                    { label: "Min. 3 Baris <td>", test: function(c) {
+                        const rows = c.match(/<tr\b[^>]*>[\s\S]*?<td\b[^>]*>[\s\S]*?<\/tr>/gi);
+                        return rows && rows.length >= 3;
+                    }},
+                    { label: "Atribut colspan", test: function(c) { return /<(?:td|th)\b[^>]*\bcolspan\s*=\s*["']?\d+["']?[^>]*>/i.test(c); } }
+                ]
+            },
+            {
+                id: 5,
+                shortTitle: "Bagian 5: Formulir",
+                fullTitle: "Bagian 5 — Formulir Pemesanan Pelanggan (Bobot: 20 Poin)",
+                instruction: "Buatlah elemen <form> di bagian bawah halaman yang dilengkapi <label>, kotak isian wajib (<input required>), menu pilihan produk (<select> + <option>), kotak catatan alamat (<textarea>), dan tombol kirim (<button type='submit'>).",
+                weight: 20,
+                badges: [
+                    { label: "<form> & <label>", test: function(c) { return /<form\b[^>]*>[\s\S]*?<label\b[^>]*>[\s\S]*?<\/label>[\s\S]*?<\/form>/i.test(c); } },
+                    { label: "<input required>", test: function(c) { return /<input\b(?=[^>]*\brequired\b)[^>]*>/i.test(c); } },
+                    { label: "<select>+<option>", test: function(c) { return /<select\b[^>]*>[\s\S]*?<option\b[^>]*>[\s\S]*?\S[\s\S]*?<\/option>[\s\S]*?<\/select>/i.test(c); } },
+                    { label: "<textarea>", test: function(c) { return /<textarea\b[^>]*>[\s\S]*?<\/textarea>/i.test(c); } },
+                    { label: "<button>", test: function(c) { return /<button\b[^>]*>[\s\S]*?\S[\s\S]*?<\/button>/i.test(c); } }
+                ]
+            }
+        ];
+
+        function evaluateHomeworkSections(rawCode) {
+            const clean = stripHtmlComments(rawCode);
+            let totalScore = 0;
+            let totalBadges = 0;
+            let passedBadges = 0;
+
+            const sections = HOMEWORK_SECTIONS_SPEC.map(function(sec) {
+                let secPassed = 0;
+                const badgeList = sec.badges.map(function(b) {
+                    totalBadges++;
+                    const ok = Boolean(b.test(clean));
+                    if (ok) {
+                        secPassed++;
+                        passedBadges++;
+                    }
+                    return { label: b.label, ok: ok };
+                });
+
+                const secScore = Math.round((secPassed / sec.badges.length) * sec.weight);
+                totalScore += secScore;
+                return {
+                    id: sec.id,
+                    shortTitle: sec.shortTitle,
+                    fullTitle: sec.fullTitle,
+                    instruction: sec.instruction,
+                    weight: sec.weight,
+                    secScore: secScore,
+                    allOk: secPassed === sec.badges.length,
+                    badges: badgeList
+                };
+            });
+
+            return {
+                totalScore: totalScore,
+                totalBadges: totalBadges,
+                passedBadges: passedBadges,
+                sections: sections
+            };
+        }
+
+        function buildHomeworkTopDeckHtml(evalObj) {
+            const activeSec = evalObj.sections.find(function(s) { return s.id === hwActiveSectionTab; }) || evalObj.sections[0];
+
+            const tabsHtml = evalObj.sections.map(function(s) {
+                const isSelected = s.id === hwActiveSectionTab;
+                return `
+                    <button type="button" onclick="setHwSectionTab(${s.id})" class="p-2.5 rounded-2xl border text-left transition flex flex-col justify-between gap-1 ${isSelected ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : s.allOk ? 'bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-400 text-emerald-900 dark:text-emerald-200' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'}">
+                        <div class="flex items-center justify-between gap-1">
+                            <span class="text-[11px] font-extrabold truncate">${escapeHtml(s.shortTitle)}</span>
+                            <i class="fa-solid ${s.allOk ? 'fa-circle-check text-emerald-400' : 'fa-circle-dot opacity-50'} text-xs shrink-0"></i>
+                        </div>
+                        <div class="text-[10px] font-mono font-bold opacity-85">Skor: ${s.secScore} / ${s.weight}</div>
+                    </button>
+                `;
+            }).join('');
+
+            const activeBadgesHtml = activeSec.badges.map(function(b) {
+                return `
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-mono text-xs font-bold border transition ${b.ok ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-300 dark:border-slate-700'}">
+                        <i class="fa-solid ${b.ok ? 'fa-check' : 'fa-hourglass-half'} text-[10px]"></i>
+                        <span>${escapeHtml(b.label)}</span>
+                    </span>
+                `;
+            }).join('');
+
+            return `
+                <div class="space-y-2.5">
+                    <div class="p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/80 dark:border-indigo-800/70 text-xs text-slate-700 dark:text-slate-200 leading-relaxed flex flex-col md:flex-row md:items-center justify-between gap-3">
+                        <div>
+                            <strong class="text-indigo-700 dark:text-indigo-300 uppercase tracking-wider block mb-0.5"><i class="fa-solid fa-clipboard-list mr-1"></i>Instruksi Tugas Mandiri (Proyek PjBL UMKM):</strong>
+                            Pilihlah <strong>1 UMKM nyata di sekitar Anda</strong> (Kedai Kopi, Rumah Makan, Laundry, Toko Roti, Barbershop, dll.). Ketik sendiri kode halaman profil &amp; katalog pemesanannya dari awal pada editor di bawah dengan melengkapi <strong>Bagian 1 s/d Bagian 5</strong> hingga seluruh penanda tag menyala hijau!
+                        </div>
+                        <button type="button" onclick="copyHomeworkInstructionText()" class="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300 font-bold text-[11px] shrink-0 self-start md:self-center hover:bg-indigo-100">
+                            <i class="fa-regular fa-copy mr-1"></i>Salin Panduan Soal
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                        ${tabsHtml}
+                    </div>
+
+                    <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                        <div class="space-y-1 max-w-2xl">
+                            <div class="text-xs font-extrabold text-slate-900 dark:text-white">${escapeHtml(activeSec.fullTitle)}</div>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">${escapeHtml(activeSec.instruction)}</p>
+                        </div>
+                        <div class="flex flex-wrap gap-1.5 shrink-0">
+                            ${activeBadgesHtml}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide16() {
+            if (!homeworkHtmlCode || !homeworkHtmlCode.trim()) {
+                homeworkHtmlCode = HOMEWORK_STARTER_HTML;
+            }
+            const evalObj = evaluateHomeworkSections(homeworkHtmlCode);
+            const showCodeCol = mobileWorkspaceView === 'split' || mobileWorkspaceView === 'code';
+            const showPrevCol = mobileWorkspaceView === 'split' || mobileWorkspaceView === 'preview';
+
+            setTimeout(function() {
+                const prevEl = document.getElementById('homeworkLivePreview');
+                if (prevEl) prevEl.innerHTML = transformVirtualHtml(homeworkHtmlCode);
+            }, 0);
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-3.5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-200 dark:border-slate-800">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-extrabold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Langkah 16 dari 16 • Tugas Rumah Mandiri</span>
+                                <span id="hwAutoSaveBadge" class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">Auto-Save Aktif</span>
+                            </div>
+                            <h2 class="text-lg sm:text-2xl font-extrabold text-slate-900 dark:text-white mt-0.5">Live Homework Studio: Bangun <span class="font-mono">index.html</span> UMKM Anda</h2>
+                        </div>
+
+                        <div class="flex flex-wrap items-center gap-1.5 self-start sm:self-center shrink-0">
+                            <div id="homeworkScoreBadge" class="px-3.5 py-1.5 rounded-xl border text-xs font-extrabold flex items-center gap-1.5 ${evalObj.totalScore === 100 ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800'}">
+                                <i class="fa-solid fa-award"></i>
+                                <span>Skor: ${evalObj.totalScore} / 100 (${evalObj.passedBadges}/${evalObj.totalBadges} Tag)</span>
+                            </div>
+                            <button type="button" onclick="toggleTopDeck()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold">
+                                <i class="fa-solid ${isTopDeckCollapsed ? 'fa-chevron-down' : 'fa-chevron-up'} mr-1"></i>${isTopDeckCollapsed ? 'Buka Instruksi' : 'Lipat Instruksi'}
+                            </button>
+                            <button type="button" onclick="toggleFullScreenWorkspace()" class="px-3 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition ${isFullScreenStudio ? 'bg-rose-600 text-white' : 'bg-indigo-600 hover:bg-indigo-700 text-white'}">
+                                <i class="fa-solid ${isFullScreenStudio ? 'fa-compress' : 'fa-expand'}"></i>
+                                <span>${isFullScreenStudio ? 'Keluar Full-Screen' : 'Full-Screen'}</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="homeworkTopDeckContainer" class="${isTopDeckCollapsed ? 'hidden' : 'block'}">
+                        ${buildHomeworkTopDeckHtml(evalObj)}
+                    </div>
+
+                    <div class="flex lg:hidden items-center justify-between gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                        <button type="button" onclick="setMobileWorkspaceView('code')" class="flex-1 py-1.5 rounded-lg text-xs font-bold transition ${mobileWorkspaceView === 'code' ? 'bg-indigo-600 text-white' : 'text-slate-600 dark:text-slate-300'}"><i class="fa-solid fa-laptop-code mr-1"></i>Ketik Kode</button>
+                        <button type="button" onclick="setMobileWorkspaceView('preview')" class="flex-1 py-1.5 rounded-lg text-xs font-bold transition ${mobileWorkspaceView === 'preview' ? 'bg-indigo-600 text-white' : 'text-slate-600 dark:text-slate-300'}"><i class="fa-solid fa-eye mr-1"></i>Lihat Hasil</button>
+                        <button type="button" onclick="setMobileWorkspaceView('split')" class="flex-1 py-1.5 rounded-lg text-xs font-bold transition ${mobileWorkspaceView === 'split' ? 'bg-indigo-600 text-white' : 'text-slate-600 dark:text-slate-300'}"><i class="fa-solid fa-arrows-up-down mr-1"></i>Tumpuk</button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch my-auto flex-1">
+                        <div class="${showCodeCol ? 'flex' : 'hidden'} lg:flex lg:col-span-6 p-3.5 sm:p-4 rounded-3xl bg-slate-900 text-slate-100 font-mono text-xs flex-col gap-2 border border-slate-800">
+                            <div class="flex flex-wrap items-center justify-between gap-1.5">
+                                <span class="text-indigo-300 font-bold">index.html (Ketik Mandiri dari Awal)</span>
+                                <div class="flex flex-wrap items-center gap-1.5">
+                                    <button type="button" onclick="downloadHomeworkFile()" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-sans font-bold text-[11px]">
+                                        <i class="fa-solid fa-download mr-1"></i>Unduh index.html
+                                    </button>
+                                    <button type="button" onclick="copyHomeworkCode()" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-sans font-bold text-[11px]">Salin</button>
+                                    <button type="button" onclick="resetHomeworkStarter()" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-rose-300 font-sans font-bold text-[11px]">Reset</button>
+                                </div>
+                            </div>
+
+                            ${buildQuickSymbolBarHtml('homeworkTextarea')}
+
+                            <textarea id="homeworkTextarea" spellcheck="false" onkeydown="handleEditorKeydown(event, this)" oninput="onHomeworkCodeInput(this.value)" class="code-editor-area w-full flex-1 ${isTopDeckCollapsed || isFullScreenStudio ? 'min-h-[340px]' : 'min-h-[210px]'} bg-slate-950 text-emerald-300 font-mono p-3.5 rounded-2xl border border-slate-800 focus:outline-none focus:border-indigo-500 resize-y">${escapeHtml(homeworkHtmlCode)}</textarea>
+                        </div>
+
+                        <div class="${showPrevCol ? 'flex' : 'hidden'} lg:flex lg:col-span-6 rounded-3xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 flex-col overflow-hidden">
+                            <div class="px-4 py-2 bg-slate-200/80 dark:bg-slate-800 border-b border-slate-300/70 dark:border-slate-700 flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-200">
+                                <span>Pratinjau Halaman UMKM Anda</span>
+                                <span class="text-[10px] font-mono text-slate-500">Real-Time Preview</span>
+                            </div>
+                            <div id="homeworkLivePreview" onclick="handlePreviewInteraction(event)" onsubmit="handlePreviewSubmit(event)" class="html-preview-canvas p-4 sm:p-5 flex-1 overflow-y-auto ${isTopDeckCollapsed || isFullScreenStudio ? 'max-h-[400px]' : 'max-h-[265px]'}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // =========================================================================
+        // 8. DAFTAR 16 SLIDE CERITA BERKESINAMBUNGAN & MESIN NAVIGASI
+        // =========================================================================
+        const SLIDES = [
+            { id: 1, category: "Babak 1: Teks & Kerangka", title: "Masalah Teks Mentah vs Struktur HTML", render: renderSlide1 },
+            { id: 2, category: "Babak 1: Teks & Kerangka", title: "Kerangka Dokumen index.html & Tag Penutup", render: renderSlide2 },
+            { id: 3, category: "Babak 1: Teks & Kerangka", title: "Menyusun Tingkatan Judul (<h1>, <h2>, <h3>)", render: renderSlide3 },
+            { id: 4, category: "Babak 1: Teks & Kerangka", title: "Merapikan Alamat & Jam Buka (<p>, <br>, <hr>)", render: renderSlide4 },
+            { id: 5, category: "Babak 1: Teks & Kerangka", title: "Menonjolkan Promo & Harga Diskon (<del> & <ins>)", render: renderSlide5 },
+            { id: 6, category: "Pos Praktik 1", title: "Pos Praktik 1: Merakit Kepala & Promo UMKM", render: renderSlide6 },
+            { id: 7, category: "Babak 2: Kontak & Foto", title: "Mengenal Rumus Atribut HTML (nama='nilai')", render: renderSlide7 },
+            { id: 8, category: "Babak 2: Kontak & Foto", title: "Memasang Menu Lompat & Link WA (<a href>)", render: renderSlide8 },
+            { id: 9, category: "Babak 2: Kontak & Foto", title: "Menampilkan Foto Produk (<img src alt>)", render: renderSlide9 },
+            { id: 10, category: "Pos Praktik 2", title: "Pos Praktik 2: Memasang Navigasi & Foto Produk", render: renderSlide10 },
+            { id: 11, category: "Babak 3: Daftar & Tabel", title: "Menyusun Daftar Poin (<ul>) & Urutan (<ol>)", render: renderSlide11 },
+            { id: 12, category: "Babak 3: Daftar & Tabel", title: "Merakit Tabel Daftar Harga (<table> & colspan)", render: renderSlide12 },
+            { id: 13, category: "Pos Praktik 3", title: "Pos Praktik 3: Menyusun Daftar & Tabel Harga", render: renderSlide13 },
+            { id: 14, category: "Babak 4: Formulir & Tugas", title: "Merakit Formulir Pemesanan (<form> & <select>)", render: renderSlide14 },
+            { id: 15, category: "Pos Praktik 4", title: "Pos Praktik 4: Merakit Formulir Pemesanan UMKM", render: renderSlide15 },
+            { id: 16, category: "Tugas Rumah Mandiri", title: "Live Homework Studio: Bangun index.html UMKM", render: renderSlide16 }
+        ];
+
+        function updateHeaderPosBadge() {
+            const keys = ['pos1', 'pos2', 'pos3', 'pos4'];
+            let completed = 0;
+            keys.forEach(function(k) {
+                const cleanCode = stripHtmlComments(userPosCodes[k]);
+                const allOk = POS_DATA[k].checks.every(function(c) {
+                    return c.regex.test(cleanCode);
+                });
+                if (allOk) completed++;
+            });
+            const el = document.getElementById('posProgressBadge');
+            if (el) el.textContent = 'Pos Praktik: ' + completed + ' / 4';
+        }
+
+        function renderCurrentSlide() {
+            previewFeedbackBanner = '';
+            applyFullScreenClass();
+
+            const slide = SLIDES[currentSlideIndex];
+            const viewport = document.getElementById('slideViewport');
+            viewport.innerHTML = slide.render();
+
+            const pct = Math.round(((currentSlideIndex + 1) / TOTAL_SLIDES) * 100);
+            document.getElementById('topProgressBar').style.width = pct + '%';
+            document.getElementById('slideCounterBadge').textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES;
+            document.getElementById('mobileFooterCounter').textContent = 'Slide ' + (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES;
+            document.getElementById('slideCategoryPill').textContent = slide.category;
+            document.getElementById('headerSlideTitle').textContent = slide.title;
+
+            const prevBtn = document.getElementById('prevSlideBtn');
+            const nextBtn = document.getElementById('nextSlideBtn');
+            const nextBtnText = document.getElementById('nextBtnText');
+
+            prevBtn.disabled = currentSlideIndex === 0;
+            if (currentSlideIndex === TOTAL_SLIDES - 1) {
+                nextBtnText.textContent = "Selesai";
+                nextBtn.disabled = true;
+            } else {
+                nextBtnText.textContent = "Selanjutnya";
+                nextBtn.disabled = false;
+            }
+
+            updateHeaderPosBadge();
+            renderDotsAndDrawer();
+            saveAppState();
+        }
+
+        function renderDotsAndDrawer() {
+            const dotsContainer = document.getElementById('slideDotsContainer');
+            let dotsHtml = '';
+            let drawerHtml = '';
+
+            for (let idx = 0; idx < SLIDES.length; idx++) {
+                const s = SLIDES[idx];
+                const isActive = idx === currentSlideIndex;
+                const isPosSlide = s.category.indexOf('Pos Praktik') !== -1 || s.category.indexOf('Tugas Rumah') !== -1;
+
+                const dotClass = isActive
+                    ? 'w-6 bg-indigo-600 dark:bg-indigo-400'
+                    : isPosSlide
+                    ? 'w-2.5 bg-emerald-500 hover:bg-emerald-600'
+                    : 'w-2 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400';
+
+                dotsHtml += `<button type="button" onclick="goToSlide(${idx})" title="${escapeHtml(s.id + '. ' + s.title)}" class="h-2 rounded-full shrink-0 transition-all ${dotClass}"></button>`;
+
+                const itemClass = isActive
+                    ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 font-bold'
+                    : 'hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-300';
+                const badgeClass = isActive
+                    ? 'bg-indigo-600 text-white'
+                    : isPosSlide
+                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500';
+
+                drawerHtml += `
+                    <button type="button" onclick="selectSlideFromDrawer(${idx})" class="w-full text-left p-2.5 rounded-xl transition flex items-start gap-3 ${itemClass}">
+                        <span class="w-6 h-6 rounded-lg text-xs font-extrabold flex items-center justify-center shrink-0 ${badgeClass}">${s.id}</span>
+                        <div class="min-w-0">
+                            <div class="text-[10px] uppercase tracking-wider opacity-75">${escapeHtml(s.category)}</div>
+                            <div class="text-xs sm:text-sm truncate">${escapeHtml(s.title)}</div>
+                        </div>
+                    </button>
+                `;
+            }
+
+            dotsContainer.innerHTML = dotsHtml;
+            document.getElementById('drawerSlideList').innerHTML = drawerHtml;
+        }
+
+        function selectSlideFromDrawer(index) {
+            goToSlide(index);
+            toggleSlideDrawer();
+        }
+
+        function changeSlide(direction) {
+            const nextIdx = currentSlideIndex + direction;
+            if (nextIdx >= 0 && nextIdx < TOTAL_SLIDES) {
+                currentSlideIndex = nextIdx;
+                renderCurrentSlide();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function goToSlide(index) {
+            if (index >= 0 && index < TOTAL_SLIDES) {
+                currentSlideIndex = index;
+                renderCurrentSlide();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function toggleSlideDrawer() {
+            const drawer = document.getElementById('slideDrawer');
+            const backdrop = document.getElementById('slideDrawerBackdrop');
+            const isClosed = drawer.classList.contains('-translate-x-full');
+
+            if (isClosed) {
+                backdrop.classList.remove('hidden');
+                setTimeout(function () {
+                    backdrop.classList.remove('opacity-0');
+                }, 10);
+                drawer.classList.remove('-translate-x-full');
+            } else {
+                backdrop.classList.add('opacity-0');
+                drawer.classList.add('-translate-x-full');
+                setTimeout(function () {
+                    backdrop.classList.add('hidden');
+                }, 200);
+            }
+        }
+
+        // =========================================================================
+        // 9. EVENT HANDLERS: SLIDE MATERI, POS PRAKTIK & LIVE HOMEWORK STUDIO
+        // =========================================================================
+
+        function updateStoryPreviewDOM(slideKey) {
+            const prevEl = document.getElementById('storyPreview_' + slideKey);
+            if (!prevEl) return;
+            const rawCode = userSlideCodes[slideKey] || '';
+            prevEl.innerHTML = transformVirtualHtml(rawCode);
+        }
+
+        function onStoryCodeInput(slideKey, val) {
+            userSlideCodes[slideKey] = val;
+            updateStoryPreviewDOM(slideKey);
+        }
+
+        function selectSlidePreset(slideKey, presetKey) {
+            activeSlidePresets[slideKey] = presetKey;
+            userSlideCodes[slideKey] = SLIDE_DATA[slideKey].presets[presetKey].code;
+            renderCurrentSlide();
+        }
+
+        function copyStoryCode(slideKey) {
+            copyTextToClipboard(userSlideCodes[slideKey] || '');
+            const fbEl = document.getElementById('storyFeedback_' + slideKey);
+            if (fbEl) {
+                fbEl.textContent = 'Kode HTML berhasil disalin ke papan klip! Siap ditempel ke VS Code.';
+                fbEl.className = 'px-4 py-2 bg-emerald-50 dark:bg-emerald-950/60 border-t border-emerald-200 dark:border-emerald-800 text-[11px] text-emerald-700 dark:text-emerald-300 font-bold';
+            }
+        }
+
+        function resetStoryCode(slideKey) {
+            const curPreset = activeSlidePresets[slideKey];
+            userSlideCodes[slideKey] = SLIDE_DATA[slideKey].presets[curPreset].code;
+            renderCurrentSlide();
+        }
+
+        function onPosCodeInput(posKey, val) {
+            userPosCodes[posKey] = val;
+            saveAppState();
+
+            const prevEl = document.getElementById('posPreview_' + posKey);
+            if (prevEl) prevEl.innerHTML = transformVirtualHtml(val);
+
+            const cleanVal = stripHtmlComments(val);
+            const task = POS_DATA[posKey];
+            let passedCount = 0;
+
+            task.checks.forEach(function(chk, idx) {
+                const ok = chk.regex.test(cleanVal);
+                if (ok) passedCount++;
+                const box = document.getElementById(posKey + '_chk_' + idx);
+                const ico = document.getElementById(posKey + '_ico_' + idx);
+                if (box && ico) {
+                    box.className = 'flex items-center gap-2 text-xs p-2 rounded-xl border transition ' +
+                        (ok ? 'bg-emerald-50/90 dark:bg-emerald-950/40 border-emerald-400 text-emerald-800 dark:text-emerald-200 font-bold'
+                            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400');
+                    ico.className = 'fa-solid ' + (ok ? 'fa-circle-check text-emerald-600' : 'fa-circle-dot text-slate-300') + ' shrink-0';
+                }
+            });
+
+            const scoreEl = document.getElementById(posKey + '_score');
+            if (scoreEl) {
+                scoreEl.textContent = 'Skor: ' + passedCount + ' / ' + task.checks.length + ' Selesai';
+                scoreEl.className = 'px-3.5 py-1.5 rounded-full text-xs font-extrabold ' +
+                    (passedCount === task.checks.length ? 'bg-emerald-600 text-white' : 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300');
+            }
+            updateHeaderPosBadge();
+        }
+
+        function checkPosDiagnostic(posKey) {
+            const task = POS_DATA[posKey];
+            const cleanCode = stripHtmlComments(userPosCodes[posKey]);
+            let firstError = null;
+
+            for (let i = 0; i < task.checks.length; i++) {
+                if (!task.checks[i].regex.test(cleanCode)) {
+                    firstError = task.checks[i].errMsg;
+                    break;
+                }
+            }
+
+            if (!firstError) {
+                posDiagFeedback[posKey] = {
+                    ok: true,
+                    msg: 'Sempurna! Keempat komponen pada Pos Praktik ini sudah lengkap dan otomatis tersimpan.'
+                };
+            } else {
+                posDiagFeedback[posKey] = {
+                    ok: false,
+                    msg: 'Diagnostik: ' + firstError
+                };
+            }
+            renderCurrentSlide();
+        }
+
+        function triggerPosHint(posKey) {
+            posHintLevel[posKey] = Math.max(posHintLevel[posKey] || 0, 1);
+            renderCurrentSlide();
+        }
+
+        function unlockPosExample(posKey) {
+            posHintLevel[posKey] = 2;
+            userPosCodes[posKey] = POS_DATA[posKey].solution;
+            posDiagFeedback[posKey] = {
+                ok: true,
+                msg: 'Contoh kode dimasukkan ke editor. Silakan ganti teks di dalamnya dengan nama dan produk UMKM Anda sendiri!'
+            };
+            saveAppState();
+            renderCurrentSlide();
+        }
+
+        function copyPosCode(posKey) {
+            copyTextToClipboard(userPosCodes[posKey] || '');
+            posDiagFeedback[posKey] = {
+                ok: true,
+                msg: 'Kode Pos Praktik berhasil disalin ke papan klip!'
+            };
+            renderCurrentSlide();
+        }
+
+        function resetPosCode(posKey) {
+            userPosCodes[posKey] = POS_DATA[posKey].starter;
+            posHintLevel[posKey] = 0;
+            posDiagFeedback[posKey] = null;
+            saveAppState();
+            renderCurrentSlide();
+        }
+
+        // Handler Tugas Rumah Mandiri (Slide 16)
+        function setHwSectionTab(secId) {
+            hwActiveSectionTab = secId;
+            const container = document.getElementById('homeworkTopDeckContainer');
+            if (container) {
+                const evalObj = evaluateHomeworkSections(homeworkHtmlCode);
+                container.innerHTML = buildHomeworkTopDeckHtml(evalObj);
+            } else {
+                renderCurrentSlide();
+            }
+        }
+
+        function onHomeworkCodeInput(val) {
+            homeworkHtmlCode = val;
+            saveAppState();
+
+            const prevEl = document.getElementById('homeworkLivePreview');
+            if (prevEl) prevEl.innerHTML = transformVirtualHtml(val);
+
+            const evalObj = evaluateHomeworkSections(val);
+            const topContainer = document.getElementById('homeworkTopDeckContainer');
+            if (topContainer) {
+                topContainer.innerHTML = buildHomeworkTopDeckHtml(evalObj);
+            }
+
+            const scoreEl = document.getElementById('homeworkScoreBadge');
+            if (scoreEl) {
+                scoreEl.className = 'px-3.5 py-1.5 rounded-xl border text-xs font-extrabold flex items-center gap-1.5 ' +
+                    (evalObj.totalScore === 100
+                        ? 'bg-emerald-600 text-white border-emerald-600'
+                        : 'bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800');
+                scoreEl.innerHTML = `<i class="fa-solid fa-award"></i><span>Skor: ${evalObj.totalScore} / 100 (${evalObj.passedBadges}/${evalObj.totalBadges} Tag)</span>`;
+            }
+        }
+
+        function downloadHomeworkFile() {
+            downloadTextFile('index.html', homeworkHtmlCode);
+        }
+
+        function copyHomeworkCode() {
+            copyTextToClipboard(homeworkHtmlCode);
+            const badge = document.getElementById('hwAutoSaveBadge');
+            if (badge) badge.textContent = 'Kode Berhasil Disalin!';
+        }
+
+        function resetHomeworkStarter() {
+            if (!confirm('Reset editor Tugas Rumah kembali ke kerangka kosong 5 bagian?')) return;
+            homeworkHtmlCode = HOMEWORK_STARTER_HTML;
+            saveAppState();
+            renderCurrentSlide();
+        }
+
+        function copyHomeworkInstructionText() {
+            const guide = [
+                "TUGAS RUMAH MANDIRI PERTEMUAN 2 - PEMROGRAMAN WEB DASAR (HTML5)",
+                "Skenario Tugas: Pilih 1 UMKM nyata di sekitar Anda dan bangun halaman informasi & katalog pemesanan (index.html) yang memuat 5 bagian berikut:",
+                "",
+                "1. Bagian 1 - Kepala & Identitas Usaha (20 Poin): Memuat <h1> Nama UMKM, <p> deskripsi, <br> untuk alamat & jam buka, serta garis pemisah <hr>.",
+                "2. Bagian 2 - Etalase Produk & Kontak (20 Poin): Memuat <h2>/<h3>, penekanan <strong>/<mark>, harga diskon (<del> & <ins>), 1 link eksternal WhatsApp/Maps (<a target='_blank'>), dan minimal 2 foto <img src='...' alt='...'>.",
+                "3. Bagian 3 - Daftar Keunggulan & Cara Pesan (20 Poin): Memuat 1 daftar poin <ul> (min. 2 <li>) dan 1 daftar bernomor urut <ol> (min. 2 <li>).",
+                "4. Bagian 4 - Tabel Daftar Harga Katalog (20 Poin): Memuat <table>, judul kolom <th>, minimal 3 baris produk <td>, dan penggabungan sel colspan.",
+                "5. Bagian 5 - Formulir Pemesanan Pelanggan (20 Poin): Memuat <form>, <label>, <input required>, <select>+<option>, <textarea>, dan <button type='submit'>."
+            ].join('\n');
+            copyTextToClipboard(guide);
+            alert('Rincian instruksi 5 bagian Tugas Rumah Pertemuan 2 berhasil disalin!');
+        }
+
+        function handlePreviewInteraction(event) {
+            const linkEl = event.target.closest('a');
+            if (!linkEl) return;
+            event.preventDefault();
+
+            const hrefVal = linkEl.getAttribute('href') || '';
+            const targetVal = linkEl.getAttribute('target') || '';
+            let msg = '';
+
+            if (hrefVal.indexOf('#') === 0) {
+                msg = 'Simulasi Klik Menu: Menggulir halaman menuju elemen ber-atribut id="' + hrefVal.substring(1) + '".';
+                const targetDom = event.currentTarget.querySelector(hrefVal);
+                if (targetDom) targetDom.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            } else if (targetVal === '_blank') {
+                msg = 'Simulasi Klik Link Eksternal: Membuka "' + hrefVal + '" di Tab Browser Baru karena ada target="_blank".';
+            } else {
+                msg = 'Simulasi Klik Link: Membuka "' + hrefVal + '" di dalam tab yang sama (tambahkan target="_blank" jika ingin membuka di tab baru).';
+            }
+
+            const fbEl = document.querySelector('[id^="storyFeedback_"]');
+            if (fbEl) {
+                fbEl.textContent = msg;
+                fbEl.className = 'px-4 py-2 bg-indigo-50 dark:bg-indigo-950/70 border-t border-indigo-200 dark:border-indigo-800 text-[11px] text-indigo-700 dark:text-indigo-300 font-bold';
+            } else {
+                alert(msg);
+            }
+        }
+
+        function handlePreviewSubmit(event) {
+            event.preventDefault();
+            const formEl = event.target;
+            const formData = new FormData(formEl);
+            const pairs = [];
+            formData.forEach(function(val, key) {
+                pairs.push(key + '="' + val + '"');
+            });
+
+            const summary = pairs.length > 0
+                ? 'Simulasi Kirim Pesanan Berhasil! Data tercatat: ' + pairs.join(', ')
+                : 'Simulasi Kirim Pesanan Berhasil!';
+
+            const fbEl = document.querySelector('[id^="storyFeedback_"]');
+            if (fbEl) {
+                fbEl.textContent = summary;
+                fbEl.className = 'px-4 py-2 bg-emerald-50 dark:bg-emerald-950/70 border-t border-emerald-200 dark:border-emerald-800 text-[11px] text-emerald-700 dark:text-emerald-300 font-bold';
+            } else {
+                alert(summary);
+            }
+        }
+
+        // =========================================================================
+        // 10. MODAL KAMUS TAG HTML, TEMA LAYAR & KEYBOARD SHORTCUT
+        // =========================================================================
+        function showTerm(key) {
+            const item = GLOSSARY_DB[key];
+            if (!item) return;
+
+            document.getElementById('termCategoryBadge').textContent = item.category;
+            document.getElementById('termTitle').textContent = item.title;
+            document.getElementById('termMainDesc').textContent = item.main;
+            document.getElementById('termDetailDesc').textContent = item.detail;
+            document.getElementById('termSourceName').textContent = "Sumber: " + item.source;
+            document.getElementById('termSourceUrl').href = item.url;
+
+            const modal = document.getElementById('termModalBackdrop');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeTermModal() {
+            const modal = document.getElementById('termModalBackdrop');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function openGlossaryIndex() {
+            document.getElementById('glossarySearchInput').value = '';
+            renderGlossaryList('');
+            const modal = document.getElementById('glossaryModalBackdrop');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeGlossaryIndex() {
+            const modal = document.getElementById('glossaryModalBackdrop');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function selectGlossaryTerm(key) {
+            closeGlossaryIndex();
+            showTerm(key);
+        }
+
+        function renderGlossaryList(query) {
+            const q = String(query || '').trim().toLowerCase();
+            const allKeys = Object.keys(GLOSSARY_DB);
+            const matchedKeys = [];
+
+            for (let i = 0; i < allKeys.length; i++) {
+                const k = allKeys[i];
+                const item = GLOSSARY_DB[k];
+                if (
+                    item.title.toLowerCase().indexOf(q) !== -1 ||
+                    item.category.toLowerCase().indexOf(q) !== -1 ||
+                    item.main.toLowerCase().indexOf(q) !== -1
+                ) {
+                    matchedKeys.push(k);
+                }
+            }
+
+            const container = document.getElementById('glossaryListGrid');
+            if (matchedKeys.length === 0) {
+                container.innerHTML = '<div class="col-span-2 text-center py-8 text-xs text-slate-500">Tag atau istilah tidak ditemukan.</div>';
+                return;
+            }
+
+            let html = '';
+            for (let i = 0; i < matchedKeys.length; i++) {
+                const k = matchedKeys[i];
+                const item = GLOSSARY_DB[k];
+                html += `
+                    <button type="button" onclick="selectGlossaryTerm('${k}')" class="text-left p-4 rounded-2xl bg-slate-50 hover:bg-indigo-50/60 dark:bg-slate-800/50 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800 transition space-y-1">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">${escapeHtml(item.category)}</span>
+                            <span class="text-[10px] text-slate-400">${escapeHtml(item.source)}</span>
+                        </div>
+                        <div class="text-sm font-extrabold text-slate-900 dark:text-white">${escapeHtml(item.title)}</div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">${escapeHtml(item.main)}</p>
+                    </button>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function toggleTheme() {
+            const htmlEl = document.documentElement;
+            const icon = document.getElementById('themeIcon');
+            htmlEl.classList.toggle('dark');
+            const isDark = htmlEl.classList.contains('dark');
+            icon.className = isDark ? 'fa-solid fa-sun text-amber-400 text-sm' : 'fa-solid fa-moon text-sm';
+        }
+
+        document.addEventListener('keydown', function (e) {
+            const activeTag = document.activeElement && document.activeElement.tagName
+                ? document.activeElement.tagName.toLowerCase()
+                : '';
+            if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') {
+                if (e.key === 'Escape' && isFullScreenStudio) {
+                    toggleFullScreenWorkspace();
+                }
+                return;
+            }
+
+            if (e.key === 'ArrowRight') changeSlide(1);
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+            if (e.key === 'Escape') {
+                if (isFullScreenStudio) toggleFullScreenWorkspace();
+                closeTermModal();
+                closeGlossaryIndex();
+            }
+        });
+
+        window.onload = function () {
+            loadAppState();
+            renderCurrentSlide();
+        };
+    </script>
+</body>
+</html>
