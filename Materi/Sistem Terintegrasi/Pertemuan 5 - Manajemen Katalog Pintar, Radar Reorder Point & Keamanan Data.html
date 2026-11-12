@@ -1,0 +1,2045 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Materi Minggu 5: Manajemen Katalog Pintar, Radar Reorder Point & Keamanan Data</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <script>
+        if (typeof tailwind !== 'undefined') {
+            tailwind.config = {
+                darkMode: 'class',
+                theme: {
+                    extend: {
+                        fontFamily: {
+                            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                            mono: ['"JetBrains Mono"', 'monospace']
+                        }
+                    }
+                }
+            };
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Kata sulit bersih tanpa box/kotak, kontras tinggi di mode terang maupun gelap */
+        .tech-term {
+            color: #4f46e5;
+            font-weight: 700;
+            text-decoration: underline;
+            text-decoration-style: dotted;
+            text-underline-offset: 3px;
+            cursor: pointer;
+            transition: color 0.15s ease, opacity 0.15s ease;
+        }
+        .dark .tech-term {
+            color: #818cf8;
+        }
+        .tech-term:hover {
+            color: #3730a3;
+            opacity: 0.85;
+        }
+        .dark .tech-term:hover {
+            color: #a5b4fc;
+        }
+
+        /* Pengaman anti-terpotong di semua ukuran layar */
+        #slideViewport,
+        #slideViewport p,
+        #slideViewport span,
+        #slideViewport div,
+        #slideViewport h2,
+        #slideViewport h3,
+        #slideViewport h4,
+        #slideViewport button {
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+        }
+
+        .slide-enter {
+            animation: fadeSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes fadeSlide {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        pre.json-box {
+            background: #0b0b10;
+            color: #e4e4e7;
+            border-radius: 0.85rem;
+            padding: 0.85rem 1.05rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            line-height: 1.6;
+            overflow-x: auto;
+            border: 1px solid #1f1f2e;
+            margin: 0;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #334155;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col justify-between transition-colors duration-200">
+
+    <!-- Header -->
+    <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800">
+        <div class="w-full h-1 bg-slate-100 dark:bg-slate-800">
+            <div id="topProgressBar" class="h-full bg-indigo-600 dark:bg-indigo-500 transition-all duration-300" style="width: 5%;"></div>
+        </div>
+
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+                <button type="button" onclick="toggleSlideDrawer()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition flex items-center gap-2 text-xs sm:text-sm font-bold shrink-0">
+                    <i class="fa-solid fa-bars-staggered text-indigo-600 dark:text-indigo-400"></i>
+                    <span class="hidden sm:inline">Alur Cerita</span>
+                    <span id="slideCounterBadge" class="px-2 py-0.5 text-xs rounded-lg bg-indigo-600 text-white font-bold">1 / 20</span>
+                </button>
+
+                <div class="hidden md:flex items-center gap-2.5 min-w-0">
+                    <span id="slideCategoryPill" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 shrink-0">
+                        Babak 1 · Jembatan M4 ke M5
+                    </span>
+                    <h1 id="headerSlideTitle" class="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">
+                        Manajemen Katalog Pintar, Radar Reorder Point &amp; Keamanan Data
+                    </h1>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 shrink-0">
+                <button type="button" onclick="openGlossaryIndex()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 text-xs sm:text-sm font-bold flex items-center gap-2 transition">
+                    <i class="fa-solid fa-book-open text-indigo-600 dark:text-indigo-400"></i>
+                    <span>Kamus Bisnis &amp; Kode</span>
+                </button>
+
+                <button type="button" onclick="toggleTheme()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center transition" title="Ganti Tema Layar">
+                    <i id="themeIcon" class="fa-solid fa-moon text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Slide Drawer -->
+    <div id="slideDrawerBackdrop" onclick="toggleSlideDrawer()" class="fixed inset-0 bg-slate-950/50 backdrop-blur-xs z-40 hidden opacity-0 transition-opacity duration-200"></div>
+    <aside id="slideDrawer" class="fixed top-0 left-0 bottom-0 w-80 sm:w-96 bg-white dark:bg-slate-900 z-50 shadow-2xl border-r border-slate-200 dark:border-slate-800 transform -translate-x-full transition-transform duration-200 flex flex-col">
+        <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Sistem Terintegrasi (BD5231)</span>
+                <h2 class="text-base font-extrabold text-slate-900 dark:text-white mt-0.5">Alur Cerita 20 Slide Pertemuan 5</h2>
+            </div>
+            <button type="button" onclick="toggleSlideDrawer()" class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div id="drawerSlideList" class="p-3.5 overflow-y-auto space-y-1 flex-1"></div>
+        <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 flex items-center justify-between">
+            <span>Gunakan tombol panah Kiri / Kanan</span>
+            <span class="font-bold">20 Slide Berkesinambungan</span>
+        </div>
+    </aside>
+
+    <!-- Main Slide Viewport -->
+    <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-5 flex flex-col justify-center">
+        <div id="slideViewport" class="bg-white dark:bg-slate-900 rounded-3xl shadow-xs border border-slate-200/80 dark:border-slate-800 p-6 sm:p-8 lg:p-10 min-h-[570px] flex flex-col justify-between relative overflow-hidden">
+            <!-- Konten slide dirender secara dinamis -->
+        </div>
+    </main>
+
+    <!-- Sticky Footer Navigation -->
+    <footer class="sticky bottom-0 z-20 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 py-3 px-4 sm:px-6">
+        <div class="max-w-6xl mx-auto flex items-center justify-between gap-4">
+            <button type="button" id="prevSlideBtn" onclick="changeSlide(-1)" class="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                <i class="fa-solid fa-arrow-left text-xs"></i>
+                <span>Sebelumnya</span>
+            </button>
+
+            <div id="slideDotsContainer" class="hidden md:flex items-center gap-1.5 flex-wrap justify-center"></div>
+
+            <div class="md:hidden text-xs font-bold text-slate-500 dark:text-slate-400" id="mobileFooterCounter">
+                1 / 20
+            </div>
+
+            <button type="button" id="nextSlideBtn" onclick="changeSlide(1)" class="px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-indigo-600 hover:bg-indigo-700 text-white transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                <span id="nextBtnText">Selanjutnya</span>
+                <i class="fa-solid fa-arrow-right text-xs"></i>
+            </button>
+        </div>
+    </footer>
+
+    <!-- Modal Penjelasan Istilah -->
+    <div id="termModalBackdrop" onclick="closeTermModal()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl slide-enter">
+            <div class="flex items-start justify-between gap-4 mb-4">
+                <div>
+                    <span id="termCategoryBadge" class="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">Kategori</span>
+                    <h3 id="termTitle" class="text-xl font-extrabold text-slate-900 dark:text-white mt-1.5">Nama Istilah</h3>
+                </div>
+                <button type="button" onclick="closeTermModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <p id="termMainDesc" class="text-sm text-slate-700 dark:text-slate-200 leading-relaxed bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200/70 dark:border-slate-700/70"></p>
+
+                <div class="p-3.5 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-200/70 dark:border-indigo-800/70">
+                    <div class="text-[11px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-1">Contoh Nyata di Toko Sepatu Kita:</div>
+                    <p id="termDetailDesc" class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed"></p>
+                </div>
+
+                <div class="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800 text-xs px-1">
+                    <span id="termSourceName" class="font-semibold text-slate-400">Referensi</span>
+                    <button type="button" onclick="closeTermModal(); openGlossaryIndex();" class="font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1.5">
+                        <span>Buka Kamus Lengkap</span>
+                        <i class="fa-solid fa-book-open text-[10px]"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Kamus Istilah Lengkap -->
+    <div id="glossaryModalBackdrop" onclick="closeGlossaryIndex()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-4xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden slide-enter">
+            <div class="p-5 sm:p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white">Kamus Istilah Bisnis Digital &amp; Terjemahan Kode — Minggu 5</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Penjelasan ramah mahasiswa non-IT untuk istilah manajemen persediaan sekaligus arti simbol kode PHP/SQL.</p>
+                </div>
+                <button type="button" onclick="closeGlossaryIndex()" class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-sm"></i>
+                    <input id="glossarySearchInput" oninput="renderGlossaryList(this.value)" type="text" placeholder="Cari istilah seperti Reorder Point, Stockout, $_GET, prepare, execute, kirim_json..." class="w-full pl-10 pr-4 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+            <div id="glossaryListGrid" class="p-5 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+        </div>
+    </div>
+
+    <script>
+        const GLOSSARY_DB = {
+            kontrak_m4: {
+                title: "Kontrak Layanan API (Hasil Pertemuan 4)",
+                category: "Jembatan Materi Minggu 4",
+                main: "Kesepakatan tertulis yang telah kita susun di Minggu ke-4 mengenai 4 pintu layanan utama (GET semua barang, GET 1 kode, POST stok keluar, POST stok masuk) beserta aturan kode statusnya.",
+                detail: "Di Pertemuan 5 hari ini, kita meng-upgrade pintu layanan baca (GET /api/barang.php) agar memiliki cetakan kop otomatis, fitur pencarian nama, dan radar stok kritis.",
+                source: "Jembatan Pertemuan 4 ke 5 (Slide 2 & 3)"
+            },
+            stockout: {
+                title: "Stockout (Kehabisan Barang di Gudang)",
+                category: "Manajemen Persediaan Ritel",
+                main: "Kondisi ketika pelanggan sudah siap membeli suatu produk di kasir, tetapi stok barang tersebut di gudang ternyata 0 (habis) karena manajer terlambat memesan ulang ke pabrik.",
+                detail: "Jika sepatu Office Oxford (SP008) sering habis saat dicari pelanggan, toko bukan hanya kehilangan omzet hari itu, tetapi pelanggan juga pindah ke toko pesaing.",
+                source: "Babak 2 · Masalah Bisnis (Slide 6)"
+            },
+            reorder_point: {
+                title: "Reorder Point / Batas Stok Kritis ($batasKritisDefault)",
+                category: "Manajemen Persediaan Ritel",
+                main: "Angka batas aman minimum stok barang di gudang (misalnya 5 pasang) yang menjadi alarm otomatis bagi manajer untuk segera memesan barang baru (restock) ke pemasok.",
+                detail: "Di dalam kode api/barang.php nanti, aturan ini ditulis dengan kalimat sederhana: $batasKritisDefault = 5; yang bebas Anda ubah sesuai strategi toko Anda.",
+                source: "Babak 2 · Radar Stok Kritis (Slide 6 & 10)"
+            },
+            modular_folder: {
+                title: "Standarisasi Dapur Modular (config/, helpers/, api/)",
+                category: "Tata Kelola Operasional",
+                main: "Cara menata file sistem informasi toko ke dalam 3 ruangan terpisah sesuai tugasnya agar mudah diawasi dan tidak saling tumpang-tindih.",
+                detail: "Di Pertemuan 4 baru ada 2 folder (config/ dan api/). Di Pertemuan 5 kita menambah folder ke-3 yaitu helpers/ untuk menyimpan cetakan kop surat resmi.",
+                source: "Babak 1 · Standarisasi Operasional (Slide 3 & 4)"
+            },
+            helper_json: {
+                title: "Mesin Kop Surat Otomatis (kirim_json di helpers/response.php)",
+                category: "Standarisasi Kualitas Layanan",
+                main: "Satu fungsi cetakan terpusat yang memastikan setiap balasan dari Gudang ke Kasir selalu memiliki format amplop JSON yang 100% seragam (status, kode_http, pesan, data, meta).",
+                detail: "Menggantikan cara manual di Pertemuan 4 yang masih mengetik http_response_code() dan echo json_encode() berulang-ulang di setiap file.",
+                source: "Babak 1 & 4 · Bedah Kode (Slide 3, 5 & 15)"
+            },
+            wajib_key: {
+                title: "Satpam Pintu Depan Otomatis (wajib_api_key)",
+                category: "Keamanan Akses Cabang",
+                main: "Fungsi di dalam helpers/response.php yang otomatis memeriksa apakah Header X-API-KEY milik cabang terdaftar dan aktif (1) di tabel api_keys.",
+                detail: "Di Pertemuan 4 pengecekan ini memakan 12 baris kode di tiap file. Di Pertemuan 5 cukup dipanggil dengan 1 baris: $mitra = wajib_api_key($pdo);",
+                source: "Babak 1 & 4 · Bedah Kode (Slide 3 & 16)"
+            },
+            get_var: {
+                title: "Simbol Kode $_GET['...'] (Penangkap Pesanan di URL)",
+                category: "Kamus Terjemahan Kode PHP",
+                main: "Alat penangkap di PHP untuk membaca tulisan yang diketik pengguna setelah tanda tanya (?) di alamat URL browser.",
+                detail: "Saat kasir membuka alamat barang.php?cari=Pro, maka perintah $_GET['cari'] otomatis menangkap kata 'Pro' tersebut untuk dicari ke database.",
+                source: "Babak 4 · Cara Membaca Kode (Slide 16)"
+            },
+            sql_injection: {
+                title: "Sabotase Input / Pencurian Data (SQL Injection)",
+                category: "Manajemen Risiko Siber Bisnis",
+                main: "Serangan siber di mana pihak jahat mengetikkan potongan perintah database palsu (seperti ' OR '1'='1) ke dalam kotak pencarian katalog untuk membobol seluruh data rahasia perusahaan.",
+                detail: "Terjadi jika programmer langsung menempelkan mentah-mentah ketikan pengguna ke dalam kalimat perintah pencarian database.",
+                source: "Babak 3 · Keamanan Aset Data (Slide 11 & 12)"
+            },
+            prepared_stmt: {
+                title: "Kaca Pelindung Database (PDO prepare & execute)",
+                category: "Kamus Terjemahan Kode & Keamanan",
+                main: "Prosedur keamanan 2 langkah di mana cetakan perintah SQL dikunci lebih dulu ($pdo->prepare), lalu ketikan pengguna dimasukkan secara terpisah ($st->execute).",
+                detail: "Dengan pemisahan ini, ketikan jahat peretas (' OR '1'='1) diperlakukan murni sebagai teks nama sepatu biasa sehingga tidak pernah bisa membobol database.",
+                source: "Babak 3 & 4 · Bedah Kode (Slide 13 & 17)"
+            }
+        };
+
+        function term(key, customLabel) {
+            const item = GLOSSARY_DB[key];
+            if (!item) return customLabel || key;
+            const label = customLabel || item.title.split(' (')[0];
+            return '<span class="tech-term" onclick="showTerm(\'' + key + '\')">' + label + '</span>';
+        }
+
+        function escapeHtml(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        // Komponen Pita Transisi Atas (Jembatan dari Slide Sebelumnya)
+        function slideBridgeTop(prevHookText) {
+            return `
+                <div class="px-3.5 py-2 rounded-2xl bg-slate-100/90 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700/80 flex items-center gap-2.5 text-xs text-slate-600 dark:text-slate-300">
+                    <span class="px-2 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-extrabold text-[10px] uppercase shrink-0">🔗 Sambungan Cerita</span>
+                    <span class="font-medium leading-snug">${prevHookText}</span>
+                </div>
+            `;
+        }
+
+        // Komponen Pita Transisi Bawah (Pengantar ke Slide Berikutnya)
+        function slideBridgeNext(nextTeaserText) {
+            return `
+                <div class="px-4 py-2.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/35 border border-indigo-200/80 dark:border-indigo-800/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-700 dark:text-slate-200">
+                    <div class="flex items-center gap-2">
+                        <span class="text-indigo-600 dark:text-indigo-400 font-extrabold shrink-0">👉 Selanjutnya:</span>
+                        <span class="font-semibold leading-snug">${nextTeaserText}</span>
+                    </div>
+                    <button type="button" onclick="changeSlide(1)" class="self-start sm:self-center px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-[11px] shrink-0 transition">
+                        Lanjut Slide Berikutnya &rarr;
+                    </button>
+                </div>
+            `;
+        }
+
+        let currentSlideIndex = 0;
+        const TOTAL_SLIDES = 20;
+
+        // State Tab Perbandingan Pertemuan 4 vs Pertemuan 5 di Slide 3
+        let activeM4CompareTab = 'tabel'; // 'tabel' | 'kode'
+
+        // Data 8 Produk Gudang (Sinkron 100% dengan LKM 05)
+        const MASTER_PRODUCTS_M5 = [
+            { id: 1, kode: "SP001", nama: "Sneakers Pro",    harga: "Rp 450.000", stok: 12 },
+            { id: 2, kode: "SP002", nama: "Formal Classic",  harga: "Rp 380.000", stok: 8 },
+            { id: 3, kode: "SP003", nama: "Boots Adventure", harga: "Rp 520.000", stok: 5 },
+            { id: 4, kode: "SP004", nama: "Running Lite",    harga: "Rp 320.000", stok: 15 },
+            { id: 5, kode: "SP005", nama: "Casual Canvas",   harga: "Rp 275.000", stok: 4 },
+            { id: 6, kode: "SP006", nama: "Slip On Comfort", harga: "Rp 240.000", stok: 10 },
+            { id: 7, kode: "SP007", nama: "Trail Hiker Pro", harga: "Rp 610.000", stok: 3 },
+            { id: 8, kode: "SP008", nama: "Office Oxford",   harga: "Rp 490.000", stok: 2 }
+        ];
+
+        let activeFilterTab = 0;
+        let simBatasKritis = 5;
+
+        // Sinkronisasi otomatis judul Slide 2 & Slide 3 di Drawer Navigation
+        window.addEventListener('DOMContentLoaded', function () {
+            if (typeof SLIDES !== 'undefined' && SLIDES.length >= 3) {
+                SLIDES[1].category = "Pengantar · Jembatan M4";
+                SLIDES[1].title = "Menyambung Pertemuan 4: Dari Kontrak API ke Katalog Pintar";
+                SLIDES[2].category = "Perbandingan M4 vs M5";
+                SLIDES[2].title = "Perbandingan Sistem & Kode: Pertemuan 4 vs Pertemuan 5";
+                renderCurrentSlide();
+            }
+        });
+
+        /* ================= RENDER SLIDES 1 S.D. 7 (BABAK 1 & AWAL BABAK 2) ================= */
+
+        // SLIDE 1: Sampul & Peta Cerita 5 Babak
+        function renderSlide1() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center my-auto">
+                        <div class="lg:col-span-7 space-y-4">
+                            <div class="inline-flex flex-wrap items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 text-xs font-bold border border-indigo-200/60 dark:border-indigo-800/60">
+                                <span>Minggu 5 · Perspektif Manajemen Bisnis Digital</span>
+                                <span>•</span>
+                                <span>Sub-CPMK 2.1 (Bobot 5%)</span>
+                            </div>
+
+                            <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 dark:text-white leading-tight tracking-tight">
+                                Manajemen Katalog Pintar, Radar ${term('reorder_point', 'Reorder Point')} &amp; Keamanan Data
+                            </h2>
+
+                            <p class="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Melanjutkan ${term('kontrak_m4', 'Kontrak Layanan API (Pertemuan 4)')}, hari ini kita belajar dari kacamata <strong>Manajer Operasional &amp; Analis Bisnis Digital</strong>: menstandarkan kop surat layanan antar-cabang, memasang radar pencegah kehabisan barang (${term('stockout', 'Stockout')}), melindungi katalog dari pencurian data, serta <strong>membedah arti kode praktikum baris demi baris</strong>.
+                            </p>
+
+                            <div class="p-3.5 rounded-2xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 flex items-center gap-3 text-xs sm:text-sm text-slate-700 dark:text-slate-200">
+                                <i class="fa-solid fa-lightbulb text-amber-500 text-base shrink-0"></i>
+                                <span><strong>Janji Kuliah Hari Ini:</strong> Setiap kali ada potongan kode komputer di layar, Anda selalu diberikan <strong>Tabel Terjemahan Bahasa Manusia per Baris</strong>. Klik juga istilah bergaris bawah titik-titik untuk membuka kamus!</span>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-5">
+                            <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 space-y-3">
+                                <div>
+                                    <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Alur Cerita 5 Babak (20 Slide)</span>
+                                    <h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white mt-0.5">Klik Babak untuk Melompat</h3>
+                                </div>
+
+                                <div class="space-y-2 text-xs">
+                                    <button type="button" onclick="goToSlide(1)" class="w-full text-left flex items-start gap-3 p-3 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <span class="w-7 h-7 rounded-xl bg-indigo-600 text-white font-extrabold flex items-center justify-center shrink-0">B1</span>
+                                        <div><strong class="text-slate-900 dark:text-white block">Babak 1: Jembatan Pertemuan 4 &amp; Standar Kop (Slide 2–5)</strong><span class="text-slate-500">Review Minggu 4, perbandingan kode M4 vs M5 &amp; kop otomatis.</span></div>
+                                    </button>
+                                    <button type="button" onclick="goToSlide(5)" class="w-full text-left flex items-start gap-3 p-3 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <span class="w-7 h-7 rounded-xl bg-emerald-600 text-white font-extrabold flex items-center justify-center shrink-0">B2</span>
+                                        <div><strong class="text-slate-900 dark:text-white block">Babak 2: Strategi Katalog &amp; Reorder Point (Slide 6–10)</strong><span class="text-slate-500">Kebutuhan Kasir vs Manajer Purchasing &amp; Simulator Restock.</span></div>
+                                    </button>
+                                    <button type="button" onclick="goToSlide(10)" class="w-full text-left flex items-start gap-3 p-3 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <span class="w-7 h-7 rounded-xl bg-rose-600 text-white font-extrabold flex items-center justify-center shrink-0">B3</span>
+                                        <div><strong class="text-slate-900 dark:text-white block">Babak 3: Risiko Pencurian Data Katalog (Slide 11–14)</strong><span class="text-slate-500">Bagaimana pesaing membobol katalog &amp; cara kerja Kaca Pelindung.</span></div>
+                                    </button>
+                                    <button type="button" onclick="goToSlide(14)" class="w-full text-left flex items-start gap-3 p-3 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <span class="w-7 h-7 rounded-xl bg-amber-600 text-white font-extrabold flex items-center justify-center shrink-0">B4</span>
+                                        <div><strong class="text-slate-900 dark:text-white block">Babak 4: Bedah Kode Praktikum per Baris (Slide 15–18)</strong><span class="text-slate-500">Terjemahan bahasa manusia untuk setiap baris kode LKM 05.</span></div>
+                                    </button>
+                                    <button type="button" onclick="goToSlide(18)" class="w-full text-left flex items-start gap-3 p-3 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <span class="w-7 h-7 rounded-xl bg-purple-600 text-white font-extrabold flex items-center justify-center shrink-0">B5</span>
+                                        <div><strong class="text-slate-900 dark:text-white block">Babak 5: Evaluasi Keputusan Manajer (Slide 19–20)</strong><span class="text-slate-500">Latihan studi kasus manajerial &amp; persiapan masuk LKM 05.</span></div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${slideBridgeNext("Kita mulai di Slide 2 dengan menyambung apa yang sudah Anda bangun pada Pertemuan 4 minggu lalu menuju target Pertemuan 5 hari ini.")}
+                </div>
+            `;
+        }
+
+        // SLIDE 2: Pengantar Menyambung Pertemuan 4 -> Pertemuan 5 + 3 Kelemahan Sistem Minggu 4
+        function renderSlide2() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-3.5">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400">Pengantar · Menyambung Pertemuan 4 Lalu</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Dari "Kontrak API &amp; Kartu Stok (Minggu 4)" Menuju "Katalog Pintar &amp; Aman (Minggu 5)"</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                            Mari kita ingat kembali apa yang sudah berhasil kita bangun di <strong>Pertemuan 4 (LKM 04)</strong>, dan mengapa sistem tersebut perlu kita tingkatkan hari ini:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-11 gap-4 items-stretch my-auto">
+                        <!-- Kiri: Hasil Pertemuan 4 -->
+                        <div class="lg:col-span-5 p-4 sm:p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-3">
+                            <div class="space-y-2.5">
+                                <span class="inline-block px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-xs font-extrabold uppercase tracking-wider">◀ Hasil Pertemuan 4 Lalu (LKM 04)</span>
+                                <h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">Sudah Punya Kontrak API &amp; 3 Tabel Gudang</h3>
+                                <ul class="space-y-1.5 text-xs text-slate-700 dark:text-slate-200 leading-relaxed">
+                                    <li class="flex items-start gap-2"><span class="text-emerald-600 font-extrabold">✓</span><span>Menyusun ${term('kontrak_m4', 'SOP Kontrak 4 Layanan API')} (<code class="font-mono">GET barang</code>, <code class="font-mono">GET ?kode=</code>, <code class="font-mono">POST stok-keluar</code>, <code class="font-mono">POST stok-masuk</code>).</span></li>
+                                    <li class="flex items-start gap-2"><span class="text-emerald-600 font-extrabold">✓</span><span>Membangun 3 tabel di <code class="font-mono font-bold">db_gudang</code>: tabel <code class="font-mono">barang</code> (5 sepatu), Kartu Stok (<code class="font-mono">log_stok</code>), dan Saklar Cabang (<code class="font-mono">api_keys</code>).</span></li>
+                                </ul>
+                            </div>
+                            <div class="p-3 rounded-2xl bg-rose-50/80 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-xs text-rose-900 dark:text-rose-200 space-y-1">
+                                <strong class="block text-rose-700 dark:text-rose-300">⚠️ 3 Kelemahan Sistem Pertemuan 4 Saat Toko Ramai:</strong>
+                                <div>1. Kode cek kunci &amp; <code class="font-mono">json_encode</code> masih diketik manual berulang-ulang di tiap file (belum ada folder <code class="font-mono">helpers/</code>).</div>
+                                <div>2. Pintu <code class="font-mono">api/barang.php</code> belum bisa mencari nama sepatu (<code class="font-mono">?cari=</code>) dan belum punya radar stok kritis (<code class="font-mono">?stok_max=</code>).</div>
+                                <div>3. Kotak pencarian belum diuji dari serangan pencurian data (${term('sql_injection', 'SQL Injection')}).</div>
+                            </div>
+                        </div>
+
+                        <!-- Panah Tengah -->
+                        <div class="lg:col-span-1 flex items-center justify-center">
+                            <div class="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-extrabold shadow-md">
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </div>
+                        </div>
+
+                        <!-- Kanan: Target Pertemuan 5 -->
+                        <div class="lg:col-span-5 p-4 sm:p-5 rounded-3xl bg-indigo-50/70 dark:bg-indigo-950/40 border-2 border-indigo-500/70 flex flex-col justify-between gap-3">
+                            <div class="space-y-2.5">
+                                <span class="inline-block px-3 py-1 rounded-full bg-indigo-600 text-white text-xs font-extrabold uppercase tracking-wider">▶ Target Pertemuan 5 Hari Ini (LKM 05)</span>
+                                <h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">Upgrade Pintu Katalog Menjadi Cerdas &amp; Terlindungi</h3>
+                                <ul class="space-y-2 text-xs text-slate-700 dark:text-slate-200 leading-relaxed">
+                                    <li class="flex items-start gap-2"><span class="px-1.5 py-0.5 rounded bg-indigo-600 text-white font-mono text-[10px] font-bold">1</span><span><strong>Standarisasi Kop Balasan:</strong> Menambah folder baru <strong><code class="font-mono">helpers/response.php</code></strong> berisi mesin cetakan ${term('helper_json', 'kirim_json()')} &amp; satpam ${term('wajib_key', 'wajib_api_key()')}.</span></li>
+                                    <li class="flex items-start gap-2"><span class="px-1.5 py-0.5 rounded bg-indigo-600 text-white font-mono text-[10px] font-bold">2</span><span><strong>Filter Katalog &amp; Radar Restock:</strong> Menambah data menjadi 8 sepatu (stok 2 s.d. 15 pasang) dengan filter <code class="font-mono font-bold">?cari=</code> dan radar ${term('reorder_point', 'Reorder Point')} (<code class="font-mono font-bold">?stok_max=</code>).</span></li>
+                                    <li class="flex items-start gap-2"><span class="px-1.5 py-0.5 rounded bg-indigo-600 text-white font-mono text-[10px] font-bold">3</span><span><strong>Kaca Pelindung Database:</strong> Mengamankan seluruh filter pencarian dengan ${term('prepared_stmt', 'PDO Prepared Statement')}.</span></li>
+                                </ul>
+                            </div>
+                            <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-800 text-xs text-indigo-900 dark:text-indigo-200 font-semibold">
+                                🎯 <strong>Prinsip Incremental Upgrade:</strong> Kita tetap memakai folder <code class="font-mono">sistem_gudang</code> dan <code class="font-mono">sistem_penjualan</code> dari Pertemuan 4, hanya menambah <code class="font-mono">helpers/</code> dan memperbarui <code class="font-mono">api/barang.php</code>!
+                            </div>
+                        </div>
+                    </div>
+
+                    ${slideBridgeNext("Ingin melihat perbandingan berdampingan antara sistem & kode Pertemuan 4 vs Pertemuan 5? Klik ke Slide 3!")}
+                </div>
+            `;
+        }
+
+        // SLIDE 3: Perbandingan Mendalam Pertemuan 4 vs Pertemuan 5 (2 Tab Interaktif: Tabel Bisnis vs Kode PHP)
+        function renderSlide3() {
+            let tabContentHtml = '';
+            if (activeM4CompareTab === 'tabel') {
+                tabContentHtml = `
+                    <div class="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 my-auto">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+                                    <th class="p-3 font-extrabold w-1/4">Aspek Perbandingan</th>
+                                    <th class="p-3 font-extrabold text-slate-600 dark:text-slate-300 w-1/3">◀ Di Pertemuan 4 Lalu (LKM 04)</th>
+                                    <th class="p-3 font-extrabold text-indigo-700 dark:text-indigo-300">▶ Di Pertemuan 5 Hari Ini (LKM 05)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 dark:divide-slate-800 bg-white dark:bg-slate-900">
+                                <tr>
+                                    <td class="p-2.5 font-bold">1. Struktur Folder <code class="font-mono">sistem_gudang</code></td>
+                                    <td class="p-2.5">2 Folder: <code class="font-mono">config/</code> dan <code class="font-mono">api/</code>.</td>
+                                    <td class="p-2.5 font-semibold">3 Folder (${term('modular_folder', 'Modular')}): <code class="font-mono">config/</code>, <strong><code class="font-mono text-amber-600">helpers/</code> (Baru!)</strong>, dan <code class="font-mono">api/</code>.</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2.5 font-bold">2. Cara Cek Kunci &amp; Cetak JSON</td>
+                                    <td class="p-2.5">Menulis 15 baris SQL cek <code class="font-mono">api_keys</code> dan <code class="font-mono">echo json_encode()</code> manual di dalam setiap file endpoint.</td>
+                                    <td class="p-2.5 font-semibold">Cukup panggil 1 baris <code class="font-mono font-bold">wajib_api_key($pdo)</code> dan 1 baris cetakan <code class="font-mono font-bold">kirim_json()</code> dari <code class="font-mono">helpers/response.php</code>.</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2.5 font-bold">3. Isi Data Tabel <code class="font-mono">barang</code></td>
+                                    <td class="p-2.5">5 produk sepatu (<code class="font-mono">SP001</code>–<code class="font-mono">SP005</code>) tanpa penanda status stok kritis.</td>
+                                    <td class="p-2.5 font-semibold">8 produk sepatu (<code class="font-mono">SP001</code>–<code class="font-mono">SP008</code>, stok 2 s.d. 15 pasang) + cap otomatis <code class="font-mono">AMAN</code> / <code class="font-mono">KRITIS</code>.</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2.5 font-bold">4. Kemampuan <code class="font-mono">GET /api/barang.php</code></td>
+                                    <td class="p-2.5">Hanya 2 mode: Tampil Semua &amp; Cek 1 Kode (<code class="font-mono">?kode=SP001</code>).</td>
+                                    <td class="p-2.5 font-semibold">4 Mode: Tampil Semua, Cek Kode (<code class="font-mono">?kode=</code>), Cari Nama (<code class="font-mono">?cari=</code>), &amp; Radar Restock (<code class="font-mono">?stok_max=</code>).</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2.5 font-bold">5. Otonomi Manajer di LKM</td>
+                                    <td class="p-2.5">Menyalin kode apa adanya untuk menguji kontrak API.</td>
+                                    <td class="p-2.5 font-semibold">Metode <strong>Use–Modify–Analyze</strong>: Anda mengubah sendiri variabel <code class="font-mono font-bold">$batasKritisDefault</code> &amp; nama gudang Anda di kode!</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } else {
+                tabContentHtml = `
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch my-auto">
+                        <div class="p-4 rounded-3xl bg-slate-100 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 space-y-2 flex flex-col justify-between">
+                            <div>
+                                <span class="inline-block px-2.5 py-0.5 rounded-md bg-slate-700 text-white font-mono text-[11px] font-extrabold mb-1.5">◀ Kode api/barang.php di Pertemuan 4 (Masih Manual)</span>
+                                <pre class="json-box">// Di Pertemuan 4, setiap file harus menulis ulang\n// pemeriksaan kunci dan header JSON secara manual:\nheader('Content-Type: application/json; charset=utf-8');\nrequire_once __DIR__ . '/../config/koneksi.php';\n\n$kunci = $_SERVER['HTTP_X_API_KEY'] ?? '';\n$stKey = $pdo->prepare('SELECT * FROM api_keys WHERE api_key = :k AND status_aktif = 1');\n$stKey->execute([':k' => $kunci]);\nif (!$stKey->fetch()) {\n    http_response_code(401);\n    echo json_encode(['status'=>'error', 'pesan'=>'401 Ditolak']);\n    exit;\n}\n// Baru di bawahnya mengambil data barang...</pre>
+                            </div>
+                            <p class="text-[11px] text-slate-600 dark:text-slate-300 font-semibold">
+                                <strong>Kelemahan Minggu 4:</strong> Bayangkan jika toko punya 20 file endpoint, maka 12 baris pemeriksaan kunci di atas harus di-copy-paste 20 kali!
+                            </p>
+                        </div>
+
+                        <div class="p-4 rounded-3xl bg-emerald-50/60 dark:bg-emerald-950/30 border-2 border-emerald-400 dark:border-emerald-800 space-y-2 flex flex-col justify-between">
+                            <div>
+                                <span class="inline-block px-2.5 py-0.5 rounded-md bg-emerald-600 text-white font-mono text-[11px] font-extrabold mb-1.5">▶ Kode api/barang.php di Pertemuan 5 (Ringkas &amp; Cerdas)</span>
+                                <pre class="json-box">// Di Pertemuan 5, cukup panggil helpers/response.php!\nrequire_once __DIR__ . '/../config/koneksi.php';\nrequire_once __DIR__ . '/../helpers/response.php';\n\n// ⚙️ Kebijakan Manajer (Bisa Anda ubah sendiri!):\n$batasKritisDefault = 5;\n\n// 🔑 12 baris cek kunci Minggu 4 kini diringkas jadi 1 baris:\n$mitra = wajib_api_key($pdo);\n\n// 🖨️ Saat membalas data, cukup panggil 1 baris cetakan:\nkirim_json('sukses', 'Data ditemukan', $daftarBarang, 200, $meta);</pre>
+                            </div>
+                            <p class="text-[11px] text-emerald-800 dark:text-emerald-300 font-semibold">
+                                <strong>Keunggulan Minggu 5:</strong> Kode loket <code class="font-mono">api/barang.php</code> menjadi jauh lebih bersih dan fokus mengurus filter bisnis (<code class="font-mono">?kode=</code>, <code class="font-mono">?cari=</code>, <code class="font-mono">?stok_max=</code>)!
+                            </p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-3.5">
+                    ${slideBridgeTop("Setelah melihat gambaran umum di Slide 2, mari kita bandingkan secara rinci perbedaan sistem Pertemuan 4 dengan Pertemuan 5.")}
+
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Babak 1 · Perbandingan Pertemuan 4 vs Pertemuan 5</span>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Apa Saja yang Berubah pada Sistem &amp; Kode Kita Hari Ini?</h2>
+                        </div>
+                        <div class="inline-flex p-1 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                            <button type="button" onclick="activeM4CompareTab='tabel';renderCurrentSlide();" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition ${activeM4CompareTab === 'tabel' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 dark:text-slate-300'}">📊 1. Tabel Perbandingan Sistem</button>
+                            <button type="button" onclick="activeM4CompareTab='kode';renderCurrentSlide();" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition ${activeM4CompareTab === 'kode' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 dark:text-slate-300'}">💻 2. Perbandingan Kode Minggu 4 vs 5</button>
+                        </div>
+                    </div>
+
+                    ${tabContentHtml}
+
+                    ${slideBridgeNext("Mengapa di Pertemuan 5 kita memisahkan file ke dalam 3 ruangan folder (config/, helpers/, api/)? Kita lihat analogi bisnisnya di Slide 4.")}
+                </div>
+            `;
+        }
+
+        // SLIDE 4: Analogi Dapur Waralaba (Struktur Folder Modular)
+        function renderSlide4() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Pada perbandingan di Slide 3 tadi, perubahan pertama di Pertemuan 5 adalah hadirnya folder ke-3 yaitu helpers/response.php.")}
+
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Babak 1 · Tata Kelola Sistem Perusahaan</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Analogi "Dapur Waralaba": Mengapa Ruangan Kerja Harus Dipisah?</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                            Coba perhatikan dapur restoran cepat saji atau gerai kopi waralaba (<em>franchise</em>). Mengapa mereka memisahkan tempat penyimpanan bahan mentah, meja cetak struk, dan loket pelayanan depan ke dalam ${term('modular_folder', '3 Ruangan Terpisah')}?
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-auto">
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-t-4 border-slate-600 border-x border-b border-slate-200 dark:border-slate-800 space-y-2.5">
+                            <span class="px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 font-mono text-xs font-extrabold">RUANGAN 1 · config/</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">🔌 Ruang Mesin &amp; Brankas Data</h3>
+                            <div class="p-2 rounded-xl bg-slate-900 text-slate-100 font-mono text-xs">📄 config/koneksi.php</div>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                                <strong>Sudah ada sejak Pertemuan 4:</strong> Khusus mengurus sambungan ke database <code class="font-mono">db_gudang</code>. Jika perusahaan ganti password database, cukup ruangan ini saja yang diubah.
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-amber-50/70 dark:bg-amber-950/30 border-t-4 border-amber-500 border-x border-b border-amber-200 dark:border-amber-800 space-y-2.5">
+                            <span class="px-2.5 py-1 rounded-lg bg-amber-500 text-white font-mono text-xs font-extrabold">RUANGAN 2 · helpers/ (BARU M5!)</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">🖨️ Ruang Cetakan Kop &amp; Satpam</h3>
+                            <div class="p-2 rounded-xl bg-slate-900 text-amber-300 font-mono text-xs font-bold">⭐ helpers/response.php</div>
+                            <p class="text-xs text-slate-700 dark:text-slate-200 leading-relaxed">
+                                <strong>Tambahan Baru Pertemuan 5:</strong> Menyimpan <strong>Mesin Pencetak Kop Surat Resmi</strong> (${term('helper_json', 'kirim_json')}) dan <strong>Satpam Pemeriksa Izin Cabang</strong> (${term('wajib_key', 'wajib_api_key')}) di satu tempat terpusat.
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-emerald-50/70 dark:bg-emerald-950/30 border-t-4 border-emerald-600 border-x border-b border-emerald-200 dark:border-emerald-800 space-y-2.5">
+                            <span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-mono text-xs font-extrabold">RUANGAN 3 · api/</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">🚪 Loket Pelayanan Depan</h3>
+                            <div class="p-2 rounded-xl bg-slate-900 text-emerald-300 font-mono text-xs">📄 api/barang.php</div>
+                            <p class="text-xs text-slate-700 dark:text-slate-200 leading-relaxed">
+                                <strong>Di-upgrade di Pertemuan 5:</strong> Loket pelayanan katalog kini menjadi sangat ringkas karena tinggal meminjam alat dari <code class="font-mono">config/</code> dan <code class="font-mono">helpers/</code>!
+                            </p>
+                        </div>
+                    </div>
+
+                    ${slideBridgeNext("Seperti apa hasil cetakan 'Mesin Kop Surat Resmi' dari ruangan helpers/response.php tadi? Mari kita uji di Simulasi Slide 5.")}
+                </div>
+            `;
+        }
+
+        // SLIDE 5: Simulasi Interaktif 1 — Mesin Cetak Kop Surat Otomatis vs Ketik Manual
+        let helperCaseIdx = 0;
+        const HELPER_CASES = [
+            {
+                label: "1. Saat Katalog Berhasil Diambil (200 OK)",
+                manualBad: `// ❌ Jika diketik manual tanpa standar (Rawan salah key):\n{\n  "status_api": "OK",\n  "daftar_sepatu": [\n    {"kode": "SP001", "stok": 12}\n  ]\n}\n// Akibat Bisnis: Layar Kasir error karena mencari kata 'status' dan 'data', bukan 'daftar_sepatu'!`,
+                helperGood: `// ✅ Dicetak otomatis oleh kirim_json() di Pertemuan 5:\n{\n  "status": "sukses",\n  "kode_http": 200,\n  "pesan": "Berhasil menampilkan 8 produk",\n  "data": [\n    {"kode": "SP001", "nama": "Sneakers Pro", "stok": 12, "status_stok": "AMAN"}\n  ],\n  "meta": {\n    "batas_kritis_manajer": 5,\n    "jumlah_produk_kritis": 4\n  }\n}`
+            },
+            {
+                label: "2. Saat Kode Barang Tidak Ada (404)",
+                manualBad: `// ❌ Jika diketik manual oleh staf berbeda:\n{\n  "error": true,\n  "msg": "Sepatu SP999 tidak ketemu"\n}\n// Akibat Bisnis: Staf ini memakai kata 'msg' (bukan 'pesan'), sehingga peringatan gagal tampil di layar Kasir!`,
+                helperGood: `// ✅ Dicetak otomatis oleh kirim_json():\n{\n  "status": "error",\n  "kode_http": 404,\n  "pesan": "404 Not Found: Produk dengan kode SP999 tidak terdaftar!",\n  "data": null\n}`
+            },
+            {
+                label: "3. Saat Kunci Cabang Dimatikan (401)",
+                manualBad: `// ❌ Jika diketik manual:\n{\n  "status": "ditolak",\n  "alasan": "Kunci cabang mati"\n}\n// Akibat Bisnis: Istilah 'ditolak' dan 'alasan' tidak dikenali oleh program Kasir!`,
+                helperGood: `// ✅ Dicetak otomatis oleh wajib_api_key() & kirim_json():\n{\n  "status": "error",\n  "kode_http": 401,\n  "pesan": "401 Ditolak: Kunci Akses Cabang tidak terdaftar atau saklarnya mati (0)!",\n  "data": null\n}`
+            }
+        ];
+
+        function renderSlide5() {
+            const c = HELPER_CASES[helperCaseIdx];
+            let caseBtns = '';
+            for (let i = 0; i < HELPER_CASES.length; i++) {
+                const isAct = i === helperCaseIdx;
+                caseBtns += `
+                    <button type="button" onclick="helperCaseIdx=${i};renderCurrentSlide();" class="px-3.5 py-2 rounded-xl text-xs font-extrabold transition border ${isAct ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-indigo-400'}">
+                        ${escapeHtml(HELPER_CASES[i].label)}
+                    </button>
+                `;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-3.5">
+                    ${slideBridgeTop("Di Slide 4 kita sudah menyiapkan Ruangan 2 (helpers/response.php) yang berisi Mesin Pencetak Kop Surat Resmi.")}
+
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400">Simulasi Interaktif 1 · Standarisasi Kop Balasan</span>
+                        <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Uji Perbandingan: Surat Ketikan Manual vs Cetakan Otomatis <code class="font-mono">kirim_json()</code></h2>
+                        <p class="text-xs text-slate-600 dark:text-slate-300">
+                            Klik 3 situasi operasional di bawah ini. Perhatikan bagaimana cetakan otomatis menjamin setiap surat balasan dari Gudang selalu memiliki <strong>5 bagian kop yang sama persis</strong> (<code class="font-mono">status, kode_http, pesan, data, meta</code>):
+                        </p>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2">
+                        ${caseBtns}
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch my-auto">
+                        <div class="p-4 rounded-3xl bg-rose-50/50 dark:bg-rose-950/20 border-2 border-rose-200 dark:border-rose-800/70 space-y-2 flex flex-col justify-between">
+                            <div>
+                                <span class="inline-block px-2.5 py-0.5 rounded-md bg-rose-600 text-white font-mono text-[11px] font-extrabold mb-1.5">❌ Tanpa Standar Cetakan (Belang-Belang)</span>
+                                <pre class="json-box">${escapeHtml(c.manualBad)}</pre>
+                            </div>
+                        </div>
+
+                        <div class="p-4 rounded-3xl bg-emerald-50/50 dark:bg-emerald-950/20 border-2 border-emerald-300 dark:border-emerald-800/70 space-y-2 flex flex-col justify-between">
+                            <div>
+                                <span class="inline-block px-2.5 py-0.5 rounded-md bg-emerald-600 text-white font-mono text-[11px] font-extrabold mb-1.5">✓ Dengan Cetakan kirim_json() (100% Rapi)</span>
+                                <pre class="json-box">${escapeHtml(c.helperGood)}</pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${slideBridgeNext("Kop surat balasan sudah rapi! Sekarang kita masuk ke Babak 2 (Slide 6): bagaimana mencegah toko kehabisan stok barang laris?")}
+                </div>
+            `;
+        }
+
+        // SLIDE 6: Babak 2 — Konsep Bisnis Manajemen Persediaan (Stockout vs Dead Stock & Reorder Point)
+        function renderSlide6() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Babak 1 selesai: kita sudah melihat jembatan dari Pertemuan 4 dan menstandarkan kop surat JSON. Kini kita masuk ke Babak 2: Manajemen Persediaan.")}
+
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Babak 2 · Ilmu Manajemen Ritel &amp; Persediaan</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Dilema Manajer Toko: Bahaya ${term('stockout', 'Stockout')} vs Tumpukan Barang Mati</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                            Dalam bisnis ritel (baik toko sepatu, minimarket, maupun e-commerce), seorang Manajer Operasional selalu menjaga keseimbangan di antara <strong>2 risiko besar</strong> ini:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-auto">
+                        <div class="p-5 rounded-3xl bg-rose-50/70 dark:bg-rose-950/30 border-t-4 border-rose-600 border-x border-b border-rose-200 dark:border-rose-800 space-y-2">
+                            <span class="px-2.5 py-1 rounded-lg bg-rose-600 text-white text-xs font-extrabold">RISIKO 1 · STOCKOUT (KEHABISAN)</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Stok Habis Saat Dicari Pembeli</h3>
+                            <p class="text-xs text-slate-700 dark:text-slate-200 leading-relaxed">
+                                Jika kita baru memesan sepatu ke pabrik setelah stoknya benar-benar <strong>0 pasang</strong>, sedangkan pengiriman dari pabrik butuh waktu 4 hari, maka selama 4 hari itu toko kehilangan omzet dan mengecewakan pelanggan.
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-100 dark:bg-slate-800/60 border-t-4 border-slate-600 border-x border-b border-slate-200 dark:border-slate-700 space-y-2">
+                            <span class="px-2.5 py-1 rounded-lg bg-slate-700 text-white text-xs font-extrabold">RISIKO 2 · OVERSTOCK (MENUMPUK)</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Modal Uang Kas Macet di Gudang</h3>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Sebaliknya, jika manajer asal membeli terlalu banyak stok untuk sepatu yang jarang laku (misal stok masih 15 pasang tapi ditambah terus), uang kas perusahaan akan terkunci menjadi barang mati (<em>dead stock</em>) di rak gudang.
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-emerald-50/70 dark:bg-emerald-950/30 border-t-4 border-emerald-600 border-x border-b border-emerald-200 dark:border-emerald-800 space-y-2">
+                            <span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-xs font-extrabold">SOLUSI MANAJEMEN · REORDER POINT</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Tetapkan ${term('reorder_point', 'Batas Stok Kritis')}!</h3>
+                            <p class="text-xs text-slate-700 dark:text-slate-200 leading-relaxed">
+                                Manajer menetapkan angka batas aman (misalnya <strong>5 pasang</strong>). Begitu sisa stok menyentuh angka <strong>&le; 5 pasang</strong>, sistem API Gudang otomatis membunyikan label peringatan <strong>"KRITIS (Wajib Restock!)"</strong>.
+                            </p>
+                        </div>
+                    </div>
+
+                    ${slideBridgeNext("Bagaimana cara Kasir dan Manajer mengakses informasi stok tersebut secara cepat? Kita lihat perbedaan kebutuhan mereka di Slide 7.")}
+                </div>
+            `;
+        }
+
+        // SLIDE 7: Dua Pengguna Katalog Gudang (Kasir Depan vs Manajer Purchasing)
+        function renderSlide7() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Kita sudah paham pentingnya Batas Stok Kritis (Reorder Point). Sekarang, siapa saja yang meminta data katalog ke Gudang?")}
+
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Babak 2 · Desain Layanan Berbasis Pengguna</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Satu Pintu Katalog (<code class="font-mono">/api/barang.php</code>), Melayani Dua Kepentingan Bisnis</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                            Agar efisien, kita cukup menggunakan <strong>1 pintu layanan baca (<code class="font-mono">GET /api/barang.php</code>)</strong> yang mampu menyesuaikan balasannya tergantung siapa yang bertanya:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 my-auto">
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-l-4 border-indigo-600 border-y border-r border-slate-200 dark:border-slate-800 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="px-3 py-1 rounded-lg bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 text-xs font-extrabold">1. KEPENTINGAN KASIR TOKO DEPAN</span>
+                                <span class="text-xl">🛒</span>
+                            </div>
+                            <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Melayani Pertanyaan Pembeli Secara Instan</h3>
+                            <ul class="space-y-2 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                                <li>• <strong>Saat Toko Baru Buka:</strong> Kasir meminta daftar seluruh katalog sepatu untuk ditampilkan di layar kasir.</li>
+                                <li>• <strong>Saat Scan Kotak Sepatu:</strong> Kasir mengirim kode spesifik (<code class="font-mono font-bold text-indigo-600">?kode=SP001</code>) untuk mengecek harga resmi dan sisa stok 1 barang tersebut.</li>
+                                <li>• <strong>Saat Pembeli Tanya Nama Model:</strong> Kasir mengetik kata kunci (<code class="font-mono font-bold text-indigo-600">?cari=Pro</code>) untuk mencari semua sepatu yang mengandung kata <em>"Pro"</em>.</li>
+                            </ul>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-amber-50/60 dark:bg-amber-950/30 border-l-4 border-amber-500 border-y border-r border-amber-200 dark:border-amber-800 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="px-3 py-1 rounded-lg bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 text-xs font-extrabold">2. KEPENTINGAN MANAJER PEMBELIAN</span>
+                                <span class="text-xl">📊</span>
+                            </div>
+                            <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Menyaring Barang Hampir Habis untuk Dipesan ke Pabrik</h3>
+                            <ul class="space-y-2 text-xs text-slate-700 dark:text-slate-200 leading-relaxed">
+                                <li>• <strong>Saat Evaluasi Stok Sore Hari:</strong> Manajer tidak mau melihat barang yang stoknya masih penuh (12 atau 15 pasang).</li>
+                                <li>• <strong>Memakai Filter Batas Maksimal:</strong> Manajer memanggil <code class="font-mono font-bold text-amber-700 dark:text-amber-300">?stok_max=5</code> agar sistem hanya menampilkan sepatu yang sisa stoknya <strong>5 pasang ke bawah</strong>.</li>
+                                <li>• <strong>Prioritas Otomatis:</strong> Sistem langsung mengurutkan dari sepatu yang stoknya paling tipis (2 pasang di urutan teratas) agar dipesan lebih dulu!</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    ${slideBridgeNext("Bagaimana cara menuliskan keempat mode permintaan tersebut di alamat URL browser? Kita bedah rumusnya di Slide 8.")}
+                </div>
+            `;
+        }
+
+        // === TEMPELKAN BAGIAN 2 TEPAT DI BAWAH BARIS INI ===
+        /* ================= RENDER SLIDES 8 S.D. 14 (BAGIAN 2 DARI 3) ================= */
+
+        // State untuk Simulasi 3 di Slide 14 (Laboratorium Keamanan)
+        let secShieldOn = false;
+        let secAttackMode = 'normal';
+
+        // SLIDE 8: Cara Kerja Parameter URL (?kode=, ?cari=, ?stok_max=) — Analogi Pesanan Drive-Thru
+        function renderSlide8() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Di Slide 7 kita melihat bahwa Kasir dan Manajer Pembelian memiliki kebutuhan pencarian yang berbeda pada pintu /api/barang.php.")}
+
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Babak 2 · Cara Menyampaikan Pesanan ke Gudang</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Analogi "Loket Drive-Thru": Empat Cara Meminta Katalog Lewat Alamat URL</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                            Bagaimana cara Kasir atau Manajer memberi tahu Gudang barang apa yang ingin dilihat? Cukup tambahkan <strong>tanda tanya (<code class="font-mono font-bold">?</code>) diikuti kriteria pesanan</strong> di ujung alamat URL:
+                        </p>
+                    </div>
+
+                    <div class="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 my-auto">
+                        <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                            <thead>
+                                <tr class="bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+                                    <th class="p-3 font-extrabold">Mode Permintaan</th>
+                                    <th class="p-3 font-extrabold">Alamat URL yang Diketik / Dipanggil</th>
+                                    <th class="p-3 font-extrabold">Terjemahan Bahasa Manusia (Arti Pesanannya)</th>
+                                    <th class="p-3 font-extrabold">Siapa yang Memakai?</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 dark:divide-slate-800 bg-white dark:bg-slate-900">
+                                <tr>
+                                    <td class="p-3 font-bold text-emerald-700 dark:text-emerald-400">1. Katalog Penuh</td>
+                                    <td class="p-3 font-mono font-bold">/api/barang.php</td>
+                                    <td class="p-3"><em>"Tolong tampilkan seluruh 8 jenis sepatu yang ada di gudang saat ini."</em></td>
+                                    <td class="p-3">Layar Kasir saat baru buka toko.</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 font-bold text-blue-700 dark:text-blue-400">2. Cek 1 Kode SKU</td>
+                                    <td class="p-3 font-mono font-bold">/api/barang.php<span class="text-blue-600 dark:text-blue-400">?kode=SP001</span></td>
+                                    <td class="p-3"><em>"Tolong cek 1 sepatu yang kodenya persis <strong>SP001</strong> saja."</em></td>
+                                    <td class="p-3">Kasir saat men-scan barcode sepatu.</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 font-bold text-indigo-700 dark:text-indigo-400">3. Cari Nama Model</td>
+                                    <td class="p-3 font-mono font-bold">/api/barang.php<span class="text-indigo-600 dark:text-indigo-400">?cari=Pro</span></td>
+                                    <td class="p-3"><em>"Tolong carikan semua sepatu yang namanya mengandung kata <strong>Pro</strong>."</em></td>
+                                    <td class="p-3">Kasir saat pembeli bertanya model.</td>
+                                </tr>
+                                <tr class="bg-amber-50/50 dark:bg-amber-950/20">
+                                    <td class="p-3 font-bold text-amber-800 dark:text-amber-300">4. Radar Restock</td>
+                                    <td class="p-3 font-mono font-bold">/api/barang.php<span class="text-amber-600 dark:text-amber-400">?stok_max=5</span></td>
+                                    <td class="p-3 font-semibold"><em>"Tolong saring sepatu yang sisa stoknya <strong>5 pasang ke bawah</strong>, urutkan dari yang paling tipis!"</em></td>
+                                    <td class="p-3 font-bold text-amber-900 dark:text-amber-200">Manajer Pembelian (Purchasing).</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    ${slideBridgeNext("Pertanyaan kritis bisnis: bagaimana jika hasil pencariannya tidak menemukan barang? Apakah selalu dianggap Error 404? Kita bahas di Slide 9!")}
+                </div>
+            `;
+        }
+
+        // SLIDE 9: Logika Layanan Pelanggan — Kapan Menolak 404 vs Kapan Membalas 200 OK Kosong []
+        function renderSlide9() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Kita sudah mengenal 4 cara meminta data di URL. Sekarang, bagaimana aturan membalasnya jika barang yang dicari tidak ada?")}
+
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Babak 2 · Ketelitian Logika Bisnis Digital</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Jangan Salah Kaprah: Kapan Balas <code class="font-mono">404 Error</code> vs Kapan Balas <code class="font-mono">200 Sukses</code> Kosong?</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                            Banyak pemula mengira setiap kali data tidak ditemukan harus dibalas <code class="font-mono">404 Error</code>. Padahal dalam bisnis ritel, ada perbedaan besar antara <strong>"Salah Nomor Kode"</strong> dengan <strong>"Tidak Ada Stok yang Kritis"</strong>:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 my-auto">
+                        <!-- Kasus A -->
+                        <div class="p-5 rounded-3xl bg-rose-50/60 dark:bg-rose-950/30 border-2 border-rose-300 dark:border-rose-800 space-y-3 flex flex-col justify-between">
+                            <div class="space-y-2">
+                                <span class="px-2.5 py-1 rounded-lg bg-rose-600 text-white font-mono text-xs font-extrabold">SITUASI A · CEK 1 KODE SPESIFIK (?kode=SP999)</span>
+                                <h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">Barang Tidak Terdaftar &rarr; Balas <code class="font-mono">404 Not Found</code></h3>
+                                <p class="text-xs text-slate-700 dark:text-slate-200 leading-relaxed">
+                                    <strong>Analogi Bisnis:</strong> Kasir men-scan kode barang <code class="font-mono">SP999</code> yang memang tidak pernah dijual oleh toko kita. Ini adalah <strong>kesalahan referensi</strong>, sehingga Gudang wajib menolak dengan status <strong>Error (404)</strong>.
+                                </p>
+                                <pre class="json-box">{\n  "status": "error",\n  "kode_http": 404,\n  "pesan": "404 Not Found: Produk SP999 tidak terdaftar di Gudang!",\n  "data": null\n}</pre>
+                            </div>
+                        </div>
+
+                        <!-- Kasus B -->
+                        <div class="p-5 rounded-3xl bg-emerald-50/60 dark:bg-emerald-950/30 border-2 border-emerald-300 dark:border-emerald-800 space-y-3 flex flex-col justify-between">
+                            <div class="space-y-2">
+                                <span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-mono text-xs font-extrabold">SITUASI B · FILTER STOK KRITIS (?stok_max=1)</span>
+                                <h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">Hasil Saringan 0 Barang &rarr; Balas <code class="font-mono">200 OK</code> (<code class="font-mono">[]</code>)</h3>
+                                <p class="text-xs text-slate-700 dark:text-slate-200 leading-relaxed">
+                                    <strong>Analogi Bisnis:</strong> Manajer bertanya: <em>"Adakah sepatu yang sisa stoknya tinggal 1 pasang?"</em> Ternyata semua sepatu di gudang stoknya masih banyak! Ini adalah <strong>kabar baik (bukan error)</strong>, sehingga Gudang tetap membalas <strong>Sukses (200 OK)</strong> dengan daftar kosong <code class="font-mono font-bold">[]</code>.
+                                </p>
+                                <pre class="json-box">{\n  "status": "sukses",\n  "kode_http": 200,\n  "pesan": "Berhasil menampilkan 0 produk (Semua stok aman)",\n  "data": []\n}</pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${slideBridgeNext("Mari kita coba langsung keempat mode pencarian dan atur sendiri kebijakan Reorder Point toko Anda pada Simulator di Slide 10!")}
+                </div>
+            `;
+        }
+
+        // SLIDE 10: [Simulasi Interaktif 2] Simulator Radar Reorder Point & Keputusan Manajer
+        function renderSlide10() {
+            const filterModes = [
+                {
+                    badge: "MODE 1 · SEMUA KATALOG",
+                    title: "Tampil Semua (8 Produk)",
+                    url: "GET /sistem_gudang/api/barang.php",
+                    humanMeaning: "Menampilkan seluruh 8 sepatu di gudang. Sistem otomatis memberi cap AMAN atau KRITIS pada tiap barang sesuai angka Batas Stok Kritis yang Anda tetapkan di kanan atas.",
+                    bizAction: "Coba ubah tombol 'Kebijakan Reorder Point' di kanan atas dari 5 pasang menjadi 3 atau 8 pasang, lalu amati berapa produk yang berubah status menjadi KRITIS!"
+                },
+                {
+                    badge: "MODE 2 · CEK 1 KODE SKU",
+                    title: "Cek Kode (?kode=SP001)",
+                    url: "GET /sistem_gudang/api/barang.php?kode=SP001",
+                    humanMeaning: "Meminta rincian 1 sepatu spesifik berkode SP001 (Sneakers Pro) saat pembeli membawa kotak sepatu tersebut ke meja kasir.",
+                    bizAction: "Kasir langsung mendapat kepastian harga resmi (Rp 450.000) dan sisa stok (12 pasang = AMAN)."
+                },
+                {
+                    badge: "MODE 3 · CARI NAMA",
+                    title: "Cari Nama (?cari=Pro)",
+                    url: "GET /sistem_gudang/api/barang.php?cari=Pro",
+                    humanMeaning: "Menyaring seluruh sepatu yang di dalam namanya terdapat kata 'Pro'.",
+                    bizAction: "Ditemukan 2 sepatu: Sneakers Pro (stok 12) dan Trail Hiker Pro (stok 3). Kasir bisa langsung menawarkan keduanya kepada pelanggan!"
+                },
+                {
+                    badge: "MODE 4 · RADAR RESTOCK",
+                    title: "Filter Kritis (?stok_max=" + simBatasKritis + ")",
+                    url: "GET /sistem_gudang/api/barang.php?stok_max=" + simBatasKritis,
+                    humanMeaning: "Menyaring HANYA sepatu yang sisa stoknya " + simBatasKritis + " pasang ke bawah, lalu mengurutkannya dari yang paling tipis (paling darurat).",
+                    bizAction: "Lihat urutan paling atas di tabel kanan: SP008 - Office Oxford (sisa 2 pasang) muncul di nomor 1 sebagai prioritas utama yang wajib di-restock manajer hari ini!"
+                }
+            ];
+
+            const f = filterModes[activeFilterTab];
+
+            let list = [];
+            if (activeFilterTab === 0) {
+                list = MASTER_PRODUCTS_M5.slice();
+            } else if (activeFilterTab === 1) {
+                list = MASTER_PRODUCTS_M5.filter(function (p) { return p.kode === 'SP001'; });
+            } else if (activeFilterTab === 2) {
+                list = MASTER_PRODUCTS_M5.filter(function (p) { return p.nama.toLowerCase().indexOf('pro') !== -1; });
+            } else {
+                list = MASTER_PRODUCTS_M5.filter(function (p) { return p.stok <= simBatasKritis; })
+                    .sort(function (a, b) { return a.stok - b.stok; });
+            }
+
+            let jumlahKritis = 0;
+            let rowsHtml = '';
+            for (let i = 0; i < list.length; i++) {
+                const row = list[i];
+                const isCrit = row.stok <= simBatasKritis;
+                if (isCrit) jumlahKritis++;
+                rowsHtml += `
+                    <tr class="border-t border-slate-200 dark:border-slate-800">
+                        <td class="p-1.5 font-mono font-bold">${escapeHtml(row.kode)}</td>
+                        <td class="p-1.5 font-semibold">${escapeHtml(row.nama)}</td>
+                        <td class="p-1.5">${escapeHtml(row.harga)}</td>
+                        <td class="p-1.5 font-mono font-extrabold ${isCrit ? 'text-rose-600' : 'text-emerald-600'}">${row.stok} psg</td>
+                        <td class="p-1.5"><span class="px-2 py-0.5 rounded text-[10px] font-extrabold ${isCrit ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'}">${isCrit ? '🚨 KRITIS (<= ' + simBatasKritis + ')' : '✓ AMAN'}</span></td>
+                    </tr>
+                `;
+            }
+
+            let tabs = '';
+            for (let i = 0; i < filterModes.length; i++) {
+                const it = filterModes[i];
+                const isAct = i === activeFilterTab;
+                tabs += `
+                    <button type="button" onclick="activeFilterTab=${i};renderCurrentSlide();" class="p-2.5 rounded-2xl border-2 text-left transition ${isAct ? 'border-indigo-600 bg-indigo-50/70 dark:bg-indigo-950/50 shadow-xs' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900'}">
+                        <div class="text-[10px] font-extrabold uppercase text-indigo-600 dark:text-indigo-400">${escapeHtml(it.badge)}</div>
+                        <div class="text-xs font-extrabold text-slate-900 dark:text-white mt-0.5">${escapeHtml(it.title)}</div>
+                    </button>
+                `;
+            }
+
+            const batasOpts = [3, 5, 8].map(function (bVal) {
+                const act = simBatasKritis === bVal;
+                return `<button type="button" onclick="simBatasKritis=${bVal};renderCurrentSlide();" class="px-2.5 py-1 rounded-lg font-mono text-xs font-extrabold transition ${act ? 'bg-amber-600 text-white shadow-2xs' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-amber-300'}">&le; ${bVal} psg</button>`;
+            }).join('');
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400">Simulasi Interaktif 2 · Radar Persediaan Manajer</span>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Uji 4 Mode Katalog &amp; Atur Kebijakan ${term('reorder_point', 'Reorder Point')} Toko Anda</h2>
+                        </div>
+                        <div class="p-2 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 flex items-center gap-2">
+                            <span class="text-xs font-extrabold text-amber-900 dark:text-amber-200">⚙️ Kebijakan Reorder Point:</span>
+                            ${batasOpts}
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+                        ${tabs}
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch my-auto">
+                        <div class="lg:col-span-5 p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-2.5">
+                            <div class="space-y-2">
+                                <div>
+                                    <div class="text-[11px] font-extrabold uppercase text-indigo-600 dark:text-indigo-400 mb-1">🔗 Alamat URL yang Dipanggil:</div>
+                                    <pre class="json-box">${escapeHtml(f.url)}</pre>
+                                </div>
+                                <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs space-y-1">
+                                    <div class="font-extrabold text-slate-800 dark:text-slate-100">📖 Arti Permintaan Ini:</div>
+                                    <p class="text-slate-600 dark:text-slate-300 leading-relaxed">${escapeHtml(f.humanMeaning)}</p>
+                                </div>
+                                <div>
+                                    <div class="text-[11px] font-extrabold uppercase text-amber-600 dark:text-amber-400 mb-1">📊 Ringkasan Eksekutif (Meta JSON):</div>
+                                    <pre class="json-box">"meta": {\n  "batas_kritis_manajer": ${simBatasKritis},\n  "jumlah_produk_kritis": ${jumlahKritis}\n}</pre>
+                                </div>
+                            </div>
+                            <div class="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border-l-4 border-amber-500 text-[11px] text-slate-700 dark:text-slate-200">
+                                <strong>💡 Tindakan Manajer:</strong> ${escapeHtml(f.bizAction)}
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-7 p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between">
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-extrabold uppercase text-slate-700 dark:text-slate-200">📥 Daftar Barang yang Tampil (${list.length} Sepatu • ${jumlahKritis} Kritis):</span>
+                                    <span class="px-2.5 py-0.5 rounded bg-emerald-600 text-white font-mono text-[11px] font-extrabold">200 OK</span>
+                                </div>
+                                <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+                                    <table class="w-full text-left border-collapse text-xs">
+                                        <thead class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                                            <tr><th class="p-1.5">Kode</th><th class="p-1.5">Nama Sepatu</th><th class="p-1.5">Harga</th><th class="p-1.5">Sisa Stok</th><th class="p-1.5">Status Persediaan</th></tr>
+                                        </thead>
+                                        <tbody>${rowsHtml}</tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${slideBridgeNext("Fitur pencarian kita sudah canggih! Tapi tunggu dulu: ada bahaya besar yang mengintai setiap kotak pencarian web. Kita masuk ke Babak 3 di Slide 11.")}
+                </div>
+            `;
+        }
+
+        // SLIDE 11: Babak 3 — Manajemen Risiko Siber: Bagaimana Pesaing Mencuri Data Lewat Kotak Pencarian?
+        function renderSlide11() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Di Babak 2 kita membuka fitur pencarian (?kode= dan ?cari=). Namun membuka kotak pencarian tanpa pelindung ibarat membuka pintu gudang tanpa satpam!")}
+
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">Babak 3 · Manajemen Risiko Keamanan Siber Bisnis</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Ancaman Bisnis: Bagaimana Kompetitor Membobol Katalog Lewat Kotak Pencarian?</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                            Sebagai calon Manajer Bisnis Digital, Anda wajib tahu bahwa <strong>setiap kotak pencarian di aplikasi adalah celah keamanan</strong> apabila ketikan pengguna tidak dipisahkan dari perintah database:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 my-auto">
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-t-4 border-emerald-600 border-x border-b border-slate-200 dark:border-slate-800 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="px-2.5 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-xs font-extrabold">1. KETIKAN KASIR / PEMBELI JUJUR</span>
+                                <span class="text-xl">👤</span>
+                            </div>
+                            <h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">Hanya Mengetik Kode Sepatu Biasa</h3>
+                            <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border font-mono text-xs sm:text-sm font-bold text-emerald-700 dark:text-emerald-400">
+                                ?kode=SP001
+                            </div>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Pengguna normal hanya mengetikkan <code class="font-mono font-bold">SP001</code> untuk melihat 1 produk saja. Data sepatu lainnya tetap tertutup rapat.
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-rose-50/70 dark:bg-rose-950/30 border-t-4 border-rose-600 border-x border-b border-rose-200 dark:border-rose-800 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="px-2.5 py-1 rounded-lg bg-rose-600 text-white text-xs font-extrabold">2. KETIKAN PERETAS / PESAING CURANG</span>
+                                <span class="text-xl">💀</span>
+                            </div>
+                            <h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">Menyelipkan Mantra ${term('sql_injection', 'SQL Injection')}</h3>
+                            <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-rose-300 font-mono text-xs sm:text-sm font-bold text-rose-600 dark:text-rose-400">
+                                ?kode=SP999' OR '1'='1
+                            </div>
+                            <p class="text-xs text-slate-700 dark:text-slate-200 leading-relaxed">
+                                Pesaing tidak mengetik kode sepatu biasa, melainkan menyelipkan tanda kutip (<code class="font-mono font-bold">'</code>) dan kata <code class="font-mono font-bold">OR '1'='1</code> untuk menghipnotis database agar memuntahkan seluruh rahasia gudang!
+                            </p>
+                        </div>
+                    </div>
+
+                    ${slideBridgeNext("Kok bisa tulisan ' OR '1'='1 menipu komputer database? Mari kita lihat ilustrasi sederhananya (tanpa koding rumit) di Slide 12.")}
+                </div>
+            `;
+        }
+
+        // SLIDE 12: Bedah Visual Mengapa Sistem Polos Tertipu oleh ' OR '1'='1
+        function renderSlide12() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Di Slide 11 kita melihat peretas mengetikkan SP999' OR '1'='1. Mengapa kalimat aneh itu bisa membobol database yang polos?")}
+
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">Babak 3 · Anatomi Sabotase Perintah</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Mengapa Kalimat <code class="font-mono">' OR '1'='1</code> Bisa Membuka Seluruh Brankas Data?</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                            Bayangkan Anda memberi perintah tertulis kepada staf gudang yang polos: <em>"Ambilkan sepatu yang kodenya <strong>[isi sesuai ketikan tamu]</strong>"</em>. Lihat apa yang terjadi ketika tamu menyelipkan kalimat tambahan:
+                        </p>
+                    </div>
+
+                    <div class="p-5 rounded-3xl bg-rose-50/60 dark:bg-rose-950/30 border-2 border-rose-300 dark:border-rose-800 my-auto space-y-3.5">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 space-y-1.5">
+                                <span class="text-[11px] font-extrabold uppercase text-slate-500">1. Kalimat Perintah Database Saat Normal:</span>
+                                <div class="font-mono text-xs font-bold text-slate-800 dark:text-slate-100 p-2 rounded bg-slate-100 dark:bg-slate-800">
+                                    SELECT * FROM barang WHERE kode = '<span class="text-emerald-600">SP001</span>'
+                                </div>
+                                <p class="text-xs text-slate-600 dark:text-slate-300">
+                                    <strong>Artinya:</strong> <em>"Tampilkan barang yang kodenya adalah <strong>SP001</strong>."</em> (Hanya keluar 1 barang).
+                                </p>
+                            </div>
+
+                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-rose-300 dark:border-rose-700 space-y-1.5">
+                                <span class="text-[11px] font-extrabold uppercase text-rose-600">2. Saat Ditempel Ketikan Peretas Tanpa Pelindung:</span>
+                                <div class="font-mono text-xs font-bold text-slate-800 dark:text-slate-100 p-2 rounded bg-rose-50 dark:bg-rose-950/60">
+                                    SELECT * FROM barang WHERE kode = '<span class="text-rose-600">SP999' OR '1'='1</span>'
+                                </div>
+                                <p class="text-xs text-rose-800 dark:text-rose-300">
+                                    <strong>Artinya Berubah Menjadi:</strong> <em>"Tampilkan barang yang kodenya SP999, <strong>ATAU tampilkan semua barang jika angka 1 sama dengan angka 1</strong>!"</em>
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border-l-4 border-rose-600 text-xs text-slate-700 dark:text-slate-200 leading-relaxed">
+                            <strong>💥 Titik Fatalnya:</strong> Karena angka <strong>1 memang selalu sama dengan 1</strong>, maka komputer database menganggap syarat tersebut <strong>BENAR untuk seluruh baris barang di gudang</strong>. Akibatnya, seluruh isi database langsung diberikan kepada peretas!
+                        </div>
+                    </div>
+
+                    ${slideBridgeNext("Bagaimana cara menutup celah berbahaya ini agar bisnis kita aman 100%? Kita pelajari solusinya di Slide 13.")}
+                </div>
+            `;
+        }
+
+        // SLIDE 13: Solusi Standar Industri — "Kaca Pelindung Loket Bank" (PDO Prepared Statement)
+        function renderSlide13() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Kita baru saja melihat bahwa menggabungkan langsung ketikan tamu ke dalam kalimat perintah database sangat berbahaya.")}
+
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Babak 3 · Standar Perlindungan Aset Data</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Solusi: Analogi "Kaca Pelindung Loket Bank" (${term('prepared_stmt', 'Prepared Statement')})</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                            Agar database tidak pernah bisa dihipnotis oleh ketikan tamu, standar industri mewajibkan prosedur <strong>2 Tahap Terpisah (Prepare &amp; Execute)</strong>:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 my-auto">
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-t-4 border-indigo-600 border-x border-b border-slate-200 dark:border-slate-800 space-y-2.5">
+                            <span class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-mono text-xs font-extrabold">TAHAP 1 · PREPARE (KUNCI FORMULIRNYA DULU)</span>
+                            <h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">Database Mengunci Struktur Perintah Lebih Dulu</h3>
+                            <pre class="json-box">$st = $pdo->prepare(\n  "SELECT * FROM barang WHERE kode = :kode"\n);</pre>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                                <strong>Cara Kerjanya:</strong> Sebelum melihat apa yang diketik pengguna, sistem menyerahkan formulir perintah dengan kotak kosong bertanda titik dua (<code class="font-mono font-bold text-indigo-600">:kode</code>). Database langsung mengunci aturan bahwa <strong>isi kotak <code class="font-mono">:kode</code> tidak boleh mengubah perintah</strong>.
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-emerald-50/70 dark:bg-emerald-950/30 border-t-4 border-emerald-600 border-x border-b border-emerald-200 dark:border-emerald-800 space-y-2.5">
+                            <span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-mono text-xs font-extrabold">TAHAP 2 · EXECUTE (MASUKKAN TEKS TERPISAH)</span>
+                            <h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">Ketikan Peretas Dianggap Murni Teks Biasa</h3>
+                            <pre class="json-box">$st->execute([\n  ':kode' => $_GET['kode']\n]);</pre>
+                            <p class="text-xs text-slate-700 dark:text-slate-200 leading-relaxed">
+                                <strong>Cara Kerjanya:</strong> Ketika peretas mengetik <code class="font-mono font-bold">SP999' OR '1'='1</code>, database hanya mencari apakah ada kardus sepatu di gudang yang mereknya benar-benar bertuliskan kalimat <em>"SP999' OR '1'='1"</em>. Karena tidak ada, sistem menolak dengan <strong>404 Not Found</strong>!
+                            </p>
+                        </div>
+                    </div>
+
+                    ${slideBridgeNext("Mari kita buktikan sendiri keampuhan Kaca Pelindung ini pada Laboratorium Simulasi Serangan di Slide 14!")}
+                </div>
+            `;
+        }
+
+        // SLIDE 14: [Simulasi Interaktif 3] Laboratorium Uji Serangan Pencurian Data vs Kaca Pelindung
+        function renderSlide14() {
+            const inputSent = secAttackMode === 'normal' ? "SP001" : "SP999' OR '1'='1";
+            let sqlExecuted = '';
+            let jsonPreview = '';
+            let bannerHtml = '';
+
+            if (!secShieldOn && secAttackMode === 'hack') {
+                sqlExecuted = "SELECT id, kode, nama, harga, stok FROM barang\nWHERE kode = 'SP999' OR '1'='1'";
+                jsonPreview = `{\n  "status": "sukses",\n  "kode_http": 200,\n  "pesan": "BAHAYA! Seluruh 8 data barang di gudang bocor!",\n  "data": [\n    {"kode": "SP001", "nama": "Sneakers Pro", "harga": 450000, "stok": 12},\n    {"kode": "SP002", "nama": "Formal Classic", "harga": 380000, "stok": 8},\n    "... (Seluruh produk lainnya ikut terbuka semua!)"\n  ]\n}`;
+                bannerHtml = `
+                    <div class="p-3 rounded-2xl bg-rose-100 dark:bg-rose-950/70 border-2 border-rose-600 text-rose-900 dark:text-rose-200 text-xs leading-relaxed">
+                        <strong>🚨 DATABASE JEBOL (200 OK BOCOR):</strong> Tanpa Kaca Pelindung, mantra <code class="font-mono font-bold">OR '1'='1'</code> berhasil menipu database sehingga seluruh rahasia stok bocor!
+                    </div>
+                `;
+            } else if (secShieldOn && secAttackMode === 'hack') {
+                sqlExecuted = "TAHAP 1 (PREPARE): SELECT * FROM barang WHERE kode = :kode LIMIT 1\nTAHAP 2 (EXECUTE): [':kode' => \"SP999' OR '1'='1\"] (Dibaca sebagai teks biasa)";
+                jsonPreview = `{\n  "status": "error",\n  "kode_http": 404,\n  "pesan": "404 Not Found: Produk dengan kode \\"SP999' OR '1'='1\\" tidak terdaftar di Gudang!",\n  "data": null,\n  "meta": {\n    "keamanan": "PDO Prepared Statement Aktif (Input diperlakukan sebagai teks biasa)"\n  }\n}`;
+                bannerHtml = `
+                    <div class="p-3 rounded-2xl bg-emerald-100 dark:bg-emerald-950/70 border-2 border-emerald-600 text-emerald-900 dark:text-emerald-200 text-xs leading-relaxed">
+                        <strong>🛡️ SERANGAN DINETRALKAN (404 NOT FOUND):</strong> Berkat Kaca Pelindung (Prepared Statement), ketikan peretas dianggap kode sepatu biasa yang tidak terdaftar. Data toko 100% aman!
+                    </div>
+                `;
+            } else {
+                sqlExecuted = secShieldOn
+                    ? "TAHAP 1 (PREPARE): SELECT * FROM barang WHERE kode = :kode LIMIT 1\nTAHAP 2 (EXECUTE): [':kode' => 'SP001']"
+                    : "SELECT * FROM barang WHERE kode = 'SP001'";
+                jsonPreview = `{\n  "status": "sukses",\n  "kode_http": 200,\n  "pesan": "Detail produk berhasil ditemukan",\n  "data": {\n    "kode": "SP001",\n    "nama": "Sneakers Pro",\n    "harga": 450000,\n    "stok": 12,\n    "status_stok": "AMAN"\n  }\n}`;
+                bannerHtml = `
+                    <div class="p-3 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs">
+                        <strong>✓ Permintaan Normal (200 OK):</strong> Menampilkan rincian 1 sepatu <strong>SP001 - Sneakers Pro</strong>.
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-3">
+                    <div class="space-y-0.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400">Simulasi Interaktif 3 · Laboratorium Keamanan Data</span>
+                        <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Uji Serangan Pencurian Data (<code class="font-mono">SQL Injection</code>) vs Kaca Pelindung</h2>
+                        <p class="text-xs text-slate-600 dark:text-slate-300">Klik tombol merah <strong>"💀 2. Kirim Ketikan Peretas"</strong> di bawah kiri, lalu ubah Saklar Kaca Pelindung dari <strong>OFF</strong> menjadi <strong>ON</strong>:</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch my-auto">
+                        <div class="lg:col-span-5 p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-3 flex flex-col justify-between">
+                            <div class="space-y-2">
+                                <span class="text-xs font-extrabold uppercase text-indigo-600 dark:text-indigo-400">Langkah 1: Pilih Ketikan di ?kode=</span>
+                                <div class="grid grid-cols-1 gap-2">
+                                    <button type="button" onclick="secAttackMode='normal';renderCurrentSlide();" class="p-2.5 rounded-xl border-2 text-left text-xs font-extrabold transition ${secAttackMode === 'normal' ? 'border-emerald-600 bg-emerald-50 dark:bg-emerald-950/50' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900'}">
+                                        👤 1. Kirim Ketikan Kasir Normal: <code class="font-mono">SP001</code>
+                                    </button>
+                                    <button type="button" onclick="secAttackMode='hack';renderCurrentSlide();" class="p-2.5 rounded-xl border-2 text-left text-xs font-extrabold transition ${secAttackMode === 'hack' ? 'border-rose-600 bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900'}">
+                                        💀 2. Kirim Ketikan Peretas: <code class="font-mono">SP999' OR '1'='1</code>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-2">
+                                <div>
+                                    <div class="text-xs font-extrabold">Langkah 2: Saklar Kaca Pelindung</div>
+                                    <div class="text-[11px] text-slate-500">PDO Prepared Statement</div>
+                                </div>
+                                <button type="button" onclick="secShieldOn=!secShieldOn;renderCurrentSlide();" class="px-3.5 py-2 rounded-xl text-xs font-extrabold transition ${secShieldOn ? 'bg-emerald-600 text-white shadow-xs' : 'bg-rose-600 text-white shadow-xs'}">
+                                    ${secShieldOn ? '🛡️ PELINDUNG: ON' : '⚠️ PELINDUNG: OFF'}
+                                </button>
+                            </div>
+
+                            ${bannerHtml}
+                        </div>
+
+                        <div class="lg:col-span-7 p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-2">
+                            <div>
+                                <div class="text-[11px] font-extrabold uppercase text-slate-500 mb-1">⚙️ Cara Database Gudang Memprosesnya:</div>
+                                <pre class="json-box">${escapeHtml(sqlExecuted)}</pre>
+                            </div>
+                            <div>
+                                <div class="text-[11px] font-extrabold uppercase text-slate-500 mb-1">📥 Surat Balasan JSON yang Keluar:</div>
+                                <pre class="json-box">${escapeHtml(jsonPreview)}</pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${slideBridgeNext("Konsep bisnisnya sudah tuntas! Sekarang kita masuk ke Babak 4 (Slide 15–18): bagaimana cara membaca baris-baris kode praktikum LKM 05 dengan mudah?")}
+                </div>
+            `;
+        }
+
+        // === TEMPELKAN BAGIAN 3 TEPAT DI BAWAH BARIS INI ===
+        /* ================= STATE & RENDER SLIDES 15 S.D. 20 (BAGIAN 3 DARI 3) ================= */
+
+        // State Simulasi 4 (Slide 19): Evaluasi Kasus Manajer & Kuis
+        let activeEvalTabM5 = 'kasus';
+        const BIZ_CASES_M5 = [
+            {
+                id: 1,
+                badge: "🎯 Kasus Manajer 1 · Manfaat Bisnis Helper JSON",
+                title: "Perusahaan Anda memiliki 15 pintu layanan API yang dikerjakan oleh 3 staf berbeda. Tanpa file cetakan terpusat (helpers/response.php), risiko bisnis apa yang paling sering terjadi saat aplikasi Kasir dan aplikasi Mobile ingin membaca balasan dari Gudang?",
+                opts: [
+                    { ltr: "A", text: "Setiap staf bisa menuliskan nama atribut JSON yang berbeda-beda (misal 'pesan' vs 'message' vs 'info'), sehingga aplikasi Kasir gagal menampilkan pemberitahuan kepada petugas.", correct: true, explain: "Tepat! Standarisasi melalui 1 fungsi cetakan (kirim_json) menjamin seluruh pintu layanan berbicara dengan struktur amplop JSON yang 100% seragam." },
+                    { ltr: "B", text: "Database MySQL akan otomatis menghapus tabel barang jika tidak ada folder helpers.", correct: false, explain: "MySQL tidak menghapus tabel, namun ketidakkonsistenan format JSON akan merusak komunikasi antar-aplikasi." }
+                ]
+            },
+            {
+                id: 2,
+                badge: "🎯 Kasus Manajer 2 · Pengambilan Keputusan Restock",
+                title: "Saat memanggil layanan filter stok kritis (GET /api/barang.php?stok_max=5), muncul 4 sepatu yang sisa stoknya di bawah 5 pasang. Jika anggaran kas toko minggu ini hanya cukup untuk memesan ulang (restock) 2 jenis sepatu saja, pertimbangan bisnis apa yang paling tepat?",
+                opts: [
+                    { ltr: "A", text: "Memprioritaskan sepatu yang sisa stoknya paling tipis (2-3 pasang) dan memiliki perputaran penjualan paling cepat (fast-moving) di meja kasir.", correct: true, explain: "Sangat tajam! Mengurutkan dari stok paling tipis (ORDER BY stok ASC) dipadukan dengan kecepatan laku barang mencegah terjadinya kekosongan stok (stockout) pada produk unggulan." },
+                    { ltr: "B", text: "Memilih sepatu berdasarkan urutan abjad namanya saja.", correct: false, explain: "Urutan abjad nama produk tidak mencerminkan tingkat urgensi kebutuhan stok di gudang." }
+                ]
+            },
+            {
+                id: 3,
+                badge: "🎯 Kasus Manajer 3 · Membedakan Hasil Pencarian Kosong vs Kode Salah",
+                title: "Ketika kasir mencari kata kunci nama sepatu '?cari=SendalJepit' dan tidak ada produk yang cocok, praktik standar manakah yang lebih tepat dibandingkan saat kasir mengecek kode spesifik '?kode=SP999' yang tidak terdaftar?",
+                opts: [
+                    { ltr: "A", text: "Pencarian kata kunci '?cari=' yang tidak menemukan hasil cukup membalas 200 OK dengan daftar kosong (data: []), sedangkan pengecekan 1 kode spesifik '?kode=SP999' yang tidak ada membalas 404 Not Found.", correct: true, explain: "Benar sekali! Dalam desain API bisnis, pencarian filter yang hasilnya 0 barang bukanlah error (tetap 200 OK dengan list kosong []), sedangkan meminta 1 ID/Kode spesifik yang tidak ada adalah 404 Not Found." },
+                    { ltr: "B", text: "Keduanya harus mematikan server Gudang.", correct: false, explain: "Server tidak boleh mati hanya karena pencarian produk tidak ditemukan." }
+                ]
+            },
+            {
+                id: 4,
+                badge: "🎯 Kasus Manajer 4 · Perlindungan dari Sabotase Input (SQL Injection)",
+                title: "Mengapa penggunaan PDO Prepared Statement (memisahkan cetakan query dan isi parameter) wajib diterapkan pada setiap fitur pencarian katalog yang dibuka untuk pelanggan atau kasir?",
+                opts: [
+                    { ltr: "A", text: "Karena Prepared Statement memperlakukan ketikan pengguna murni sebagai teks biasa (bukan perintah program), sehingga karakter berbahaya seperti (' OR '1'='1) tidak bisa membobol database.", correct: true, explain: "Tepat! Dengan Prepared Statement, sejahat apa pun teks yang diketikkan di kotak pencarian, database hanya menganggapnya sebagai kode/nama sepatu biasa yang sedang dicari." },
+                    { ltr: "B", text: "Supaya harga sepatu di gudang otomatis naik 10%.", correct: false, explain: "Prepared Statement adalah fitur keamanan database, bukan pengubah harga otomatis." }
+                ]
+            }
+        ];
+        let bizChoicesM5 = {};
+
+        const TF_QUIZ_M5 = [
+            { id: 1, text: 'Memisahkan proyek ke dalam folder config/, helpers/, dan api/ memudahkan tim menemukan sumber masalah ketika terjadi gangguan operasional.', answer: 'true', explain: 'Benar. Pemisahan tanggung jawab (modularitas) membuat pengelolaan sistem jauh lebih rapi dan terukur.' },
+            { id: 2, text: 'Fungsi helper kirim_json() bertugas memastikan setiap balasan API selalu menyertakan header Content-Type: application/json dan kode status HTTP yang sesuai.', answer: 'true', explain: 'Benar. Dengan begitu programmer tidak perlu mengetik ulang pengaturan header di setiap file endpoint.' },
+            { id: 3, text: 'Parameter filter ?stok_max=5 pada endpoint GET /api/barang.php digunakan untuk menghapus seluruh barang yang stoknya di bawah 5 pasang.', answer: 'false', explain: 'Salah. Method GET hanya membaca/menampilkan daftar barang yang stoknya <= 5 pasang sebagai peringatan restock, bukan menghapusnya.' },
+            { id: 4, text: 'Menempelkan langsung variabel $_GET["kode"] ke dalam kalimat SQL tanpa tanda tanya (?) / parameter binding sangat aman dari serangan SQL Injection.', answer: 'false', explain: 'Salah besar. Menggabungkan input pengguna langsung ke kalimat SQL adalah penyebab utama celah keamanan SQL Injection.' },
+            { id: 5, text: 'Dengan PDO Prepared Statement, placeholder :kode berfungsi sebagai wadah aman yang memastikan input pengguna tidak pernah mengubah logika perintah SQL.', answer: 'true', explain: 'Benar. Cetakan perintah SQL dikunci terlebih dahulu oleh database sebelum diisi dengan teks dari pengguna.' }
+        ];
+        let tfChoicesM5 = {};
+
+        // SLIDE 15: Babak 4 (Bedah Kode 1/4) — Terjemahan Baris-demi-Baris Kode Cetakan Kop Surat (helpers/response.php)
+        function renderSlide15() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Kita sudah memahami seluruh konsep bisnisnya di Babak 1–3. Sekarang di Babak 4 (Slide 15–18), mari kita bedah arti setiap baris kode yang akan Anda pakai di praktikum nanti!")}
+
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">Babak 4 · Kamus Terjemahan Kode Praktikum (Bagian 1 dari 4)</span>
+                        <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Cara Membaca Kode Mesin Kop Surat (<code class="font-mono">helpers/response.php</code>)</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                            Anda <strong>tidak perlu menghafal</strong> kode di bawah ini. Cukup pahami arti setiap nomor barisnya melalui tabel terjemahan bahasa manusia di sebelah kanan:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch my-auto">
+                        <!-- Kiri: Potongan Kode Bernomor Baris -->
+                        <div class="lg:col-span-5 p-4 rounded-3xl bg-slate-900 text-slate-100 border border-slate-800 flex flex-col justify-between">
+                            <div>
+                                <div class="text-[11px] font-mono font-bold text-amber-400 mb-2">📄 File: sistem_gudang/helpers/response.php</div>
+                                <pre class="json-box">/* Baris 1 */ function kirim_json($status, $pesan, $data, $kodeHttp) {\n/* Baris 2 */   header('Content-Type: application/json');\n/* Baris 3 */   http_response_code($kodeHttp);\n\n/* Baris 4 */   $amplopStandar = [\n/* Baris 5 */     'status'    => $status,\n/* Baris 6 */     'kode_http' => $kodeHttp,\n/* Baris 7 */     'pesan'     => $pesan,\n/* Baris 8 */     'data'      => $data\n/* Baris 9 */   ];\n\n/* Baris 10 */  echo json_encode($amplopStandar);\n/* Baris 11 */  exit;\n/* Baris 12 */ }</pre>
+                            </div>
+                            <div class="text-[11px] text-slate-400 mt-2">
+                                💡 Dibuat satu kali di folder <code class="font-mono text-amber-300">helpers/</code>, lalu dipakai berulang kali oleh semua loket API.
+                            </div>
+                        </div>
+
+                        <!-- Kanan: Tabel Terjemahan Bahasa Manusia per Baris -->
+                        <div class="lg:col-span-7 overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                            <table class="w-full text-left border-collapse text-xs">
+                                <thead>
+                                    <tr class="bg-amber-50 dark:bg-amber-950/60 border-b border-amber-200 dark:border-amber-800">
+                                        <th class="p-2.5 font-extrabold text-amber-900 dark:text-amber-200 w-24">Nomor Baris</th>
+                                        <th class="p-2.5 font-extrabold text-amber-900 dark:text-amber-200 w-40">Potongan Perintah</th>
+                                        <th class="p-2.5 font-extrabold text-amber-900 dark:text-amber-200">Terjemahan Bahasa Manusia &amp; Fungsi Bisnisnya</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+                                    <tr>
+                                        <td class="p-2.5 font-mono font-bold text-indigo-600">Baris 1</td>
+                                        <td class="p-2.5 font-mono font-bold">function kirim_json(...)</td>
+                                        <td class="p-2.5">Mendefinisikan mesin cetakan bernama <code class="font-mono font-bold">kirim_json</code> yang menerima 4 bahan: status, kalimat pesan, isi data barang, dan nomor kode HTTP.</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-2.5 font-mono font-bold text-indigo-600">Baris 2</td>
+                                        <td class="p-2.5 font-mono font-bold">header('Content-Type...')</td>
+                                        <td class="p-2.5">Menempelkan stiker resmi di luar amplop agar aplikasi Kasir tahu bahwa surat balasan ini berformat <strong>JSON</strong>.</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-2.5 font-mono font-bold text-indigo-600">Baris 3</td>
+                                        <td class="p-2.5 font-mono font-bold">http_response_code(...)</td>
+                                        <td class="p-2.5">Mengatur lampu status resmi protokol HTTP (misal <code class="font-mono">200</code> jika disetujui, <code class="font-mono">401</code> jika kunci cabang mati, atau <code class="font-mono">404</code> jika barang tidak ada).</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-2.5 font-mono font-bold text-indigo-600">Baris 4–9</td>
+                                        <td class="p-2.5 font-mono font-bold">$amplopStandar = [...]</td>
+                                        <td class="p-2.5">Menyusun <strong>Kop Surat Baku</strong>. Perhatikan: nama label di sebelah kiri (<code class="font-mono">'status', 'kode_http', 'pesan', 'data'</code>) sudah dikunci mati agar tidak mungkin salah ketik!</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-2.5 font-mono font-bold text-indigo-600">Baris 10–11</td>
+                                        <td class="p-2.5 font-mono font-bold">echo json_encode(...)<br>exit;</td>
+                                        <td class="p-2.5">Perintah <code class="font-mono font-bold">json_encode</code> mengubah daftar barang menjadi teks JSON, <code class="font-mono font-bold">echo</code> mengirimkannya ke Kasir, dan <code class="font-mono font-bold">exit</code> langsung menutup loket agar tidak ada teks liar yang ikut tercetak.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    ${slideBridgeNext("Setelah mesin kop surat siap di helpers/response.php, bagaimana cara loket api/barang.php memanggilnya dan menangkap pesanan URL? Kita bedah di Slide 16.")}
+                </div>
+            `;
+        }
+
+        // SLIDE 16: Babak 4 (Bedah Kode 2/4) — Terjemahan Kode Kebijakan Manajer & Penangkap Parameter URL ($_GET)
+        function renderSlide16() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Di Slide 15 kita sudah paham cara kerja mesin kop surat di helpers/response.php. Sekarang kita buka bagian atas file loket api/barang.php.")}
+
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">Babak 4 · Kamus Terjemahan Kode Praktikum (Bagian 2 dari 4)</span>
+                        <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Cara Membaca Kode Kebijakan Manajer &amp; Penangkap URL (${term('get_var', '$_GET')})</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                            Inilah <strong>bagian paling penting bagi Anda di praktikum LKM 05</strong> nanti, karena pada <strong>Baris 4 dan 5</strong> di bawah inilah Anda akan memasukkan kebijakan toko Anda sendiri:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch my-auto">
+                        <!-- Kiri: Potongan Kode Bagian Atas api/barang.php -->
+                        <div class="lg:col-span-5 p-4 rounded-3xl bg-slate-900 text-slate-100 border border-slate-800 flex flex-col justify-between">
+                            <div>
+                                <div class="text-[11px] font-mono font-bold text-emerald-400 mb-2">📄 File: sistem_gudang/api/barang.php (Bagian Atas)</div>
+                                <pre class="json-box">/* Baris 1 */ require_once '../config/koneksi.php';\n/* Baris 2 */ require_once '../helpers/response.php';\n\n/* === ⚙️ KEBIJAKAN MANAJER TOKO === */\n/* Baris 4 */ $batasKritisDefault = 5;\n/* Baris 5 */ $labelTokoAnda = 'Gudang Sepatu Nusantara';\n\n/* Baris 6 */ $mitra = wajib_api_key($pdo);\n\n/* === 🔍 PENANGKAP PESANAN URL === */\n/* Baris 7 */ $kode    = $_GET['kode'] ?? '';\n/* Baris 8 */ $cari    = $_GET['cari'] ?? '';\n/* Baris 9 */ $stokMax = $_GET['stok_max'] ?? null;</pre>
+                            </div>
+                            <div class="p-2.5 rounded-xl bg-amber-950/80 border border-amber-700 text-[11px] text-amber-200 mt-2">
+                                ⭐ <strong>Otonomi Anda di LKM 05:</strong> Anda bebas mengubah angka <code class="font-mono font-bold">5</code> di Baris 4 dan nama toko di Baris 5!
+                            </div>
+                        </div>
+
+                        <!-- Kanan: Tabel Terjemahan Bahasa Manusia per Baris -->
+                        <div class="lg:col-span-7 overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                            <table class="w-full text-left border-collapse text-xs">
+                                <thead>
+                                    <tr class="bg-emerald-50 dark:bg-emerald-950/60 border-b border-emerald-200 dark:border-emerald-800">
+                                        <th class="p-2.5 font-extrabold text-emerald-900 dark:text-emerald-200 w-24">Nomor Baris</th>
+                                        <th class="p-2.5 font-extrabold text-emerald-900 dark:text-emerald-200 w-44">Simbol Kode PHP</th>
+                                        <th class="p-2.5 font-extrabold text-emerald-900 dark:text-emerald-200">Terjemahan Bahasa Manusia &amp; Fungsi Bisnisnya</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+                                    <tr>
+                                        <td class="p-2.5 font-mono font-bold text-emerald-700">Baris 1–2</td>
+                                        <td class="p-2.5 font-mono font-bold">require_once '...'</td>
+                                        <td class="p-2.5"><strong>Artinya: "Pinjam Alat dari Ruangan Sebelah".</strong> Memanggil sambungan database dari folder <code class="font-mono">config/</code> dan mesin kop surat dari folder <code class="font-mono">helpers/</code>.</td>
+                                    </tr>
+                                    <tr class="bg-amber-50/50 dark:bg-amber-950/25">
+                                        <td class="p-2.5 font-mono font-bold text-amber-700">Baris 4–5 ⭐</td>
+                                        <td class="p-2.5 font-mono font-bold">$batasKritisDefault = 5;<br>$labelTokoAnda = '...';</td>
+                                        <td class="p-2.5"><strong>Variabel Kebijakan Manajer:</strong> Tempat Anda menetapkan berapa pasang batas ${term('reorder_point', 'Reorder Point')} toko Anda dan apa nama resmi gudang Anda di kop surat.</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-2.5 font-mono font-bold text-emerald-700">Baris 6</td>
+                                        <td class="p-2.5 font-mono font-bold">$mitra = wajib_api_key($pdo);</td>
+                                        <td class="p-2.5">Menyuruh <strong>Satpam Pintu Depan</strong> memeriksa kartu akses cabang (<code class="font-mono">X-API-KEY</code>). Jika kartu cabang tidak sah/mati, tamu langsung diusir di baris ini juga!</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-2.5 font-mono font-bold text-emerald-700">Baris 7–9</td>
+                                        <td class="p-2.5 font-mono font-bold">$_GET['kode'] ?? ''</td>
+                                        <td class="p-2.5"><strong>Penangkap Pesanan di URL:</strong> Simbol <code class="font-mono font-bold">$_GET</code> membaca kriteria yang diketik di ujung alamat URL. Tanda <code class="font-mono font-bold">?? ''</code> artinya: <em>"Jika pengguna tidak mengetik filter apa-apa, anggap kosong"</em>.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    ${slideBridgeNext("Setelah pesanan URL ditangkap oleh $_GET, bagaimana kode PHP mengambil datanya secara aman dari database dan memberi cap KRITIS? Kita bedah di Slide 17.")}
+                </div>
+            `;
+        }
+
+        // SLIDE 17: Babak 4 (Bedah Kode 3/4) — Terjemahan Kode Kaca Pelindung Database, Pengurutan Prioritas & Cap Kritis Otomatis
+        function renderSlide17() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Di Slide 16 kita sudah menangkap permintaan filter dari URL ($kode, $cari, $stokMax). Sekarang kita lihat bagian bawah api/barang.php yang memproses datanya.")}
+
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">Babak 4 · Kamus Terjemahan Kode Praktikum (Bagian 3 dari 4)</span>
+                        <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Cara Membaca Kode Kaca Pelindung (<code class="font-mono">prepare</code>) &amp; Pemberi Label Stok Kritis</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                            Perhatikan bagaimana 4 langkah di bawah ini mengambil data secara aman, mengurutkan prioritas <em>restock</em>, hingga memberi cap <strong>KRITIS / AMAN</strong> secara otomatis:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch my-auto">
+                        <!-- Kiri: Potongan Kode Bagian Bawah api/barang.php -->
+                        <div class="lg:col-span-5 p-4 rounded-3xl bg-slate-900 text-slate-100 border border-slate-800 flex flex-col justify-between">
+                            <div>
+                                <div class="text-[11px] font-mono font-bold text-sky-400 mb-2">📄 File: sistem_gudang/api/barang.php (Bagian Bawah)</div>
+                                <pre class="json-box">/* Baris 10 */ $st = $pdo->prepare(\n  "SELECT id, kode, nama, harga, stok\n   FROM barang\n   WHERE stok <= :stok_max\n   ORDER BY stok ASC"\n);\n/* Baris 11 */ $st->execute([':stok_max' => $stokMax]);\n/* Baris 12 */ $daftarBarang = $st->fetchAll();\n\n/* === 🏷️ BERI CAP STATUS STOK === */\n/* Baris 13 */ foreach ($daftarBarang as &$b) {\n/* Baris 14 */   if ($b['stok'] <= $batasKritisDefault) {\n/* Baris 15 */     $b['status_stok'] = 'KRITIS (Wajib Restock)';\n/* Baris 16 */   } else {\n/* Baris 17 */     $b['status_stok'] = 'AMAN';\n/* Baris 18 */   }\n/* Baris 19 */ }</pre>
+                            </div>
+                        </div>
+
+                        <!-- Kanan: Tabel Terjemahan Bahasa Manusia per Baris -->
+                        <div class="lg:col-span-7 overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                            <table class="w-full text-left border-collapse text-xs">
+                                <thead>
+                                    <tr class="bg-sky-50 dark:bg-sky-950/60 border-b border-sky-200 dark:border-sky-800">
+                                        <th class="p-2.5 font-extrabold text-sky-900 dark:text-sky-200 w-24">Nomor Baris</th>
+                                        <th class="p-2.5 font-extrabold text-sky-900 dark:text-sky-200 w-44">Potongan Kode</th>
+                                        <th class="p-2.5 font-extrabold text-sky-900 dark:text-sky-200">Terjemahan Bahasa Manusia &amp; Fungsi Bisnisnya</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+                                    <tr>
+                                        <td class="p-2.5 font-mono font-bold text-sky-700">Baris 10</td>
+                                        <td class="p-2.5 font-mono font-bold">$pdo-&gt;prepare(...)<br>:stok_max</td>
+                                        <td class="p-2.5"><strong>Tahap 1 Kaca Pelindung:</strong> Mengunci cetakan pencarian ke tabel <code class="font-mono">barang</code>. Kotak kosong <code class="font-mono font-bold">:stok_max</code> disiapkan agar input pengguna tidak bisa merusak perintah.</td>
+                                    </tr>
+                                    <tr class="bg-amber-50/40 dark:bg-amber-950/20">
+                                        <td class="p-2.5 font-mono font-bold text-amber-700">Baris 10 (Akhir)</td>
+                                        <td class="p-2.5 font-mono font-bold">ORDER BY stok ASC</td>
+                                        <td class="p-2.5"><strong>Pengurut Prioritas Manajer:</strong> Kata <code class="font-mono font-bold">ASC</code> (<em>Ascending</em> = Kecil ke Besar) memerintahkan database menaruh sepatu yang stoknya paling tipis (2 pasang) di urutan paling atas!</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-2.5 font-mono font-bold text-sky-700">Baris 11–12</td>
+                                        <td class="p-2.5 font-mono font-bold">$st-&gt;execute(...)<br>$st-&gt;fetchAll()</td>
+                                        <td class="p-2.5"><strong>Tahap 2 Kaca Pelindung:</strong> Memasukkan angka batas ke kotak <code class="font-mono">:stok_max</code> secara aman (<code class="font-mono">execute</code>), lalu mengambil seluruh baris sepatu yang lolos saringan (<code class="font-mono">fetchAll</code>).</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-2.5 font-mono font-bold text-sky-700">Baris 13–19</td>
+                                        <td class="p-2.5 font-mono font-bold">foreach (...)<br>if ($b['stok'] &lt;= ...)</td>
+                                        <td class="p-2.5"><strong>Mesin Stempel Status Persediaan:</strong> Memeriksa satu per satu sepatu yang ditemukan. Jika sisa stoknya &le; angka <code class="font-mono">$batasKritisDefault</code> Anda, beri cap <strong>"KRITIS"</strong>; jika lebih, beri cap <strong>"AMAN"</strong>.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    ${slideBridgeNext("Mari kita satukan ketiga potongan kode tadi ke dalam 1 Peta Alur Visual Utuh di Slide 18 agar terbayang perjalanan datanya dari awal sampai akhir!")}
+                </div>
+            `;
+        }
+
+        // SLIDE 18: Babak 4 (Bedah Kode 4/4) — Diagram Visual SVG Utuh 4 Tahap Eksekusi GET /api/barang.php
+        function renderSlide18() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Kita sudah membedah arti baris kode di Slide 15, 16, dan 17. Beginilah wujud kerja sama keseluruhannya dalam satu diagram alur.")}
+
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Babak 4 · Peta Besar Alur Kerja Sistem (Big Picture)</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Empat Tahap Perjalanan Permintaan Katalog di Sistem Gudang</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                            Setiap kali Kasir atau Manajer menekan tombol pencarian di browser pada praktikum LKM 05 nanti, permintaan tersebut melewati <strong>4 pos pemeriksaan berurutan</strong> ini:
+                        </p>
+                    </div>
+
+                    <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 my-auto overflow-x-auto">
+                        <svg class="w-full min-w-[780px] h-auto" viewBox="0 0 920 210">
+                            <!-- Pos 1 -->
+                            <rect x="15" y="20" width="195" height="170" rx="14" fill="#ffffff" stroke="#d97706" stroke-width="2.2"/>
+                            <rect x="15" y="20" width="195" height="32" rx="14" fill="#d97706"/>
+                            <text x="112" y="41" text-anchor="middle" font-size="11.5" font-weight="800" fill="#ffffff" font-family="monospace">POS 1 · SATPAM CABANG</text>
+                            <text x="30" y="74" font-size="11.5" font-weight="800" fill="#0f172a">wajib_api_key($pdo)</text>
+                            <text x="30" y="96" font-size="10.5" fill="#475569">Periksa X-API-KEY di</text>
+                            <text x="30" y="114" font-size="10.5" fill="#475569">tabel api_keys.</text>
+                            <text x="30" y="142" font-size="10.5" font-weight="700" fill="#dc2626">• Mati (0): Tolak 401!</text>
+                            <text x="30" y="162" font-size="10.5" font-weight="700" fill="#059669">• Aktif (1): Silakan Masuk</text>
+
+                            <line x1="210" y1="105" x2="245" y2="105" stroke="#64748b" stroke-width="2.5"/>
+
+                            <!-- Pos 2 -->
+                            <rect x="245" y="20" width="195" height="170" rx="14" fill="#ffffff" stroke="#4f46e5" stroke-width="2.2"/>
+                            <rect x="245" y="20" width="195" height="32" rx="14" fill="#4f46e5"/>
+                            <text x="342" y="41" text-anchor="middle" font-size="11.5" font-weight="800" fill="#ffffff" font-family="monospace">POS 2 · BACA PESANAN</text>
+                            <text x="260" y="74" font-size="11.5" font-weight="800" fill="#0f172a">Tangkap via $_GET</text>
+                            <text x="260" y="98" font-size="10.5" font-family="monospace" fill="#334155">• ?kode=SP001 (1 SKU)</text>
+                            <text x="260" y="118" font-size="10.5" font-family="monospace" fill="#334155">• ?cari=Pro (Nama)</text>
+                            <text x="260" y="138" font-size="10.5" font-family="monospace" fill="#334155">• ?stok_max=5 (Kritis)</text>
+                            <text x="260" y="158" font-size="10.5" font-family="monospace" fill="#334155">• Kosong (Semua)</text>
+
+                            <line x1="440" y1="105" x2="475" y2="105" stroke="#64748b" stroke-width="2.5"/>
+
+                            <!-- Pos 3 -->
+                            <rect x="475" y="20" width="200" height="170" rx="14" fill="#ffffff" stroke="#0284c7" stroke-width="2.2"/>
+                            <rect x="475" y="20" width="200" height="32" rx="14" fill="#0284c7"/>
+                            <text x="575" y="41" text-anchor="middle" font-size="11.5" font-weight="800" fill="#ffffff" font-family="monospace">POS 3 · KACA PELINDUNG</text>
+                            <text x="490" y="74" font-size="11.5" font-weight="800" fill="#0f172a">Prepare, Execute &amp; Cap</text>
+                            <text x="490" y="96" font-size="10.5" font-family="monospace" fill="#0369a1">$pdo-&gt;prepare($sql)</text>
+                            <text x="490" y="114" font-size="10.5" font-family="monospace" fill="#0369a1">$st-&gt;execute($param)</text>
+                            <text x="490" y="140" font-size="10.5" fill="#475569">Amankan dari peretas &amp;</text>
+                            <text x="490" y="158" font-size="10.5" font-weight="700" fill="#b45309">beri cap AMAN / KRITIS.</text>
+
+                            <line x1="675" y1="105" x2="710" y2="105" stroke="#64748b" stroke-width="2.5"/>
+
+                            <!-- Pos 4 -->
+                            <rect x="710" y="20" width="195" height="170" rx="14" fill="#ffffff" stroke="#059669" stroke-width="2.2"/>
+                            <rect x="710" y="20" width="195" height="32" rx="14" fill="#059669"/>
+                            <text x="807" y="41" text-anchor="middle" font-size="11.5" font-weight="800" fill="#ffffff" font-family="monospace">POS 4 · CETAK KOP SURAT</text>
+                            <text x="725" y="74" font-size="11.5" font-weight="800" fill="#0f172a">kirim_json(...)</text>
+                            <text x="725" y="98" font-size="10.5" fill="#475569">Kemas ke amplop resmi:</text>
+                            <text x="725" y="118" font-size="10.5" font-family="monospace" fill="#047857">status, kode_http,</text>
+                            <text x="725" y="136" font-size="10.5" font-family="monospace" fill="#047857">pesan, data, meta</text>
+                            <text x="725" y="160" font-size="10.5" font-weight="700" fill="#0f172a">Tampil di Layar Kasir!</text>
+                        </svg>
+                    </div>
+
+                    ${slideBridgeNext("Sekarang saatnya menguji ketajaman analisis bisnis dan pemahaman Anda melalui 4 Studi Kasus Manajer di Slide 19!")}
+                </div>
+            `;
+        }
+
+        // SLIDE 19: Babak 5 — [Simulasi Interaktif 4] Studi Kasus Keputusan Manajer & Kuis Kilat
+        function renderSlide19() {
+            let contentHtml = '';
+            if (activeEvalTabM5 === 'kasus') {
+                let cardsHtml = '';
+                for (let i = 0; i < BIZ_CASES_M5.length; i++) {
+                    const sc = BIZ_CASES_M5[i];
+                    const chosenIdx = bizChoicesM5[sc.id];
+                    const hasAnswered = chosenIdx !== undefined;
+
+                    let optsHtml = '';
+                    for (let j = 0; j < sc.opts.length; j++) {
+                        const o = sc.opts[j];
+                        let btnCls = 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 hover:border-indigo-500';
+                        let badgeCls = 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300';
+
+                        if (hasAnswered) {
+                            if (o.correct) {
+                                btnCls = 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 text-emerald-900 dark:text-emerald-200';
+                                badgeCls = 'bg-emerald-600 text-white';
+                            } else if (chosenIdx === j) {
+                                btnCls = 'bg-rose-50 dark:bg-rose-950/60 border-rose-500 text-rose-900 dark:text-rose-200';
+                                badgeCls = 'bg-rose-600 text-white';
+                            } else {
+                                btnCls = 'opacity-60 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800';
+                            }
+                        }
+
+                        optsHtml += `
+                            <button type="button" ${hasAnswered ? 'disabled' : ''} onclick="chooseBizCaseM5(${sc.id}, ${j})" class="w-full text-left p-2.5 rounded-xl border-2 font-semibold text-xs flex items-start gap-2.5 transition ${btnCls}">
+                                <span class="w-5 h-5 rounded-md font-mono text-[11px] font-extrabold flex items-center justify-center shrink-0 mt-0.5 ${badgeCls}">${o.ltr}</span>
+                                <span>${escapeHtml(o.text)}</span>
+                            </button>
+                        `;
+                    }
+
+                    let fbHtml = '';
+                    if (hasAnswered) {
+                        const selectedOpt = sc.opts[chosenIdx];
+                        const fbCls = selectedOpt.correct
+                            ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-500 text-emerald-900 dark:text-emerald-200'
+                            : 'bg-rose-50 dark:bg-rose-950/50 border-rose-500 text-rose-900 dark:text-rose-200';
+                        fbHtml = `
+                            <div class="p-2 rounded-xl border-l-4 ${fbCls} text-[11px] leading-relaxed">
+                                ${escapeHtml(selectedOpt.explain)}
+                            </div>
+                        `;
+                    }
+
+                    cardsHtml += `
+                        <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-2">
+                            <div class="space-y-1">
+                                <span class="inline-block px-2 py-0.5 rounded-full bg-orange-100 dark:bg-orange-950 text-orange-800 dark:text-orange-300 text-[10px] font-extrabold uppercase">${sc.badge}</span>
+                                <p class="text-xs font-bold text-slate-900 dark:text-white leading-snug">${escapeHtml(sc.title)}</p>
+                            </div>
+                            <div class="space-y-1.5">
+                                ${optsHtml}
+                                ${fbHtml}
+                            </div>
+                        </div>
+                    `;
+                }
+                contentHtml = `<div class="grid grid-cols-1 lg:grid-cols-2 gap-3 my-auto">${cardsHtml}</div>`;
+            } else {
+                let itemsHtml = '';
+                for (let i = 0; i < TF_QUIZ_M5.length; i++) {
+                    const q = TF_QUIZ_M5[i];
+                    const chosen = tfChoicesM5[q.id];
+                    const hasAns = chosen !== undefined;
+                    const isCorrect = chosen === q.answer;
+
+                    let rowCls = 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800';
+                    let numCls = 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200';
+                    if (hasAns) {
+                        rowCls = isCorrect ? 'bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-500' : 'bg-rose-50/70 dark:bg-rose-950/30 border-rose-500';
+                        numCls = isCorrect ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white';
+                    }
+
+                    const btnStyle = function (val) {
+                        if (!hasAns) return 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 hover:border-indigo-500';
+                        if (chosen === val) {
+                            return isCorrect ? 'bg-emerald-600 border-emerald-600 text-white' : 'bg-rose-600 border-rose-600 text-white';
+                        }
+                        if (q.answer === val) {
+                            return 'bg-emerald-100 dark:bg-emerald-950 border-emerald-500 text-emerald-800 dark:text-emerald-300';
+                        }
+                        return 'opacity-50 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800';
+                    };
+
+                    itemsHtml += `
+                        <div class="p-3 rounded-2xl border ${rowCls} space-y-1.5 transition">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                                <div class="flex items-start gap-2.5 text-xs font-bold text-slate-900 dark:text-white">
+                                    <span class="w-5 h-5 rounded-md font-mono text-[11px] flex items-center justify-center shrink-0 ${numCls}">${q.id}</span>
+                                    <span>${q.text}</span>
+                                </div>
+                                <div class="flex gap-1.5 shrink-0">
+                                    <button type="button" ${hasAns ? 'disabled' : ''} onclick="answerTfM5(${q.id}, 'true')" class="px-3 py-1 rounded-xl border font-extrabold text-xs transition ${btnStyle('true')}">Benar</button>
+                                    <button type="button" ${hasAns ? 'disabled' : ''} onclick="answerTfM5(${q.id}, 'false')" class="px-3 py-1 rounded-xl border font-extrabold text-xs transition ${btnStyle('false')}">Salah</button>
+                                </div>
+                            </div>
+                            ${hasAns ? `<div class="p-2 rounded-xl bg-white/80 dark:bg-slate-900/80 border-l-4 ${isCorrect ? 'border-emerald-600' : 'border-rose-600'} text-[11px] text-slate-700 dark:text-slate-200">${escapeHtml(q.explain)}</div>` : ''}
+                        </div>
+                    `;
+                }
+                contentHtml = `<div class="space-y-2 my-auto">${itemsHtml}</div>`;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">Babak 5 · Simulasi Interaktif 4 (Evaluasi Pemahaman)</span>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Latihan Studi Kasus Keputusan Manajer &amp; Kuis Kilat</h2>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="inline-flex p-1 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                                <button type="button" onclick="activeEvalTabM5='kasus';renderCurrentSlide();" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition ${activeEvalTabM5 === 'kasus' ? 'bg-indigo-600 text-white' : 'text-slate-600 dark:text-slate-300'}">🎯 4 Kasus Manajer</button>
+                                <button type="button" onclick="activeEvalTabM5='kuis';renderCurrentSlide();" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition ${activeEvalTabM5 === 'kuis' ? 'bg-indigo-600 text-white' : 'text-slate-600 dark:text-slate-300'}">⚡ 5 Kuis Benar/Salah</button>
+                            </div>
+                            <button type="button" onclick="bizChoicesM5={};tfChoicesM5={};renderCurrentSlide();" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 transition">
+                                Ulangi
+                            </button>
+                        </div>
+                    </div>
+
+                    ${contentHtml}
+                </div>
+            `;
+        }
+
+        // SLIDE 20: Babak 5 — Penutup & Jembatan Langsung Menuju File Praktikum LKM 05
+        function renderSlide20() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    ${slideBridgeTop("Seluruh 5 Babak materi tatap muka telah selesai! Sekarang Anda siap mempraktikkannya secara mandiri pada Lembar Kerja LKM 05.")}
+
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Babak 5 · Rangkuman Akhir &amp; Persiapan Praktikum</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Tiga Bekal Utama Anda untuk Menyelesaikan LKM 05 Hari Ini</h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 my-auto">
+                        <div class="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-l-4 border-emerald-600 border-y border-r border-slate-200 dark:border-slate-800 space-y-3">
+                            <div class="w-11 h-11 rounded-2xl bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center text-2xl">📌</div>
+                            <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Ringkasan Konsep Bisnis &amp; Teknis</h3>
+                            <ul class="list-disc pl-5 space-y-2 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                <li><strong>Standarisasi Layanan (<code class="font-mono">helpers/response.php</code>):</strong> Menjamin seluruh loket Gudang mencetak surat balasan JSON yang 100% seragam lewat fungsi ${term('helper_json', 'kirim_json()')}.</li>
+                                <li><strong>Katalog Pintar &amp; ${term('reorder_point', 'Reorder Point')}:</strong> Melayani pencarian cepat kasir (<code class="font-mono">?kode=</code>, <code class="font-mono">?cari=</code>) sekaligus menjadi radar *restock* manajer (<code class="font-mono">?stok_max=</code>).</li>
+                                <li><strong>Kaca Pelindung Database:</strong> Memisahkan cetakan perintah (<code class="font-mono">prepare</code>) dan input pengguna (<code class="font-mono">execute</code>) agar kebal dari serangan ${term('sql_injection', 'SQL Injection')}.</li>
+                            </ul>
+                        </div>
+
+                        <div class="p-6 rounded-3xl bg-indigo-50/70 dark:bg-indigo-950/40 border-l-4 border-indigo-600 border-y border-r border-indigo-200 dark:border-indigo-800 space-y-3">
+                            <div class="w-11 h-11 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-2xl">💻</div>
+                            <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Langkah Selanjutnya: Buka File Praktikum LKM 05!</h3>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Silakan buka file <strong><code class="font-mono">Pertemuan_5_Praktikum_LKM_05.html</code></strong> di browser Anda untuk mengerjakan 4 misi individu berikut:
+                            </p>
+                            <ol class="list-decimal pl-5 space-y-1.5 text-xs sm:text-sm text-slate-700 dark:text-slate-200 font-semibold">
+                                <li>Menetapkan kebijakan angka <strong>Batas Stok Kritis (<code class="font-mono">$batasKritisDefault</code>)</strong> dan nama gudang versi Anda sendiri di Form 1 &amp; kode <code class="font-mono">api/barang.php</code>.</li>
+                                <li>Menjalankan 3 Misi Investigasi di browser dan mencatat hasilnya dengan kerangka <em>Sebelum &rarr; Sesudah &rarr; Mengapa</em>.</li>
+                                <li>Menentukan <strong>2 Produk Prioritas Restock</strong> berdasarkan hasil filter Anda, lalu mengunduh <strong>PDF A4 LKM 05</strong>!</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <div class="p-3.5 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-300 flex flex-wrap items-center justify-between gap-2">
+                        <span><strong>Rujukan Resmi RPS:</strong> Manajemen Operasional Ritel (Reorder Point) • PHP PDO Prepared Statements • OWASP SQL Injection Prevention.</span>
+                        <span class="font-mono font-bold text-indigo-600 dark:text-indigo-400">Sub-CPMK 2.1 · Materi Pertemuan 5 Selesai</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        const SLIDES = [
+            { id: 1, category: "Sampul & Peta Cerita", title: "Manajemen Katalog Pintar, Radar Reorder Point & Keamanan Data", render: renderSlide1 },
+            { id: 2, category: "Babak 1 · Masalah Bisnis", title: "Tiga Kerugian Bisnis Saat Toko Mulai Ramai Transaksi", render: renderSlide2 },
+            { id: 3, category: "Babak 1 · Peta Solusi M5", title: "Apa yang Kita Tingkatkan dari Sistem Minggu 4 ke Minggu 5?", render: renderSlide3 },
+            { id: 4, category: "Babak 1 · Dapur Waralaba", title: "Analogi Dapur Waralaba: Mengapa Ruangan Kerja Harus Dipisah?", render: renderSlide4 },
+            { id: 5, category: "Simulasi Interaktif 1", title: "Uji Perbandingan: Surat Manual vs Cetakan Otomatis kirim_json()", render: renderSlide5 },
+            { id: 6, category: "Babak 2 · Ilmu Persediaan", title: "Dilema Manajer Toko: Bahaya Stockout vs Tumpukan Barang Mati", render: renderSlide6 },
+            { id: 7, category: "Babak 2 · 2 Pengguna Katalog", title: "Satu Pintu Katalog (/api/barang.php), Melayani Dua Kepentingan", render: renderSlide7 },
+            { id: 8, category: "Babak 2 · 4 Mode Pesanan URL", title: "Analogi Loket Drive-Thru: Empat Cara Meminta Katalog via URL", render: renderSlide8 },
+            { id: 9, category: "Babak 2 · Logika 404 vs []", title: "Kapan Balas 404 Error vs Kapan Balas 200 Sukses Kosong []?", render: renderSlide9 },
+            { id: 10, category: "Simulasi Interaktif 2", title: "Uji 4 Mode Katalog & Atur Kebijakan Reorder Point Toko Anda", render: renderSlide10 },
+            { id: 11, category: "Babak 3 · Risiko Pencurian", title: "Ancaman Bisnis: Bagaimana Kompetitor Membobol Kotak Pencarian?", render: renderSlide11 },
+            { id: 12, category: "Babak 3 · Cara Kerja Jebakan", title: "Mengapa Kalimat ' OR '1'='1 Bisa Membuka Seluruh Brankas Data?", render: renderSlide12 },
+            { id: 13, category: "Babak 3 · Kaca Pelindung", title: "Solusi: Analogi Kaca Pelindung Loket Bank (Prepared Statement)", render: renderSlide13 },
+            { id: 14, category: "Simulasi Interaktif 3", title: "Laboratorium Uji Serangan Pencurian Data vs Kaca Pelindung", render: renderSlide14 },
+            { id: 15, category: "Babak 4 · Bedah Kode 1/4", title: "Cara Membaca Kode Mesin Kop Surat (helpers/response.php)", render: renderSlide15 },
+            { id: 16, category: "Babak 4 · Bedah Kode 2/4", title: "Cara Membaca Kode Kebijakan Manajer & Penangkap URL ($_GET)", render: renderSlide16 },
+            { id: 17, category: "Babak 4 · Bedah Kode 3/4", title: "Cara Membaca Kode Kaca Pelindung (prepare) & Cap Stok Kritis", render: renderSlide17 },
+            { id: 18, category: "Babak 4 · Bedah Kode 4/4", title: "Peta Besar: Empat Tahap Perjalanan Permintaan Katalog di Gudang", render: renderSlide18 },
+            { id: 19, category: "Babak 5 · Evaluasi Manajer", title: "Latihan Studi Kasus Keputusan Manajer & Kuis Kilat Minggu 5", render: renderSlide19 },
+            { id: 20, category: "Babak 5 · Penutup & LKM 05", title: "Tiga Bekal Utama Anda untuk Menyelesaikan LKM 05 Hari Ini", render: renderSlide20 }
+        ];
+
+        function renderCurrentSlide() {
+            const slide = SLIDES[currentSlideIndex];
+            const viewport = document.getElementById('slideViewport');
+            if (!viewport || !slide) return;
+            viewport.innerHTML = slide.render();
+
+            const pct = Math.round(((currentSlideIndex + 1) / TOTAL_SLIDES) * 100);
+            document.getElementById('topProgressBar').style.width = pct + '%';
+            document.getElementById('slideCounterBadge').textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES;
+            document.getElementById('mobileFooterCounter').textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES;
+            document.getElementById('slideCategoryPill').textContent = slide.category;
+            document.getElementById('headerSlideTitle').textContent = slide.title;
+
+            const prevBtn = document.getElementById('prevSlideBtn');
+            const nextBtn = document.getElementById('nextSlideBtn');
+            const nextBtnText = document.getElementById('nextBtnText');
+
+            prevBtn.disabled = currentSlideIndex === 0;
+            if (currentSlideIndex === TOTAL_SLIDES - 1) {
+                nextBtnText.textContent = "Selesai";
+                nextBtn.disabled = true;
+            } else {
+                nextBtnText.textContent = "Selanjutnya";
+                nextBtn.disabled = false;
+            }
+
+            renderDotsAndDrawer();
+        }
+
+        function renderDotsAndDrawer() {
+            const dotsContainer = document.getElementById('slideDotsContainer');
+            let dotsHtml = '';
+            let drawerHtml = '';
+
+            for (let idx = 0; idx < SLIDES.length; idx++) {
+                const s = SLIDES[idx];
+                const isActive = idx === currentSlideIndex;
+                const isSim = s.category.indexOf('Simulasi') !== -1 || s.category.indexOf('Evaluasi') !== -1;
+                const dotClass = isActive
+                    ? 'w-6 bg-indigo-600 dark:bg-indigo-400'
+                    : isSim
+                    ? 'w-2.5 bg-amber-400 dark:bg-amber-500 hover:bg-amber-600'
+                    : 'w-2 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400';
+
+                dotsHtml += `<button type="button" onclick="goToSlide(${idx})" title="${escapeHtml(s.title)}" class="h-2 rounded-full transition-all ${dotClass}"></button>`;
+
+                const itemClass = isActive
+                    ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 font-bold'
+                    : 'hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-300';
+                const badgeClass = isActive
+                    ? 'bg-indigo-600 text-white'
+                    : isSim
+                    ? 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500';
+
+                drawerHtml += `
+                    <button type="button" onclick="selectSlideFromDrawer(${idx})" class="w-full text-left p-3 rounded-xl transition flex items-start gap-3 ${itemClass}">
+                        <span class="w-6 h-6 rounded-lg text-xs font-extrabold flex items-center justify-center shrink-0 ${badgeClass}">${s.id}</span>
+                        <div class="min-w-0">
+                            <div class="text-[10px] uppercase tracking-wider opacity-75">${escapeHtml(s.category)}</div>
+                            <div class="text-xs sm:text-sm truncate">${escapeHtml(s.title)}</div>
+                        </div>
+                    </button>
+                `;
+            }
+
+            dotsContainer.innerHTML = dotsHtml;
+            document.getElementById('drawerSlideList').innerHTML = drawerHtml;
+        }
+
+        function selectSlideFromDrawer(index) {
+            goToSlide(index);
+            toggleSlideDrawer();
+        }
+
+        function changeSlide(direction) {
+            const nextIdx = currentSlideIndex + direction;
+            if (nextIdx >= 0 && nextIdx < TOTAL_SLIDES) {
+                currentSlideIndex = nextIdx;
+                renderCurrentSlide();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function goToSlide(index) {
+            if (index >= 0 && index < TOTAL_SLIDES) {
+                currentSlideIndex = index;
+                renderCurrentSlide();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function toggleSlideDrawer() {
+            const drawer = document.getElementById('slideDrawer');
+            const backdrop = document.getElementById('slideDrawerBackdrop');
+            const isClosed = drawer.classList.contains('-translate-x-full');
+
+            if (isClosed) {
+                backdrop.classList.remove('hidden');
+                setTimeout(function () { backdrop.classList.remove('opacity-0'); }, 10);
+                drawer.classList.remove('-translate-x-full');
+            } else {
+                backdrop.classList.add('opacity-0');
+                drawer.classList.add('-translate-x-full');
+                setTimeout(function () { backdrop.classList.add('hidden'); }, 200);
+            }
+        }
+
+        function chooseBizCaseM5(id, idx) {
+            bizChoicesM5[id] = idx;
+            renderCurrentSlide();
+        }
+
+        function answerTfM5(id, val) {
+            tfChoicesM5[id] = val;
+            renderCurrentSlide();
+        }
+
+        /* Modal Istilah & Kamus Lengkap */
+        function showTerm(key) {
+            const item = GLOSSARY_DB[key];
+            if (!item) return;
+
+            document.getElementById('termCategoryBadge').textContent = item.category;
+            document.getElementById('termTitle').textContent = item.title;
+            document.getElementById('termMainDesc').textContent = item.main;
+            document.getElementById('termDetailDesc').textContent = item.detail;
+            document.getElementById('termSourceName').textContent = "Sumber: " + item.source;
+
+            const modal = document.getElementById('termModalBackdrop');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeTermModal() {
+            const modal = document.getElementById('termModalBackdrop');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function openGlossaryIndex() {
+            document.getElementById('glossarySearchInput').value = '';
+            renderGlossaryList('');
+            const modal = document.getElementById('glossaryModalBackdrop');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeGlossaryIndex() {
+            const modal = document.getElementById('glossaryModalBackdrop');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function selectGlossaryTerm(key) {
+            closeGlossaryIndex();
+            showTerm(key);
+        }
+
+        function renderGlossaryList(query) {
+            const q = String(query || '').trim().toLowerCase();
+            const allKeys = Object.keys(GLOSSARY_DB);
+            const matchedKeys = [];
+
+            for (let i = 0; i < allKeys.length; i++) {
+                const k = allKeys[i];
+                const item = GLOSSARY_DB[k];
+                if (
+                    item.title.toLowerCase().indexOf(q) !== -1 ||
+                    item.category.toLowerCase().indexOf(q) !== -1 ||
+                    item.main.toLowerCase().indexOf(q) !== -1
+                ) {
+                    matchedKeys.push(k);
+                }
+            }
+
+            const container = document.getElementById('glossaryListGrid');
+            if (matchedKeys.length === 0) {
+                container.innerHTML = '<div class="col-span-2 text-center py-8 text-xs text-slate-500">Istilah tidak ditemukan.</div>';
+                return;
+            }
+
+            let html = '';
+            for (let i = 0; i < matchedKeys.length; i++) {
+                const k = matchedKeys[i];
+                const item = GLOSSARY_DB[k];
+                html += `
+                    <button type="button" onclick="selectGlossaryTerm('${k}')" class="text-left p-4 rounded-2xl bg-slate-50 hover:bg-indigo-50/60 dark:bg-slate-800/50 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800 transition space-y-1">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">${escapeHtml(item.category)}</span>
+                            <span class="text-[10px] text-slate-400">${escapeHtml(item.source)}</span>
+                        </div>
+                        <div class="text-sm font-extrabold text-slate-900 dark:text-white">${escapeHtml(item.title)}</div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">${escapeHtml(item.main)}</p>
+                    </button>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function toggleTheme() {
+            const htmlEl = document.documentElement;
+            const icon = document.getElementById('themeIcon');
+            htmlEl.classList.toggle('dark');
+            const isDark = htmlEl.classList.contains('dark');
+            icon.className = isDark ? 'fa-solid fa-sun text-amber-400 text-sm' : 'fa-solid fa-moon text-sm';
+        }
+
+        document.addEventListener('keydown', function (e) {
+            const activeTag = document.activeElement && document.activeElement.tagName
+                ? document.activeElement.tagName.toLowerCase()
+                : '';
+            if (activeTag === 'input' || activeTag === 'textarea') return;
+
+            if (e.key === 'ArrowRight') changeSlide(1);
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+            if (e.key === 'Escape') {
+                closeTermModal();
+                closeGlossaryIndex();
+            }
+        });
+
+        window.onload = function () {
+            renderCurrentSlide();
+        };
+    </script>
+</body>
+</html>
