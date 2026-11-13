@@ -1,0 +1,1663 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pertemuan 7: Evaluasi Heuristik, Uji Triangulasi Wireframe, & Portofolio UTS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <script>
+        if (typeof tailwind !== 'undefined') {
+            tailwind.config = {
+                darkMode: 'class',
+                theme: {
+                    extend: {
+                        fontFamily: {
+                            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                            mono: ['"JetBrains Mono"', 'monospace']
+                        }
+                    }
+                }
+            };
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+        .tech-term {
+            color: #4f46e5;
+            font-weight: 700;
+            text-decoration: underline;
+            text-decoration-style: dotted;
+            text-underline-offset: 3px;
+            cursor: pointer;
+            transition: color 0.15s ease, opacity 0.15s ease;
+        }
+        .dark .tech-term { color: #818cf8; }
+        .tech-term:hover { color: #3730a3; opacity: 0.85; }
+        .dark .tech-term:hover { color: #a5b4fc; }
+
+        #slideViewport, #slideViewport p, #slideViewport span, #slideViewport div,
+        #slideViewport h2, #slideViewport h3, #slideViewport h4, #slideViewport button {
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+        }
+
+        .slide-enter { animation: fadeSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes fadeSlide {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Kotak Placeholder Silang [X] Wireframe */
+        .wf-box-x {
+            position: relative;
+            background-color: #e2e8f0;
+            border: 1.5px solid #94a3b8;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .dark .wf-box-x {
+            background-color: #334155;
+            border-color: #64748b;
+        }
+        .wf-box-x::before, .wf-box-x::after {
+            content: "";
+            position: absolute;
+            width: 145%;
+            height: 1.5px;
+            background-color: #94a3b8;
+        }
+        .wf-box-x::before { transform: rotate(35deg); }
+        .wf-box-x::after { transform: rotate(-35deg); }
+
+        /* Pin Evaluasi Merah di Atas Kanvas */
+        .eval-pin {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            border-radius: 9999px;
+            background-color: #e11d48;
+            color: #ffffff;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 800;
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 8px rgba(225, 29, 72, 0.45);
+        }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+        .dark ::-webkit-scrollbar-thumb { background: #334155; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col justify-between transition-colors duration-200">
+
+    <!-- Header Navigasi Atas -->
+    <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800">
+        <div class="w-full h-1 bg-slate-100 dark:bg-slate-800">
+            <div id="topProgressBar" class="h-full bg-indigo-600 dark:bg-indigo-500 transition-all duration-300" style="width: 6%;"></div>
+        </div>
+
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+                <button type="button" onclick="toggleSlideDrawer()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition flex items-center gap-2 text-xs sm:text-sm font-bold shrink-0">
+                    <i class="fa-solid fa-bars-staggered text-indigo-600 dark:text-indigo-400"></i>
+                    <span class="hidden sm:inline">Alur Materi</span>
+                    <span id="slideCounterBadge" class="px-2 py-0.5 text-xs rounded-lg bg-indigo-600 text-white font-bold">1 / 18</span>
+                </button>
+
+                <div class="hidden md:flex items-center gap-2.5 min-w-0">
+                    <span id="slideCategoryPill" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 shrink-0">
+                        Pengantar
+                    </span>
+                    <h1 id="headerSlideTitle" class="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">
+                        Evaluasi Heuristik, Uji Triangulasi Wireframe, & Portofolio UTS
+                    </h1>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 shrink-0">
+                <button type="button" onclick="openGlossaryIndex()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 text-xs sm:text-sm font-bold flex items-center gap-2 transition">
+                    <i class="fa-solid fa-book-open text-indigo-600 dark:text-indigo-400"></i>
+                    <span>Kamus Istilah</span>
+                </button>
+
+                <button type="button" onclick="toggleTheme()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center transition" title="Ganti Tema Layar">
+                    <i id="themeIcon" class="fa-solid fa-moon text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Drawer Daftar Slide -->
+    <div id="slideDrawerBackdrop" onclick="toggleSlideDrawer()" class="fixed inset-0 bg-slate-950/50 backdrop-blur-xs z-40 hidden opacity-0 transition-opacity duration-200"></div>
+    <aside id="slideDrawer" class="fixed top-0 left-0 bottom-0 w-80 sm:w-96 bg-white dark:bg-slate-900 z-50 shadow-2xl border-r border-slate-200 dark:border-slate-800 transform -translate-x-full transition-transform duration-200 flex flex-col">
+        <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Pertemuan 7 • BD7401</span>
+                <h2 class="text-base font-extrabold text-slate-900 dark:text-white mt-0.5">Alur Cerita 18 Slide Pertemuan 7</h2>
+            </div>
+            <button type="button" onclick="toggleSlideDrawer()" class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div id="drawerSlideList" class="p-3.5 overflow-y-auto space-y-1 flex-1"></div>
+        <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 flex items-center justify-between">
+            <span>Gunakan tombol panah Kiri / Kanan</span>
+            <span class="font-bold">18 Slide Interaktif</span>
+        </div>
+    </aside>
+
+    <!-- Area Utama Slide -->
+    <main class="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-5 flex flex-col justify-center">
+        <div id="slideViewport" class="bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl shadow-xs border border-slate-200/80 dark:border-slate-800 p-4 sm:p-8 lg:p-10 min-h-[540px] flex flex-col justify-between relative">
+            <div class="py-12 text-center text-sm text-slate-500">Memuat materi perkuliahan Pertemuan 7...</div>
+        </div>
+    </main>
+
+    <!-- Footer Navigasi Bawah -->
+    <footer class="sticky bottom-0 z-20 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 py-3 px-4 sm:px-6">
+        <div class="max-w-6xl mx-auto flex items-center justify-between gap-4">
+            <button type="button" id="prevSlideBtn" onclick="changeSlide(-1)" class="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                <i class="fa-solid fa-arrow-left text-xs"></i>
+                <span>Sebelumnya</span>
+            </button>
+
+            <div id="slideDotsContainer" class="hidden md:flex items-center gap-1.5 flex-wrap justify-center"></div>
+
+            <div class="md:hidden text-xs font-bold text-slate-500 dark:text-slate-400" id="mobileFooterCounter">1 / 18</div>
+
+            <button type="button" id="nextSlideBtn" onclick="changeSlide(1)" class="px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-indigo-600 hover:bg-indigo-700 text-white transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                <span id="nextBtnText">Selanjutnya</span>
+                <i class="fa-solid fa-arrow-right text-xs"></i>
+            </button>
+        </div>
+    </footer>
+
+    <!-- Modal Penjelasan Istilah -->
+    <div id="termModalBackdrop" onclick="closeTermModal()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl slide-enter max-h-[90vh] overflow-y-auto">
+            <div class="flex items-start justify-between gap-4 mb-4">
+                <div>
+                    <span id="termCategoryBadge" class="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">Kategori</span>
+                    <h3 id="termTitle" class="text-xl font-extrabold text-slate-900 dark:text-white mt-1.5">Nama Istilah</h3>
+                </div>
+                <button type="button" onclick="closeTermModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <p id="termMainDesc" class="text-sm text-slate-700 dark:text-slate-200 leading-relaxed bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200/70 dark:border-slate-700/70"></p>
+                <div class="p-3.5 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-200/70 dark:border-indigo-800/70">
+                    <div class="text-[11px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-1">Konteks Penerapan pada Evaluasi Wireframe & Portofolio UTS:</div>
+                    <p id="termDetailDesc" class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed"></p>
+                </div>
+                <div class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-200 dark:border-slate-800 text-xs px-1">
+                    <span id="termSourceName" class="font-semibold text-slate-400">Referensi</span>
+                    <div class="flex items-center gap-3">
+                        <button type="button" onclick="closeTermModal(); openGlossaryIndex();" class="font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1">
+                            <i class="fa-solid fa-book-open text-[10px]"></i>
+                            <span>Buka Kamus Lengkap</span>
+                        </button>
+                        <a id="termSourceUrl" href="#" target="_blank" rel="noopener noreferrer" class="font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1">
+                            <span>Referensi Web</span>
+                            <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Kamus Istilah Lengkap -->
+    <div id="glossaryModalBackdrop" onclick="closeGlossaryIndex()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-4xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden slide-enter">
+            <div class="p-5 sm:p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white">Kamus Istilah Pertemuan 7: Evaluasi Heuristik, Triangulasi, & Portofolio UTS</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Klik pada istilah mana pun untuk membaca arti dan contoh penerapannya.</p>
+                </div>
+                <button type="button" onclick="closeGlossaryIndex()" class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-sm"></i>
+                    <input id="glossarySearchInput" oninput="renderGlossaryList(this.value)" type="text" placeholder="Cari istilah seperti Heuristic Evaluation, Triangulation, Severity Rating, Cognitive Walkthrough, Traceability..." class="w-full pl-10 pr-4 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+            <div id="glossaryListGrid" class="p-5 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+        </div>
+    </div>
+
+    <script>
+        // =========================================================================
+        // DATABASE KAMUS ISTILAH PERTEMUAN 7
+        // =========================================================================
+        const GLOSSARY_DB = {
+            wireframe: {
+                title: "Low-Fidelity Wireframe (Kerangka Layar Hitam-Putih)",
+                category: "Artefak Tahap 2",
+                main: "Cetak biru visual dua dimensi yang menampilkan struktur tata letak, informasi, dan tombol dalam skala abu-abu tanpa dekorasi warna.",
+                detail: "Menjadi objek utama yang diuji pada Pertemuan 7 karena sangat cepat dan murah untuk direvisi.",
+                source: "Interaction Design Foundation",
+                url: "https://www.interaction-design.org/literature/topics/wireframing"
+            },
+            heuristic: {
+                title: "Heuristic Evaluation (Evaluasi Heuristik)",
+                category: "Metode Inspeksi UX",
+                main: "Metode pemeriksaan kegunaan (usability inspection) di mana evaluator meninjau antarmuka berdasarkan 10 prinsip standar kegunaan yang dirumuskan oleh Jakob Nielsen.",
+                detail: "Dilakukan pada tahap Low-Fidelity Wireframe agar cacat tata letak, tombol yang membingungkan, atau jalan buntu dapat diperbaiki sebelum masuk ke tahap desain berwarna.",
+                source: "Nielsen Norman Group",
+                url: "https://www.nngroup.com/articles/ten-usability-heuristics/"
+            },
+            triangulation: {
+                title: "Usability Triangulation (Triangulasi 3 Evaluator)",
+                category: "Validasi Multi-Perspektif",
+                main: "Teknik memvalidasi rancangan desain dengan menggabungkan masukan dari 3 sudut pandang berbeda agar hasil evaluasi objektif dan menyeluruh.",
+                detail: "Pada LKM 07 mencakup: (1) Peer Review Silang sesama mahasiswa untuk menguji alur & heuristik, (2) Responden Dosen untuk menguji ketajaman metodologi MVP, dan (3) Pemilik Usaha/Objek Serupa untuk menguji kelayakan operasional di lapangan.",
+                source: "Nielsen Norman Group",
+                url: "https://www.nngroup.com/articles/triangulation-better-research-results-using-multiple-ux-methods/"
+            },
+            severity: {
+                title: "Severity Rating (Skala Keparahan Masalah 0–4)",
+                category: "Prioritas Perbaikan",
+                main: "Skala 0 hingga 4 dari Jakob Nielsen untuk mengukur seberapa parah sebuah masalah kegunaan menghambat pengguna dan seberapa mendesak masalah tersebut harus diperbaiki.",
+                detail: "Ditentukan oleh 3 faktor: Frekuensi kemunculan, Dampak bagi pengguna saat terjadi, dan Persistensi (apakah pengguna terus terjebak).",
+                source: "Nielsen Norman Group",
+                url: "https://www.nngroup.com/articles/how-to-rate-the-severity-of-usability-problems/"
+            },
+            walkthrough: {
+                title: "Cognitive Walkthrough (Telusur Kognitif Tugas)",
+                category: "Metode Uji Alur",
+                main: "Metode evaluasi di mana penguji memberikan satu tugas skenario spesifik kepada responden (misal: 'Pesan 2 porsi Ayam Bakar'), lalu mengamati apakah responden tahu harus mengklik apa di setiap layar tanpa dibantu.",
+                detail: "Pada LKM 07 dilakukan menggunakan fitur 'Uji Klik (Play Wireflow)' dari kanvas LKM 06.",
+                source: "Interaction Design Foundation",
+                url: "https://www.interaction-design.org/literature/topics/cognitive-walkthrough"
+            },
+            iteration: {
+                title: "Design Iteration (Iterasi Perbaikan Desain)",
+                category: "Siklus UCD",
+                main: "Proses menyempurnakan rancangan antarmuka secara berulang berdasarkan temuan masalah dari hasil pengujian.",
+                detail: "Evaluasi tidak boleh berhenti pada daftar kritik di atas kertas; kanvas Wireframe wajib langsung direvisi untuk membuktikan masalah telah teratasi.",
+                source: "Interaction Design Foundation",
+                url: "https://www.interaction-design.org/literature/topics/design-iteration"
+            },
+            traceability: {
+                title: "UX Traceability Matrix (Matriks Benang Merah Proyek)",
+                category: "Standar Portofolio UTS",
+                main: "Keterhubungan logis dari hulu ke hilir yang membuktikan bahwa setiap layar dan tombol di Wireframe berasal dari fitur MVP (LKM 04), yang menjawab titik sakit Persona (LKM 03), dari hasil riset UMKM nyata (LKM 01–02).",
+                detail: "Menjadi tulang punggung penilaian presentasi Portofolio UTS di Pertemuan 8.",
+                source: "Nielsen Norman Group",
+                url: "https://www.nngroup.com/articles/ux-mapping-methods-compared/"
+            },
+            casestudy: {
+                title: "UX Case Study Portfolio (Portofolio Studi Kasus UX)",
+                category: "Artefak UTS",
+                main: "Format penyajian proyek desain yang tidak hanya memamerkan gambar layar akhir, melainkan menceritakan proses berpikir pemecahan masalah dari riset, sintesis, struktur, hingga hasil iterasi.",
+                detail: "Penguji UTS dan perekrut industri menilai kualitas desainer dari kejelasan alasan di balik keputusan desainnya (Design Rationale).",
+                source: "Nielsen Norman Group",
+                url: "https://www.nngroup.com/articles/ux-design-portfolios/"
+            }
+        };
+
+        function escapeHtml(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function term(key, customLabel) {
+            const item = GLOSSARY_DB[key];
+            if (!item) return customLabel || key;
+            const label = customLabel || item.title.split(' (')[0];
+            return '<span class="tech-term" onclick="showTerm(\'' + key + '\')">' + label + '</span>';
+        }
+
+        function slideBridgeTop(prevHookText) {
+            return '<div class="px-3.5 py-2 rounded-2xl bg-slate-100/90 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700/80 flex items-center gap-2.5 text-xs text-slate-600 dark:text-slate-300">' +
+                '<span class="px-2 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-extrabold text-[10px] uppercase shrink-0">🔗 Sambungan Cerita</span>' +
+                '<span class="font-medium leading-snug">' + prevHookText + '</span>' +
+                '</div>';
+        }
+
+        function slideBridgeNext(nextTeaserText) {
+            return '<div class="px-4 py-2.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/35 border border-indigo-200/80 dark:border-indigo-800/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-700 dark:text-slate-200">' +
+                '<div class="flex items-center gap-2">' +
+                '<span class="text-indigo-600 dark:text-indigo-400 font-extrabold shrink-0">👉 Selanjutnya:</span>' +
+                '<span class="font-semibold leading-snug">' + nextTeaserText + '</span>' +
+                '</div>' +
+                '<button type="button" onclick="changeSlide(1)" class="self-start sm:self-center px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-[11px] shrink-0 transition">Lanjut Slide Berikutnya &rarr;</button>' +
+                '</div>';
+        }
+
+        // =========================================================================
+        // STATE INTERAKTIF 18 SLIDE PERTEMUAN 7
+        // =========================================================================
+        let currentSlideIndex = 0;
+        const TOTAL_SLIDES = 18;
+
+        let s6HeurIdx = 0;          // 0 s/d 9 (10 Heuristik Nielsen)
+        let s8SevIdx = 3;           // 0 (Sev 1), 1 (Sev 2), 2 (Sev 3), 3 (Sev 4)
+        let s10EvalTab = 'umkm';    // 'peer' | 'dosen' | 'umkm'
+        let s11IterState = 'before';// 'before' | 'after'
+        let s14PitchIdx = 0;        // 0 s/d 4 (5 Menit Pitch Deck UTS)
+        let openReflectionKey = { 1: false, 2: false, 3: false };
+
+        let activeEvalTabM7 = 'refleksi'; // 'refleksi' | 'kasus' | 'kuis'
+        let bizChoicesM7 = {};
+        let tfChoicesM7 = {};
+
+        const BIZ_CASES_M7 = [
+            {
+                id: 1,
+                badge: "🎯 Kasus Evaluasi 1 · Identifikasi Heuristik Jakob Nielsen",
+                title: "Saat melakukan Peer Review pada Wireframe UMKM Laundry milik temannya, Raka menemukan bahwa setelah pengguna menekan tombol 'Pilih Paket Cuci Kilat', pengguna masuk ke layar SCR-02 tetapi tidak ada tombol 'Kembali / Ubah Pilihan' sama sekali. Prinsip Heuristik Nielsen manakah yang dilanggar?",
+                opts: [
+                    { ltr: "A", text: "Heuristik #3: User Control and Freedom (Pengguna membutuhkan pintu keluar darurat atau tombol kembali/batal yang jelas ketika tidak sengaja salah klik).", correct: true, explain: "Tepat sekali! Tanpa tombol Kembali atau Ubah Pilihan, pengguna kehilangan kendali dan terpaksa menutup paksa halaman web." },
+                    { ltr: "B", text: "Heuristik #10: Help and Documentation (Kurangnya buku panduan setebal 50 halaman).", correct: false, explain: "Keliru. Ketiadaan tombol kembali/batal berkaitan langsung dengan kebebasan kendali pengguna (User Control and Freedom)." }
+                ]
+            },
+            {
+                id: 2,
+                badge: "🎯 Kasus Evaluasi 2 · Menentukan Skala Keparahan (Severity Rating)",
+                title: "Pemilik UMKM Katering mencoba kanvas layar kasir (SCR-05) dan menyadari tidak ada keterangan apakah pesanan yang masuk sudah dibayar lunas via QRIS atau belum dibayar (Bayar Tunai), sehingga kasir berisiko menagih dua kali ke pelanggan. Berapa tingkat Severity Rating masalah ini?",
+                opts: [
+                    { ltr: "A", text: "Severity 4 (Usability Catastrophe / Bencana Kegunaan): Masalah fatal yang merusak operasional bisnis dan kepercayaan pelanggan, wajib diperbaiki sebelum rilis/UTS.", correct: true, explain: "Sangat tajam! Masalah yang menyebabkan kesalahan transaksi uang atau kebingungan fatal di meja kasir adalah prioritas tertinggi (Severity 4)." },
+                    { ltr: "B", text: "Severity 1 (Cosmetic Problem): Hanya masalah keindahan garis tepi yang bisa diabaikan.", correct: false, explain: "Salah. Ketidakjelasan status pembayaran pada layar kasir bukanlah masalah kosmetik, melainkan celah operasional yang kritis." }
+                ]
+            },
+            {
+                id: 3,
+                badge: "🎯 Kasus Evaluasi 3 · Etika Cognitive Walkthrough Tanpa Menyuapi",
+                title: "Saat menguji prototipe Wireflow LKM 06 kepada pemilik usaha serupa, tindakan manakah yang BENAR dilakukan oleh mahasiswa perancang?",
+                opts: [
+                    { ltr: "A", text: "Memberikan skenario tugas singkat (misal: 'Coba Bapak tandai pesanan nomor #A-14 sudah siap diambil'), lalu diam mengamati di mana Bapak tersebut mencari tombolnya.", correct: true, explain: "Benar! Dengan tidak mendikte letak tombol, kita bisa melihat secara jujur apakah tata letak Wireframe kita sudah intuitif atau belum." },
+                    { ltr: "B", text: "Langsung menunjuk layar sambil berkata: 'Bapak klik tombol hitam di pojok kanan bawah ini ya Pak, apakah menurut Bapak sudah bagus?'", correct: false, explain: "Menunjuk letak tombol sebelum responden mencoba sendiri akan merusak validitas pengujian karena responden hanya mengikuti aba-aba." }
+                ]
+            },
+            {
+                id: 4,
+                badge: "🎯 Kasus Evaluasi 4 · Benang Merah Portofolio UTS (Traceability)",
+                title: "Ketika mempresentasikan Portofolio Proyek UI/UX pada saat UTS, apa yang membedakan portofolio bernilai A (Unggul) dengan portofolio yang sekadar memamerkan gambar layar?",
+                opts: [
+                    { ltr: "A", text: "Portofolio unggul menunjukkan benang merah yang utuh: dari bukti masalah nyata UMKM (LKM 01-03), prioritas MVP (LKM 04), alur Sitemap/Flow (LKM 05), hingga bukti perubahan Wireframe sebelum dan sesudah dievaluasi 3 pihak (LKM 06-07).", correct: true, explain: "Tepat! Penguji menilai ketajaman logika pemecahan masalah dari hulu ke hilir serta kerendahan hati memperbaiki desain berdasarkan masukan evaluator." },
+                    { ltr: "B", text: "Portofolio unggul menyembunyikan seluruh kritik dari dosen dan pemilik UMKM agar terlihat sempurna tanpa celah sejak awal.", correct: false, explain: "Keliru. Menampilkan temuan masalah dari evaluator beserta bukti perbaikannya (Before vs After) justru membuktikan kematangan proses berpikir seorang desainer UX." }
+                ]
+            }
+        ];
+
+        const TF_QUIZ_M7 = [
+            { id: 1, text: "Evaluasi Heuristik jauh lebih hemat waktu jika dilakukan pada tahap Low-Fidelity Wireframe dibandingkan menunggu sampai desain berwarna penuh (High-Fidelity) selesai dibuat.", answer: "true", explain: "Benar! Menggeser kotak dan memperbaiki alur di tahap Wireframe hitam-putih hanya memakan waktu beberapa menit." },
+            { id: 2, text: "Triangulasi evaluasi pada LKM 07 menggabungkan 3 sudut pandang: Peer Review Silang (sesama mahasiswa), Responden Dosen, dan Pemilik Usaha / Objek Serupa.", answer: "true", explain: "Benar. Ketiganya saling melengkapi dari sisi teknis alur, ketajaman akademik MVP, dan realitas operasional lapangan." },
+            { id: 3, text: "Saat melakukan Evaluasi Heuristik di LKM 07, mahasiswa wajib mengarang-ngarang kesalahan palsu agar kesepuluh prinsip Heuristik Nielsen terisi semua.", answer: "false", explain: "Salah! Fokuslah mendokumentasikan 3–4 temuan nyata yang benar-benar krusial dari hasil pemeriksaan ketiga evaluator agar beban kognitif terjaga dan perbaikan tepat sasaran." },
+            { id: 4, text: "Masalah dengan Severity Rating 4 (Usability Catastrophe) wajib segera diperbaiki langsung pada kanvas Wireframe sebelum dikumpulkan untuk Portofolio UTS.", answer: "true", explain: "Benar. Masalah berlevel 3 dan 4 menghambat penyelesaian tugas utama pengguna sehingga wajib diselesaikan pada iterasi kanvas." },
+            { id: 5, text: "Pada presentasi Portofolio UTS, menampilkan perbandingan kanvas 'Sebelum Revisi (Ber-Pin Masalah)' dan 'Sesudah Revisi' adalah bukti nyata bahwa proses desain berbasis pengguna telah berjalan.", answer: "true", explain: "Benar! Bukti iterasi Before vs After adalah bagian paling bernilai tinggi dalam studi kasus portofolio UI/UX." }
+        ];
+
+        // =========================================================================
+        // RENDER 18 SLIDE PERTEMUAN 7
+        // =========================================================================
+        function renderSlide1() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center my-auto">
+                        <div class="lg:col-span-7 space-y-4">
+                            <div class="inline-flex flex-wrap items-center gap-2">
+                                <span class="px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 text-xs font-bold border border-indigo-200/60 dark:border-indigo-800/60">Pertemuan 7 • Penutup Paruh Pertama Semester (Pra-UTS)</span>
+                                <span class="px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 text-xs font-bold border border-emerald-200/60 dark:border-emerald-800/60">S1 Bisnis Digital • Sub-CPMK 2.3 & Persiapan UTS (Bobot 5%)</span>
+                            </div>
+
+                            <h2 class="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 dark:text-white leading-tight tracking-tight">
+                                Evaluasi Heuristik, <span class="text-indigo-600 dark:text-indigo-400">Uji Triangulasi Wireframe</span>, & <span class="text-emerald-600 dark:text-emerald-400">Portofolio UTS</span>
+                            </h2>
+
+                            <p class="text-xs sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Pada Pertemuan 6 (LKM 06), Anda telah merakit kanvas <em>Low-Fidelity Wireframe</em> secara mandiri. Namun dalam metodologi UI/UX, <strong>rancangan pertama tidak pernah langsung sempurna</strong>. Hari ini kita melakukan ${term('heuristic', 'Evaluasi Heuristik')} dan ${term('triangulation', 'Triangulasi 3 Evaluator')} (Peer Mahasiswa, Dosen, & Pemilik Usaha/Objek Serupa), melakukan ${term('iteration', 'Iterasi Kanvas')}, serta merangkum benang merah <code>LKM 01–07</code> menjadi <strong>Portofolio Proyek UTS</strong>.
+                            </p>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                                <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="px-2 py-0.5 rounded-md bg-indigo-600 text-white text-[11px] font-extrabold">Validasi & Iterasi</span>
+                                        <span class="text-xs font-bold text-slate-500">10 Heuristik + 3 Evaluator</span>
+                                    </div>
+                                    <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">Menginspeksi celah kegunaan pada kanvas Wireframe, memberi pin nomor masalah, dan merevisi tata letaknya secara langsung.</p>
+                                </div>
+                                <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="px-2 py-0.5 rounded-md bg-emerald-600 text-white text-[11px] font-extrabold">Portofolio UTS</span>
+                                        <span class="text-xs font-bold text-slate-500">Traceability LKM 01–07</span>
+                                    </div>
+                                    <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">Menyusun narasi studi kasus yang utuh dari riset masalah UMKM hingga prototipe Wireflow tervalidasi untuk dipresentasikan saat UTS.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-5">
+                            <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 space-y-3">
+                                <div>
+                                    <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Alur Cerita 5 Babak (18 Slide)</span>
+                                    <h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white mt-0.5">Klik Babak untuk Melompat</h3>
+                                </div>
+                                <div class="space-y-2 text-xs">
+                                    <button type="button" onclick="goToSlide(1)" class="w-full text-left flex items-start gap-3 p-3 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <span class="w-7 h-7 rounded-xl bg-indigo-600 text-white font-extrabold flex items-center justify-center shrink-0">B1</span>
+                                        <div><strong class="text-slate-900 dark:text-white block">Babak 1: Urgensi Evaluasi & Triangulasi (Slide 2–3)</strong><span class="text-slate-500">Mengapa uji di tahap Lo-Fi & peran 3 Evaluator (Peer, Dosen, UMKM).</span></div>
+                                    </button>
+                                    <button type="button" onclick="goToSlide(3)" class="w-full text-left flex items-start gap-3 p-3 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <span class="w-7 h-7 rounded-xl bg-emerald-600 text-white font-extrabold flex items-center justify-center shrink-0">B2</span>
+                                        <div><strong class="text-slate-900 dark:text-white block">Babak 2: 10 Heuristik Nielsen & Severity (Slide 4–8)</strong><span class="text-slate-500">Prinsip #1–#10, inspektor visual & skala keparahan 0–4.</span></div>
+                                    </button>
+                                    <button type="button" onclick="goToSlide(8)" class="w-full text-left flex items-start gap-3 p-3 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <span class="w-7 h-7 rounded-xl bg-amber-600 text-white font-extrabold flex items-center justify-center shrink-0">B3</span>
+                                        <div><strong class="text-slate-900 dark:text-white block">Babak 3: Walkthrough & Iterasi Pin Kanvas (Slide 9–11)</strong><span class="text-slate-500">Cara uji tanpa menyuapi, pertanyaan 3 evaluator & Before-After.</span></div>
+                                    </button>
+                                    <button type="button" onclick="goToSlide(11)" class="w-full text-left flex items-start gap-3 p-3 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <span class="w-7 h-7 rounded-xl bg-rose-600 text-white font-extrabold flex items-center justify-center shrink-0">B4</span>
+                                        <div><strong class="text-slate-900 dark:text-white block">Babak 4: Benang Merah & Pitching Portofolio UTS (Slide 12–15)</strong><span class="text-slate-500">Matriks LKM 01–07, struktur studi kasus & pitch 5 menit.</span></div>
+                                    </button>
+                                    <button type="button" onclick="goToSlide(15)" class="w-full text-left flex items-start gap-3 p-3 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <span class="w-7 h-7 rounded-xl bg-purple-600 text-white font-extrabold flex items-center justify-center shrink-0">B5</span>
+                                        <div><strong class="text-slate-900 dark:text-white block">Babak 5: Evaluasi 3 Mode & Panduan LKM 07 (Slide 16–18)</strong><span class="text-slate-500">4 kasus heuristik/severity, kuis kilat & langkah kerja LKM 07.</span></div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    ${slideBridgeNext("Kita mulai di Slide 2 dengan melihat mengapa pengujian wajib dilakukan saat desain masih berwujud Wireframe hitam-putih.")}
+                </div>
+            `;
+        }
+
+        function renderSlide2() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Setelah selesai merakit kanvas Wireframe di LKM 06, mengapa kita tidak langsung mewarnainya saja, melainkan harus mengujinya dulu hari ini?")}
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Babak 1 • Prinsip Fail Fast, Fix Early</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Mengapa Wajib Menguji di Tahap ${term('wireframe', 'Low-Fidelity Wireframe')}?</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Pakar kegunaan web <strong>Steve Krug</strong> dalam bukunya <em>Rocket Surgery Made Easy</em> menekankan bahwa menguji 1 halaman kasar di awal jauh lebih berharga daripada menguji 50 halaman indah di akhir:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs my-auto">
+                        <div class="p-4 sm:p-5 rounded-3xl bg-emerald-50/70 dark:bg-emerald-950/30 border-2 border-emerald-500 space-y-2.5">
+                            <div class="flex items-center justify-between">
+                                <span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-extrabold">UJI SAAT LO-FI WIREFRAME (HARI INI)</span>
+                                <span class="font-mono font-extrabold text-emerald-700 dark:text-emerald-300">Biaya Revisi: 1x</span>
+                            </div>
+                            <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-emerald-300 flex items-center gap-3">
+                                <div class="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-400 flex items-center justify-center relative shrink-0">
+                                    <span class="font-mono text-[10px] font-bold">[CTA]</span>
+                                    <span class="eval-pin absolute -top-2 -right-2">1</span>
+                                </div>
+                                <div class="text-[11px] leading-snug">
+                                    <strong>Kritik Jujur & Fokus Fungsi:</strong> Saat evaluator melihat kotak hitam-putih, mereka fokus menilai <em>"Tombol kembali mana?"</em> atau <em>"Kok tidak ada info ongkir?"</em>. Memperbaikinya di kanvas LKM 06/07 hanya butuh <strong>2 menit</strong>!
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-4 sm:p-5 rounded-3xl bg-rose-50/70 dark:bg-rose-950/30 border-2 border-rose-400 space-y-2.5">
+                            <div class="flex items-center justify-between">
+                                <span class="px-2.5 py-1 rounded-lg bg-rose-600 text-white font-extrabold">BARU DIUJI SAAT SUDAH JADI APLIKASI</span>
+                                <span class="font-mono font-extrabold text-rose-600">Biaya Revisi: 100x Lipat!</span>
+                            </div>
+                            <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-rose-300 flex items-center gap-3">
+                                <div class="w-12 h-12 rounded-xl bg-rose-100 dark:bg-rose-950 border border-rose-400 flex items-center justify-center text-rose-600 text-lg shrink-0">
+                                    <i class="fa-solid fa-bug-slash"></i>
+                                </div>
+                                <div class="text-[11px] leading-snug">
+                                    <strong>Terlambat & Defensif:</strong> Jika baru diuji di akhir semester setelah diberi warna dan komponen rumit, perancang cenderung menolak kritik karena merasa sayang membongkar desain yang sudah susah payah dihias.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 text-xs text-slate-700 dark:text-slate-200">
+                        <i class="fa-solid fa-award text-indigo-600 mr-1.5"></i><strong>Keuntungan untuk Portofolio UTS Anda:</strong> Penguji UTS tidak mencari desain yang "mengaku sempurna sejak awal", melainkan menilai kemampuan Anda <strong>menemukan celah pada Wireframe LKM 06 dan membuktikan perbaikannya di LKM 07</strong>!
+                    </div>
+                    ${slideBridgeNext("Siapa saja yang harus menguji dan menilai kanvas Wireframe kita hari ini? Kita pelajari metode Triangulasi 3 Evaluator di Slide 3.")}
+                </div>
+            `;
+        }
+
+        function renderSlide3() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Agar hasil evaluasi Wireframe tidak bias (tidak hanya dinilai oleh diri sendiri), kita menerapkan metode Triangulasi 3 Evaluator.")}
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Babak 1 • Metodologi ${term('triangulation', 'Usability Triangulation')} (Sinkron LKM 07)</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Tiga Lensa Pengujian: Peer Mahasiswa, Dosen, & Praktisi Usaha</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Pada praktikum LKM 07 hari ini, kanvas <em>Wireframe</em> dan alur <em>Wireflow</em> Anda akan ditinjau dari <strong>3 sudut pandang yang saling melengkapi</strong>:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-auto text-xs">
+                        <div class="p-5 rounded-3xl bg-indigo-50/70 dark:bg-indigo-950/30 border-2 border-indigo-500 space-y-2.5 flex flex-col justify-between">
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-extrabold text-[11px]">EVALUATOR 1 • PEER REVIEW SILANG</span>
+                                    <i class="fa-solid fa-user-group text-lg text-indigo-600 dark:text-indigo-400"></i>
+                                </div>
+                                <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Rekan Mahasiswa Sejawat</h3>
+                                <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    Bertindak sebagai pengguna baru yang mencoba <strong>Mode Uji Klik (Play Wireflow)</strong> Anda dan memeriksa kepatuhan terhadap <strong>10 Heuristik Jakob Nielsen</strong>.
+                                </p>
+                            </div>
+                            <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-indigo-200 dark:border-slate-700 font-semibold text-indigo-700 dark:text-indigo-300 text-[11px]">
+                                🔍 Fokus Temuan: Alur buntu (dead-end), tombol kembali yang hilang, atau tata letak yang membingungkan.
+                            </div>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-purple-50/70 dark:bg-purple-950/30 border-2 border-purple-500 space-y-2.5 flex flex-col justify-between">
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="px-2.5 py-1 rounded-lg bg-purple-600 text-white font-extrabold text-[11px]">EVALUATOR 2 • RESPONDEN DOSEN</span>
+                                    <i class="fa-solid fa-user-graduate text-lg text-purple-600 dark:text-purple-400"></i>
+                                </div>
+                                <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Dosen Pengampu / Peninjau Ahli</h3>
+                                <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    Meninjau konsistensi metodologi (${term('traceability', 'Traceability')}): apakah fitur yang digambar di kanvas benar-benar menjawab akar masalah dan <strong>Fitur Inti MVP dari LKM 04</strong>.
+                                </p>
+                            </div>
+                            <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-purple-200 dark:border-slate-700 font-semibold text-purple-700 dark:text-purple-300 text-[11px]">
+                                🔍 Fokus Temuan: Ketajaman solusi bisnis digital, kesesuaian cakupan MVP, & kesiapan Portofolio UTS.
+                            </div>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-emerald-50/70 dark:bg-emerald-950/30 border-2 border-emerald-500 space-y-2.5 flex flex-col justify-between">
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-extrabold text-[11px]">EVALUATOR 3 • PRAKTISI LAPANGAN</span>
+                                    <i class="fa-solid fa-store text-lg text-emerald-600 dark:text-emerald-400"></i>
+                                </div>
+                                <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Pemilik Usaha / Objek Serupa</h3>
+                                <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    Pemilik UMKM mitra atau pelaku usaha setopik yang menilai apakah istilah di layar masuk akal dan apakah <strong>layar kasir <code>SCR-05</code> sanggup dipakai saat jam sibuk</strong>.
+                                </p>
+                            </div>
+                            <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-slate-700 font-semibold text-emerald-700 dark:text-emerald-300 text-[11px]">
+                                🔍 Fokus Temuan: Kejelasan bahasa/harga bagi pembeli & kepraktisan tombol bagi kasir toko.
+                            </div>
+                        </div>
+                    </div>
+                    ${slideBridgeNext("Apa tolok ukur standar internasional yang digunakan saat menginspeksi layar Wireframe? Kita masuk ke Babak 2 (Slide 4–5): 10 Heuristik Jakob Nielsen!")}
+                </div>
+            `;
+        }
+
+        function renderSlide4() {
+            const h1to5 = [
+                { code: "H1", name: "Visibility of System Status", idName: "Keterlihatan Status Sistem", ex: "Pelanggan langsung tahu apakah toko sedang Buka/Tutup, sisa porsi berapa, dan pesanan sedang di tahap mana (Diterima -> Disiapkan -> Siap)." },
+                { code: "H2", name: "Match Between System & Real World", idName: "Kesesuaian dengan Dunia Nyata", ex: "Menggunakan bahasa sehari-hari pelanggan & kasir (misal: 'Pilih Tingkat Pedas', 'Ambil di Warung'), bukan istilah kode database seperti 'Input Parameter Null'." },
+                { code: "H3", name: "User Control and Freedom", idName: "Kendali & Kebebasan Pengguna", ex: "Selalu menyediakan tombol '&larr; Kembali', 'Ubah Pesanan', atau 'Batal' di layar SCR-02 dan SCR-03 jika pengguna salah memilih menu." },
+                { code: "H4", name: "Consistency and Standards", idName: "Konsistensi & Standar", ex: "Letak navigasi atas, gaya kartu produk, dan posisi tombol utama (CTA) konsisten di seluruh layar sehingga pengguna tidak perlu belajar ulang." },
+                { code: "H5", name: "Error Prevention", idName: "Pencegahan Kesalahan", ex: "Menonaktifkan tombol '+ Pilih' pada menu yang stoknya habis (SCR-ERR) sejak awal agar pelanggan tidak terlanjur memesan barang kosong." }
+            ];
+            const cardsHtml = h1to5.map(function (h) {
+                return '<div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 flex flex-col justify-between space-y-2">' +
+                    '<div class="space-y-1">' +
+                    '<span class="px-2 py-0.5 rounded bg-indigo-600 text-white font-mono font-extrabold text-[10px] inline-block">' + h.code + '</span>' +
+                    '<h3 class="font-extrabold text-slate-900 dark:text-white text-xs leading-snug">' + h.name + '</h3>' +
+                    '<div class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400">' + h.idName + '</div>' +
+                    '</div>' +
+                    '<p class="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed pt-2 border-t border-slate-200 dark:border-slate-700">' + h.ex + '</p>' +
+                    '</div>';
+            }).join('');
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-3.5">
+                    ${slideBridgeTop("Memasuki Babak 2, mari kita pelajari 10 Prinsip Heuristik Jakob Nielsen (1994) yang menjadi kompas evaluasi UI/UX di seluruh dunia.")}
+                    <div class="space-y-0.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Babak 2 • Standar ${term('heuristic', '10 Usability Heuristics')} (Bagian 1 dari 2)</span>
+                        <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Sepuluh Heuristik Jakob Nielsen: Prinsip #1 s/d #5</h2>
+                        <p class="text-xs text-slate-600 dark:text-slate-300">Perhatikan bagaimana kelima prinsip pertama ini diterapkan langsung untuk memeriksa kanvas Wireframe UMKM:</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-5 gap-2.5 my-auto text-xs">${cardsHtml}</div>
+                    ${slideBridgeNext("Kita lanjutkan ke 5 prinsip berikutnya (Prinsip #6 s/d #10) di Slide 5 sebelum mencoba simulator inspektor visualnya di Slide 6.")}
+                </div>
+            `;
+        }
+
+        function renderSlide5() {
+            const h6to10 = [
+                { code: "H6", name: "Recognition Rather Than Recall", idName: "Mengenali Lebih Mudah daripada Mengingat", ex: "Saat pelanggan berada di layar konfirmasi bayar (SCR-03), tampilkan kembali rincian item dan harga yang tadi dipilih agar mereka tidak perlu mengingat-ingat." },
+                { code: "H7", name: "Flexibility & Efficiency of Use", idName: "Fleksibilitas & Efisiensi Penggunaan", ex: "Menyediakan tombol kapsul pilihan cepat (Filter Chips) bagi pelanggan dan tombol '1-Tap Siap Diambil' di layar kasir UMKM (SCR-05)." },
+                { code: "H8", name: "Aesthetic and Minimalist Design", idName: "Desain Estetis & Minimalis", ex: "Setiap layar hanya menampilkan informasi yang dibutuhkan saat itu (sesuai Hick's Law). Tidak menumpuk sejarah warung atau teks dekoratif di layar transaksi." },
+                { code: "H9", name: "Help Users Recognize & Recover from Errors", idName: "Bantu Pengguna Pulih dari Kesalahan", ex: "Pada kanvas SCR-ERR, pesan kendala ditulis jelas dalam bahasa manusia disertai tombol jalan keluar (misal: 'Pilih Menu Pengganti yang Tersedia')." },
+                { code: "H10", name: "Help and Documentation", idName: "Bantuan & Petunjuk Singkat", ex: "Menyediakan petunjuk singkat tepat di tempat pengguna membutuhkannya (misal: teks kecil 'Tunjukkan kode tiket ini ke kasir saat mengambil pesanan')." }
+            ];
+            const cardsHtml = h6to10.map(function (h) {
+                return '<div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 flex flex-col justify-between space-y-2">' +
+                    '<div class="space-y-1">' +
+                    '<span class="px-2 py-0.5 rounded bg-emerald-600 text-white font-mono font-extrabold text-[10px] inline-block">' + h.code + '</span>' +
+                    '<h3 class="font-extrabold text-slate-900 dark:text-white text-xs leading-snug">' + h.name + '</h3>' +
+                    '<div class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">' + h.idName + '</div>' +
+                    '</div>' +
+                    '<p class="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed pt-2 border-t border-slate-200 dark:border-slate-700">' + h.ex + '</p>' +
+                    '</div>';
+            }).join('');
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-3.5">
+                    ${slideBridgeTop("Melanjutkan Prinsip #1 s/d #5 di Slide 4, berikut adalah Prinsip #6 s/d #10 dari Jakob Nielsen.")}
+                    <div class="space-y-0.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Babak 2 • Standar ${term('heuristic', '10 Usability Heuristics')} (Bagian 2 dari 2)</span>
+                        <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Sepuluh Heuristik Jakob Nielsen: Prinsip #6 s/d #10</h2>
+                        <p class="text-xs text-slate-600 dark:text-slate-300">Kelima prinsip kedua ini berfokus pada keringanan beban ingatan pengguna, efisiensi kerja kasir, dan pemulihan saat terjadi kendala:</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-5 gap-2.5 my-auto text-xs">${cardsHtml}</div>
+                    <div class="p-3 rounded-2xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-xs">
+                        <i class="fa-solid fa-lightbulb text-amber-600 mr-1.5"></i><strong>Catatan Beban Kognitif untuk LKM 07:</strong> Anda perlu memahami kesepuluh prinsip di atas, namun saat menginspeksi kanvas di LKM 07 nanti, Anda <strong>cukup mendokumentasikan minimal 3–4 temuan nyata yang paling krusial</strong> (tidak perlu mengarang 10 kesalahan palsu!).
+                    </div>
+                    ${slideBridgeNext("Mari kita lihat wujud visual pelanggaran H1 s/d H10 langsung di atas Mockup Layar Wireframe melalui Simulator Slide 6!")}
+                </div>
+            `;
+        }
+
+        function renderSlide6() {
+            const items = [
+                { code: "H1", title: "H1: Visibility of System Status", badMock: '<div class="p-3 rounded-xl bg-white dark:bg-slate-900 border-2 border-rose-400 text-xs space-y-2"><div class="font-bold">Tiket Pesanan #A-14</div><div class="p-3 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">Pesanan Anda sudah dikirim ke sistem.</div></div>', badText: "SALAH: Pelanggan tidak tahu apakah pesanannya sudah dimasak atau belum.", goodText: "PERBAIKAN: Tambahkan indikator progres 3 tahap: [● Diterima] -> [● Disiapkan] -> [○ Siap Diambil]." },
+                { code: "H2", title: "H2: Match Between System & Real World", badMock: '<div class="p-3 rounded-xl bg-white dark:bg-slate-900 border-2 border-rose-400 text-xs space-y-2"><div class="font-bold">Modul Eksekusi SKU</div><div class="p-2 rounded bg-slate-800 text-white text-center font-mono">EXECUTE_TX_01</div></div>', badText: "SALAH: Menggunakan bahasa pemrograman yang asing bagi pelanggan UMKM.", goodText: "PERBAIKAN: Gunakan bahasa alami pelanggan: 'Pilih Paket Makanan' dan tombol 'Lanjut Pesan'." },
+                { code: "H3", title: "H3: User Control and Freedom", badMock: '<div class="p-3 rounded-xl bg-white dark:bg-slate-900 border-2 border-rose-400 text-xs space-y-2"><div class="font-bold">Rincian Tagihan (Tanpa Tombol Back!)</div><div class="p-2 rounded bg-slate-900 text-white text-center font-bold">Bayar Sekarang</div></div>', badText: "SALAH: Di layar SCR-02/03 tidak ada tombol Kembali untuk mengubah porsi/menu.", goodText: "PERBAIKAN: Pasang tombol '← Kembali / Ubah Pilihan' di sudut kiri atas Header." },
+                { code: "H4", title: "H4: Consistency and Standards", badMock: '<div class="p-3 rounded-xl bg-white dark:bg-slate-900 border-2 border-rose-400 text-xs space-y-2"><div class="p-1.5 rounded bg-slate-900 text-white text-center">Tombol Lanjut di Atas</div><div class="p-2 rounded bg-slate-100 dark:bg-slate-800">Isi Formulir di Bawah</div></div>', badText: "SALAH: Di SCR-01 tombol utama di bawah, tapi di SCR-02 pindah ke paling atas.", goodText: "PERBAIKAN: Jaga konsistensi letak tombol aksi utama (CTA) selalu di zona yang sama." },
+                { code: "H5", title: "H5: Error Prevention", badMock: '<div class="p-3 rounded-xl bg-white dark:bg-slate-900 border-2 border-rose-400 text-xs flex justify-between items-center"><div><strong>Nila Bakar</strong> (Stok: 0)</div><span class="px-2.5 py-1 rounded bg-slate-900 text-white font-bold">+ Pilih</span></div>', badText: "SALAH: Stok sudah 0 tapi tombol '+ Pilih' masih aktif dan bisa diklik.", goodText: "PERBAIKAN: Ubah tombol menjadi nonaktif '[Stok Habis]' agar kesalahan dicegah sejak awal." },
+                { code: "H6", title: "H6: Recognition Rather Than Recall", badMock: '<div class="p-3 rounded-xl bg-white dark:bg-slate-900 border-2 border-rose-400 text-xs space-y-2"><div class="font-bold">Halaman Pembayaran QRIS</div><div class="text-slate-500">Silakan bayar sesuai menu yang tadi Anda pilih di halaman awal.</div></div>', badText: "SALAH: Memaksa pengguna mengingat sendiri berapa total harga dan item yang tadi dipilih.", goodText: "PERBAIKAN: Tampilkan kembali ringkasan item (2x Ayam Bakar) dan nominal Rp 44.000 tepat di atas QRIS." },
+                { code: "H7", title: "H7: Flexibility & Efficiency of Use", badMock: '<div class="p-3 rounded-xl bg-white dark:bg-slate-900 border-2 border-rose-400 text-xs space-y-1.5"><div class="font-bold">Kasir: Ketik Status Manual</div><div class="p-1.5 border rounded text-slate-400">[Ketik: Pesanan sudah siap...]</div></div>', badText: "SALAH: Memaksa kasir mengetik kalimat status secara manual di jam ramai.", goodText: "PERBAIKAN: Sediakan 1 tombol besar '[✓ Tandai Siap Diambil]' (1-Tap Action)." },
+                { code: "H8", title: "H8: Aesthetic and Minimalist Design", badMock: '<div class="p-3 rounded-xl bg-white dark:bg-slate-900 border-2 border-rose-400 text-[10px] space-y-1"><div class="font-bold">Sejarah Berdirinya Warung Tahun 1998...</div><div>Visi Misi Kami adalah... [Menu tersembunyi di bawah]</div></div>', badText: "SALAH: Memenuhi layar utama dengan paragraf profil panjang yang menutupi katalog menu.", goodText: "PERBAIKAN: Pangkas informasi tidak relevan; langsung tampilkan katalog, harga, dan stok di SCR-01." },
+                { code: "H9", title: "H9: Help Users Recover from Errors", badMock: '<div class="p-3 rounded-xl bg-white dark:bg-slate-900 border-2 border-rose-400 text-xs text-center font-mono text-rose-600 font-bold">ERROR 422: INVALID INPUT EXCEPTION!</div>', badText: "SALAH: Menampilkan pesan error teknis tanpa memberi tahu cara memperbaikinya.", goodText: "PERBAIKAN: Tulis jelas: 'Mohon isi Nomor WhatsApp aktif agar tiket pesanan dapat dikirim'." },
+                { code: "H10", title: "H10: Help and Documentation", badMock: '<div class="p-3 rounded-xl bg-white dark:bg-slate-900 border-2 border-rose-400 text-xs text-center"><div class="font-mono font-extrabold text-base">#A-14</div><div class="text-slate-400">(Tanpa petunjuk apa pun)</div></div>', badText: "SALAH: Menampilkan kode tiket #A-14 tetapi pelanggan bingung harus diapakan kode tersebut.", goodText: "PERBAIKAN: Beri petunjuk singkat 1 baris: 'Tunjukkan nomor tiket #A-14 ini ke kasir saat mengambil pesanan'." }
+            ];
+            const cur = items[s6HeurIdx];
+            const btnGridHtml = items.map(function (it, idx) {
+                const cls = s6HeurIdx === idx
+                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                    : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700';
+                return '<button type="button" onclick="setS6Heur(' + idx + ')" class="py-2 rounded-xl font-mono text-xs font-extrabold border transition ' + cls + '">' + it.code + '</button>';
+            }).join('');
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-3.5">
+                    ${slideBridgeTop("Klik H1 sampai H10 di bawah ini untuk melihat contoh nyata pelanggaran heuristik pada layar Wireframe beserta cara memperbaikinya.")}
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400">Simulasi Interaktif 1 • Inspektor Visual 10 Heuristik Nielsen</span>
+                        <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Menemukan Celah Heuristik di Atas Kanvas Wireframe</h2>
+                    </div>
+
+                    <div class="grid grid-cols-5 sm:grid-cols-10 gap-1.5">${btnGridHtml}</div>
+
+                    <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 grid grid-cols-1 lg:grid-cols-12 gap-5 items-center my-auto text-xs sm:text-sm">
+                        <div class="lg:col-span-5 space-y-2">
+                            <span class="px-2.5 py-0.5 rounded bg-rose-600 text-white text-[10px] font-extrabold uppercase">Visualisasi Pelanggaran di Kanvas:</span>
+                            ${cur.badMock}
+                        </div>
+                        <div class="lg:col-span-7 space-y-3">
+                            <h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">${cur.title}</h3>
+                            <div class="p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-900 dark:text-rose-200 text-xs">
+                                <i class="fa-solid fa-circle-xmark mr-1.5"></i>${cur.badText}
+                            </div>
+                            <div class="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200 text-xs font-semibold">
+                                <i class="fa-solid fa-wrench mr-1.5"></i>${cur.goodText}
+                            </div>
+                        </div>
+                    </div>
+                    ${slideBridgeNext("Tidak semua masalah di atas memiliki tingkat bahaya yang sama. Bagaimana cara menentukan mana yang harus diperbaiki duluan? Kita pelajari Severity Rating di Slide 7.")}
+                </div>
+            `;
+        }
+
+        function renderSlide7() {
+            const scales = [
+                { lvl: "0", name: "Bukan Masalah", desc: "Evaluator setuju bahwa hal tersebut bukanlah masalah kegunaan.", action: "Tidak perlu diubah.", cls: "bg-slate-100 dark:bg-slate-800 border-slate-300 text-slate-600" },
+                { lvl: "1", name: "Masalah Kosmetik", desc: "Hanya masalah tampilan kecil (misal kotak agak kurang rata tengah) yang tidak menghambat alur.", action: "Diperbaiki jika masih ada sisa waktu.", cls: "bg-sky-50 dark:bg-sky-950/40 border-sky-300 text-sky-800 dark:text-sky-200" },
+                { lvl: "2", name: "Masalah Minor", desc: "Pengguna sempat ragu 2–3 detik saat membaca label, namun masih bisa melanjutkan transaksi.", action: "Prioritas perbaikan rendah–menengah.", cls: "bg-amber-50 dark:bg-amber-950/40 border-amber-300 text-amber-900 dark:text-amber-200" },
+                { lvl: "3", name: "Masalah Mayor", desc: "Pengguna kesulitan menyelesaikan tugas penting atau salah memahami informasi harga/stok.", action: "Prioritas Tinggi (Wajib diperbaiki!).", cls: "bg-orange-50 dark:bg-orange-950/40 border-orange-400 text-orange-900 dark:text-orange-200" },
+                { lvl: "4", name: "Bencana Usability", desc: "Alur buntu total (tombol tidak jalan, tidak bisa kembali, atau kasir gagal memproses pesanan).", action: "WAJIB MUTLAK diperbaiki sebelum UTS!", cls: "bg-rose-50 dark:bg-rose-950/40 border-2 border-rose-500 text-rose-900 dark:text-rose-200" }
+            ];
+            const scaleCards = scales.map(function (s) {
+                return '<div class="p-3.5 rounded-2xl border ' + s.cls + ' flex flex-col justify-between space-y-2">' +
+                    '<div class="space-y-1">' +
+                    '<span class="w-7 h-7 rounded-lg bg-slate-900 text-white font-mono font-extrabold flex items-center justify-center text-sm">' + s.lvl + '</span>' +
+                    '<h3 class="font-extrabold text-xs pt-1">' + s.name + '</h3>' +
+                    '<p class="text-[11px] opacity-90 leading-relaxed">' + s.desc + '</p>' +
+                    '</div>' +
+                    '<div class="pt-2 border-t border-current/20 font-extrabold text-[10px] uppercase">' + s.action + '</div>' +
+                    '</div>';
+            }).join('');
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Setelah menemukan temuan heuristik seperti di Slide 6, kita memberi skor keparahan (Severity Rating) agar tahu prioritas perbaikannya.")}
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Babak 2 • Skala Prioritas ${term('severity', 'Severity Rating (0–4)')}</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Lima Tingkat Keparahan Masalah Kegunaan (Jakob Nielsen)</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Skor keparahan ditentukan oleh 3 faktor: <strong>(1) Frekuensi</strong> (seberapa sering terjadi), <strong>(2) Dampak</strong> (seberapa fatal akibatnya bagi pengguna/toko), dan <strong>(3) Persistensi</strong> (apakah pengguna terus terjebak):
+                        </p>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-5 gap-2.5 my-auto text-xs">${scaleCards}</div>
+                    ${slideBridgeNext("Mari berlatih membedakan masalah Severity 1, 2, 3, dan 4 pada kasus nyata Wireframe UMKM di Slide 8!")}
+                </div>
+            `;
+        }
+
+        function renderSlide8() {
+            const sevCases = [
+                {
+                    lvl: "Severity 1 (Kosmetik)",
+                    badgeCls: "bg-sky-600 text-white",
+                    title: "Kasus A: Ukuran Kotak Ikon di Header Sedikit Kurang Sejajar 2 Piksel",
+                    desc: "Pada layar Katalog SCR-01, kotak ikon jam buka tampak bergeser 2 piksel ke atas dibandingkan teks judul, namun seluruh tulisan tetap terbaca jelas.",
+                    reason: "Mengapa Severity 1? Karena sama sekali tidak menghambat pelanggan memilih menu atau membaca harga. Boleh dirapikan paling terakhir."
+                },
+                {
+                    lvl: "Severity 2 (Minor)",
+                    badgeCls: "bg-amber-500 text-slate-950",
+                    title: "Kasus B: Label Input Tertulis 'Identitas Personal' (Kurang Akrab)",
+                    desc: "Pada layar SCR-02, kotak input nama diberi judul 'Identitas Personal'. Pelanggan sempat ragu 2 detik apakah harus mengisi nama panggilan atau nomor KTP.",
+                    reason: "Mengapa Severity 2? Melanggar Heuristik #2 (Match with Real World), namun pelanggan masih bisa menebak. Cukup ganti teksnya menjadi 'Nama Pemesan'."
+                },
+                {
+                    lvl: "Severity 3 (Mayor)",
+                    badgeCls: "bg-orange-600 text-white",
+                    title: "Kasus C: Tidak Ada Informasi Estimasi Waktu Selesai Cucian di Katalog Laundry",
+                    desc: "Pada layar pilih paket laundry (SCR-01), tertulis 'Paket Reguler Rp 7.000/kg' dan 'Paket Ekspres Rp 12.000/kg', tetapi tidak tertulis berapa hari/jam selesainya.",
+                    reason: "Mengapa Severity 3? Informasi kunci yang menentukan keputusan pembelian hilang! Pelanggan terpaksa batal memesan dan kembali bertanya lewat chat manual."
+                },
+                {
+                    lvl: "Severity 4 (Bencana Usability)",
+                    badgeCls: "bg-rose-600 text-white",
+                    title: "Kasus D: Tombol Utama 'Konfirmasi Pesanan' Tidak Punya Tautan Layar & Layar Kasir Tidak Punya Tombol Selesai",
+                    desc: "Saat diuji dengan Play Wireflow, klik tombol 'Konfirmasi' di SCR-02 tidak membuka layar tiket SCR-03, dan di layar kasir SCR-05 tidak ada tombol untuk mengubah status pesanan.",
+                    reason: "Mengapa Severity 4? Karena tujuan utama aplikasi lumpuh total! Baik pelanggan maupun kasir UMKM terjebak di jalan buntu (Dead-End)."
+                }
+            ];
+            const cur = sevCases[s8SevIdx];
+            const tabsHtml = sevCases.map(function (c, idx) {
+                const cls = s8SevIdx === idx
+                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                    : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700';
+                return '<button type="button" onclick="setS8Sev(' + idx + ')" class="p-3 rounded-2xl border text-left transition ' + cls + '">' +
+                    '<div class="text-[10px] font-bold uppercase opacity-80">Contoh Kasus</div>' +
+                    '<div class="text-xs sm:text-sm font-extrabold mt-0.5">' + c.lvl + '</div>' +
+                    '</button>';
+            }).join('');
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Menerapkan skala 0–4 dari Slide 7, klik keempat tingkat kasus di bawah ini untuk melatih ketajaman penilaian Severity Rating Anda.")}
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400">Simulasi Interaktif 2 • Kalibrasi Skor Keparahan</span>
+                        <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Membedakan Masalah Kosmetik (Sev 1) vs Bencana Alur (Sev 4)</h2>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">${tabsHtml}</div>
+                    <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-3 my-auto text-xs sm:text-sm">
+                        <span class="px-3 py-1 rounded-lg font-extrabold text-xs inline-block ${cur.badgeCls}">${cur.lvl}</span>
+                        <h3 class="text-base sm:text-xl font-extrabold text-slate-900 dark:text-white">${cur.title}</h3>
+                        <p class="text-slate-600 dark:text-slate-300 leading-relaxed">${cur.desc}</p>
+                        <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-semibold text-indigo-600 dark:text-indigo-400">
+                            <i class="fa-solid fa-scale-balanced mr-1.5"></i>${cur.reason}
+                        </div>
+                    </div>
+                    ${slideBridgeNext("Babak 2 selesai! Sekarang kita masuk ke Babak 3 (Slide 9): bagaimana cara memandu Peer dan Pemilik Usaha mencoba Wireframe kita tanpa menyuapi mereka?")}
+                </div>
+            `;
+        }
+
+        function renderSlide9() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Memasuki Babak 3, saat Anda menyerahkan layar Wireframe LKM 06 ke teman atau pemilik UMKM, cara Anda bertanya sangat menentukan kejujuran hasilnya.")}
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">Babak 3 • Protokol ${term('walkthrough', 'Cognitive Walkthrough')}</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Cara Menguji Prototipe Wireflow Tanpa Menyuapi Responden</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Kesalahan terbesar mahasiswa saat menguji desain adalah <strong>ikut campur menunjuk letak tombol</strong>. Patuhi 3 aturan pelaksanaan <em>Cognitive Walkthrough</em> berikut:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-auto text-xs sm:text-sm">
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <span class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-xs font-extrabold">1. Berikan Skenario Tugas, Bukan Instruksi Klik</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Jangan Menyebut Nama Tombol!</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                <strong>Salah:</strong> <em>"Coba klik tombol '+ Pilih' lalu klik tombol hitam di bawah."</em><br>
+                                <strong>Benar:</strong> <em>"Bayangkan kamu sedang lapar dan ingin memesan 2 porsi Ayam Bakar. Coba lakukan di layar ini."</em>
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-xs font-extrabold">2. Minta Responden Berpikir Keras (Think Aloud)</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Dengarkan Kebingungannya</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Minta evaluator mengucapkan apa yang sedang mereka cari di layar: <em>"Saya mau lihat harganya sudah termasuk nasi belum ya..."</em>. Setiap keraguan mereka adalah emas untuk bahan revisi!
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <span class="px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 text-xs font-extrabold">3. Tahan Diri untuk Tidak Membela Diri</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Yang Diuji Desainnya, Bukan Orangnya</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Jika rekan atau pemilik usaha salah menekan tombol, jangan menyalahkan mereka. Jika pengguna bingung melihat Wireframe kita, berarti <strong>tata letak atau Microcopy kita yang perlu diperbaiki</strong>.
+                            </p>
+                        </div>
+                    </div>
+                    ${slideBridgeNext("Pertanyaan spesifik apa yang sebaiknya kita ajukan kepada Peer Mahasiswa, Dosen, dan Pemilik Usaha/Objek Serupa? Kita lihat panduannya di Slide 10.")}
+                </div>
+            `;
+        }
+
+        function renderSlide10() {
+            const evalGuides = {
+                peer: {
+                    badge: "Panduan Sesi 1 • Peer Review Silang (Sesama Mahasiswa)",
+                    title: "🤝 Daftar Periksa untuk Rekan Mahasiswa (Fokus Alur & 10 Heuristik)",
+                    tasks: [
+                        "1. Minta rekan Anda menjalankan 'Mode Uji Klik (Play Wireflow)' dari SCR-01 sampai selesai tanpa Anda bantu.",
+                        "2. Tanyakan: 'Pada layar mana kamu sempat bingung harus mengklik apa atau merasa informasi harganya kurang jelas?'",
+                        "3. Periksa bersama: Apakah ada layar yang tidak punya jalan kembali (melanggar H3) atau istilah yang membingungkan (melanggar H2)?",
+                        "4. Pasang Pin Evaluasi pada titik elemen yang bermasalah di kanvas LKM 07."
+                    ]
+                },
+                dosen: {
+                    badge: "Panduan Sesi 2 • Konsultasi / Responden Dosen",
+                    title: "🎓 Fokus Tinjauan Dosen (Ketajaman Solusi MVP & Konsistensi Metodologi)",
+                    tasks: [
+                        "1. Tunjukkan benang merah singkat: dari Masalah Utama UMKM & HMW (LKM 04) menuju kanvas Wireframe inti Anda.",
+                        "2. Tanyakan: 'Apakah komponen di layar utama (SCR-01 & SCR-05) sudah cukup tajam menyelesaikan masalah antrean/pencatatan UMKM mitra?'",
+                        "3. Tanyakan: 'Apakah ada bagian pada alur atau tampilan kendala (SCR-ERR) yang perlu dipertajam sebelum dipresentasikan pada UTS minggu depan?'",
+                        "4. Catat masukan dosen sebagai Pin Evaluasi ber-prioritas tinggi untuk langsung direvisi pada kanvas."
+                    ]
+                },
+                umkm: {
+                    badge: "Panduan Sesi 3 • Validasi Pemilik Usaha / Objek Serupa",
+                    title: "🏪 Pertanyaan untuk Pemilik Usaha / Objek Setopik (Realitas Operasional)",
+                    tasks: [
+                        "1. Tunjukkan layar Katalog Pelanggan (SCR-01): 'Menurut Bapak/Ibu, apakah informasi menu/paket dan status ketersediaan di layar ini sudah sesuai dengan yang biasa ditanyakan pembeli?'",
+                        "2. Tunjukkan layar Kasir Backstage (SCR-05): 'Jika toko sedang ramai pembeli, apakah ukuran tulisan dan tombol [Siap Diambil / Saklar Stok] di layar ini cukup praktis Bapak/Ibu tekan?'",
+                        "3. Tunjukkan layar Kendala (SCR-ERR): 'Jika stok mendadak habis, apakah tampilan pemberitahuan seperti ini sudah pas?'",
+                        "4. Dokumentasikan masukan praktis beliau ke dalam Pin Evaluasi LKM 07."
+                    ]
+                }
+            };
+            const cur = evalGuides[s10EvalTab];
+            const tasksHtml = cur.tasks.map(function (t) {
+                return '<div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-medium text-slate-700 dark:text-slate-200 text-xs">' + t + '</div>';
+            }).join('');
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Agar sesi diskusi dengan ketiga evaluator berjalan cepat dan fokus (10–15 menit), gunakan daftar pertanyaan terarah berikut.")}
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">Babak 3 • Instrumen Wawancara Singkat 3 Evaluator (Sinkron LKM 07)</span>
+                        <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Panduan Menggali Masukan dari Peer, Dosen, & Pemilik Usaha</h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        <button type="button" onclick="setS10Tab('peer')" class="p-3 rounded-2xl border text-left transition ${s10EvalTab === 'peer' ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-[10px] font-bold uppercase opacity-80">Evaluator 1</div>
+                            <div class="text-xs sm:text-sm font-extrabold mt-0.5">🤝 1. Peer Review Mahasiswa</div>
+                        </button>
+                        <button type="button" onclick="setS10Tab('dosen')" class="p-3 rounded-2xl border text-left transition ${s10EvalTab === 'dosen' ? 'bg-purple-600 text-white border-purple-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-[10px] font-bold uppercase opacity-80">Evaluator 2</div>
+                            <div class="text-xs sm:text-sm font-extrabold mt-0.5">🎓 2. Responden Dosen</div>
+                        </button>
+                        <button type="button" onclick="setS10Tab('umkm')" class="p-3 rounded-2xl border text-left transition ${s10EvalTab === 'umkm' ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-[10px] font-bold uppercase opacity-80">Evaluator 3</div>
+                            <div class="text-xs sm:text-sm font-extrabold mt-0.5">🏪 3. Pemilik Usaha / Serupa</div>
+                        </button>
+                    </div>
+
+                    <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-3 my-auto text-xs sm:text-sm">
+                        <span class="px-2.5 py-1 rounded-lg bg-slate-900 text-white text-[11px] font-extrabold inline-block">${cur.badge}</span>
+                        <h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">${cur.title}</h3>
+                        <div class="space-y-2 pt-1">${tasksHtml}</div>
+                    </div>
+                    ${slideBridgeNext("Bagaimana wujud visual pemasangan Pin Evaluasi (📍 #1, #2, #3) di atas kanvas dan perubahannya setelah direvisi? Kita simulasikan di Slide 11!")}
+                </div>
+            `;
+        }
+
+        function renderSlide11() {
+            const isBefore = s11IterState === 'before';
+            let visualPanel = '';
+
+            if (isBefore) {
+                visualPanel = `
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center text-xs">
+                        <div class="lg:col-span-5">
+                            <div class="max-w-[255px] mx-auto p-3.5 rounded-[28px] bg-white dark:bg-slate-900 border-4 border-rose-500 space-y-2.5 shadow-lg relative">
+                                <div class="flex justify-between items-center border-b pb-1.5 relative">
+                                    <span class="font-bold text-slate-900 dark:text-white">Rincian Pesanan [SCR-02]</span>
+                                    <span class="eval-pin" title="Pin #1 dari Peer">1</span>
+                                </div>
+                                <div class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 flex justify-between items-center relative">
+                                    <div><div class="font-bold">Paket Ayam Bakar</div><div class="text-[10px] text-slate-400">(Harga tidak tertulis)</div></div>
+                                    <span class="eval-pin" title="Pin #2 dari Dosen">2</span>
+                                </div>
+                                <div class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 relative">
+                                    <div class="text-[10px] font-bold">Layar Kasir [SCR-05]: Ketik Status Manual</div>
+                                    <div class="p-1 mt-1 border rounded text-[9px] text-slate-400">[Ketik pesan ke pembeli...]</div>
+                                    <span class="eval-pin absolute -top-2 -right-2" title="Pin #3 dari Pemilik UMKM">3</span>
+                                </div>
+                                <div class="p-2 rounded-xl bg-slate-400 text-white text-center font-bold">Submit</div>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-7 space-y-2.5">
+                            <div class="font-extrabold text-rose-600 uppercase text-[11px]">📍 3 Pin Temuan Masalah pada Kanvas Awal (LKM 06):</div>
+                            <div class="p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 space-y-1">
+                                <div class="font-extrabold text-slate-900 dark:text-white"><span class="eval-pin mr-1.5">1</span>Temuan Peer (H3 • Severity 3): Tidak Ada Tombol Kembali</div>
+                                <p class="text-slate-600 dark:text-slate-300 text-[11px]">Di Header atas SCR-02 belum ada tombol <code>&larr; Kembali</code> jika pembeli ingin menambah menu lain.</p>
+                            </div>
+                            <div class="p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 space-y-1">
+                                <div class="font-extrabold text-slate-900 dark:text-white"><span class="eval-pin mr-1.5">2</span>Temuan Dosen (H6 • Severity 3): Rincian Harga Hilang Saat Checkout</div>
+                                <p class="text-slate-600 dark:text-slate-300 text-[11px]">Pelanggan harus mengingat sendiri harga per porsi karena tidak ditampilkan ulang di SCR-02.</p>
+                            </div>
+                            <div class="p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 space-y-1">
+                                <div class="font-extrabold text-slate-900 dark:text-white"><span class="eval-pin mr-1.5">3</span>Temuan Pemilik Usaha (H7 • Severity 4): Kasir Repot Mengetik Manual</div>
+                                <p class="text-slate-600 dark:text-slate-300 text-[11px]">Pemilik warung menolak kotak ketik manual saat jam sibuk dan meminta diganti tombol klik cepat.</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                visualPanel = `
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center text-xs">
+                        <div class="lg:col-span-5">
+                            <div class="max-w-[255px] mx-auto p-3.5 rounded-[28px] bg-white dark:bg-slate-900 border-4 border-emerald-500 space-y-2.5 shadow-lg">
+                                <div class="flex justify-between items-center border-b pb-1.5">
+                                    <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-900 font-extrabold text-[10px]">&larr; Kembali [Fix #1]</span>
+                                    <span class="font-bold text-slate-900 dark:text-white text-[11px]">Rincian [SCR-02]</span>
+                                </div>
+                                <div class="p-2.5 rounded-xl bg-emerald-50/70 dark:bg-slate-800 border-2 border-emerald-500 flex justify-between items-center">
+                                    <div><div class="font-bold text-slate-900 dark:text-white">Paket Ayam Bakar</div><div class="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-400">Rp 22.000 x 2 = Rp 44.000 [Fix #2]</div></div>
+                                </div>
+                                <div class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border-2 border-emerald-500 space-y-1.5">
+                                    <div class="text-[10px] font-bold">Layar Kasir [SCR-05] (Revisi 1-Tap):</div>
+                                    <div class="p-2 rounded-lg bg-slate-900 text-white text-center font-extrabold text-[10px]">&#10003; Tandai Siap Diambil [Fix #3]</div>
+                                </div>
+                                <div class="p-2 rounded-xl bg-slate-900 text-white text-center font-extrabold">Bayar QRIS (Rp 44.000) &rarr;</div>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-7 space-y-2.5">
+                            <div class="font-extrabold text-emerald-600 uppercase text-[11px]">✅ Hasil Iterasi Perbaikan pada Kanvas (LKM 07):</div>
+                            <div class="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-800 space-y-1">
+                                <div class="font-extrabold text-slate-900 dark:text-white">✓ Solusi Pin #1: Menambahkan Tombol '&larr; Kembali' Ber-Tautan ke SCR-01</div>
+                                <p class="text-slate-600 dark:text-slate-300 text-[11px]">Memenuhi Heuristik #3 (User Control & Freedom) dan lulus uji klik bolak-balik.</p>
+                            </div>
+                            <div class="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-800 space-y-1">
+                                <div class="font-extrabold text-slate-900 dark:text-white">✓ Solusi Pin #2: Menampilkan Kalkulasi Subtotal Harga secara Eksplisit</div>
+                                <p class="text-slate-600 dark:text-slate-300 text-[11px]">Memenuhi Heuristik #6 (Recognition Rather Than Recall) sehingga pembeli yakin sebelum membayar.</p>
+                            </div>
+                            <div class="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-800 space-y-1">
+                                <div class="font-extrabold text-slate-900 dark:text-white">✓ Solusi Pin #3: Mengganti Input Ketik Kasir Menjadi Tombol Besar 1-Tap</div>
+                                <p class="text-slate-600 dark:text-slate-300 text-[11px]">Memenuhi Heuristik #7 & aturan kesederhanaan operasional UMKM dari LKM 04.</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Persis seperti simulasi di bawah ini, di LKM 07 nanti Anda akan menaruh Pin Nomor (📍 #1, #2, #3) di atas kanvas lalu memperbaiki elemennya.")}
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400">Simulasi Interaktif 3 • Siklus ${term('iteration', 'Design Iteration')} (Sinkron Studio LKM 07)</span>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Dari Pin Masukan 3 Evaluator Menuju Revisi Kanvas</h2>
+                        </div>
+                        <div class="flex gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl shrink-0">
+                            <button type="button" onclick="setS11Iter('before')" class="px-3.5 py-1.5 rounded-lg text-xs font-extrabold transition ${isBefore ? 'bg-rose-600 text-white shadow-2xs' : 'text-slate-600 dark:text-slate-300'}">📍 1. Sebelum: Kanvas Ber-Pin Masalah</button>
+                            <button type="button" onclick="setS11Iter('after')" class="px-3.5 py-1.5 rounded-lg text-xs font-extrabold transition ${!isBefore ? 'bg-emerald-600 text-white shadow-2xs' : 'text-slate-600 dark:text-slate-300'}">✅ 2. Sesudah: Kanvas Hasil Revisi</button>
+                        </div>
+                    </div>
+
+                    <div class="p-4 sm:p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 my-auto">
+                        ${visualPanel}
+                    </div>
+                    ${slideBridgeNext("Babak 3 selesai! Sekarang kita masuk ke Babak 4 (Slide 12–15): bagaimana merangkai seluruh pekerjaan LKM 01 s/d LKM 07 menjadi Portofolio UTS yang memukau?")}
+                </div>
+            `;
+        }
+
+        function renderSlide12() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Memasuki Babak 4 (Persiapan Portofolio UTS), penguji akan memeriksa apakah desain layar Anda nyambung dengan hasil riset awal semester.")}
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">Babak 4 • Rantai Bukti Ilmiah (${term('traceability', 'UX Traceability Matrix')})</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Benang Merah Proyek UI/UX dari <code>LKM 01</code> hingga <code>LKM 07</code></h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Keunggulan utama menggunakan ekosistem file <code>.JSON</code> berantai kita adalah Anda memiliki <strong>Benang Merah Bukti (Traceability) yang tidak terputus</strong> untuk ditampilkan saat presentasi Portofolio UTS:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5 my-auto text-xs">
+                        <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1.5">
+                            <span class="px-2 py-0.5 rounded bg-slate-800 text-white font-mono font-extrabold text-[10px]">LKM 01 & 02</span>
+                            <h3 class="font-extrabold text-slate-900 dark:text-white">1. Fakta Masalah UMKM</h3>
+                            <p class="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">Observasi antrean manual, kebingungan stok/harga, & wawancara langsung dengan pelanggan serta pemilik UMKM.</p>
+                        </div>
+
+                        <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1.5">
+                            <span class="px-2 py-0.5 rounded bg-rose-600 text-white font-mono font-extrabold text-[10px]">LKM 03</span>
+                            <h3 class="font-extrabold text-slate-900 dark:text-white">2. Persona & Titik Sakit</h3>
+                            <p class="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">Profil pelanggan sasaran dan fase paling menyakitkan (😞) pada <em>Customer Journey Map</em> saat ini.</p>
+                        </div>
+
+                        <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1.5">
+                            <span class="px-2 py-0.5 rounded bg-amber-500 text-slate-950 font-mono font-extrabold text-[10px]">LKM 04</span>
+                            <h3 class="font-extrabold text-slate-900 dark:text-white">3. HMW & Fitur MVP</h3>
+                            <p class="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">Rumusan <em>How Might We</em>, 3 Fitur Inti Kuadran 1 (<code>MVP-1..3</code>), dan aturan kesederhanaan <em>Backstage</em> toko.</p>
+                        </div>
+
+                        <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1.5">
+                            <span class="px-2 py-0.5 rounded bg-indigo-600 text-white font-mono font-extrabold text-[10px]">LKM 05</span>
+                            <h3 class="font-extrabold text-slate-900 dark:text-white">4. Sitemap & User Flow</h3>
+                            <p class="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">Daftar layar (<code>SCR-01..05</code>), alur pelanggan + cabang <code>🟨 Decision</code>, serta alur kasir UMKM.</p>
+                        </div>
+
+                        <div class="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border-2 border-emerald-500 space-y-1.5 sm:col-span-2 lg:col-span-1">
+                            <span class="px-2 py-0.5 rounded bg-emerald-600 text-white font-mono font-extrabold text-[10px]">LKM 06 & 07</span>
+                            <h3 class="font-extrabold text-slate-900 dark:text-white">5. Wireframe Tervalidasi</h3>
+                            <p class="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">Kanvas <em>Lo-Fi Wireframe</em> yang telah diuji klik dan direvisi berdasarkan masukan Peer, Dosen, & UMKM.</p>
+                        </div>
+                    </div>
+                    ${slideBridgeNext("Bagaimana cara menyusun kelima tahapan di atas menjadi dokumen dan presentasi Portofolio Studi Kasus UX untuk UTS? Kita bahas di Slide 13.")}
+                </div>
+            `;
+        }
+
+        function renderSlide13() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Menyambung matriks benang merah di Slide 12, berikut adalah struktur standar internasional penyajian UX Case Study Portfolio.")}
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">Babak 4 • Arsitektur ${term('casestudy', 'UX Case Study Portfolio')}</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Tiga Elemen Wajib dalam Portofolio Desain Pra-UTS</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Dalam buku <em>Articulating Design Decisions</em>, <strong>Tom Greever</strong> menjelaskan bahwa penguji tidak menilai desain dari kata <em>"Menurut saya ini bagus"</em>, melainkan dari 3 bukti objektif berikut:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-auto text-xs sm:text-sm">
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <span class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-xs font-extrabold">1. Problem-to-Feature Proof</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Bukti Masalah &rarr; Fitur MVP</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Tunjukkan kutipan keluhan nyata pelanggan/pemilik UMKM dari LKM 02–03 dan bagaimana 3 fitur MVP Anda di LKM 04 memangkas waktu tunggu atau beban kerja mereka.
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-xs font-extrabold">2. Dual-Side Wireflow Proof</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Bukti Alur 2 Sisi (Pembeli & Toko)</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Tampilkan bagaimana layar pelanggan (<code>SCR-01..04</code>), layar kendala (<code>SCR-ERR</code>), dan layar kasir UMKM (<code>SCR-05</code>) saling terhubung membentuk ekosistem layanan yang utuh.
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <span class="px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 text-xs font-extrabold">3. Before-vs-After Iteration Proof</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Bukti Perubahan Hasil Evaluasi</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Tunjukkan minimal 3 pin masukan dari Peer, Dosen, dan Pemilik Usaha beserta perubahan nyata yang telah Anda lakukan pada kanvas Wireframe di LKM 07.
+                            </p>
+                        </div>
+                    </div>
+                    ${slideBridgeNext("Bagaimana cara mempresentasikan seluruh portofolio tersebut hanya dalam waktu 5 menit saat UTS minggu depan? Kita simulasikan di Slide 14!")}
+                </div>
+            `;
+        }
+
+        function renderSlide14() {
+            const pitchSteps = [
+                {
+                    min: "Menit 1",
+                    title: "Babak 1: Konteks UMKM Mitra & Akar Masalah Nyata (LKM 01–03)",
+                    speak: "Kalimat Pembuka yang Kuat: 'Kami bermitra dengan [Nama UMKM]. Berdasarkan observasi dan wawancara kami di LKM 01–03, pelanggan bernama [Nama Persona] mengalami titik sakit utama pada [Sebutkan Fase Journey Map], sementara pemilik usaha kewalahan karena [Sebutkan Masalah Backstage].'",
+                    artifact: "Artefak yang Ditampilkan: Foto Bukti Lapangan + Kartu Persona + Titik Sakit Customer Journey Map."
+                },
+                {
+                    min: "Menit 2",
+                    title: "Babak 2: Rumusan HMW, Fokus 3 Fitur MVP, & Aturan Backstage (LKM 04)",
+                    speak: "Kalimat Kunci: 'Untuk menjawab masalah tersebut tanpa membebani operasional toko, kami menetapkan 3 Fitur Inti MVP (Kuadran 1): [MVP-1], [MVP-2], dan [MVP-3], dengan aturan wajib: kasir UMKM dapat memproses pesanan maksimal dalam 2 klik.'",
+                    artifact: "Artefak yang Ditampilkan: Matriks Prioritas Fitur Kuadran 1 MVP & UX Design Brief LKM 04."
+                },
+                {
+                    min: "Menit 3",
+                    title: "Babak 3: Arsitektur Pohon Sitemap & Logika User Flow 2 Sisi (LKM 05)",
+                    speak: "Kalimat Kunci: 'Ketiga fitur MVP tersebut kami terjemahkan ke dalam struktur Flat Hierarchy berjumlah [X] layar (SCR-01 s/d SCR-05), dilengkapi titik pengecekan Decision ketika stok habis atau input belum lengkap.'",
+                    artifact: "Artefak yang Ditampilkan: Diagram Pohon Sitemap Visual 4 Level & Rantai User Flow LKM 05."
+                },
+                {
+                    min: "Menit 4",
+                    title: "Babak 4: Demo Kanvas Low-Fidelity Wireframe & Play Wireflow (LKM 06)",
+                    speak: "Kalimat Kunci: 'Berikut adalah wujud kerangka layar [Mobile/Tablet POS/Desktop] yang kami rakit. Mari kita lihat simulasi klik (Play Wireflow) dari pelanggan memilih menu di SCR-01, melewati validasi di SCR-02, hingga pesanan masuk ke layar kasir SCR-05.'",
+                    artifact: "Artefak yang Ditampilkan: Kanvas Wireframe Studio LKM 06/07 (Mode Uji Klik Aktif)."
+                },
+                {
+                    min: "Menit 5",
+                    title: "Babak 5: Temuan Triangulasi 3 Evaluator & Bukti Iterasi (LKM 07)",
+                    speak: "Kalimat Penutup: 'Setelah diuji oleh Rekan Sejawat, Dosen, dan Pemilik Usaha, kami menemukan [X] celah utama—salah satunya [Sebutkan Temuan Severity 3/4]. Kami telah merevisi langsung kanvas tersebut seperti terlihat pada perbandingan Before vs After ini.'",
+                    artifact: "Artefak yang Ditampilkan: Kanvas Ber-Pin Evaluasi & Tabel Log Iterasi LKM 07."
+                }
+            ];
+            const cur = pitchSteps[s14PitchIdx];
+            const tabsHtml = pitchSteps.map(function (st, idx) {
+                const cls = s14PitchIdx === idx
+                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                    : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700';
+                return '<button type="button" onclick="setS14Pitch(' + idx + ')" class="p-2.5 rounded-xl border text-center transition ' + cls + '"><div class="text-xs font-extrabold">' + st.min + '</div></button>';
+            }).join('');
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Agar presentasi Portofolio UTS Anda minggu depan terstruktur, padat, dan meyakinkan, gunakan panduan alokasi waktu 5 menit berikut.")}
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400">Simulasi Interaktif 4 • Struktur Pitching Portofolio UTS</span>
+                        <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Simulasi Alur Presentasi Portofolio Proyek UI/UX (5 Menit)</h2>
+                        <p class="text-xs text-slate-600 dark:text-slate-300">Klik Menit 1 hingga Menit 5 di bawah ini untuk melihat naskah bicara dan artefak LKM yang ditampilkan:</p>
+                    </div>
+                    <div class="grid grid-cols-5 gap-2">${tabsHtml}</div>
+                    <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-3 my-auto text-xs sm:text-sm">
+                        <span class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-xs font-extrabold inline-block">${cur.min} • Panduan Bicara</span>
+                        <h3 class="text-base sm:text-xl font-extrabold text-slate-900 dark:text-white">${cur.title}</h3>
+                        <p class="text-slate-700 dark:text-slate-200 leading-relaxed bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 italic">${cur.speak}</p>
+                        <div class="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 font-bold text-emerald-800 dark:text-emerald-300 text-xs">
+                            <i class="fa-solid fa-chalkboard-user mr-1.5"></i>${cur.artifact}
+                        </div>
+                    </div>
+                    ${slideBridgeNext("Sebelum masuk ke latihan evaluasi, mari kita kenali 4 kesalahan umum saat evaluasi heuristik & presentasi UTS di Slide 15.")}
+                </div>
+            `;
+        }
+
+        function renderSlide15() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Sebagai penutup Babak 4, pastikan proses evaluasi di LKM 07 dan persiapan Portofolio UTS Anda terhindar dari 4 jebakan berikut.")}
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">Babak 4 • Standar Mutu Evaluasi & Portofolio UTS</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Empat Kesalahan Umum pada Evaluasi & Portofolio UTS</h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 my-auto text-xs sm:text-sm">
+                        <div class="p-4 sm:p-5 rounded-3xl bg-rose-50/60 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800 space-y-2">
+                            <div class="font-extrabold text-rose-700 dark:text-rose-300"><i class="fa-solid fa-circle-xmark mr-1.5"></i>1. Mencatat Temuan Masalah, Tapi Malas Merevisi Kanvas</div>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Menuliskan bahwa "Tombol kembali belum ada di SCR-02" pada tabel evaluasi, tetapi gambar kanvas SCR-02 dibiarkan tetap salah tanpa ditambahkan tombol kembali.
+                            </p>
+                        </div>
+
+                        <div class="p-4 sm:p-5 rounded-3xl bg-rose-50/60 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800 space-y-2">
+                            <div class="font-extrabold text-rose-700 dark:text-rose-300"><i class="fa-solid fa-circle-xmark mr-1.5"></i>2. Mengarang Evaluasi Fiktif Tanpa Bertanya ke Evaluator Nyata</div>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Mengisi sendiri kolom Peer Review dan masukan pemilik usaha tanpa benar-benar mendemokan kanvasnya, sehingga masalah fatal yang sebenarnya justru terlewat.
+                            </p>
+                        </div>
+
+                        <div class="p-4 sm:p-5 rounded-3xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 space-y-2">
+                            <div class="font-extrabold text-amber-800 dark:text-amber-300"><i class="fa-solid fa-triangle-exclamation mr-1.5"></i>3. Presentasi UTS Langsung Lompat ke Gambar Tanpa Konteks Riset</div>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Langsung memamerkan kotak-kotak Wireframe tanpa menceritakan masalah UMKM dan Persona apa yang sedang diselesaikan oleh layar tersebut.
+                            </p>
+                        </div>
+
+                        <div class="p-4 sm:p-5 rounded-3xl bg-indigo-50/60 dark:bg-indigo-950/20 border border-indigo-200 dark:border-indigo-800 space-y-2">
+                            <div class="font-extrabold text-indigo-700 dark:text-indigo-300"><i class="fa-solid fa-store-slash mr-1.5"></i>4. Hanya Menguji Layar Pembeli, Lupa Menguji Layar Kasir UMKM</div>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Lupa meminta pendapat pemilik usaha/objek serupa mengenai kepraktisan layar kasir (<code>SCR-05</code>) dan layar kondisi kendala (<code>SCR-ERR</code>).
+                            </p>
+                        </div>
+                    </div>
+                    ${slideBridgeNext("Babak 4 selesai! Sekarang uji pemahaman Anda melalui Evaluasi Interaktif 3 Mode di Slide 16.")}
+                </div>
+            `;
+        }
+
+        function renderSlide16() {
+            let tabBodyHtml = '';
+
+            if (activeEvalTabM7 === 'refleksi') {
+                const questions = [
+                    {
+                        id: 1,
+                        title: "1. Mengapa Kita Menggunakan Triangulasi 3 Evaluator?",
+                        question: "Apa manfaat menggabungkan masukan dari Rekan Mahasiswa (Peer), Dosen, dan Pemilik Usaha/Objek Serupa?",
+                        answer: "Rekan mahasiswa peka menemukan celah teknis alur dan heuristik, Dosen memastikan ketajaman solusi MVP dan benang merah akademik, sedangkan Pemilik Usaha memastikan istilah dan alur kasir benar-benar realistis dipakai di lapangan."
+                    },
+                    {
+                        id: 2,
+                        title: "2. Bagaimana Menjaga Beban Kognitif Saat Evaluasi Heuristik?",
+                        question: "Mengapa kita cukup mendokumentasikan minimal 3–4 temuan nyata yang paling berdampak beserta perbaikannya, bukan memaksakan 10 temuan palsu?",
+                        answer: "Tujuan evaluasi heuristik adalah menemukan dan memperbaiki masalah nyata (terutama Severity 3 dan 4) secara tuntas di atas kanvas, bukan sekadar menghafal atau mengarang daftar panjang tanpa tindak lanjut."
+                    },
+                    {
+                        id: 3,
+                        title: "3. Apa Kunci Utama Presentasi Portofolio UTS yang Meyakinkan?",
+                        question: "Apa yang paling ingin dilihat oleh penguji saat Anda mempresentasikan Portofolio Proyek UI/UX minggu depan?",
+                        answer: "Keterhubungan benang merah (Traceability) dari masalah nyata UMKM (LKM 01–03), prioritas MVP (LKM 04), Sitemap & Flow (LKM 05), hingga bukti bagaimana Wireframe Anda berkembang menjadi lebih baik setelah dievaluasi (LKM 06–07)."
+                    }
+                ];
+
+                let cardsHtml = '';
+                for (let i = 0; i < questions.length; i++) {
+                    const q = questions[i];
+                    const isOpen = openReflectionKey[q.id];
+                    cardsHtml += '<div class="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-3">' +
+                        '<div class="space-y-1.5">' +
+                        '<div class="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">' + q.title + '</div>' +
+                        '<p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">' + q.question + '</p>' +
+                        '</div>' +
+                        '<div class="pt-2 border-t border-slate-200/70 dark:border-slate-700/70">' +
+                        '<button type="button" onclick="toggleReflectionAnswer(' + q.id + ')" class="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1.5">' +
+                        '<i class="fa-regular ' + (isOpen ? 'fa-eye-slash' : 'fa-lightbulb') + '"></i>' +
+                        '<span>' + (isOpen ? 'Sembunyikan Kunci Konsep' : 'Lihat Kunci Konsep') + '</span>' +
+                        '</button>' +
+                        (isOpen ? '<div class="mt-2.5 p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">' + q.answer + '</div>' : '') +
+                        '</div></div>';
+                }
+                tabBodyHtml = '<div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-auto">' + cardsHtml + '</div>';
+            } else if (activeEvalTabM7 === 'kasus') {
+                let cardsHtml = '';
+                for (let i = 0; i < BIZ_CASES_M7.length; i++) {
+                    const sc = BIZ_CASES_M7[i];
+                    const chosenIdx = bizChoicesM7[sc.id];
+                    const hasAnswered = chosenIdx !== undefined;
+                    let optsHtml = '';
+                    for (let j = 0; j < sc.opts.length; j++) {
+                        const o = sc.opts[j];
+                        let btnCls = 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 hover:border-indigo-500';
+                        let badgeCls = 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300';
+                        if (hasAnswered) {
+                            if (o.correct) { btnCls = 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 text-emerald-900 dark:text-emerald-200'; badgeCls = 'bg-emerald-600 text-white'; }
+                            else if (chosenIdx === j) { btnCls = 'bg-rose-50 dark:bg-rose-950/60 border-rose-500 text-rose-900 dark:text-rose-200'; badgeCls = 'bg-rose-600 text-white'; }
+                            else { btnCls = 'opacity-60 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800'; }
+                        }
+                        optsHtml += '<button type="button" ' + (hasAnswered ? 'disabled' : '') + ' onclick="chooseBizCaseM7(' + sc.id + ', ' + j + ')" class="w-full text-left p-2.5 rounded-xl border-2 font-semibold text-xs flex items-start gap-2.5 transition ' + btnCls + '"><span class="w-5 h-5 rounded-md font-mono text-[11px] font-extrabold flex items-center justify-center shrink-0 mt-0.5 ' + badgeCls + '">' + o.ltr + '</span><span>' + escapeHtml(o.text) + '</span></button>';
+                    }
+                    let fbHtml = '';
+                    if (hasAnswered) {
+                        const sel = sc.opts[chosenIdx];
+                        const fbCls = sel.correct ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-500 text-emerald-900 dark:text-emerald-200' : 'bg-rose-50 dark:bg-rose-950/50 border-rose-500 text-rose-900 dark:text-rose-200';
+                        fbHtml = '<div class="p-2 rounded-xl border-l-4 ' + fbCls + ' text-[11px] leading-relaxed">' + escapeHtml(sel.explain) + '</div>';
+                    }
+                    cardsHtml += '<div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-2"><div class="space-y-1"><span class="inline-block px-2 py-0.5 rounded-full bg-orange-100 dark:bg-orange-950 text-orange-800 dark:text-orange-300 text-[10px] font-extrabold uppercase">' + sc.badge + '</span><p class="text-xs font-bold text-slate-900 dark:text-white leading-snug">' + escapeHtml(sc.title) + '</p></div><div class="space-y-1.5">' + optsHtml + fbHtml + '</div></div>';
+                }
+                tabBodyHtml = '<div class="grid grid-cols-1 lg:grid-cols-2 gap-3 my-auto">' + cardsHtml + '</div>';
+            } else {
+                let itemsHtml = '';
+                for (let i = 0; i < TF_QUIZ_M7.length; i++) {
+                    const q = TF_QUIZ_M7[i];
+                    const chosen = tfChoicesM7[q.id];
+                    const hasAns = chosen !== undefined;
+                    const isCorrect = chosen === q.answer;
+                    let rowCls = 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800';
+                    let numCls = 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200';
+                    if (hasAns) {
+                        rowCls = isCorrect ? 'bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-500' : 'bg-rose-50/70 dark:bg-rose-950/30 border-rose-500';
+                        numCls = isCorrect ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white';
+                    }
+                    const btnStyle = function (val) {
+                        if (!hasAns) return 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 hover:border-indigo-500';
+                        if (chosen === val) return isCorrect ? 'bg-emerald-600 border-emerald-600 text-white' : 'bg-rose-600 border-rose-600 text-white';
+                        if (q.answer === val) return 'bg-emerald-100 dark:bg-emerald-950 border-emerald-500 text-emerald-800 dark:text-emerald-300';
+                        return 'opacity-50 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800';
+                    };
+                    itemsHtml += '<div class="p-3 rounded-2xl border ' + rowCls + ' space-y-1.5 transition"><div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5"><div class="flex items-start gap-2.5 text-xs font-bold text-slate-900 dark:text-white"><span class="w-5 h-5 rounded-md font-mono text-[11px] flex items-center justify-center shrink-0 ' + numCls + '">' + q.id + '</span><span>' + escapeHtml(q.text) + '</span></div><div class="flex gap-1.5 shrink-0"><button type="button" ' + (hasAns ? 'disabled' : '') + ' onclick="answerTfM7(' + q.id + ', \'true\')" class="px-3 py-1 rounded-xl border font-extrabold text-xs transition ' + btnStyle('true') + '">Benar</button><button type="button" ' + (hasAns ? 'disabled' : '') + ' onclick="answerTfM7(' + q.id + ', \'false\')" class="px-3 py-1 rounded-xl border font-extrabold text-xs transition ' + btnStyle('false') + '">Salah</button></div></div>' + (hasAns ? '<div class="p-2 rounded-xl bg-white/80 dark:bg-slate-900/80 border-l-4 ' + (isCorrect ? 'border-emerald-600' : 'border-rose-600') + ' text-[11px] text-slate-700 dark:text-slate-200">' + escapeHtml(q.explain) + '</div>' : '') + '</div>';
+                }
+                tabBodyHtml = '<div class="space-y-2 my-auto">' + itemsHtml + '</div>';
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">Babak 5 • Simulasi Evaluasi Pra-UTS</span>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Refleksi Konsep, 4 Kasus Heuristik & Severity, & Kuis Kilat</h2>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-1.5">
+                            <div class="inline-flex p-1 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                                <button type="button" onclick="activeEvalTabM7='refleksi';renderCurrentSlide();" class="px-3 py-1.5 rounded-xl text-xs font-extrabold transition ${activeEvalTabM7 === 'refleksi' ? 'bg-indigo-600 text-white' : 'text-slate-600 dark:text-slate-300'}">💡 3 Refleksi Konsep</button>
+                                <button type="button" onclick="activeEvalTabM7='kasus';renderCurrentSlide();" class="px-3 py-1.5 rounded-xl text-xs font-extrabold transition ${activeEvalTabM7 === 'kasus' ? 'bg-indigo-600 text-white' : 'text-slate-600 dark:text-slate-300'}">🎯 4 Kasus Evaluasi</button>
+                                <button type="button" onclick="activeEvalTabM7='kuis';renderCurrentSlide();" class="px-3 py-1.5 rounded-xl text-xs font-extrabold transition ${activeEvalTabM7 === 'kuis' ? 'bg-indigo-600 text-white' : 'text-slate-600 dark:text-slate-300'}">⚡ 5 Kuis Benar/Salah</button>
+                            </div>
+                            <button type="button" onclick="bizChoicesM7={};tfChoicesM7={};openReflectionKey={1:false,2:false,3:false};renderCurrentSlide();" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 transition">Reset</button>
+                        </div>
+                    </div>
+                    ${tabBodyHtml}
+                    ${slideBridgeNext("Selanjutnya di Slide 17: rangkuman 5 poin kunci Pertemuan 7 dan daftar referensi utama.")}
+                </div>
+            `;
+        }
+
+        function renderSlide17() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Setelah menyelesaikan evaluasi di Slide 16, mari kita rangkum 5 prinsip utama Evaluasi Heuristik, Triangulasi, dan Portofolio UTS.")}
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">Babak 5 • Rangkuman & Referensi Akademik</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Lima Poin Kunci Pertemuan 7 & Daftar Referensi</h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 my-auto">
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-3">
+                            <h3 class="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider"><i class="fa-solid fa-list-check text-indigo-600 mr-1.5"></i>5 Poin Kunci Pertemuan 7</h3>
+                            <ol class="space-y-2 text-xs text-slate-700 dark:text-slate-300 list-decimal list-inside leading-relaxed">
+                                <li><strong>Evaluasi Dini di Tahap Lo-Fi:</strong> Menguji kerangka hitam-putih (Wireframe) menghemat waktu revisi hingga puluhan kali lipat dibandingkan menunggu desain akhir selesai.</li>
+                                <li><strong>Triangulasi 3 Evaluator:</strong> Gabungkan perspektif <em>Peer Review Silang</em> (alur & heuristik), <em>Responden Dosen</em> (ketajaman MVP), dan <em>Pemilik Usaha/Objek Serupa</em> (realitas kasir & pembeli).</li>
+                                <li><strong>10 Heuristik Nielsen & Severity (0–4):</strong> Gunakan 10 prinsip Nielsen sebagai kompas inspeksi dan utamakan memperbaiki temuan ber-skor <strong>Severity 3 (Mayor)</strong> & <strong>Severity 4 (Bencana Usability)</strong>.</li>
+                                <li><strong>Iterasi Langsung di Atas Kanvas:</strong> Pasang pin lokasi masalah (<code>📍 #1, #2, #3</code>) dan langsung revisi komponen di kanvas Wireframe untuk membuktikan masalah telah selesai.</li>
+                                <li><strong>Portofolio UTS Berbasis Bukti (Traceability):</strong> Sajikan cerita proyek yang utuh dari riset masalah (<code>LKM 01–03</code>), MVP (<code>LKM 04</code>), Sitemap/Flow (<code>LKM 05</code>), hingga iterasi Wireframe (<code>LKM 06–07</code>).</li>
+                            </ol>
+                        </div>
+
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 space-y-3">
+                            <h3 class="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider"><i class="fa-solid fa-book-open text-indigo-600 mr-1.5"></i>Daftar Referensi Utama</h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                                <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"><strong class="text-indigo-700 dark:text-indigo-300">Nielsen, J. (1994)</strong><br><em>Usability Engineering (10 Usability Heuristics & Severity Ratings).</em> Morgan Kaufmann.</div>
+                                <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"><strong class="text-indigo-700 dark:text-indigo-300">Krug, S. (2009)</strong><br><em>Rocket Surgery Made Easy: The Do-It-Yourself Guide to Finding and Fixing Usability Problems.</em> New Riders.</div>
+                                <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"><strong class="text-indigo-700 dark:text-indigo-300">Greever, T. (2020)</strong><br><em>Articulating Design Decisions: Communicate with Stakeholders (2nd ed.).</em> O'Reilly Media.</div>
+                                <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"><strong class="text-indigo-700 dark:text-indigo-300">Moran, K., & Gordon, K. (2023)</strong><br><em>How to Conduct a Heuristic Evaluation.</em> Nielsen Norman Group (nngroup.com).</div>
+                                <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"><strong class="text-indigo-700 dark:text-indigo-300">Polson, P. G., et al. (1992)</strong><br><em>The Cognitive Walkthrough Method: A Practitioner's Guide.</em> John Wiley & Sons.</div>
+                                <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"><strong class="text-indigo-700 dark:text-indigo-300">Interaction Design Foundation</strong><br><em>Building a UX Design Portfolio & Case Study Storytelling.</em> interaction-design.org.</div>
+                            </div>
+                        </div>
+                    </div>
+                    ${slideBridgeNext("Terakhir di Slide 18: panduan langkah kerja mengerjakan Workspace LKM 07 dan menyiapkan berkas Portofolio UTS!")}
+                </div>
+            `;
+        }
+
+        function renderSlide18() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Seluruh materi Pertemuan 7 (dan paruh pertama semester) telah selesai! Sekarang saatnya mengeksekusi evaluasi & iterasi di LKM 07.")}
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Babak 5 • Eksekusi Praktikum 7 & Persiapan UTS (Bobot 5%)</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Langkah Kerja Menuju Workspace LKM 07 & Paket Portofolio UTS</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                            Buka file <strong><code class="font-mono">Pertemuan 7 - Praktikum 7_ Workspace Evaluasi Heuristik, Iterasi Kanvas, & Portofolio UTS (LKM 07).html</code></strong> dan ikuti 4 langkah terstruktur berikut:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 my-auto text-xs">
+                        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <span class="w-7 h-7 rounded-xl bg-indigo-600 text-white font-extrabold flex items-center justify-center">1</span>
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Tarik Master .JSON (LKM 01–06)</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Klik <strong>Tarik dari LKM 06 Lokal</strong> atau <strong>Muat .JSON</strong> untuk memuat otomatis seluruh kanvas Wireframe Anda beserta ringkasan benang merah <code>LKM 01–06</code>, lalu isi profil 3 Evaluator.
+                            </p>
+                        </div>
+
+                        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <span class="w-7 h-7 rounded-xl bg-rose-600 text-white font-extrabold flex items-center justify-center">2</span>
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Pasang Min. 3 Pin Triangulasi</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Aktifkan <strong>📍 Mode Pasang Pin Evaluasi</strong>, klik titik masalah di atas kanvas untuk menaruh Pin <code>#1, #2, #3</code> (dari Peer, Dosen, & Pemilik Usaha), pilih Heuristik & <em>Severity Rating</em>-nya.
+                            </p>
+                        </div>
+
+                        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <span class="w-7 h-7 rounded-xl bg-amber-500 text-slate-950 font-extrabold flex items-center justify-center">3</span>
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Revisi Langsung di Kanvas (Iterasi)</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Aktifkan <strong>🛠️ Mode Edit & Perbaiki Kanvas</strong> untuk langsung menyempurnakan komponen Wireframe sesuai pin masukan tadi, dan catat tindakan perbaikannya.
+                            </p>
+                        </div>
+
+                        <div class="p-4 rounded-3xl bg-emerald-50/80 dark:bg-emerald-950/30 border-2 border-emerald-500 space-y-2">
+                            <span class="w-7 h-7 rounded-xl bg-emerald-600 text-white font-extrabold flex items-center justify-center">4</span>
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Unduh PDF Portofolio UTS & .JSON</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Lengkapi ringkasan eksekutif <em>Pitching UTS</em>, lalu unduh <strong>Laporan Evaluasi & Portofolio Pra-UTS (PDF A4)</strong> beserta <strong>Master .JSON (LKM 01–07)</strong>!
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="p-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-emerald-600 text-white text-center">
+                        <p class="text-xs sm:text-sm font-bold"><i class="fa-solid fa-trophy mr-1.5"></i>Pertemuan Berikutnya (Pertemuan 8 — Ujian Tengah Semester / UTS): Pengumpulan & Presentasi Portofolio Studi Kasus Proyek UI/UX Tahap 1–2!</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // =========================================================================
+        // DAFTAR 18 SLIDE PERTEMUAN 7
+        // =========================================================================
+        const SLIDES = [
+            { id: 1, category: "Pengantar", title: "Pengantar Pertemuan 7: Gerbang Validasi Pra-UTS & Peta 5 Babak", render: renderSlide1 },
+            { id: 2, category: "Babak 1 · Urgensi Evaluasi", title: "Mengapa Wajib Menguji di Tahap Low-Fidelity Wireframe?", render: renderSlide2 },
+            { id: 3, category: "Babak 1 · Triangulasi", title: "Metode Triangulasi 3 Evaluator: Peer, Dosen, & Pemilik Usaha", render: renderSlide3 },
+            { id: 4, category: "Babak 2 · Heuristik #1–#5", title: "10 Heuristik Kegunaan Jakob Nielsen: Prinsip #1 s/d #5", render: renderSlide4 },
+            { id: 5, category: "Babak 2 · Heuristik #6–#10", title: "10 Heuristik Kegunaan Jakob Nielsen: Prinsip #6 s/d #10", render: renderSlide5 },
+            { id: 6, category: "Simulasi Interaktif 1", title: "Inspektor Visual 10 Heuristik pada Layar Wireframe UMKM", render: renderSlide6 },
+            { id: 7, category: "Babak 2 · Skala Keparahan", title: "Mengukur Prioritas Masalah dengan Severity Rating (0–4)", render: renderSlide7 },
+            { id: 8, category: "Simulasi Interaktif 2", title: "Kalibrasi Skor Keparahan: Kosmetik (Sev 1) vs Bencana (Sev 4)", render: renderSlide8 },
+            { id: 9, category: "Babak 3 · Walkthrough", title: "Teknik Cognitive Walkthrough Tanpa Menyuapi Responden", render: renderSlide9 },
+            { id: 10, category: "Babak 3 · Instrumen 3 Evaluator", title: "Panduan Menggali Masukan dari Peer, Dosen, & Pemilik Usaha", render: renderSlide10 },
+            { id: 11, category: "Simulasi Interaktif 3", title: "Siklus Iterasi: Dari Pin Masukan Menuju Revisi Kanvas (Before vs After)", render: renderSlide11 },
+            { id: 12, category: "Babak 4 · Benang Merah", title: "Matriks Benang Merah Proyek UI/UX (LKM 01 hingga LKM 07)", render: renderSlide12 },
+            { id: 13, category: "Babak 4 · Struktur Portofolio", title: "Tiga Elemen Wajib dalam Portofolio Desain Pra-UTS", render: renderSlide13 },
+            { id: 14, category: "Simulasi Interaktif 4", title: "Simulasi Alur Presentasi Pitching Portofolio UTS (5 Menit)", render: renderSlide14 },
+            { id: 15, category: "Babak 4 · Standar Mutu", title: "Empat Kesalahan Umum pada Evaluasi & Portofolio UTS", render: renderSlide15 },
+            { id: 16, category: "Babak 5 · Evaluasi Kasus", title: "Refleksi Konsep, 4 Kasus Evaluasi Heuristik, & Kuis Kilat", render: renderSlide16 },
+            { id: 17, category: "Babak 5 · Rangkuman", title: "Lima Poin Kunci Pertemuan 7 & Daftar Referensi Utama", render: renderSlide17 },
+            { id: 18, category: "Babak 5 · Panduan LKM 07", title: "Langkah Kerja Menuju Workspace LKM 07 & Paket Portofolio UTS", render: renderSlide18 }
+        ];
+
+        // =========================================================================
+        // NAVIGASI UTAMA & HANDLER INTERAKSI
+        // =========================================================================
+        function renderCurrentSlide() {
+            const slide = SLIDES[currentSlideIndex];
+            const viewport = document.getElementById('slideViewport');
+            if (!viewport || !slide) return;
+            viewport.innerHTML = slide.render();
+
+            const pct = Math.round(((currentSlideIndex + 1) / TOTAL_SLIDES) * 100);
+            document.getElementById('topProgressBar').style.width = pct + '%';
+            document.getElementById('slideCounterBadge').textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES;
+            document.getElementById('mobileFooterCounter').textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES;
+            document.getElementById('slideCategoryPill').textContent = slide.category;
+            document.getElementById('headerSlideTitle').textContent = slide.title;
+
+            const prevBtn = document.getElementById('prevSlideBtn');
+            const nextBtn = document.getElementById('nextSlideBtn');
+            const nextBtnText = document.getElementById('nextBtnText');
+
+            prevBtn.disabled = currentSlideIndex === 0;
+            if (currentSlideIndex === TOTAL_SLIDES - 1) {
+                nextBtnText.textContent = "Selesai";
+                nextBtn.disabled = true;
+            } else {
+                nextBtnText.textContent = "Selanjutnya";
+                nextBtn.disabled = false;
+            }
+            renderDotsAndDrawer();
+        }
+
+        function renderDotsAndDrawer() {
+            const dotsContainer = document.getElementById('slideDotsContainer');
+            let dotsHtml = '';
+            let drawerHtml = '';
+            for (let idx = 0; idx < SLIDES.length; idx++) {
+                const s = SLIDES[idx];
+                const isActive = idx === currentSlideIndex;
+                const isSim = s.category.indexOf('Simulasi') !== -1 || s.category.indexOf('Evaluasi Kasus') !== -1;
+                const dotClass = isActive
+                    ? 'w-6 bg-indigo-600 dark:bg-indigo-400'
+                    : isSim
+                    ? 'w-2.5 bg-amber-400 dark:bg-amber-500 hover:bg-amber-600'
+                    : 'w-1.5 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400';
+                dotsHtml += '<button type="button" onclick="goToSlide(' + idx + ')" title="' + escapeHtml(s.title) + '" class="h-2 rounded-full transition-all ' + dotClass + '"></button>';
+
+                const itemClass = isActive ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 font-bold' : 'hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-300';
+                const badgeClass = isActive
+                    ? 'bg-indigo-600 text-white'
+                    : isSim
+                    ? 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500';
+                drawerHtml += '<button type="button" onclick="selectSlideFromDrawer(' + idx + ')" class="w-full text-left p-3 rounded-xl transition flex items-start gap-3 ' + itemClass + '"><span class="w-6 h-6 rounded-lg text-xs font-extrabold flex items-center justify-center shrink-0 mt-0.5 ' + badgeClass + '">' + s.id + '</span><div class="min-w-0 flex-1"><div class="text-[10px] uppercase tracking-wider opacity-75">' + escapeHtml(s.category) + '</div><div class="text-xs sm:text-sm leading-snug break-words">' + escapeHtml(s.title) + '</div></div></button>';
+            }
+            if (dotsContainer) dotsContainer.innerHTML = dotsHtml;
+            const drawerList = document.getElementById('drawerSlideList');
+            if (drawerList) drawerList.innerHTML = drawerHtml;
+        }
+
+        function selectSlideFromDrawer(index) {
+            goToSlide(index);
+            toggleSlideDrawer();
+        }
+
+        function changeSlide(direction) {
+            const nextIdx = currentSlideIndex + direction;
+            if (nextIdx >= 0 && nextIdx < TOTAL_SLIDES) {
+                currentSlideIndex = nextIdx;
+                renderCurrentSlide();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function goToSlide(index) {
+            if (index >= 0 && index < TOTAL_SLIDES) {
+                currentSlideIndex = index;
+                renderCurrentSlide();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function toggleSlideDrawer() {
+            const drawer = document.getElementById('slideDrawer');
+            const backdrop = document.getElementById('slideDrawerBackdrop');
+            const isClosed = drawer.classList.contains('-translate-x-full');
+            if (isClosed) {
+                backdrop.classList.remove('hidden');
+                setTimeout(function () { backdrop.classList.remove('opacity-0'); }, 10);
+                drawer.classList.remove('-translate-x-full');
+            } else {
+                backdrop.classList.add('opacity-0');
+                drawer.classList.add('-translate-x-full');
+                setTimeout(function () { backdrop.classList.add('hidden'); }, 200);
+            }
+        }
+
+        function setS6Heur(idx) { s6HeurIdx = idx; renderCurrentSlide(); }
+        function setS8Sev(idx) { s8SevIdx = idx; renderCurrentSlide(); }
+        function setS10Tab(tKey) { s10EvalTab = tKey; renderCurrentSlide(); }
+        function setS11Iter(stKey) { s11IterState = stKey; renderCurrentSlide(); }
+        function setS14Pitch(idx) { s14PitchIdx = idx; renderCurrentSlide(); }
+        function toggleReflectionAnswer(id) { openReflectionKey[id] = !openReflectionKey[id]; renderCurrentSlide(); }
+        function chooseBizCaseM7(id, idx) { bizChoicesM7[id] = idx; renderCurrentSlide(); }
+        function answerTfM7(id, val) { tfChoicesM7[id] = val; renderCurrentSlide(); }
+
+        // =========================================================================
+        // MODAL PENJELASAN ISTILAH & KAMUS
+        // =========================================================================
+        function showTerm(key) {
+            const item = GLOSSARY_DB[key];
+            if (!item) return;
+            document.getElementById('termCategoryBadge').textContent = item.category;
+            document.getElementById('termTitle').textContent = item.title;
+            document.getElementById('termMainDesc').textContent = item.main;
+            document.getElementById('termDetailDesc').textContent = item.detail;
+            document.getElementById('termSourceName').textContent = "Sumber: " + item.source;
+            document.getElementById('termSourceUrl').href = item.url;
+            const modal = document.getElementById('termModalBackdrop');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeTermModal() {
+            const modal = document.getElementById('termModalBackdrop');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function openGlossaryIndex() {
+            document.getElementById('glossarySearchInput').value = '';
+            renderGlossaryList('');
+            const modal = document.getElementById('glossaryModalBackdrop');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeGlossaryIndex() {
+            const modal = document.getElementById('glossaryModalBackdrop');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function selectGlossaryTerm(key) {
+            closeGlossaryIndex();
+            showTerm(key);
+        }
+
+        function renderGlossaryList(query) {
+            const q = String(query || '').trim().toLowerCase();
+            const allKeys = Object.keys(GLOSSARY_DB);
+            const matchedKeys = [];
+            for (let i = 0; i < allKeys.length; i++) {
+                const k = allKeys[i];
+                const item = GLOSSARY_DB[k];
+                if (item.title.toLowerCase().indexOf(q) !== -1 || item.category.toLowerCase().indexOf(q) !== -1 || item.main.toLowerCase().indexOf(q) !== -1) {
+                    matchedKeys.push(k);
+                }
+            }
+            const container = document.getElementById('glossaryListGrid');
+            if (matchedKeys.length === 0) {
+                container.innerHTML = '<div class="col-span-2 text-center py-8 text-xs text-slate-500">Istilah tidak ditemukan.</div>';
+                return;
+            }
+            let html = '';
+            for (let i = 0; i < matchedKeys.length; i++) {
+                const k = matchedKeys[i];
+                const item = GLOSSARY_DB[k];
+                html += '<button type="button" onclick="selectGlossaryTerm(\'' + k + '\')" class="text-left p-4 rounded-2xl bg-slate-50 hover:bg-indigo-50/60 dark:bg-slate-800/50 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800 transition space-y-1"><div class="flex items-center justify-between"><span class="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">' + escapeHtml(item.category) + '</span><span class="text-[10px] text-slate-400">' + escapeHtml(item.source) + '</span></div><div class="text-sm font-extrabold text-slate-900 dark:text-white leading-snug">' + escapeHtml(item.title) + '</div><p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">' + escapeHtml(item.main) + '</p></button>';
+            }
+            container.innerHTML = html;
+        }
+
+        function toggleTheme() {
+            const htmlEl = document.documentElement;
+            const icon = document.getElementById('themeIcon');
+            htmlEl.classList.toggle('dark');
+            const isDark = htmlEl.classList.contains('dark');
+            icon.className = isDark ? 'fa-solid fa-sun text-amber-400 text-sm' : 'fa-solid fa-moon text-sm';
+        }
+
+        document.addEventListener('keydown', function (e) {
+            const activeTag = document.activeElement && document.activeElement.tagName ? document.activeElement.tagName.toLowerCase() : '';
+            if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') return;
+            if (e.key === 'ArrowRight') changeSlide(1);
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+            if (e.key === 'Escape') { closeTermModal(); closeGlossaryIndex(); }
+        });
+
+        renderCurrentSlide();
+    </script>
+</body>
+</html>
