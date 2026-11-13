@@ -1,0 +1,2180 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pertemuan 6: Sketsa Antarmuka, Low-Fidelity Wireframe, & Tata Letak</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <script>
+        if (typeof tailwind !== 'undefined') {
+            tailwind.config = {
+                darkMode: 'class',
+                theme: {
+                    extend: {
+                        fontFamily: {
+                            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                            mono: ['"JetBrains Mono"', 'monospace']
+                        }
+                    }
+                }
+            };
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+        .tech-term {
+            color: #4f46e5;
+            font-weight: 700;
+            text-decoration: underline;
+            text-decoration-style: dotted;
+            text-underline-offset: 3px;
+            cursor: pointer;
+            transition: color 0.15s ease, opacity 0.15s ease;
+        }
+        .dark .tech-term { color: #818cf8; }
+        .tech-term:hover { color: #3730a3; opacity: 0.85; }
+        .dark .tech-term:hover { color: #a5b4fc; }
+
+        #slideViewport, #slideViewport p, #slideViewport span, #slideViewport div,
+        #slideViewport h2, #slideViewport h3, #slideViewport h4, #slideViewport button {
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+        }
+
+        .slide-enter { animation: fadeSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes fadeSlide {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Gaya Khusus Kotak Placeholder Silang [X] Wireframe */
+        .wf-box-x {
+            position: relative;
+            background-color: #e2e8f0;
+            border: 1.5px solid #94a3b8;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .dark .wf-box-x {
+            background-color: #334155;
+            border-color: #64748b;
+        }
+        .wf-box-x::before, .wf-box-x::after {
+            content: "";
+            position: absolute;
+            width: 145%;
+            height: 1.5px;
+            background-color: #94a3b8;
+        }
+        .wf-box-x::before { transform: rotate(35deg); }
+        .wf-box-x::after { transform: rotate(-35deg); }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+        .dark ::-webkit-scrollbar-thumb { background: #334155; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col justify-between transition-colors duration-200">
+
+    <!-- Header Navigasi Atas -->
+    <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800">
+        <div class="w-full h-1 bg-slate-100 dark:bg-slate-800">
+            <div id="topProgressBar" class="h-full bg-indigo-600 dark:bg-indigo-500 transition-all duration-300" style="width: 6%;"></div>
+        </div>
+
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+                <button type="button" onclick="toggleSlideDrawer()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition flex items-center gap-2 text-xs sm:text-sm font-bold shrink-0">
+                    <i class="fa-solid fa-bars-staggered text-indigo-600 dark:text-indigo-400"></i>
+                    <span class="hidden sm:inline">Alur Materi</span>
+                    <span id="slideCounterBadge" class="px-2 py-0.5 text-xs rounded-lg bg-indigo-600 text-white font-bold">1 / 18</span>
+                </button>
+
+                <div class="hidden md:flex items-center gap-2.5 min-w-0">
+                    <span id="slideCategoryPill" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 shrink-0">
+                        Pengantar
+                    </span>
+                    <h1 id="headerSlideTitle" class="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">
+                        Sketsa Antarmuka, Low-Fidelity Wireframe, & Tata Letak
+                    </h1>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 shrink-0">
+                <button type="button" onclick="openGlossaryIndex()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 text-xs sm:text-sm font-bold flex items-center gap-2 transition">
+                    <i class="fa-solid fa-book-open text-indigo-600 dark:text-indigo-400"></i>
+                    <span>Kamus Istilah</span>
+                </button>
+
+                <button type="button" onclick="toggleTheme()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center transition" title="Ganti Tema Layar">
+                    <i id="themeIcon" class="fa-solid fa-moon text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Drawer Daftar Slide -->
+    <div id="slideDrawerBackdrop" onclick="toggleSlideDrawer()" class="fixed inset-0 bg-slate-950/50 backdrop-blur-xs z-40 hidden opacity-0 transition-opacity duration-200"></div>
+    <aside id="slideDrawer" class="fixed top-0 left-0 bottom-0 w-80 sm:w-96 bg-white dark:bg-slate-900 z-50 shadow-2xl border-r border-slate-200 dark:border-slate-800 transform -translate-x-full transition-transform duration-200 flex flex-col">
+        <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Pertemuan 6 • BD7401</span>
+                <h2 class="text-base font-extrabold text-slate-900 dark:text-white mt-0.5">Alur Cerita 18 Slide Pertemuan 6</h2>
+            </div>
+            <button type="button" onclick="toggleSlideDrawer()" class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div id="drawerSlideList" class="p-3.5 overflow-y-auto space-y-1 flex-1"></div>
+        <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 flex items-center justify-between">
+            <span>Gunakan tombol panah Kiri / Kanan</span>
+            <span class="font-bold">18 Slide Interaktif</span>
+        </div>
+    </aside>
+
+    <!-- Area Utama Slide -->
+    <main class="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-5 flex flex-col justify-center">
+        <div id="slideViewport" class="bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl shadow-xs border border-slate-200/80 dark:border-slate-800 p-4 sm:p-8 lg:p-10 min-h-[540px] flex flex-col justify-between relative">
+            <div class="py-12 text-center text-sm text-slate-500">Memuat materi perkuliahan Pertemuan 6...</div>
+        </div>
+    </main>
+
+    <!-- Footer Navigasi Bawah -->
+    <footer class="sticky bottom-0 z-20 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 py-3 px-4 sm:px-6">
+        <div class="max-w-6xl mx-auto flex items-center justify-between gap-4">
+            <button type="button" id="prevSlideBtn" onclick="changeSlide(-1)" class="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                <i class="fa-solid fa-arrow-left text-xs"></i>
+                <span>Sebelumnya</span>
+            </button>
+
+            <div id="slideDotsContainer" class="hidden md:flex items-center gap-1.5 flex-wrap justify-center"></div>
+
+            <div class="md:hidden text-xs font-bold text-slate-500 dark:text-slate-400" id="mobileFooterCounter">1 / 18</div>
+
+            <button type="button" id="nextSlideBtn" onclick="changeSlide(1)" class="px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-indigo-600 hover:bg-indigo-700 text-white transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                <span id="nextBtnText">Selanjutnya</span>
+                <i class="fa-solid fa-arrow-right text-xs"></i>
+            </button>
+        </div>
+    </footer>
+
+    <!-- Modal Penjelasan Istilah -->
+    <div id="termModalBackdrop" onclick="closeTermModal()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl slide-enter max-h-[90vh] overflow-y-auto">
+            <div class="flex items-start justify-between gap-4 mb-4">
+                <div>
+                    <span id="termCategoryBadge" class="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">Kategori</span>
+                    <h3 id="termTitle" class="text-xl font-extrabold text-slate-900 dark:text-white mt-1.5">Nama Istilah</h3>
+                </div>
+                <button type="button" onclick="closeTermModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <p id="termMainDesc" class="text-sm text-slate-700 dark:text-slate-200 leading-relaxed bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200/70 dark:border-slate-700/70"></p>
+                <div class="p-3.5 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-200/70 dark:border-indigo-800/70">
+                    <div class="text-[11px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-1">Konteks & Contoh Penerapan pada Sketsa & Wireframe UMKM:</div>
+                    <p id="termDetailDesc" class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed"></p>
+                </div>
+                <div class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-200 dark:border-slate-800 text-xs px-1">
+                    <span id="termSourceName" class="font-semibold text-slate-400">Referensi</span>
+                    <div class="flex items-center gap-3">
+                        <button type="button" onclick="closeTermModal(); openGlossaryIndex();" class="font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1">
+                            <i class="fa-solid fa-book-open text-[10px]"></i>
+                            <span>Buka Kamus Lengkap</span>
+                        </button>
+                        <a id="termSourceUrl" href="#" target="_blank" rel="noopener noreferrer" class="font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1">
+                            <span>Referensi Web</span>
+                            <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Kamus Istilah Lengkap -->
+    <div id="glossaryModalBackdrop" onclick="closeGlossaryIndex()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-4xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden slide-enter">
+            <div class="p-5 sm:p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white">Kamus Istilah Pertemuan 6: Sketsa, Low-Fidelity Wireframe, & Tata Letak</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Klik pada istilah mana pun untuk membaca arti dan contoh penerapannya dalam perancangan antarmuka UMKM.</p>
+                </div>
+                <button type="button" onclick="closeGlossaryIndex()" class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-sm"></i>
+                    <input id="glossarySearchInput" oninput="renderGlossaryList(this.value)" type="text" placeholder="Cari istilah seperti Wireframe, Low-Fidelity, Crazy 8s, Thumb Zone, Fitts's Law, F-Pattern, Microcopy..." class="w-full pl-10 pr-4 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+            <div id="glossaryListGrid" class="p-5 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+        </div>
+    </div>
+
+    <script>
+        // =========================================================================
+        // DATABASE KAMUS ISTILAH PERTEMUAN 6
+        // =========================================================================
+        const GLOSSARY_DB = {
+            fidelity: {
+                title: "Design Fidelity (Tingkat Ketelitian Visual)",
+                category: "Konsep Dasar UI/UX",
+                main: "Seberapa detail dan mirip sebuah rancangan prototipe dibandingkan dengan produk akhir yang sesungguhnya.",
+                detail: "Dibagi menjadi Low-Fidelity (sketsa kertas & kerangka hitam-putih untuk menguji struktur) serta High-Fidelity (desain penuh warna, foto asli, dan tipografi matang).",
+                source: "Nielsen Norman Group",
+                url: "https://www.nngroup.com/articles/ux-prototype-hi-lo-fidelity/"
+            },
+            papersketch: {
+                title: "Paper Sketching (Sketsa Antarmuka di Kertas)",
+                category: "Eksplorasi Cepat",
+                main: "Teknik menggambar ide tata letak layar secara cepat dengan tangan di atas kertas sebelum menyentuh aplikasi desain di komputer.",
+                detail: "Sangat dianjurkan memakai spidol cukup tebal agar perancang fokus pada susunan kotak utama dan tidak terjebak menggambar detail kecil.",
+                source: "Interaction Design Foundation",
+                url: "https://www.interaction-design.org/literature/topics/sketching"
+            },
+            crazy8: {
+                title: "Crazy 8s (Teknik Sketsa 8 Menit)",
+                category: "Metode Design Sprint",
+                main: "Metode eksplorasi cepat dari Google Design Sprint di mana perancang melipat kertas menjadi 8 kotak dan menggambar 8 alternatif sketsa layar dalam 8 menit.",
+                detail: "Membantu kita tidak langsung terpaku pada ide tata letak pertama yang belum tentu paling nyaman bagi pengguna UMKM.",
+                source: "Google Design Sprint",
+                url: "https://designsprintkit.withgoogle.com/methodology/phase3-sketch/crazy-8s"
+            },
+            wireframe: {
+                title: "Low-Fidelity Wireframe (Kerangka Layar Hitam-Putih)",
+                category: "Artefak Struktur Visual",
+                main: "Cetak biru (blueprint) dua dimensi dari sebuah halaman antarmuka yang hanya menampilkan kerangka tata letak, pembagian ruang, prioritas informasi, dan fungsi tombol tanpa warna dekoratif.",
+                detail: "Ibarat gambar rangka tulangan rumah sebelum dicat: jika letak pintu atau tombolnya salah, sangat mudah digeser dalam hitungan detik.",
+                source: "Interaction Design Foundation",
+                url: "https://www.interaction-design.org/literature/topics/wireframing"
+            },
+            grayscale: {
+                title: "Aturan Skala Abu-Abu (Grayscale) & Placeholder [X]",
+                category: "Standar Wireframe",
+                main: "Prinsip menjaga Wireframe tetap menggunakan warna netral (putih, abu-abu terang, abu-abu gelap, dan hitam) serta mewakili foto dengan kotak bergaris silang [X].",
+                detail: "Tujuannya agar saat dievaluasi, perhatian kita tidak terdistraksi oleh perdebatan warna atau keindahan foto makanan, melainkan fokus pada kemudahan alur.",
+                source: "Nielsen Norman Group",
+                url: "https://www.nngroup.com/articles/wireflows/"
+            },
+            fittslaw: {
+                title: "Fitts's Law (Hukum Fitts)",
+                category: "Psikologi Ergonomi",
+                main: "Hukum ergonomi interaksi yang menyatakan bahwa waktu untuk mencapai suatu target klik bergantung pada jarak menuju target tersebut dan seberapa besar ukuran targetnya.",
+                detail: "Berlaku di semua perangkat: pada HP tombol ditaruh dekat ibu jari bawah; pada Web Desktop tombol ditaruh dekat panel rincian kanan agar kursor mouse tidak jauh menyeberang; pada Tablet POS tombol dibuat ekstra besar untuk jari telunjuk kasir.",
+                source: "Laws of UX",
+                url: "https://lawsofux.com/fittss-law/"
+            },
+            thumbzone: {
+                title: "Thumb Zone (Peta Zona Jangkauan Ibu Jari)",
+                category: "Ergonomi Mobile",
+                main: "Pemetaan area layar ponsel oleh Steven Hoober berdasarkan tingkat kenyamanan ibu jari saat memegang ponsel dengan satu tangan: Natural (Hijau/Bawah), Stretch (Kuning/Tengah), dan Hard (Merah/Sudut Atas).",
+                detail: "Tempatkan tombol aksi utama (CTA) dan navigasi utama di area bawah layar (Natural Zone) pada perangkat Mobile.",
+                source: "Smashing Magazine / Steven Hoober",
+                url: "https://www.smashingmagazine.com/2016/09/the-thumb-zone-designing-for-mobile-users/"
+            },
+            fpattern: {
+                title: "F-Pattern & Vertical Scanning (Pola Pindai Mata)",
+                category: "Perilaku Visual",
+                main: "Pola pergerakan mata pengguna saat memindai halaman: pada layar lebar (Desktop) mata bergerak membentuk huruf F dari kiri-atas ke kanan; sedangkan pada layar sempit (Mobile) mata memindai vertikal lurus ke bawah.",
+                detail: "Memahami pola ini membantu kita menaruh foto, nama produk, dan harga di titik yang pertama kali ditangkap mata.",
+                source: "Nielsen Norman Group",
+                url: "https://www.nngroup.com/articles/f-shaped-pattern-reading-web-content/"
+            },
+            hierarchy: {
+                title: "Visual Hierarchy (Hierarki Visual di Wireframe)",
+                category: "Tata Letak Informasi",
+                main: "Pengaturan ukuran, ketebalan huruf, dan jarak antar-kotak agar mata pengguna otomatis menangkap informasi terpenting terlebih dahulu.",
+                detail: "Meskipun masih hitam-putih, nama menu, harga, dan status stok harus tampak lebih menonjol dibandingkan teks keterangan tambahan.",
+                source: "Nielsen Norman Group",
+                url: "https://www.nngroup.com/articles/visual-hierarchy-ux-definition/"
+            },
+            microcopy: {
+                title: "UX Microcopy (Teks Antarmuka Nyata)",
+                category: "Komunikasi Antarmuka",
+                main: "Kata-kata singkat pada judul halaman, label input, keterangan stok, dan teks di dalam tombol yang memandu pengguna mengambil tindakan.",
+                detail: "Di dalam Wireframe, dilarang menulis teks palsu 'Lorem ipsum' pada label utama dan tombol. Tulislah kata nyata seperti 'Pilih Jam Ambil' atau 'Bayar via QRIS'.",
+                source: "Nielsen Norman Group",
+                url: "https://www.nngroup.com/articles/microcopy-tiny-words-huge-impact/"
+            },
+            wireflow: {
+                title: "Wireflow (Gabungan Wireframe + User Flow)",
+                category: "Dokumentasi Alur Layar",
+                main: "Format dokumentasi desain yang menyandingkan kerangka layar (Wireframe) secara berurutan lengkap dengan panah penghubung dan catatan anotasi interaksi.",
+                detail: "Menunjukkan secara konkret tombol mana di layar SCR-01 yang jika diklik akan membawa pengguna berpindah ke layar SCR-02.",
+                source: "Nielsen Norman Group",
+                url: "https://www.nngroup.com/articles/wireflows/"
+            },
+            emptystate: {
+                title: "Empty State & Error State pada Wireframe",
+                category: "Penanganan Kendala",
+                main: "Tampilan visual pada kerangka layar ketika data sedang kosong/habis (Empty State) atau ketika pengguna belum melengkapi input wajib (Error State).",
+                detail: "Merupakan wujud visual langsung dari cabang 'Jika TIDAK (Edge Case)' pada simbol Decision yang telah Anda buat di LKM 05.",
+                source: "Nielsen Norman Group",
+                url: "https://www.nngroup.com/articles/empty-state-interface-design/"
+            },
+            glanceability: {
+                title: "Glanceability (Keterbacaan Sekilas)",
+                category: "Desain Layar Kasir",
+                main: "Kemudahan suatu layar untuk dibaca dan dipahami isinya hanya dalam lirikan mata 1–2 detik dari jarak setengah meter.",
+                detail: "Sangat krusial untuk layar Backstage UMKM (SCR-05) baik di HP maupun Tablet POS meja kasir.",
+                source: "Interaction Design Foundation",
+                url: "https://www.interaction-design.org/literature/topics/mobile-ux-design"
+            }
+        };
+
+        function escapeHtml(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function term(key, customLabel) {
+            const item = GLOSSARY_DB[key];
+            if (!item) return customLabel || key;
+            const label = customLabel || item.title.split(' (')[0];
+            return '<span class="tech-term" onclick="showTerm(\'' + key + '\')">' + label + '</span>';
+        }
+
+        function slideBridgeTop(prevHookText) {
+            return `
+                <div class="px-3.5 py-2 rounded-2xl bg-slate-100/90 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700/80 flex items-center gap-2.5 text-xs text-slate-600 dark:text-slate-300">
+                    <span class="px-2 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-extrabold text-[10px] uppercase shrink-0">🔗 Sambungan Cerita</span>
+                    <span class="font-medium leading-snug">${prevHookText}</span>
+                </div>
+            `;
+        }
+
+        function slideBridgeNext(nextTeaserText) {
+            return `
+                <div class="px-4 py-2.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/35 border border-indigo-200/80 dark:border-indigo-800/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-700 dark:text-slate-200">
+                    <div class="flex items-center gap-2">
+                        <span class="text-indigo-600 dark:text-indigo-400 font-extrabold shrink-0">👉 Selanjutnya:</span>
+                        <span class="font-semibold leading-snug">${nextTeaserText}</span>
+                    </div>
+                    <button type="button" onclick="changeSlide(1)" class="self-start sm:self-center px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-[11px] shrink-0 transition">
+                        Lanjut Slide Berikutnya &rarr;
+                    </button>
+                </div>
+            `;
+        }
+
+        // =========================================================================
+        // STATE INTERAKTIF 18 SLIDE PERTEMUAN 6
+        // =========================================================================
+        let currentSlideIndex = 0;
+        const TOTAL_SLIDES = 18;
+
+        let s3FidelityTab = 'lofi'; // 'sketch' | 'lofi' | 'hifi'
+        let s6DeviceTab = 'mobile'; // 'mobile' | 'desktop' | 'tablet'
+        let s7ErgoMode = 'mobile';  // 'mobile' | 'desktop'
+        let s7ThumbZone = 'natural';// 'natural' | 'stretch' | 'hard'
+        let s8ScanMode = 'card';    // 'card' | 'pattern'
+        let s10CopyMode = 'real';   // 'lorem' | 'real'
+        let s11PosMode = 'mobile';  // 'mobile' | 'tablet'
+        let s12ScreenIdx = 0;       // 0 (SCR-01), 1 (SCR-02), 2 (SCR-04), 3 (SCR-05)
+        let openReflectionKey = { 1: false, 2: false, 3: false };
+
+        let activeEvalTabM6 = 'refleksi'; // 'refleksi' | 'kasus' | 'kuis'
+        let bizChoicesM6 = {};
+        let tfChoicesM6 = {};
+
+        const BIZ_CASES_M6 = [
+            {
+                id: 1,
+                badge: "🎯 Kasus Wireframe 1 · Jebakan High-Fidelity Dini",
+                title: "Saat sesi praktikum pembuatan Wireframe dimulai, seorang mahasiswa menghabiskan 90 menit hanya untuk memilih gradasi warna tombol dan mencari foto makanan beresolusi tinggi di internet, sehingga baru menyelesaikan 1 layar. Mengapa cara kerja ini keliru?",
+                opts: [
+                    { ltr: "A", text: "Karena melanggar prinsip Low-Fidelity Wireframe: seharusnya fokus dulu menyusun struktur 3 zona layar menggunakan skala abu-abu (Grayscale) dan kotak silang [X] untuk seluruh layar prioritas agar alurnya tuntas.", correct: true, explain: "Tepat sekali! Pada tahap Wireframing, kecepatan menyusun tata letak dan kelengkapan alur layar jauh lebih penting daripada dekorasi warna dan foto." },
+                    { ltr: "B", text: "Karena mahasiswa tersebut seharusnya membeli foto berbayar terlebih dahulu sebelum membuka Figma.", correct: false, explain: "Keliru. Pada tahap Low-Fidelity Wireframe, foto asli sama sekali belum diperlukan dan cukup diwakili oleh kotak placeholder [X]." }
+                ]
+            },
+            {
+                id: 2,
+                badge: "🎯 Kasus Wireframe 2 · Ergonomi Lintas Perangkat (Mobile vs Desktop/POS)",
+                title: "Pada layar HP (Mobile), tombol CTA utama diletakkan di Sticky Bottom Bar bawah agar dekat ibu jari. Namun saat merancang layar Web Desktop (1280x800 px), mengapa tombol CTA sebaiknya diletakkan di dalam Panel Ringkasan Samping Kanan (Sticky Side Panel)?",
+                opts: [
+                    { ltr: "A", text: "Karena di layar lebar Desktop interaksi menggunakan kursor mouse/trackpad; menempatkan tombol CTA menyatu di panel rincian kanan memperpendek jarak tempuh kursor sesuai Fitts's Law.", correct: true, explain: "Sangat tajam! Di layar lebar Desktop, mata memindai katalog di kiri dan mengunci rincian serta tombol eksekusi di panel kanan tanpa perlu menggulir jauh ke dasar halaman." },
+                    { ltr: "B", text: "Karena pengguna laptop mengetik menggunakan ibu jari kaki.", correct: false, explain: "Keliru. Perbedaan perangkat mengubah cara interaksi fisik: dari jangkauan ibu jari (Mobile) menjadi jarak kursor mouse (Desktop) atau telunjuk di meja (Tablet POS)." }
+                ]
+            },
+            {
+                id: 3,
+                badge: "🎯 Kasus Wireframe 3 · Bahaya Teks Palsu 'Lorem Ipsum'",
+                title: "Mengapa penggunaan teks palsu 'Lorem ipsum dolor sit amet' pada judul kartu menu dan label tombol di dalam Low-Fidelity Wireframe sangat dilarang dalam standar UX?",
+                opts: [
+                    { ltr: "A", text: "Karena teks palsu menyembunyikan masalah panjang karakter asli dan membuat pengguna maupun pemilik UMKM tidak paham fungsi tombol saat Wireframe dievaluasi.", correct: true, explain: "Benar! UX Microcopy (nama menu, harga, status stok, dan teks tombol) wajib ditulis menggunakan bahasa nyata sejak tahap Wireframe." },
+                    { ltr: "B", text: "Karena kalimat Lorem Ipsum memiliki hak cipta berbayar yang mahal.", correct: false, explain: "Lorem Ipsum bebas hak cipta, tetapi buruk bagi UX karena mengaburkan kejelasan komunikasi antarmuka." }
+                ]
+            },
+            {
+                id: 4,
+                badge: "🎯 Kasus Wireframe 4 · Desain Layar Kasir Backstage UMKM (SCR-05)",
+                title: "Pemilik UMKM warung makan meletakkan HP/Tablet kasir di meja sambil berdiri memasak berjarak setengah meter. Desain Wireframe layar kasir (SCR-05) manakah yang menerapkan prinsip Glanceability dengan benar?",
+                opts: [
+                    { ltr: "A", text: "Menampilkan Nomor Tiket dan Nama Item dengan ukuran teks besar dan tebal, disertai 1 tombol aksi besar 'Pesanan Siap Diambil' yang mudah ditekan dalam 1 sentuhan.", correct: true, explain: "Tepat! Prinsip Glanceability memastikan informasi kunci terbaca dalam lirikan 1–2 detik dan tombol mudah ditekan oleh tangan pengelola yang sibuk." },
+                    { ltr: "B", text: "Menampilkan tabel padat berisi 14 kolom angka kecil yang harus digeser ke kiri-kanan menggunakan dua jari.", correct: false, explain: "Tabel kecil yang padat akan menyulitkan pemilik UMKM saat jam sibuk dan memicu kesalahan baca pesanan." }
+                ]
+            }
+        ];
+
+        const TF_QUIZ_M6 = [
+            { id: 1, text: "Pada Low-Fidelity Wireframe, gambar atau foto produk cukup diwakili dengan kotak abu-abu bergaris silang [X] (Image Placeholder) agar perancang fokus pada tata letak.", answer: "true", explain: "Benar. Kotak silang [X] adalah notasi standar internasional dalam pembuatan Wireframe." },
+            { id: 2, text: "Pembagian 3 zona pada layar Web Desktop/Tablet POS menggunakan tata letak melebar (Navigasi Atas/Kiri + Area Utama Kiri 60-70% + Panel Ringkasan & CTA Kanan 30-40%).", answer: "true", explain: "Benar! Layar landscape memanfaatkan lebar horizontal agar pengguna dapat melihat katalog sekaligus rincian pesanan dalam satu pandangan." },
+            { id: 3, text: "Menurut pemetaan Thumb Zone oleh Steven Hoober, area paling bawah layar ponsel adalah zona paling sulit dijangkau oleh ibu jari.", answer: "false", explain: "Salah. Area bawah layar ponsel justru merupakan Natural Zone (zona paling mudah dan nyaman dijangkau ibu jari satu tangan)." },
+            { id: 4, text: "Cabang kondisi 'Jika TIDAK (Edge Case)' dari simbol Decision di LKM 05 wajib memiliki wujud visual pada Wireframe (misalnya tampilan label 'Stok Habis' atau pesan kolom belum diisi).", answer: "true", explain: "Benar. Setiap logika percabangan pada User Flow harus terlihat umpan balik visualnya di atas layar Wireframe." },
+            { id: 5, text: "Wireflow adalah gabungan antara kerangka layar (Wireframe) dan panah alur interaksi (User Flow) beserta catatan anotasi cara kerjanya.", answer: "true", explain: "Benar! Wireflow membantu dosen maupun pengembang memahami layar mana yang terbuka ketika suatu tombol ditekan." }
+        ];
+
+        // =========================================================================
+        // RENDER 18 SLIDE PERTEMUAN 6 (VISUALISASI MULTI-PERANGKAT LENGKAP)
+        // =========================================================================
+        function renderSlide1() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center my-auto">
+                        <div class="lg:col-span-7 space-y-4">
+                            <div class="inline-flex flex-wrap items-center gap-2">
+                                <span class="px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 text-xs font-bold border border-indigo-200/60 dark:border-indigo-800/60">Pertemuan 6 • Tahap 2 (Kerangka Visual & Tata Letak)</span>
+                                <span class="px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 text-xs font-bold border border-emerald-200/60 dark:border-emerald-800/60">S1 Bisnis Digital • Sub-CPMK 2.2 & 2.3 (Bobot 5%)</span>
+                            </div>
+
+                            <h2 class="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 dark:text-white leading-tight tracking-tight">
+                                Sketsa Antarmuka, <span class="text-indigo-600 dark:text-indigo-400">Low-Fidelity Wireframe</span>, & Tata Letak
+                            </h2>
+
+                            <p class="text-xs sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Melanjutkan <strong>Pohon Sitemap (<code>SCR-01..05</code>) & User Flow (LKM 05)</strong> minggu lalu, hari ini kita memberikan wujud visual pertama pada layar-layar tersebut—baik untuk perangkat <strong>Mobile (HP)</strong>, <strong>Web Desktop</strong>, maupun <strong>Tablet Kasir (POS)</strong>. Kita akan mempelajari ${term('papersketch', 'Paper Sketching')}, aturan ${term('wireframe', 'Low-Fidelity Wireframe')}, ergonomi lintas perangkat (${term('thumbzone', 'Thumb Zone')} & ${term('fittslaw', "Fitts's Law")}), ${term('microcopy', 'UX Microcopy')} nyata, hingga merangkai ${term('wireflow', 'Wireflow')}.
+                            </p>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                                <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="px-2 py-0.5 rounded-md bg-indigo-600 text-white text-[11px] font-extrabold">Sub-CPMK 2.2</span>
+                                        <span class="text-xs font-bold text-slate-500">C4, P4</span>
+                                    </div>
+                                    <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">Menerjemahkan daftar halaman Sitemap dan langkah User Flow menjadi sketsa kerangka layar (Low-Fidelity Wireframe) yang proporsional sesuai target perangkat.</p>
+                                </div>
+                                <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="px-2 py-0.5 rounded-md bg-emerald-600 text-white text-[11px] font-extrabold">Sub-CPMK 2.3</span>
+                                        <span class="text-xs text-slate-500">C4, P4</span>
+                                    </div>
+                                    <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">Menerapkan prinsip hierarki visual, ergonomi interaksi (Thumb Zone & Fitts's Law), serta kejelasan teks antarmuka (Microcopy) untuk pelanggan & kasir UMKM.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-5">
+                            <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 space-y-3">
+                                <div>
+                                    <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Alur Cerita 5 Babak (18 Slide)</span>
+                                    <h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white mt-0.5">Klik Babak untuk Melompat</h3>
+                                </div>
+                                <div class="space-y-2 text-xs">
+                                    <button type="button" onclick="goToSlide(1)" class="w-full text-left flex items-start gap-3 p-3 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <span class="w-7 h-7 rounded-xl bg-indigo-600 text-white font-extrabold flex items-center justify-center shrink-0">B1</span>
+                                        <div><strong class="text-slate-900 dark:text-white block">Babak 1: Spektrum Fidelity & Sketsa Cepat (Slide 2–5)</strong><span class="text-slate-500">Sketch vs Lo-Fi vs Hi-Fi, Crazy 8s & 4 aturan Grayscale.</span></div>
+                                    </button>
+                                    <button type="button" onclick="goToSlide(5)" class="w-full text-left flex items-start gap-3 p-3 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <span class="w-7 h-7 rounded-xl bg-emerald-600 text-white font-extrabold flex items-center justify-center shrink-0">B2</span>
+                                        <div><strong class="text-slate-900 dark:text-white block">Babak 2: Zona Perangkat (Mobile, Desktop, POS) (Slide 6–8)</strong><span class="text-slate-500">3 zona per perangkat, Thumb Zone vs Kursor & pola baca.</span></div>
+                                    </button>
+                                    <button type="button" onclick="goToSlide(8)" class="w-full text-left flex items-start gap-3 p-3 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <span class="w-7 h-7 rounded-xl bg-amber-600 text-white font-extrabold flex items-center justify-center shrink-0">B3</span>
+                                        <div><strong class="text-slate-900 dark:text-white block">Babak 3: Komponen UI, Microcopy, & Kasir (Slide 9–12)</strong><span class="text-slate-500">5 komponen Lo-Fi, anti-Lorem Ipsum & inspektor 4 layar.</span></div>
+                                    </button>
+                                    <button type="button" onclick="goToSlide(12)" class="w-full text-left flex items-start gap-3 p-3 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <span class="w-7 h-7 rounded-xl bg-rose-600 text-white font-extrabold flex items-center justify-center shrink-0">B4</span>
+                                        <div><strong class="text-slate-900 dark:text-white block">Babak 4: Wireflow & Tampilan Kendala (Slide 13–15)</strong><span class="text-slate-500">Anotasi Wireflow, visualisasi Decision & 4 kesalahan umum.</span></div>
+                                    </button>
+                                    <button type="button" onclick="goToSlide(15)" class="w-full text-left flex items-start gap-3 p-3 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <span class="w-7 h-7 rounded-xl bg-purple-600 text-white font-extrabold flex items-center justify-center shrink-0">B5</span>
+                                        <div><strong class="text-slate-900 dark:text-white block">Babak 5: Evaluasi 3 Mode & Panduan LKM 06 (Slide 16–18)</strong><span class="text-slate-500">4 kasus keputusan Wireframe, kuis kilat & langkah LKM 06.</span></div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    ${slideBridgeNext("Kita mulai di Slide 2 dengan memahami mengapa desainer profesional selalu memulai dari kerangka hitam-putih (Low-Fidelity) sebelum memberi warna.")}
+                </div>
+            `;
+        }
+
+        function renderSlide2() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Di LKM 05 Anda sudah memilih minimal 4 layar prioritas (SCR). Mengapa kita tidak langsung mendesain layar tersebut dengan warna dan foto asli?")}
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Babak 1 • Ekonomi Perancangan Antarmuka</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Mengapa Wajib Mulai dari ${term('wireframe', 'Low-Fidelity Wireframe')}?</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Membuat desain langsung berwarna penuh (<em>High-Fidelity</em>) tanpa menguji kerangka hitam-putih terlebih dahulu adalah penyebab utama pemborosan waktu dalam proyek UI/UX:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5 text-xs">
+                        <div class="p-3.5 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border-2 border-emerald-500 flex items-center gap-3.5">
+                            <div class="w-24 shrink-0 p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 font-mono text-[9px] space-y-1">
+                                <div class="h-3 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                                <div class="h-7 wf-box-x rounded text-[8px] font-bold">[X]</div>
+                                <div class="h-4 bg-slate-800 text-white rounded text-center leading-4 font-bold">CTA &rarr;</div>
+                            </div>
+                            <div>
+                                <span class="px-2 py-0.5 rounded bg-emerald-600 text-white font-extrabold text-[10px]">REVISI WIREFRAME: 5 DETIK</span>
+                                <p class="font-bold text-slate-900 dark:text-white mt-1">Kotak Abu-Abu Mudah Digeser</p>
+                                <p class="text-slate-600 dark:text-slate-300 text-[11px]">Jika letak tombol kurang pas, cukup tarik kotak hitam-putih dalam 5 detik tanpa beban.</p>
+                            </div>
+                        </div>
+
+                        <div class="p-3.5 rounded-2xl bg-rose-50/70 dark:bg-rose-950/30 border-2 border-rose-400 flex items-center gap-3.5">
+                            <div class="w-24 shrink-0 p-2 rounded-xl bg-gradient-to-b from-orange-100 to-amber-50 dark:from-slate-800 dark:to-slate-900 border border-orange-300 text-[9px] space-y-1">
+                                <div class="h-3 bg-orange-500 rounded"></div>
+                                <div class="h-7 bg-amber-400 text-white rounded flex items-center justify-center"><i class="fa-solid fa-image"></i></div>
+                                <div class="h-4 bg-rose-600 text-white rounded text-center leading-4 font-bold">Bongkar!</div>
+                            </div>
+                            <div>
+                                <span class="px-2 py-0.5 rounded bg-rose-600 text-white font-extrabold text-[10px]">REVISI HI-FI DINI: 5 JAM TERBUANG</span>
+                                <p class="font-bold text-slate-900 dark:text-white mt-1">Sayang Membongkar yang Sudah Dicat</p>
+                                <p class="text-slate-600 dark:text-slate-300 text-[11px]">Sudah lelah memotong foto & memilih warna, ternyata alur tombolnya salah total.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-auto text-xs sm:text-sm">
+                        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                            <div class="flex items-center gap-2 font-extrabold text-indigo-600 dark:text-indigo-400"><i class="fa-solid fa-bolt"></i><span>1. Biaya Revisi 5 Detik vs 5 Jam</span></div>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-xs">
+                                Menggeser atau menghapus kotak abu-abu pada Wireframe hanya butuh <strong>5 detik</strong>. Sebaliknya, membongkar layar yang sudah diberi gradasi warna, bayangan, dan foto produk yang dipotong rapi bisa memakan waktu berjam-jam.
+                            </p>
+                        </div>
+
+                        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                            <div class="flex items-center gap-2 font-extrabold text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-bullseye"></i><span>2. Fokus pada Struktur & Kejelasan</span></div>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-xs">
+                                Tanpa gangguan warna dan foto makanan yang menggugah selera, kita bisa menilai secara jujur: <em>"Apakah harga, status stok, dan tombol pesan di layar ini sudah langsung terlihat jelas?"</em>
+                            </p>
+                        </div>
+
+                        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                            <div class="flex items-center gap-2 font-extrabold text-amber-600 dark:text-amber-400"><i class="fa-solid fa-comments"></i><span>3. Masukan Jujur dari Pemilik UMKM</span></div>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-xs">
+                                Saat melihat gambar kasar hitam-putih, pemilik UMKM tidak sungkan memberi masukan tentang alur kerja. Namun jika diberi desain yang tampak "sudah jadi", mereka sering segan mengoreksi letak tombolnya.
+                            </p>
+                        </div>
+                    </div>
+                    ${slideBridgeNext("Seperti apa perbedaan visual antara Paper Sketch, Low-Fidelity Wireframe, dan High-Fidelity Mockup? Kita lihat simulasinya di Slide 3.")}
+                </div>
+            `;
+        }
+
+        function renderSlide3() {
+            const tabs = {
+                sketch: {
+                    badge: "Tingkat 1 • Eksplorasi Awal di Kertas (5–10 Menit)",
+                    title: "1. Paper Sketch (Sketsa Tangan Kasar)",
+                    desc: "Digambar cepat menggunakan pena/spidol di atas kertas untuk mencoba berbagai kemungkinan susunan layar sebelum membuka komputer.",
+                    visualMockup: `
+                        <div class="max-w-[270px] mx-auto p-3 rounded-[28px] bg-amber-50/90 dark:bg-slate-800 border-4 border-dashed border-slate-500 font-mono text-xs space-y-2 text-slate-800 dark:text-slate-200 shadow-md">
+                            <div class="w-12 h-1.5 bg-slate-400 rounded-full mx-auto mb-1"></div>
+                            <div class="border-b-2 border-dashed border-slate-400 pb-1.5 flex justify-between font-bold text-[11px]"><span>[Warung Makan]</span><span>[Buka]</span></div>
+                            <div class="flex gap-1 text-[9px] font-bold"><span class="px-1.5 py-0.5 border border-dashed border-slate-600">[Semua]</span><span class="px-1.5 py-0.5 border border-dashed border-slate-400">[Paket]</span></div>
+                            <div class="p-2 border-2 border-dashed border-slate-500 rounded-xl flex justify-between items-center gap-2">
+                                <div class="w-9 h-9 border-2 border-dashed border-slate-500 flex items-center justify-center text-[9px] shrink-0">[X]</div>
+                                <div class="flex-1 min-w-0"><div class="font-bold text-[11px]">Ayam Bakar</div><div class="text-[10px]">Rp 22rb • [Ada]</div></div>
+                                <span class="px-1.5 py-1 border-2 border-slate-700 font-extrabold text-[10px]">[+Pilih]</span>
+                            </div>
+                            <div class="p-2 bg-slate-300 dark:bg-slate-700 text-center font-extrabold border-2 border-slate-700 text-[10px]">[ LIHAT PESANAN (1) &rarr; ]</div>
+                        </div>
+                    `,
+                    focus: "Fokus: Kecepatan menuangkan ide dari kepala ke kertas."
+                },
+                lofi: {
+                    badge: "Tingkat 2 • Fokus Utama Pertemuan 6 & LKM 06 Hari Ini",
+                    title: "2. Low-Fidelity Wireframe (Kerangka Digital Skala Abu-Abu)",
+                    desc: "Disusun dengan proporsi ukuran layar nyata menggunakan warna hitam-putih-abu (Grayscale), kotak silang [X] sebagai penanda gambar, dan teks Microcopy asli.",
+                    visualMockup: `
+                        <div class="max-w-[270px] mx-auto p-3 rounded-[28px] bg-white dark:bg-slate-900 border-4 border-slate-700 text-xs space-y-2 text-slate-800 dark:text-slate-200 shadow-lg">
+                            <div class="w-12 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mb-1"></div>
+                            <div class="flex items-center justify-between pb-1.5 border-b border-slate-300 dark:border-slate-700">
+                                <span class="font-extrabold text-slate-900 dark:text-white text-[11px]">Katalog Siang Ini</span>
+                                <span class="px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-800 font-bold text-[9px]">Buka s/d 15.00</span>
+                            </div>
+                            <div class="flex gap-1 text-[9px] font-bold">
+                                <span class="px-2 py-0.5 rounded-full bg-slate-800 text-white">Semua Menu</span>
+                                <span class="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-300">Minuman</span>
+                            </div>
+                            <div class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 flex items-center gap-2.5">
+                                <div class="w-11 h-11 rounded-lg wf-box-x font-mono text-[9px] font-extrabold text-slate-700 dark:text-slate-200 shrink-0"><span class="bg-white/80 dark:bg-slate-900/80 px-1 rounded">FOTO</span></div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="font-extrabold text-slate-900 dark:text-white text-[11px]">Paket Ayam Bakar</div>
+                                    <div class="text-[10px] text-slate-600 dark:text-slate-300">Rp 22.000 • <span class="underline font-bold">Stok: 8</span></div>
+                                </div>
+                                <span class="px-2.5 py-1.5 rounded-lg bg-slate-800 text-white font-extrabold text-[10px] shrink-0">+ Pilih</span>
+                            </div>
+                            <div class="p-2.5 rounded-xl bg-slate-900 text-white text-center font-extrabold text-[11px]">Lanjut Pesan (Rp 22.000) &rarr;</div>
+                        </div>
+                    `,
+                    focus: "Fokus: Mengunci hierarki informasi, kejelasan label tombol, dan ergonomi tata letak."
+                },
+                hifi: {
+                    badge: "Tingkat 3 • Akan Kita Pelajari pada Pertemuan 8–10 (Setelah UTS)",
+                    title: "3. High-Fidelity Mockup (Desain Visual Berwarna Penuh)",
+                    desc: "Tahap akhir setelah struktur Wireframe teruji: menambahkan palet warna brand, tipografi, ikonografi, dan foto produk asli beresolusi tinggi.",
+                    visualMockup: `
+                        <div class="max-w-[270px] mx-auto p-3 rounded-[28px] bg-gradient-to-br from-orange-50 to-amber-50 dark:from-slate-900 dark:to-slate-800 border-4 border-orange-500 text-xs space-y-2 shadow-lg">
+                            <div class="w-12 h-1.5 bg-orange-300 rounded-full mx-auto mb-1"></div>
+                            <div class="flex items-center justify-between pb-1.5 border-b border-orange-200 dark:border-slate-700">
+                                <span class="font-extrabold text-orange-900 dark:text-orange-300 text-[11px]"><i class="fa-solid fa-fire-flame-curved text-orange-500 mr-1"></i>Dapur Minang</span>
+                                <span class="px-2 py-0.5 rounded-full bg-emerald-500 text-white font-bold text-[9px]">● Buka</span>
+                            </div>
+                            <div class="flex gap-1 text-[9px] font-bold">
+                                <span class="px-2 py-0.5 rounded-full bg-orange-600 text-white">Semua Menu</span>
+                                <span class="px-2 py-0.5 rounded-full bg-white text-orange-800 border border-orange-200">Minuman</span>
+                            </div>
+                            <div class="p-2 rounded-xl bg-white dark:bg-slate-900 shadow-sm border border-orange-200 dark:border-slate-700 flex items-center gap-2.5">
+                                <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center text-base shrink-0 shadow-xs"><i class="fa-solid fa-drumstick-bite"></i></div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="font-extrabold text-slate-900 dark:text-white text-[11px]">Paket Ayam Bakar</div>
+                                    <div class="text-[10px] text-emerald-600 font-bold">Rp 22.000 • Sisa 8</div>
+                                </div>
+                                <span class="px-2.5 py-1.5 rounded-xl bg-orange-600 text-white font-extrabold text-[10px] shrink-0 shadow-xs">+ Pilih</span>
+                            </div>
+                            <div class="p-2.5 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 text-white text-center font-extrabold text-[11px] shadow-md">Pesan Sekarang (Rp 22.000) &rarr;</div>
+                        </div>
+                    `,
+                    focus: "Fokus: Estetika visual, identitas warna brand, dan daya tarik emosional."
+                }
+            };
+            const cur = tabs[s3FidelityTab];
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Untuk memahami mengapa kita fokus pada tahap ke-2 hari ini, bandingkan wujud layar Katalog UMKM yang sama dalam 3 tingkat Fidelity berikut.")}
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400">Simulasi Interaktif 1 • Spektrum ${term('fidelity', 'Design Fidelity')}</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Paper Sketch vs ${term('wireframe', 'Lo-Fi Wireframe')} vs Hi-Fi Mockup</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">Klik ketiga tingkatan di bawah ini untuk melihat evolusi dari sketsa kasar menuju desain akhir:</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        <button type="button" onclick="setS3Tab('sketch')" class="p-3 rounded-2xl border text-left transition ${s3FidelityTab === 'sketch' ? 'bg-slate-800 text-white border-slate-800 shadow-xs' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-[10px] font-bold uppercase opacity-80">Tahap Awal</div>
+                            <div class="text-xs sm:text-sm font-extrabold mt-0.5">1. Paper Sketch (Kertas)</div>
+                        </button>
+                        <button type="button" onclick="setS3Tab('lofi')" class="p-3 rounded-2xl border text-left transition ${s3FidelityTab === 'lofi' ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-[10px] font-bold uppercase opacity-80">Fokus Pertemuan 6 (LKM 06)</div>
+                            <div class="text-xs sm:text-sm font-extrabold mt-0.5">2. Low-Fidelity Wireframe</div>
+                        </button>
+                        <button type="button" onclick="setS3Tab('hifi')" class="p-3 rounded-2xl border text-left transition ${s3FidelityTab === 'hifi' ? 'bg-orange-600 text-white border-orange-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-[10px] font-bold uppercase opacity-80">Nanti di Pertemuan 8–10</div>
+                            <div class="text-xs sm:text-sm font-extrabold mt-0.5">3. High-Fidelity Mockup</div>
+                        </button>
+                    </div>
+
+                    <div class="p-4 sm:p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 grid grid-cols-1 lg:grid-cols-12 gap-5 items-center my-auto">
+                        <div class="lg:col-span-7 space-y-2.5 text-xs sm:text-sm">
+                            <span class="px-2.5 py-1 rounded-lg bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-[11px] font-extrabold inline-block">${cur.badge}</span>
+                            <h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">${cur.title}</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">${cur.desc}</p>
+                            <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-semibold text-indigo-600 dark:text-indigo-400 text-xs">${cur.focus}</div>
+                        </div>
+                        <div class="lg:col-span-5">
+                            ${cur.visualMockup}
+                        </div>
+                    </div>
+                    ${slideBridgeNext("Bagaimana cara memulai sketsa cepat di kertas agar tidak buntu menatap layar kosong? Kita pelajari teknik Crazy 8s di Slide 4.")}
+                </div>
+            `;
+        }
+
+        function renderSlide4() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Sebelum membuat Wireframe rapi di layar atau kertas, perancang UX selalu melakukan pemanasan ide lewat Paper Sketching.")}
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Babak 1 • Teknik Eksplorasi Ide Visual</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Mengatasi Buntu Ide dengan ${term('papersketch', 'Paper Sketching')} & ${term('crazy8', 'Crazy 8s')}</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Banyak mahasiswa terpaku selama 30 menit menatap kanvas kosong di Figma karena bingung harus menaruh kotak di mana. Solusi terbaiknya adalah mencorat-coret kertas selama 5–8 menit terlebih dahulu:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center my-auto">
+                        <div class="lg:col-span-7 space-y-2.5 text-xs">
+                            <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-1">
+                                <span class="px-2 py-0.5 rounded bg-indigo-600 text-white font-extrabold text-[10px]">1. Gunakan Spidol / Pena Tebal</span>
+                                <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Cegah Perfeksionisme Dini</h3>
+                                <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    Menggambar dengan pensil tipis membuat kita tergoda menggambar ikon kecil yang rumit. Pena tebal memaksa kita hanya menggambar <strong>kotak besar, judul utama, dan tombol penting</strong>.
+                                </p>
+                            </div>
+
+                            <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-1">
+                                <span class="px-2 py-0.5 rounded bg-emerald-600 text-white font-extrabold text-[10px]">2. Metode ${term('crazy8', 'Crazy 8s')}</span>
+                                <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Lipat Kertas Jadi 4 atau 8 Kotak</h3>
+                                <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    Lipat selembar kertas A4 menjadi beberapa kotak seukuran layar HP/Desktop. Gunakan masing-masing kotak untuk menggambar <code>SCR-01</code>, <code>SCR-02</code>, <code>SCR-04</code>, dan <code>SCR-05</code> secara berurutan.
+                                </p>
+                            </div>
+
+                            <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-1">
+                                <span class="px-2 py-0.5 rounded bg-amber-500 text-white font-extrabold text-[10px]">3. Tidak Perlu Bakat Melukis!</span>
+                                <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Cukup Kotak, Garis, & Teks</h3>
+                                <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    Sketsa UI hanya membutuhkan 3 bentuk dasar: <strong>Persegi panjang</strong> (untuk kartu & tombol), <strong>Kotak silang <code>[X]</code></strong> (untuk foto), dan <strong>Teks label nyata</strong>.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-5 p-4 rounded-3xl bg-amber-50/70 dark:bg-slate-800/70 border-2 border-dashed border-amber-400 dark:border-slate-600 space-y-2.5">
+                            <div class="flex items-center justify-between text-[11px] font-extrabold text-amber-900 dark:text-amber-300">
+                                <span><i class="fa-solid fa-sheet-plastic mr-1"></i>Ilustrasi Kertas A4 Lipat (Crazy 8s / 4 Panel)</span>
+                                <span class="font-mono">8 Menit</span>
+                            </div>
+                            <div class="grid grid-cols-4 gap-1.5 font-mono text-[8px]">
+                                ${[
+                                    { num: '1', scr: 'SCR-01A', desc: 'Katalog List' },
+                                    { num: '2', scr: 'SCR-01B', desc: 'Katalog Grid' },
+                                    { num: '3', scr: 'SCR-02', desc: 'Pilih Varian' },
+                                    { num: '4', scr: 'SCR-03', desc: 'Tagihan QRIS' },
+                                    { num: '5', scr: 'SCR-04', desc: 'Tiket #A14' },
+                                    { num: '6', scr: 'SCR-05A', desc: 'Kasir Masuk' },
+                                    { num: '7', scr: 'SCR-05B', desc: 'Saklar Stok' },
+                                    { num: '8', scr: 'ERROR', desc: 'Stok Habis' }
+                                ].map(b => `
+                                    <div class="p-1.5 rounded-lg bg-white dark:bg-slate-900 border border-dashed border-slate-400 space-y-1">
+                                        <div class="flex justify-between font-bold text-indigo-600"><span>#${b.num}</span><span>${b.scr}</span></div>
+                                        <div class="h-4 wf-box-x rounded"></div>
+                                        <div class="truncate text-slate-600 dark:text-slate-300 font-bold">${b.desc}</div>
+                                        <div class="h-2.5 bg-slate-800 rounded"></div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <p class="text-[10px] text-slate-600 dark:text-slate-300 text-center italic">Garis putus-putus menunjukkan bekas lipatan kertas A4 menjadi 8 kanvas layar mini.</p>
+                        </div>
+                    </div>
+                    ${slideBridgeNext("Apa saja 4 aturan emas yang wajib dipatuhi saat merapikan sketsa menjadi Low-Fidelity Wireframe? Kita bahas di Slide 5.")}
+                </div>
+            `;
+        }
+
+        function renderSlide5() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Sebagai penutup Babak 1, pastikan Low-Fidelity Wireframe yang Anda buat hari ini mematuhi 4 aturan disiplin visual berikut.")}
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Babak 1 • Standar Disiplin ${term('grayscale', 'Grayscale Wireframe')}</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Empat Aturan Emas Penyusunan ${term('wireframe', 'Low-Fidelity Wireframe')}</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Baik Anda menggambar Wireframe di Figma maupun di atas kertas berpetak pada LKM 06 hari ini, patuhi 4 standar industri berikut:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 my-auto text-xs">
+                        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-2.5 flex flex-col justify-between">
+                            <div class="space-y-1.5">
+                                <span class="px-2.5 py-0.5 rounded bg-slate-800 text-white font-extrabold">Aturan 1</span>
+                                <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">100% Skala Abu-Abu (Grayscale)</h3>
+                                <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    Gunakan hanya warna Putih (latar), Abu-abu Muda (kotak kartu), Abu-abu Tua (teks sekunder), dan Hitam/Gelap Pekat (untuk menonjolkan tombol CTA utama).
+                                </p>
+                            </div>
+                            <div class="grid grid-cols-4 gap-1 pt-2 border-t border-slate-200 dark:border-slate-700 font-mono text-[9px] text-center">
+                                <div class="p-1.5 rounded bg-white border border-slate-300 text-slate-800 font-bold">#FFF</div>
+                                <div class="p-1.5 rounded bg-slate-200 text-slate-800 font-bold">#E2E8</div>
+                                <div class="p-1.5 rounded bg-slate-500 text-white font-bold">#6474</div>
+                                <div class="p-1.5 rounded bg-slate-900 text-white font-bold">#0F17</div>
+                            </div>
+                        </div>
+
+                        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-2.5 flex flex-col justify-between">
+                            <div class="space-y-1.5">
+                                <span class="px-2.5 py-0.5 rounded bg-indigo-600 text-white font-extrabold">Aturan 2</span>
+                                <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Kotak Silang <code>[X]</code> untuk Gambar</h3>
+                                <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    Jangan membuang waktu mencari dan memotong foto ayam bakar atau foto baju laundry hari ini! Cukup gambar kotak abu-abu dengan tanda silang <code>[Foto Produk]</code>.
+                                </p>
+                            </div>
+                            <div class="h-10 rounded-xl wf-box-x font-mono text-[10px] font-extrabold text-slate-800 dark:text-white">
+                                <span class="bg-white/90 dark:bg-slate-900/90 px-2 py-0.5 rounded border border-slate-400">[Foto Produk]</span>
+                            </div>
+                        </div>
+
+                        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-2.5 flex flex-col justify-between">
+                            <div class="space-y-1.5">
+                                <span class="px-2.5 py-0.5 rounded bg-emerald-600 text-white font-extrabold">Aturan 3</span>
+                                <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">1 Jenis Huruf (Font) Netral</h3>
+                                <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    Gunakan satu jenis huruf standar yang bersih (seperti Inter atau Plus Jakarta Sans). Bedakan tingkat kepentingan informasi hanya lewat ukuran dan ketebalan (Bold vs Regular).
+                                </p>
+                            </div>
+                            <div class="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 space-y-0.5">
+                                <div class="text-xs font-extrabold text-slate-900 dark:text-white">Judul Bold (16px)</div>
+                                <div class="text-[10px] font-semibold text-slate-500">Sub-info Regular (12px)</div>
+                            </div>
+                        </div>
+
+                        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-2.5 flex flex-col justify-between">
+                            <div class="space-y-1.5">
+                                <span class="px-2.5 py-0.5 rounded bg-amber-500 text-slate-950 font-extrabold">Aturan 4</span>
+                                <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Teks Label & Harga Nyata</h3>
+                                <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    Meskipun gambarnya masih berupa kotak <code>[X]</code>, tulisan pada judul halaman, nama menu, harga, status stok, dan tombol aksi <strong>wajib menggunakan kata-kata nyata</strong>.
+                                </p>
+                            </div>
+                            <div class="p-2 rounded-xl bg-slate-900 text-white text-center font-extrabold text-[11px]">
+                                Pesan (Rp 22.000) &rarr;
+                            </div>
+                        </div>
+                    </div>
+                    ${slideBridgeNext("Babak 1 selesai! Sekarang kita masuk ke Babak 2 (Slide 6): bagaimana pembagian 3 Zona Layar pada perangkat Mobile HP vs Web Desktop vs Tablet Kasir POS?")}
+                </div>
+            `;
+        }
+
+        // SLIDE 6: Anatomi 3 Zona Layar Lintas Perangkat (Mobile vs Web Desktop vs Tablet Kasir POS)
+        function renderSlide6() {
+            const devMap = {
+                mobile: {
+                    title: "1. Perangkat Mobile / Smartphone (360 x 800 px — Vertikal 1 Lajur)",
+                    desc: "Karena layar HP sempit secara horizontal namun memanjang ke bawah, ketiga zona disusun bertumpuk dari atas ke bawah (Top-to-Bottom Stack):",
+                    mockup: `
+                        <div class="max-w-[235px] mx-auto p-3 rounded-[28px] bg-slate-100 dark:bg-slate-800 border-4 border-slate-700 space-y-2 text-[10px] shadow-md">
+                            <div class="text-center font-mono text-[9px] text-slate-400">Mobile: 360 x 800 px</div>
+                            <div class="p-2 rounded-xl bg-indigo-100 dark:bg-indigo-950/80 border-2 border-indigo-500 text-indigo-900 dark:text-indigo-200">
+                                <div class="font-extrabold uppercase text-[9px]">ZONA 1: TOP HEADER (56px)</div>
+                                <div class="flex justify-between font-bold mt-0.5"><span>&larr; Katalog</span><span>[Buka]</span></div>
+                            </div>
+                            <div class="p-2.5 rounded-xl bg-sky-100/80 dark:bg-sky-950/60 border-2 border-dashed border-sky-500 text-sky-900 dark:text-sky-200 space-y-1.5">
+                                <div class="font-extrabold uppercase text-[9px]">ZONA 2: BODY (1 KOLOM SCROLL)</div>
+                                <div class="p-1.5 rounded bg-white dark:bg-slate-900 border border-slate-300 flex gap-1.5 items-center">
+                                    <div class="w-5 h-5 wf-box-x rounded shrink-0"></div>
+                                    <div class="font-bold">Kartu Menu #1</div>
+                                </div>
+                                <div class="p-1.5 rounded bg-white dark:bg-slate-900 border border-slate-300 flex gap-1.5 items-center">
+                                    <div class="w-5 h-5 wf-box-x rounded shrink-0"></div>
+                                    <div class="font-bold">Kartu Menu #2</div>
+                                </div>
+                            </div>
+                            <div class="p-2 rounded-xl bg-emerald-600 text-white border-2 border-emerald-800 shadow-sm">
+                                <div class="font-extrabold uppercase text-[9px]">ZONA 3: STICKY BOTTOM BAR</div>
+                                <div class="font-extrabold text-center mt-0.5">[ Tombol CTA Utama &rarr; ]</div>
+                            </div>
+                        </div>
+                    `,
+                    zones: [
+                        { badge: "ZONA 1: TOP HEADER BAR (ATAS)", color: "bg-indigo-600", title: "Orientasi & Navigasi Kembali", text: "Memuat tombol &larr; Kembali, Judul Halaman, dan status jam operasional toko." },
+                        { badge: "ZONA 2: CONTENT BODY (TENGAH)", color: "bg-sky-600", title: "Area Gulir Vertikal 1 Kolom", text: "Memuat filter kategori (chips) dan tumpukan kartu produk/layanan yang digulir ke bawah dengan jempol." },
+                        { badge: "ZONA 3: STICKY BOTTOM BAR (BAWAH)", color: "bg-emerald-600", title: "Area Eksekusi Ibu Jari (CTA Utama)", text: "Melayang tetap di bawah layar. Memuat total harga & tombol CTA utama berukuran lebar penuh." }
+                    ]
+                },
+                desktop: {
+                    title: "2. Perangkat Web Desktop / Laptop (1280 x 800 px — Landscape Multi-Kolom)",
+                    desc: "Pada layar laptop/PC yang melebar, pengguna tidak memakai Sticky Bottom Bar di dasar layar, melainkan membagi ruang secara horizontal (Kiri Konten Utama 70% & Kanan Panel Ringkasan/CTA 30%):",
+                    mockup: `
+                        <div class="w-full p-3 rounded-2xl bg-slate-100 dark:bg-slate-800 border-4 border-slate-700 space-y-2 text-[9px] shadow-md">
+                            <div class="flex items-center justify-between border-b border-slate-300 dark:border-slate-600 pb-1">
+                                <div class="flex gap-1"><span class="w-2 h-2 rounded-full bg-rose-400"></span><span class="w-2 h-2 rounded-full bg-amber-400"></span><span class="w-2 h-2 rounded-full bg-emerald-400"></span></div>
+                                <span class="font-mono text-slate-400">Web Desktop: 1280 x 800 px (Grid 12 Kolom)</span>
+                            </div>
+                            <!-- Zona 1 Desktop -->
+                            <div class="p-2 rounded-lg bg-indigo-100 dark:bg-indigo-950/80 border-2 border-indigo-500 text-indigo-900 dark:text-indigo-200 flex justify-between items-center font-bold">
+                                <span>ZONA 1: TOP NAVBAR HORIZONTAL (Logo UMKM)</span>
+                                <span>[Katalog] &nbsp; [Lacak Tiket] &nbsp; [Info Toko]</span>
+                            </div>
+                            <!-- Zona 2 & 3 Berdampingan -->
+                            <div class="grid grid-cols-12 gap-2">
+                                <div class="col-span-8 p-2.5 rounded-xl bg-sky-100/80 dark:bg-sky-950/60 border-2 border-dashed border-sky-500 text-sky-900 dark:text-sky-200 space-y-1.5">
+                                    <div class="font-extrabold uppercase">ZONA 2: KONTEN UTAMA KIRI (70% • GRID 3 KOLOM)</div>
+                                    <div class="grid grid-cols-3 gap-1.5">
+                                        <div class="p-1.5 rounded bg-white dark:bg-slate-900 border border-slate-300 text-center"><div class="h-6 wf-box-x rounded mb-1"></div><strong>Item 1</strong></div>
+                                        <div class="p-1.5 rounded bg-white dark:bg-slate-900 border border-slate-300 text-center"><div class="h-6 wf-box-x rounded mb-1"></div><strong>Item 2</strong></div>
+                                        <div class="p-1.5 rounded bg-white dark:bg-slate-900 border border-slate-300 text-center"><div class="h-6 wf-box-x rounded mb-1"></div><strong>Item 3</strong></div>
+                                    </div>
+                                </div>
+                                <div class="col-span-4 p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border-2 border-emerald-500 flex flex-col justify-between">
+                                    <div>
+                                        <div class="font-extrabold uppercase text-emerald-800 dark:text-emerald-300">ZONA 3: PANEL KANAN (30%)</div>
+                                        <div class="mt-1 text-slate-600 dark:text-slate-300">Ringkasan Pesanan & Total Tagihan</div>
+                                    </div>
+                                    <div class="p-1.5 rounded-lg bg-emerald-600 text-white font-extrabold text-center mt-2">[ Tombol CTA &rarr; ]</div>
+                                </div>
+                            </div>
+                        </div>
+                    `,
+                    zones: [
+                        { badge: "ZONA 1: TOP NAVBAR / SIDEBAR", color: "bg-indigo-600", title: "Navigasi Horizontal di Atas Layar", text: "Memuat identitas UMKM di kiri dan menu perpindahan halaman (Katalog, Lacak Pesanan) di kanan atas." },
+                        { badge: "ZONA 2: MAIN CONTENT KIRI (70%)", color: "bg-sky-600", title: "Grid Katalog Multi-Kolom (2–3 Kartu Sejajar)", text: "Memanfaatkan lebar layar laptop untuk menampilkan kartu produk dalam beberapa kolom sehingga hemat guliran." },
+                        { badge: "ZONA 3: STICKY SIDE PANEL KANAN (30%)", color: "bg-emerald-600", title: "Panel Ringkasan Keranjang & CTA", text: "Terletak tetap di sisi kanan layar: menampilkan rincian pesanan yang dipilih beserta tombol CTA utama yang mudah diklik kursor mouse." }
+                    ]
+                },
+                tablet: {
+                    title: "3. Perangkat Tablet Kasir / POS UMKM (1024 x 768 px — Split-Screen Tanpa Scroll)",
+                    desc: "Khusus untuk layar kasir/pengelola UMKM di meja toko (Point of Sale), layar dibagi secara permanen menjadi 2 panel berdampingan agar kasir bisa bekerja cepat dengan jari telunjuk:",
+                    mockup: `
+                        <div class="w-full p-3 rounded-2xl bg-slate-900 border-4 border-slate-600 space-y-2 text-[9px] text-white shadow-md">
+                            <div class="flex justify-between text-slate-400 font-mono"><span>Tablet POS Kasir: 1024 x 768 px (Landscape)</span><span>Tanpa Scroll Panjang</span></div>
+                            <div class="p-2 rounded-lg bg-indigo-900/80 border border-indigo-400 flex justify-between font-bold">
+                                <span>ZONA 1: STATUS BAR TOKO & TAB ANTREAN</span>
+                                <span>[Pesanan Masuk (3)] &nbsp; [Saklar Stok]</span>
+                            </div>
+                            <div class="grid grid-cols-12 gap-2">
+                                <div class="col-span-7 p-2.5 rounded-xl bg-slate-800 border border-sky-400 space-y-1.5">
+                                    <div class="font-extrabold text-sky-300 uppercase">ZONA 2: DAFTAR KARTU ANTREAN KIRI (60%)</div>
+                                    <div class="p-2 rounded bg-slate-700 border-l-4 border-amber-400 flex justify-between font-bold"><span>#A-14 • Rina (2 Item)</span><span class="text-amber-300">Dipilih &rarr;</span></div>
+                                    <div class="p-2 rounded bg-slate-900/60 flex justify-between text-slate-400"><span>#A-15 • Budi (1 Item)</span><span>Menunggu</span></div>
+                                </div>
+                                <div class="col-span-5 p-2.5 rounded-xl bg-slate-800 border-2 border-emerald-400 flex flex-col justify-between">
+                                    <div>
+                                        <div class="font-extrabold text-emerald-300 uppercase">ZONA 3: PANEL AKSI KANAN (40%)</div>
+                                        <div class="mt-1 font-bold">Detail #A-14: 2x Ayam Bakar</div>
+                                    </div>
+                                    <div class="p-2 rounded-lg bg-emerald-500 text-slate-950 font-extrabold text-center mt-2">[ &#10003; TANDAI SIAP DIAMBIL ]</div>
+                                </div>
+                            </div>
+                        </div>
+                    `,
+                    zones: [
+                        { badge: "ZONA 1: TOP STATUS & TAB BAR", color: "bg-indigo-600", title: "Filter Cepat Antrean & Saklar Stok", text: "Baris atas untuk berpindah cepat antara tab 'Pesanan Masuk', 'Siap Diambil', dan 'Saklar Stok Habis'." },
+                        { badge: "ZONA 2: PANEL ANTREAN / MENU KIRI (60%)", color: "bg-sky-600", title: "Daftar Kartu Pesanan Masuk", text: "Menampilkan daftar tiket antrean atau tombol menu berukuran besar yang tinggal disentuh jari telunjuk kasir." },
+                        { badge: "ZONA 3: PANEL EKSEKUSI KANAN (40%)", color: "bg-emerald-600", title: "Rincian Nota Aktif & Tombol 1-Tap Besar", text: "Menampilkan rincian pesanan yang sedang dipilih beserta tombol eksekusi ekstra besar di kanan bawah." }
+                    ]
+                }
+            };
+            const cur = devMap[s6DeviceTab];
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-3.5">
+                    ${slideBridgeTop("Memasuki Babak 2, karena target platform produk UMKM bisa berupa HP, Web Desktop, atau Tablet Kasir, mari kita bedah perbedaan 3 Zona Layarnya!")}
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Babak 2 • Struktur 3 Zona Lintas Perangkat (Sinkron LKM 06)</span>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Anatomi 3 Zona Layar: Mobile vs Desktop vs Tablet POS</h2>
+                        </div>
+                        <div class="flex flex-wrap gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl shrink-0">
+                            <button type="button" onclick="setS6Device('mobile')" class="px-3 py-1.5 rounded-lg text-xs font-extrabold transition ${s6DeviceTab === 'mobile' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 dark:text-slate-300'}">📱 1. Mobile HP</button>
+                            <button type="button" onclick="setS6Device('desktop')" class="px-3 py-1.5 rounded-lg text-xs font-extrabold transition ${s6DeviceTab === 'desktop' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 dark:text-slate-300'}">💻 2. Web Desktop</button>
+                            <button type="button" onclick="setS6Device('tablet')" class="px-3 py-1.5 rounded-lg text-xs font-extrabold transition ${s6DeviceTab === 'tablet' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 dark:text-slate-300'}">🖥️ 3. Tablet Kasir POS</button>
+                        </div>
+                    </div>
+
+                    <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                        <strong>${cur.title}:</strong> ${cur.desc}
+                    </p>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center my-auto">
+                        <div class="lg:col-span-5">
+                            ${cur.mockup}
+                        </div>
+                        <div class="lg:col-span-7 space-y-2.5 text-xs">
+                            ${cur.zones.map(z => `
+                                <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-1">
+                                    <span class="px-2 py-0.5 rounded ${z.color} text-white font-extrabold text-[10px] inline-block">${z.badge}</span>
+                                    <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">${z.title}</h3>
+                                    <p class="text-slate-600 dark:text-slate-300 leading-relaxed">${z.text}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    ${slideBridgeNext("Mengapa letak tombol CTA di Mobile berada di bawah, sedangkan di Desktop/Tablet berada di panel kanan? Kita bedah ergonominya di Slide 7!")}
+                </div>
+            `;
+        }
+
+        // SLIDE 7: Ergonomi Lintas Perangkat: Thumb Zone (Mobile) vs Fitts's Law Cursor & Telunjuk (Desktop/Tablet)
+        function renderSlide7() {
+            const zones = {
+                natural: {
+                    badge: "Zona Hijau (Natural / Easy Zone) • Bagian Bawah Layar HP",
+                    title: "🟢 ZONA NYAMAN IBU JARI (Tempat Wajib untuk Tombol Utama Mobile)",
+                    desc: "Berdasarkan riset Steven Hoober, 75% pengguna memegang HP dengan satu tangan. Area bawah layar adalah titik paling cepat dijangkau ibu jari tanpa mengubah genggaman.",
+                    placement: "Elemen Mobile di Sini: Tombol CTA Utama ('Lanjut Pembayaran', 'Simpan Tiket') & Bottom Navigation Bar.",
+                    colorClass: "border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/30"
+                },
+                stretch: {
+                    badge: "Zona Kuning (Stretch Zone) • Bagian Tengah Layar HP",
+                    title: "🟡 ZONA JANGKAUAN MENENGAH (Tempat Kartu Informasi & Pilihan)",
+                    desc: "Ibu jari masih dapat menjangkau area tengah layar dengan sedikit regangan. Area ini paling nyaman untuk dilihat mata saat menggulir (scrolling) daftar produk.",
+                    placement: "Elemen Mobile di Sini: Kartu katalog menu/jasa, tombol pilih varian/porsi, dan kotak input nama singkat.",
+                    colorClass: "border-amber-400 bg-amber-50/70 dark:bg-amber-950/30"
+                },
+                hard: {
+                    badge: "Zona Merah (Hard / Ow Zone) • Sudut Atas Layar HP",
+                    title: "🔴 ZONA SULIT DIJANGKAU (Hindari Menaruh Tombol Transaksi Utama!)",
+                    desc: "Untuk menekan sudut paling atas layar HP berukuran 6 inci ke atas, pengguna terpaksa menggeser genggaman tangannya atau memakai tangan kedua.",
+                    placement: "Elemen Mobile di Sini: Judul halaman statis, logo toko, tombol Kembali (<), atau aksi hapus yang jarang ditekan.",
+                    colorClass: "border-rose-400 bg-rose-50/70 dark:bg-rose-950/30"
+                }
+            };
+            const cur = zones[s7ThumbZone];
+
+            let bodyContent = '';
+            if (s7ErgoMode === 'mobile') {
+                bodyContent = `
+                    <div class="space-y-3 my-auto">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <button type="button" onclick="setS7Zone('natural')" class="p-2.5 rounded-xl border text-left transition ${s7ThumbZone === 'natural' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                                <div class="text-xs font-extrabold">🟢 1. Natural Zone (Bawah)</div>
+                            </button>
+                            <button type="button" onclick="setS7Zone('stretch')" class="p-2.5 rounded-xl border text-left transition ${s7ThumbZone === 'stretch' ? 'bg-amber-500 text-slate-950 border-amber-500' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                                <div class="text-xs font-extrabold">🟡 2. Stretch Zone (Tengah)</div>
+                            </button>
+                            <button type="button" onclick="setS7Zone('hard')" class="p-2.5 rounded-xl border text-left transition ${s7ThumbZone === 'hard' ? 'bg-rose-600 text-white border-rose-600' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                                <div class="text-xs font-extrabold">🔴 3. Hard Zone (Sudut Atas)</div>
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
+                            <div class="lg:col-span-4">
+                                <div class="max-w-[230px] mx-auto p-3 rounded-[28px] bg-slate-900 border-4 border-slate-700 space-y-2 text-[10px] text-white shadow-xl">
+                                    <div onclick="setS7Zone('hard')" class="cursor-pointer p-2 rounded-xl transition ${s7ThumbZone === 'hard' ? 'bg-rose-600 ring-2 ring-white font-extrabold' : 'bg-rose-900/60 opacity-65'}">
+                                        <div class="flex justify-between"><span>🔴 HARD ZONE</span><span>Sulit</span></div>
+                                        <div class="text-[9px] opacity-90">Judul Statis & &larr; Back</div>
+                                    </div>
+                                    <div onclick="setS7Zone('stretch')" class="cursor-pointer p-3 rounded-xl transition ${s7ThumbZone === 'stretch' ? 'bg-amber-400 text-slate-950 ring-2 ring-white font-extrabold' : 'bg-amber-600/50 text-amber-100 opacity-65'}">
+                                        <div class="flex justify-between"><span>🟡 STRETCH ZONE</span><span>Sedang</span></div>
+                                        <div class="text-[9px] mt-0.5">Area Gulir Kartu Menu & Pilihan</div>
+                                    </div>
+                                    <div onclick="setS7Zone('natural')" class="cursor-pointer p-3 rounded-xl transition ${s7ThumbZone === 'natural' ? 'bg-emerald-500 text-slate-950 ring-2 ring-white font-extrabold' : 'bg-emerald-800/60 text-emerald-100 opacity-65'}">
+                                        <div class="flex justify-between"><span>🟢 NATURAL ZONE</span><span>Mudah!</span></div>
+                                        <div class="mt-1 p-1.5 rounded-lg bg-slate-950 text-white text-center font-extrabold text-[10px]">[ Tombol CTA Utama &rarr; ]</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="lg:col-span-8 p-5 rounded-3xl border-2 ${cur.colorClass} space-y-2.5 text-xs sm:text-sm">
+                                <span class="px-2.5 py-1 rounded-lg bg-slate-900 text-white text-[11px] font-extrabold inline-block">${cur.badge}</span>
+                                <h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">${cur.title}</h3>
+                                <p class="text-slate-700 dark:text-slate-200 leading-relaxed">${cur.desc}</p>
+                                <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-semibold text-indigo-600 dark:text-indigo-400">${cur.placement}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                bodyContent = `
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center my-auto text-xs">
+                        <div class="lg:col-span-5">
+                            <div class="p-3.5 rounded-2xl bg-slate-900 text-white border-4 border-slate-700 space-y-2.5 shadow-lg">
+                                <div class="text-[10px] font-mono text-slate-400 flex justify-between"><span>Layar Desktop / Tablet POS</span><span>Fitts's Law</span></div>
+                                <div class="grid grid-cols-12 gap-2 items-center">
+                                    <div class="col-span-7 p-2.5 rounded-xl bg-slate-800 border border-slate-600 space-y-1.5">
+                                        <div class="font-bold text-sky-300">1. Klik Pilih Menu di Kiri</div>
+                                        <div class="p-2 rounded bg-slate-700 flex justify-between"><span>Ayam Bakar</span><span class="px-1.5 rounded bg-sky-500 text-slate-950 font-extrabold">Klik ①</span></div>
+                                    </div>
+                                    <div class="col-span-5 p-2.5 rounded-xl bg-emerald-950 border-2 border-emerald-400 space-y-2">
+                                        <div class="font-bold text-emerald-300">2. Panel Kanan Dekat</div>
+                                        <div class="text-[10px]">Total: Rp 22.000</div>
+                                        <div class="p-2 rounded-lg bg-emerald-500 text-slate-950 font-extrabold text-center">Klik CTA ② &rarr;</div>
+                                    </div>
+                                </div>
+                                <div class="text-[10px] text-amber-300 text-center">Jarak kursor ① ke ② pendek & ukuran tombol ② besar!</div>
+                            </div>
+                        </div>
+                        <div class="lg:col-span-7 space-y-3 text-xs sm:text-sm">
+                            <div class="p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 space-y-1">
+                                <span class="px-2 py-0.5 rounded bg-indigo-600 text-white font-extrabold text-[10px]">1. ERGONOMI KURSOR MOUSE (WEB DESKTOP)</span>
+                                <h3 class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white">Pendekkan Jarak Tempuh Kursor (${term('fittslaw', "Fitts's Law")})</h3>
+                                <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-xs">
+                                    Pada layar laptop yang lebar, jangan menaruh tombol kecil di pojok yang jauh dari rincian harga. Letakkan <strong>Tombol CTA Utama langsung di bawah rincian harga pada Panel Samping Kanan (Zona 3)</strong> agar kursor langsung mengklik setelah mata memeriksa total harga.
+                                </p>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 space-y-1">
+                                <span class="px-2 py-0.5 rounded bg-emerald-600 text-white font-extrabold text-[10px]">2. ERGONOMI JARI TELUNJUK (TABLET KASIR POS)</span>
+                                <h3 class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white">Tombol Ekstra Besar di Kanan Bawah (&ge; 48–56 px)</h3>
+                                <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-xs">
+                                    Tablet kasir diletakkan di atas meja dan ditekan dengan jari telunjuk tangan kanan. Tempatkan tombol <strong>"Tandai Siap Diambil / Cetak Nota"</strong> berukuran besar di sudut kanan bawah panel agar tangan kasir tidak menutupi layar daftar antrean di sebelah kiri.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-3.5">
+                    ${slideBridgeTop("Menjelaskan alasan ilmiah di balik penempatan tombol pada ketiga perangkat di Slide 6 melalui Thumb Zone dan Fitts's Law.")}
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400">Simulasi Interaktif 2 • Ergonomi Fisik Lintas Perangkat</span>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">${term('thumbzone', 'Thumb Zone (Mobile)')} vs ${term('fittslaw', "Fitts's Law (Desktop & Tablet POS)")}</h2>
+                        </div>
+                        <div class="flex gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl shrink-0">
+                            <button type="button" onclick="setS7ErgoMode('mobile')" class="px-3 py-1.5 rounded-lg text-xs font-extrabold transition ${s7ErgoMode === 'mobile' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 dark:text-slate-300'}">📱 Ergonomi Ibu Jari (Mobile HP)</button>
+                            <button type="button" onclick="setS7ErgoMode('desktop')" class="px-3 py-1.5 rounded-lg text-xs font-extrabold transition ${s7ErgoMode === 'desktop' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 dark:text-slate-300'}">💻 Ergonomi Kursor & Telunjuk (Desktop/POS)</button>
+                        </div>
+                    </div>
+
+                    ${bodyContent}
+                    ${slideBridgeNext("Selain ergonomi tangan, bagaimana cara mata pengguna memindai layar di Mobile vs Desktop? Kita lihat visualisasinya di Slide 8.")}
+                </div>
+            `;
+        }
+
+        // SLIDE 8: Hierarki Visual, Card Layout, & Pola Memindai Mata (Vertical vs F-Pattern)
+        function renderSlide8() {
+            let visualComparison = '';
+            if (s8ScanMode === 'card') {
+                visualComparison = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5 text-xs">
+                        <div class="p-3.5 rounded-2xl bg-rose-50/60 dark:bg-rose-950/20 border border-rose-300 space-y-1.5">
+                            <span class="font-extrabold text-rose-700 dark:text-rose-300 text-[11px] block">❌ TANPA HIERARKI & TANPA CARD (Teks Rata & Rapat):</span>
+                            <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 font-sans text-[11px] leading-tight text-slate-600 dark:text-slate-300">
+                                Paket Ayam Bakar Madu Nasi Lalapan Sambal Harga Rp 22.000 Stok Tersedia 8 Porsi Klik Pilih Di Sini Paket Ikan Nila Bakar Harga Rp 24.000 Stok Habis
+                            </div>
+                        </div>
+                        <div class="p-3.5 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-400 space-y-1.5">
+                            <span class="font-extrabold text-emerald-700 dark:text-emerald-300 text-[11px] block">✅ DENGAN PROXIMITY, KONTRAS 3 TINGKAT, & WHITESPACE:</span>
+                            <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border-2 border-slate-400 flex items-center justify-between gap-2.5">
+                                <div class="w-10 h-10 wf-box-x rounded-lg shrink-0 text-[8px] font-mono font-bold">[X]</div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="font-extrabold text-slate-900 dark:text-white text-xs">1. Paket Ayam Bakar Madu (Bold)</div>
+                                    <div class="text-[10px] text-slate-500">3. Nasi + Lalapan + Sambal (Kecil)</div>
+                                    <div class="text-[11px] font-bold text-slate-900 dark:text-white mt-0.5">Rp 22.000 • <span class="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-[9px]">2. Sisa 8 Porsi</span></div>
+                                </div>
+                                <span class="px-2.5 py-1.5 rounded-lg bg-slate-900 text-white font-extrabold text-[10px] shrink-0">+ Pilih</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                visualComparison = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5 text-xs">
+                        <div class="p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-300 space-y-1.5">
+                            <span class="font-extrabold text-indigo-700 dark:text-indigo-300 text-[11px] block">📱 POLA PINDAI MATA DI MOBILE (VERTICAL SCANNING):</span>
+                            <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 flex items-center gap-3">
+                                <div class="px-2 py-1 rounded bg-indigo-600 text-white font-mono font-extrabold text-[10px]">&darr; Lurus ke Bawah</div>
+                                <p class="text-[11px] text-slate-600 dark:text-slate-300">Pada layar HP yang sempit (1 kolom), mata memindai lurus vertikal dari kartu atas ke kartu bawah, lalu berhenti di pita tombol bawah.</p>
+                            </div>
+                        </div>
+                        <div class="p-3.5 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-400 space-y-1.5">
+                            <span class="font-extrabold text-emerald-700 dark:text-emerald-300 text-[11px] block">💻 POLA PINDAI MATA DI DESKTOP (${term('fpattern', 'F-PATTERN & Z-PATTERN')}):</span>
+                            <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 flex items-center gap-3">
+                                <div class="px-2 py-1 rounded bg-emerald-600 text-white font-mono font-extrabold text-[10px]">Kiri &rarr; Kanan</div>
+                                <p class="text-[11px] text-slate-600 dark:text-slate-300">Pada layar Desktop yang lebar, mata menyapu baris atas dari kiri ke kanan, turun ke katalog kiri, lalu mengunci tombol bayar di panel kanan.</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Setelah tahu letak tombol di setiap perangkat (Slide 7), mari kita atur susunan informasi di dalam kartu produk (Card Layout) dan pola baca mata.")}
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Babak 2 • ${term('hierarchy', 'Visual Hierarchy')} & Pola Pindai Mata</span>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Pengelompokan Kartu (Card) & Pola Pindai Mobile vs Desktop</h2>
+                        </div>
+                        <div class="flex gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl shrink-0">
+                            <button type="button" onclick="setS8ScanMode('card')" class="px-3 py-1.5 rounded-lg text-xs font-extrabold transition ${s8ScanMode === 'card' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 dark:text-slate-300'}">1. Anatomi Kartu (Proximity)</button>
+                            <button type="button" onclick="setS8ScanMode('pattern')" class="px-3 py-1.5 rounded-lg text-xs font-extrabold transition ${s8ScanMode === 'pattern' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 dark:text-slate-300'}">2. Pola Mata (Mobile vs Desktop)</button>
+                        </div>
+                    </div>
+
+                    ${visualComparison}
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-auto text-xs sm:text-sm">
+                        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                            <span class="px-2.5 py-0.5 rounded-lg bg-indigo-600 text-white text-xs font-extrabold">1. Hukum Kedekatan (Proximity)</span>
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Bungkus dalam Komponen Kartu</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-xs">
+                                Kelompokkan Foto <code>[X]</code>, Nama Produk, Harga, Status Stok, dan Tombol Pilih ke dalam satu kotak kartu (<em>Card</em>) berbatas jelas agar tidak bercampur dengan produk lainnya.
+                            </p>
+                        </div>
+
+                        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                            <span class="px-2.5 py-0.5 rounded-lg bg-emerald-600 text-white text-xs font-extrabold">2. Kontras Ukuran Huruf</span>
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">3 Tingkat Ketebalan Teks</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-xs">
+                                Buat perbedaan tegas antara: (1) <strong>Nama Produk & Harga</strong> (Tebal/Bold), (2) <strong>Badge Status Stok</strong> (Kotak label kecil), dan (3) <strong>Rincian isi paket</strong> (Ukuran lebih kecil/abu-abu).
+                            </p>
+                        </div>
+
+                        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                            <span class="px-2.5 py-0.5 rounded-lg bg-amber-500 text-slate-950 text-xs font-extrabold">3. Ruang Kosong (Whitespace)</span>
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Beri Jarak Antar-Elemen</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-xs">
+                                Jangan menempelkan semua kotak rapat-rapat. Beri jarak (<em>padding & margin</em>) antar-kartu agar layar terasa lega dan jari/kursor tidak salah menekan tombol di sebelahnya.
+                            </p>
+                        </div>
+                    </div>
+                    ${slideBridgeNext("Babak 2 selesai! Sekarang kita masuk ke Babak 3 (Slide 9): mengenal 5 komponen UI standar yang paling sering dipakai saat menggambar Wireframe UMKM.")}
+                </div>
+            `;
+        }
+
+        function renderSlide9() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Memasuki Babak 3, Anda tidak perlu bingung menggambar bentuk elemen dari nol. Cukup gunakan 5 komponen UI standar berikut.")}
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">Babak 3 • Blok Bangunan Antarmuka (UI Components)</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Lima Komponen Standar Pembentuk Wireframe UMKM</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Hampir seluruh layar aplikasi pemesanan dan layanan UMKM tersusun dari kombinasi 5 komponen fungsional berikut:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 my-auto text-xs">
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-2.5 flex flex-col justify-between">
+                            <div class="space-y-1.5">
+                                <span class="px-2 py-0.5 rounded bg-indigo-600 text-white font-extrabold text-[10px]">1. FILTER CHIPS</span>
+                                <p class="text-slate-600 dark:text-slate-300 leading-relaxed">Tombol kapsul di bagian atas katalog untuk menyaring kategori menu atau memilih jam layanan dengan 1 sentuhan.</p>
+                            </div>
+                            <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 font-mono text-[10px] flex flex-wrap gap-1">
+                                <span class="px-2 py-0.5 rounded-full bg-slate-900 text-white font-bold">● Semua</span>
+                                <span class="px-2 py-0.5 rounded-full border border-slate-400">Paket</span>
+                            </div>
+                        </div>
+
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-2.5 flex flex-col justify-between">
+                            <div class="space-y-1.5">
+                                <span class="px-2 py-0.5 rounded bg-indigo-600 text-white font-extrabold text-[10px]">2. ITEM CARD & BADGE</span>
+                                <p class="text-slate-600 dark:text-slate-300 leading-relaxed">Kartu daftar produk/jasa yang menyatukan kotak foto <code>[X]</code>, judul, harga, dan label status ketersediaan.</p>
+                            </div>
+                            <div class="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 font-mono text-[10px] flex items-center gap-2">
+                                <div class="w-7 h-7 wf-box-x rounded shrink-0"></div>
+                                <div><strong>Menu A</strong><br>Rp 20rb • <span class="underline">Ada</span></div>
+                            </div>
+                        </div>
+
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-2.5 flex flex-col justify-between">
+                            <div class="space-y-1.5">
+                                <span class="px-2 py-0.5 rounded bg-indigo-600 text-white font-extrabold text-[10px]">3. STEPPER & CHIPS</span>
+                                <p class="text-slate-600 dark:text-slate-300 leading-relaxed">Pengatur jumlah porsi/berat serta tombol pilihan varian (misal: <em>Tidak Pedas / Sedang / Pedas</em>) tanpa ketik manual.</p>
+                            </div>
+                            <div class="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 font-mono text-[10px] flex items-center justify-between font-bold">
+                                <span class="px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-700">-</span>
+                                <span>2 Porsi</span>
+                                <span class="px-2 py-0.5 rounded bg-slate-800 text-white">+</span>
+                            </div>
+                        </div>
+
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-2.5 flex flex-col justify-between">
+                            <div class="space-y-1.5">
+                                <span class="px-2 py-0.5 rounded bg-indigo-600 text-white font-extrabold text-[10px]">4. INPUT RINGKAS</span>
+                                <p class="text-slate-600 dark:text-slate-300 leading-relaxed">Kotak isian teks berlabel jelas di atasnya untuk data yang benar-benar wajib (Nama & Nomor WA).</p>
+                            </div>
+                            <div class="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 font-mono text-[9px] space-y-0.5">
+                                <div class="font-bold">Nama Pemesan *:</div>
+                                <div class="p-1 rounded border border-slate-400 text-slate-400">[Ketik nama...]</div>
+                            </div>
+                        </div>
+
+                        <div class="p-4 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border-2 border-emerald-500 space-y-2.5 flex flex-col justify-between sm:col-span-2 lg:col-span-1">
+                            <div class="space-y-1.5">
+                                <span class="px-2 py-0.5 rounded bg-emerald-600 text-white font-extrabold text-[10px]">5. ACTION / CTA BAR</span>
+                                <p class="text-slate-600 dark:text-slate-300 leading-relaxed">Pita tombol aksi utama (di bawah layar pada Mobile, atau di bawah panel kanan pada Desktop/POS).</p>
+                            </div>
+                            <div class="p-2.5 rounded-xl bg-slate-900 text-white font-mono text-[10px] text-center font-extrabold shadow-xs">
+                                [ Bayar Rp 40.000 &rarr; ]
+                            </div>
+                        </div>
+                    </div>
+                    ${slideBridgeNext("Mengapa di dalam kelima komponen di atas kita dilarang keras menulis kata 'Lorem Ipsum'? Kita buktikan lewat simulasi di Slide 10!")}
+                </div>
+            `;
+        }
+
+        function renderSlide10() {
+            const isLorem = s10CopyMode === 'lorem';
+            let screenPreview = '';
+
+            if (isLorem) {
+                screenPreview = `
+                    <div class="p-5 rounded-3xl bg-rose-50/70 dark:bg-rose-950/20 border-2 border-rose-400 grid grid-cols-1 lg:grid-cols-12 gap-5 items-center text-xs">
+                        <div class="lg:col-span-5">
+                            <div class="max-w-[240px] mx-auto p-3 rounded-[26px] bg-white dark:bg-slate-900 border-4 border-rose-400 space-y-2 font-sans shadow-md">
+                                <div class="font-extrabold text-xs text-slate-900 dark:text-white border-b pb-1.5">Lorem Ipsum Dolor</div>
+                                <div class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center gap-2">
+                                    <div class="w-9 h-9 wf-box-x rounded shrink-0"></div>
+                                    <div class="flex-1"><div class="font-bold text-[11px]">Item Title</div><div class="text-[9px] text-slate-400">Lorem ipsum sit amet</div></div>
+                                    <span class="px-2 py-1 rounded bg-slate-400 text-white font-bold text-[9px]">Button</span>
+                                </div>
+                                <div class="p-2 rounded-xl bg-slate-400 text-white text-center font-bold text-[10px]">Submit Action</div>
+                            </div>
+                        </div>
+                        <div class="lg:col-span-7 space-y-2.5">
+                            <span class="px-2.5 py-1 rounded-lg bg-rose-600 text-white font-extrabold inline-block">Contoh SALAH: Wireframe Penuh "Lorem Ipsum" & Label Abstrak</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Pengguna & Pemilik Toko Sama-Sama Bingung!</h3>
+                            <p class="text-rose-900 dark:text-rose-200 font-semibold leading-relaxed">
+                                <i class="fa-solid fa-circle-xmark mr-1.5"></i><strong>Mengapa Ini Berbahaya?</strong> Karena kita tidak tahu apakah teks harga dan keterangan stok muat di dalam kotak tersebut, dan pengguna tidak tahu apa yang terjadi jika menekan tombol "Submit Action"!
+                            </p>
+                        </div>
+                    </div>
+                `;
+            } else {
+                screenPreview = `
+                    <div class="p-5 rounded-3xl bg-emerald-50/70 dark:bg-emerald-950/20 border-2 border-emerald-500 grid grid-cols-1 lg:grid-cols-12 gap-5 items-center text-xs">
+                        <div class="lg:col-span-5">
+                            <div class="max-w-[240px] mx-auto p-3 rounded-[26px] bg-white dark:bg-slate-900 border-4 border-slate-700 space-y-2 font-sans shadow-md">
+                                <div class="font-extrabold text-xs text-slate-900 dark:text-white border-b pb-1.5">Pilih Paket Laundry [SCR-01]</div>
+                                <div class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center gap-2">
+                                    <div class="w-9 h-9 wf-box-x rounded shrink-0"></div>
+                                    <div class="flex-1"><div class="font-bold text-[11px] text-slate-900 dark:text-white">Cuci + Setrika (2 Hari)</div><div class="text-[9px] text-slate-600 dark:text-slate-300">Rp 7.000/Kg • <span class="underline font-bold">Rak Ada</span></div></div>
+                                    <span class="px-2 py-1 rounded bg-slate-900 text-white font-bold text-[9px]">+ Pilih</span>
+                                </div>
+                                <div class="p-2 rounded-xl bg-slate-900 text-white text-center font-extrabold text-[10px]">Hitung Estimasi & Tiket &rarr;</div>
+                            </div>
+                        </div>
+                        <div class="lg:col-span-7 space-y-2.5">
+                            <span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-extrabold inline-block">Contoh BENAR: Wireframe dengan UX Microcopy Nyata & Spesifik</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Langsung Dipahami dalam 2 Detik!</h3>
+                            <p class="text-emerald-900 dark:text-emerald-200 font-semibold leading-relaxed">
+                                <i class="fa-solid fa-circle-check mr-1.5"></i><strong>Mengapa Ini Tepat?</strong> Teks antarmuka (${term('microcopy', 'Microcopy')}) adalah bagian paling krusial dari UX. Menulis judul, harga, status, dan label tombol yang spesifik membuat layar langsung bisa diuji!
+                            </p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Saat menyusun kelima komponen UI dari Slide 9, kata-kata yang tertulis di atas tombol menentukan apakah pengguna paham atau bingung.")}
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400">Simulasi Interaktif 3 • Kejelasan Komunikasi Layar</span>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Bahaya "Lorem Ipsum" vs Kekuatan ${term('microcopy', 'UX Microcopy')} Nyata</h2>
+                        </div>
+                        <div class="flex gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl self-start shrink-0">
+                            <button type="button" onclick="setS10Copy('real')" class="px-3.5 py-1.5 rounded-lg text-xs font-extrabold transition ${!isLorem ? 'bg-emerald-600 text-white shadow-2xs' : 'text-slate-600 dark:text-slate-300'}">Gunakan Microcopy Nyata (Wajib)</button>
+                            <button type="button" onclick="setS10Copy('lorem')" class="px-3.5 py-1.5 rounded-lg text-xs font-extrabold transition ${isLorem ? 'bg-rose-600 text-white shadow-2xs' : 'text-slate-600 dark:text-slate-300'}">Jebakan Lorem Ipsum (Dilarang)</button>
+                        </div>
+                    </div>
+
+                    <div class="my-auto">
+                        ${screenPreview}
+                    </div>
+                    ${slideBridgeNext("Bagaimana aturan merancang Wireframe khusus untuk layar pengelola/kasir UMKM (Backstage SCR-05) baik di HP maupun Tablet POS? Kita bedah di Slide 11.")}
+                </div>
+            `;
+        }
+
+        // SLIDE 11: Merancang Wireframe Khusus Pengelola UMKM (HP Kasir vs Tablet/Desktop POS)
+        function renderSlide11() {
+            let posMockup = '';
+            if (s11PosMode === 'mobile') {
+                posMockup = `
+                    <div class="max-w-[255px] mx-auto p-3.5 rounded-[28px] bg-white dark:bg-slate-900 border-4 border-slate-700 space-y-2.5 text-xs shadow-lg">
+                        <div class="flex items-center justify-between pb-1.5 border-b border-slate-300 dark:border-slate-700">
+                            <span class="font-extrabold text-[11px] text-slate-900 dark:text-white">HP Kasir UMKM [SCR-05]</span>
+                            <span class="px-2 py-0.5 rounded bg-slate-800 text-white font-mono text-[9px] font-bold">Antrean (2)</span>
+                        </div>
+                        <div class="p-3 rounded-2xl bg-slate-100 dark:bg-slate-800 border-2 border-slate-400 space-y-2">
+                            <div class="flex items-center justify-between">
+                                <span class="px-2.5 py-0.5 rounded-lg bg-slate-900 text-white font-mono text-sm font-extrabold">#A-14</span>
+                                <span class="font-bold text-[11px]">Pemesan: Rina</span>
+                            </div>
+                            <div class="text-xs font-extrabold text-slate-900 dark:text-white">2x Paket Ayam Bakar (Pedas)</div>
+                            <div class="p-2.5 rounded-xl bg-slate-900 text-white text-center font-extrabold text-xs shadow-xs">
+                                &#10003; Tandai Siap Diambil (1-Tap)
+                            </div>
+                        </div>
+                        <div class="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-300 flex items-center justify-between text-[10px] font-bold">
+                            <span>Saklar Stok Ayam Bakar:</span>
+                            <span class="px-2 py-0.5 rounded bg-slate-800 text-white">[ ● Tersedia ]</span>
+                        </div>
+                    </div>
+                `;
+            } else {
+                posMockup = `
+                    <div class="w-full p-3.5 rounded-2xl bg-white dark:bg-slate-900 border-4 border-slate-700 space-y-2 text-[10px] shadow-lg">
+                        <div class="flex items-center justify-between pb-1.5 border-b border-slate-300 dark:border-slate-700 font-bold">
+                            <span class="text-slate-900 dark:text-white">🖥️ Tablet / Desktop POS Kasir [SCR-05]</span>
+                            <span class="px-2 py-0.5 rounded bg-slate-800 text-white font-mono text-[9px]">Split-Screen 2 Panel</span>
+                        </div>
+                        <div class="grid grid-cols-12 gap-2">
+                            <div class="col-span-6 p-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 space-y-1.5">
+                                <div class="font-extrabold text-[9px] uppercase text-slate-500">Kiri: Antrean Masuk</div>
+                                <div class="p-2 rounded-lg bg-white dark:bg-slate-900 border-2 border-slate-800 font-bold flex justify-between"><span>#A-14 (Rina)</span><span>Aktif &rarr;</span></div>
+                                <div class="p-1.5 rounded-lg bg-slate-200/70 dark:bg-slate-700/50 text-slate-500 flex justify-between"><span>#A-15 (Budi)</span><span>Menunggu</span></div>
+                            </div>
+                            <div class="col-span-6 p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border-2 border-slate-500 flex flex-col justify-between space-y-2">
+                                <div>
+                                    <div class="font-mono font-extrabold text-xs text-slate-900 dark:text-white">Tiket #A-14 • Rina</div>
+                                    <div class="font-bold mt-0.5">2x Ayam Bakar (Pedas)</div>
+                                </div>
+                                <div class="p-2 rounded-xl bg-slate-900 text-white text-center font-extrabold">
+                                    &#10003; Tandai Siap (1-Tap)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Selain layar pelanggan di Slide 10, kita wajib merancang Wireframe untuk layar pengelola/kasir UMKM (Backstage SCR-05).")}
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">Babak 3 • Tata Letak Sisi Toko (Backstage UI)</span>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Tiga Aturan Wireframe Layar Kasir UMKM (${term('glanceability', 'Glanceability')})</h2>
+                        </div>
+                        <div class="flex gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl shrink-0">
+                            <button type="button" onclick="setS11Pos('mobile')" class="px-3 py-1.5 rounded-lg text-xs font-extrabold transition ${s11PosMode === 'mobile' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 dark:text-slate-300'}">📱 Mode HP Kasir</button>
+                            <button type="button" onclick="setS11Pos('tablet')" class="px-3 py-1.5 rounded-lg text-xs font-extrabold transition ${s11PosMode === 'tablet' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 dark:text-slate-300'}">🖥️ Mode Tablet / Desktop POS</button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center my-auto">
+                        <div class="lg:col-span-5">
+                            ${posMockup}
+                        </div>
+
+                        <div class="lg:col-span-7 space-y-3 text-xs sm:text-sm">
+                            <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-1">
+                                <div class="flex items-center gap-2 font-extrabold text-indigo-600 dark:text-indigo-400"><i class="fa-solid fa-eye"></i><span>1. Prinsip ${term('glanceability', 'Glanceability')} (Terbaca 1 Detik)</span></div>
+                                <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-xs">
+                                    Tampilkan <strong>Nomor Tiket Antrean (<code>#A-14</code>), Nama Pelanggan, dan Rincian Item</strong> dengan ukuran huruf besar dan kontras tinggi agar terbaca dari jarak setengah meter.
+                                </p>
+                            </div>
+
+                            <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-1">
+                                <div class="flex items-center gap-2 font-extrabold text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-hand-pointer"></i><span>2. Target Sentuh Besar (&ge; 48 px)</span></div>
+                                <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-xs">
+                                    Sesuai ${term('fittslaw', "Fitts's Law")}, buat tombol <strong>"Tandai Siap Diambil"</strong> berukuran lebar penuh di bawah kartu pesanan agar mudah ditekan meskipun jari pengelola sedang sibuk.
+                                </p>
+                            </div>
+
+                            <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-1">
+                                <div class="flex items-center gap-2 font-extrabold text-amber-600 dark:text-amber-400"><i class="fa-solid fa-toggle-on"></i><span>3. Saklar Cepat Stok / Kuota</span></div>
+                                <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-xs">
+                                    Sediakan tombol saklar (<em>Toggle Switch</em>) sederhana <strong>[Tersedia / Habis]</strong> di layar kasir agar pemilik bisa menutup stok menu yang habis hanya dengan 1 sentuhan.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    ${slideBridgeNext("Mari kita bedah contoh lengkap susunan 3 Zona Layar beserta Mockup Visualnya pada keempat layar utama UMKM (SCR-01 s/d SCR-05) di Slide 12!")}
+                </div>
+            `;
+        }
+
+        function renderSlide12() {
+            const screens = [
+                {
+                    code: "SCR-01 (Level 0)",
+                    name: "Layar 1: Beranda Katalog & Status Stok",
+                    headerZone: "Nama UMKM, Badge Status 'Buka • Jam 09.00–17.00', & Tombol 'Lacak Tiket'.",
+                    bodyZone: "Filter Kategori Kapsul ([Semua] [Paket Utama] [Minuman]) + Daftar Kartu Produk (Kotak Foto [X], Nama Menu, Harga Rp, Badge 'Tersedia', & Tombol '+ Pilih').",
+                    bottomZone: "Sticky Bottom Bar (Mobile) / Panel Kanan (Desktop): Ringkasan '1 Item Dipilih • Total Rp 22.000' + Tombol Utama 'Lanjut Pesan &rarr;' (Menuju SCR-02).",
+                    mockupHtml: `
+                        <div class="space-y-2 text-[10px]">
+                            <div class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-300 flex justify-between font-bold"><span>Warung UMKM</span><span class="underline">Lacak Tiket</span></div>
+                            <div class="flex gap-1 font-bold text-[9px]"><span class="px-2 py-0.5 rounded-full bg-slate-900 text-white">Semua</span><span class="px-2 py-0.5 rounded-full border border-slate-300">Paket</span></div>
+                            <div class="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 flex items-center gap-2">
+                                <div class="w-9 h-9 wf-box-x rounded shrink-0"></div>
+                                <div class="flex-1"><div class="font-bold">Ayam Bakar</div><div class="text-[9px]">Rp 22rb • <span class="underline">Ada</span></div></div>
+                                <span class="px-2 py-1 rounded bg-slate-800 text-white font-bold text-[9px]">+ Pilih</span>
+                            </div>
+                            <div class="p-2 rounded-xl bg-slate-900 text-white text-center font-extrabold">1 Item (Rp 22.000) • Lanjut &rarr;</div>
+                        </div>
+                    `
+                },
+                {
+                    code: "SCR-02 (Level 1)",
+                    name: "Layar 2: Pilih Varian & Input Identitas Ringkas",
+                    headerZone: "Tombol '&larr; Kembali ke Katalog' + Judul Halaman 'Rincian Pesanan Anda'.",
+                    bodyZone: "Stepper Jumlah Porsi [- 1 +], Pilihan Kapsul Varian (Misal: Tidak Pedas / Pedas), serta 2 Kotak Input Wajib: 'Nama Pemesan' & 'Nomor WhatsApp'.",
+                    bottomZone: "Sticky Bottom Bar / Panel Kanan: Tombol Utama Lebar Penuh 'Konfirmasi & Lihat Tagihan QRIS &rarr;' (Menuju SCR-03/04).",
+                    mockupHtml: `
+                        <div class="space-y-2 text-[10px]">
+                            <div class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-300 font-bold">&larr; Rincian Pesanan Anda</div>
+                            <div class="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 flex justify-between items-center font-bold"><span>Jumlah Porsi:</span><span>[ - ] 1 [ + ]</span></div>
+                            <div class="flex gap-1 text-[9px] font-bold"><span class="px-2 py-0.5 rounded bg-slate-800 text-white">● Pedas</span><span class="px-2 py-0.5 rounded border">Tidak Pedas</span></div>
+                            <div class="p-1.5 rounded border border-slate-400 text-slate-400 font-mono text-[9px]">Nama Pemesan *: [ Rina... ]</div>
+                            <div class="p-2 rounded-xl bg-slate-900 text-white text-center font-extrabold">Konfirmasi & Tagihan QRIS &rarr;</div>
+                        </div>
+                    `
+                },
+                {
+                    code: "SCR-04 (Level 2)",
+                    name: "Layar 3: Tiket Nota Digital & Pelacakan Status",
+                    headerZone: "Judul Halaman 'Tiket Pesanan Anda' + Badge Nomor Antrean Besar '#A-14'.",
+                    bodyZone: "Indikator Progres 3 Tahap ([● Diterima] &rarr; [○ Sedang Disiapkan] &rarr; [○ Siap Diambil]) + Rincian Item, Total Harga, & Kode QRIS / Bukti Lunas.",
+                    bottomZone: "Sticky Bottom Bar / Panel Kanan: Tombol Utama 'Simpan Gambar Tiket Nota' & Tombol Sekunder 'Kembali ke Beranda'.",
+                    mockupHtml: `
+                        <div class="space-y-2 text-[10px]">
+                            <div class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-300 flex justify-between font-bold"><span>Tiket Nota Digital</span><span class="font-mono font-extrabold">#A-14</span></div>
+                            <div class="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 text-[9px] font-bold text-center">● Diterima &rarr; ● Disiapkan &rarr; ○ Siap</div>
+                            <div class="p-2 rounded-xl border border-dashed border-slate-400 text-[9px] space-y-0.5">
+                                <div class="font-bold">1x Paket Ayam Bakar (Pedas)</div>
+                                <div>Total: Rp 22.000 (QRIS/Tunai)</div>
+                            </div>
+                            <div class="p-2 rounded-xl bg-slate-900 text-white text-center font-extrabold">Simpan Tiket Nota</div>
+                        </div>
+                    `
+                },
+                {
+                    code: "SCR-05 (Backstage)",
+                    name: "Layar 4: Panel Kasir Pengelola UMKM (Sisi Toko)",
+                    headerZone: "Judul 'Panel Kasir UMKM' + Tab Filter Cepat: [Pesanan Baru (2)] | [Atur Saklar Stok].",
+                    bodyZone: "Kartu Pesanan Masuk Berukuran Besar: Nomor Tiket '#A-14 (Rina)', Daftar Item '2x Ayam Bakar Madu (Pedas)', & Status Pembayaran.",
+                    bottomZone: "Tombol Aksi Besar di Bawah Kartu / Panel Kanan POS (Tinggi 48px): '[ &#10003; Tandai Pesanan Siap Diambil ]' (1-Tap Update tanpa ketik chat).",
+                    mockupHtml: `
+                        <div class="space-y-2 text-[10px]">
+                            <div class="p-2 rounded-lg bg-slate-800 text-white flex justify-between font-bold"><span>Kasir UMKM</span><span>Baru (2)</span></div>
+                            <div class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border-2 border-slate-500 space-y-1.5">
+                                <div class="flex justify-between font-extrabold"><span>Tiket #A-14</span><span>Rina</span></div>
+                                <div class="font-bold text-[9px]">1x Ayam Bakar Madu (Pedas)</div>
+                                <div class="p-2 rounded-lg bg-slate-900 text-white text-center font-extrabold">&#10003; Tandai Siap Diambil</div>
+                            </div>
+                            <div class="p-1.5 rounded border border-slate-300 flex justify-between text-[9px] font-bold"><span>Stok Ayam:</span><span>[ ● Tersedia ]</span></div>
+                        </div>
+                    `
+                }
+            ];
+            const cur = screens[s12ScreenIdx];
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-3.5">
+                    ${slideBridgeTop("Keempat layar di bawah ini adalah contoh nyata bagaimana kode layar dari LKM 05 diterjemahkan menjadi spesifikasi 3 zona di LKM 06.")}
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400">Simulasi Interaktif 4 • Inspektor Blueprint 4 Layar Inti (Sinkron LKM 06)</span>
+                        <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Bedah Anatomi 3 Zona pada 4 Layar Prioritas UMKM</h2>
+                        <p class="text-xs text-slate-600 dark:text-slate-300">Klik keempat layar di bawah ini untuk melihat Mockup Wireframe sekaligus rincian Zona 1, Zona 2, dan Zona 3-nya:</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        ${screens.map((s, idx) => `
+                            <button type="button" onclick="setS12Screen(${idx})" class="p-2.5 rounded-xl border text-left transition ${s12ScreenIdx === idx ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                                <div class="text-[10px] font-mono font-bold uppercase opacity-80">${s.code}</div>
+                                <div class="text-xs font-extrabold mt-0.5 line-clamp-1">${s.name.split(': ')[1]}</div>
+                            </button>
+                        `).join('')}
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center my-auto">
+                        <div class="lg:col-span-4">
+                            <div class="max-w-[245px] mx-auto p-3 rounded-[26px] bg-white dark:bg-slate-900 border-4 border-slate-700 shadow-lg">
+                                <div class="w-10 h-1 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mb-2"></div>
+                                ${cur.mockupHtml}
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-8 p-4 rounded-3xl bg-slate-100 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 space-y-2.5 text-xs">
+                            <div class="flex items-center justify-between border-b border-slate-300 dark:border-slate-700 pb-2">
+                                <span class="font-extrabold text-sm text-slate-900 dark:text-white">${cur.name}</span>
+                                <span class="px-2.5 py-0.5 rounded bg-slate-800 text-white font-mono text-[11px] font-bold">${cur.code}</span>
+                            </div>
+                            <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border-l-4 border-indigo-600">
+                                <span class="text-[10px] font-extrabold uppercase text-indigo-600 dark:text-indigo-400 block">1. Zona 1 (Top Header / Navigasi Atas):</span>
+                                <p class="font-semibold text-slate-800 dark:text-slate-100 mt-0.5">${cur.headerZone}</p>
+                            </div>
+                            <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border-l-4 border-sky-500">
+                                <span class="text-[10px] font-extrabold uppercase text-sky-600 dark:text-sky-400 block">2. Zona 2 (Content Body / Area Utama):</span>
+                                <p class="font-semibold text-slate-800 dark:text-slate-100 mt-0.5 leading-relaxed">${cur.bodyZone}</p>
+                            </div>
+                            <div class="p-2.5 rounded-xl bg-slate-900 text-white border-l-4 border-emerald-400">
+                                <span class="text-[10px] font-extrabold uppercase text-emerald-400 block">3. Zona 3 (Sticky Bottom Bar Mobile / Panel Kanan Desktop & POS):</span>
+                                <p class="font-bold mt-0.5">${cur.bottomZone}</p>
+                            </div>
+                        </div>
+                    </div>
+                    ${slideBridgeNext("Babak 3 selesai! Sekarang kita masuk ke Babak 4 (Slide 13): bagaimana menghubungkan keempat layar Wireframe di atas menjadi sebuah Wireflow?")}
+                </div>
+            `;
+        }
+
+        function renderSlide13() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Memasuki Babak 4, gambar Wireframe yang berdiri sendiri sering membingungkan pembaca jika tidak diberi keterangan sambungan alurnya.")}
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">Babak 4 • Dokumentasi Interaksi (${term('wireflow', 'Wireflows')})</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Menyusun ${term('wireflow', 'Wireflow')} & Catatan Anotasi Layar</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Menurut <strong>Nielsen Norman Group</strong>, <strong>Wireflow</strong> adalah standar dokumentasi UX yang menggabungkan tata letak <em>Wireframe</em> dengan panah tujuan <em>User Flow</em> serta catatan penjelasan fungsi (<em>Annotations</em>):
+                        </p>
+                    </div>
+
+                    <div class="p-4 rounded-3xl bg-slate-100 dark:bg-slate-800/70 border border-slate-300 dark:border-slate-700 grid grid-cols-1 md:grid-cols-11 gap-3 items-center text-xs">
+                        <div class="md:col-span-4 p-3 rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-500 space-y-1.5 relative">
+                            <span class="px-2 py-0.5 rounded bg-indigo-600 text-white font-mono font-bold text-[10px]">[SCR-01] Katalog Menu</span>
+                            <div class="p-2 rounded bg-slate-100 dark:bg-slate-800 flex justify-between items-center text-[10px]">
+                                <span><strong>Ayam Bakar</strong> • Rp 22rb</span>
+                                <span class="px-1.5 py-0.5 rounded bg-amber-400 text-slate-950 font-extrabold">①</span>
+                            </div>
+                            <div class="p-1.5 rounded bg-slate-900 text-white text-center font-bold text-[10px]">Lanjut Pesan &rarr; <span class="px-1.5 rounded bg-amber-400 text-slate-950 font-extrabold">②</span></div>
+                        </div>
+
+                        <div class="md:col-span-3 text-center space-y-1">
+                            <div class="text-[10px] font-extrabold text-indigo-600 dark:text-indigo-400">Klik CTA ② Berpindah Ke</div>
+                            <div class="text-2xl text-indigo-600 dark:text-indigo-400 font-extrabold">&rarr;</div>
+                            <div class="text-[10px] text-slate-500 italic">Panah Sambungan Wireflow</div>
+                        </div>
+
+                        <div class="md:col-span-4 p-3 rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-500 space-y-1.5">
+                            <span class="px-2 py-0.5 rounded bg-emerald-600 text-white font-mono font-bold text-[10px]">[SCR-02] Rincian & Varian</span>
+                            <div class="p-2 rounded bg-slate-100 dark:bg-slate-800 text-[10px] font-bold">Porsi: [- 1 +] • Nama Pemesan *</div>
+                            <div class="p-1.5 rounded bg-slate-900 text-white text-center font-bold text-[10px]">Bayar QRIS (Menuju SCR-03)</div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-auto text-xs sm:text-sm">
+                        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                            <span class="px-2.5 py-0.5 rounded-lg bg-indigo-600 text-white text-xs font-extrabold">1. Target Layar Tujuan (Target Screen)</span>
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Tautkan Tombol CTA ke Kode SCR</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-xs">
+                                Setiap tombol utama wajib jelas mengarah ke layar mana: misalnya menekan tombol <em>"Lanjut Pesan"</em> pada <code>SCR-01</code> akan membawa pengguna berpindah ke layar <code>SCR-02</code>.
+                            </p>
+                        </div>
+
+                        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                            <span class="px-2.5 py-0.5 rounded-lg bg-emerald-600 text-white text-xs font-extrabold">2. Catatan Aturan Layar (Annotations)</span>
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Jelaskan Perilaku Dinamis</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-xs">
+                                Gambar statis tidak bisa bergerak sendiri. Tambahkan 1 kalimat anotasi singkat: misalnya <em>"Total harga di pita bawah otomatis bertambah saat pengguna menekan tombol [+] porsi"</em>.
+                            </p>
+                        </div>
+
+                        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                            <span class="px-2.5 py-0.5 rounded-lg bg-amber-500 text-slate-950 text-xs font-extrabold">3. Kesiapan Prototipe Interaktif</span>
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Bekal Menuju Pertemuan 9–10</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-xs">
+                                Dengan mencatat layar tujuan (<code>Target Screen</code>) di LKM 06 hari ini, saat membuat prototipe klik di Figma nanti Anda tinggal menarik garis sambungan sesuai catatan tersebut.
+                            </p>
+                        </div>
+                    </div>
+                    ${slideBridgeNext("Bagaimana cara menggambarkan cabang kondisi kendala ('Jika Tidak' dari simbol Decision LKM 05) di atas layar Wireframe? Kita pelajari di Slide 14.")}
+                </div>
+            `;
+        }
+
+        function renderSlide14() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Di LKM 05 minggu lalu, Anda telah menulis cabang 'Jika TIDAK (Edge Case)' pada simbol Decision. Kini kita wujudkan tampilannya di atas layar Wireframe.")}
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">Babak 4 • Visualisasi Cabang Decision (${term('emptystate', 'Empty & Error State')})</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Merancang Wujud Visual Saat Terjadi Kendala di Layar</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Desainer pemula hanya menggambar layar saat semuanya berjalan sempurna. Desainer UX yang matang wajib memetakan bagaimana tampilan layar saat terjadi <strong>2 kondisi kendala utama</strong> berikut (yang akan Anda isi pada Tahap 4 LKM 06):
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 my-auto text-xs sm:text-sm">
+                        <div class="p-5 rounded-3xl bg-amber-50/70 dark:bg-amber-950/20 border-2 border-amber-400 dark:border-amber-700 space-y-2.5">
+                            <span class="px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-extrabold text-xs">1. Kondisi Stok / Kuota Jadwal Habis (Unavailable State)</span>
+                            <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 font-mono text-xs flex justify-between items-center opacity-75">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-9 h-9 wf-box-x rounded shrink-0"></div>
+                                    <div><strong>Paket Ayam Bakar</strong><br><span class="text-[11px]">Rp 22.000 • [Stok Habis Hari Ini]</span></div>
+                                </div>
+                                <span class="px-2.5 py-1 rounded bg-slate-200 text-slate-500 font-bold">[Habis]</span>
+                            </div>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                <strong>Solusi Visual di Wireframe:</strong> Jangan menghapus menu dari katalog tanpa keterangan! Tampilkan badge <strong>"Stok Habis"</strong>, ubah tombol pilih menjadi nonaktif (abu-abu), dan tampilkan rekomendasi menu sejenis yang masih tersedia.
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-rose-50/70 dark:bg-rose-950/20 border-2 border-rose-400 dark:border-rose-700 space-y-2.5">
+                            <span class="px-2.5 py-1 rounded-lg bg-rose-600 text-white font-extrabold text-xs">2. Kondisi Input Belum Lengkap (Inline Validation Error)</span>
+                            <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border-2 border-slate-800 font-mono text-xs space-y-1">
+                                <div>Nomor WhatsApp *: [ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ]</div>
+                                <div class="text-[10px] font-bold">⚠️ Mohon isi nomor WA aktif untuk pengiriman tiket nota.</div>
+                            </div>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                <strong>Solusi Visual di Wireframe:</strong> Jika pelanggan menekan tombol lanjut tetapi lupa mengisi Nama/WA, tampilkan garis batas tegas dan pesan petunjuk ramah tepat di bawah kotak yang kosong tersebut.
+                            </p>
+                        </div>
+                    </div>
+                    ${slideBridgeNext("Sebelum masuk ke latihan evaluasi, mari kita periksa 4 kesalahan umum yang wajib dihindari saat membuat Wireframe di Slide 15.")}
+                </div>
+            `;
+        }
+
+        function renderSlide15() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Sebagai penutup Babak 4, pastikan keempat layar Wireframe yang Anda susun di LKM 06 terhindar dari 4 kesalahan umum berikut.")}
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">Babak 4 • Standar Evaluasi Kualitas Wireframe</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Empat Kesalahan Umum Saat Menyusun Wireframe</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                            Periksa kembali sketsa atau kerangka layar Anda agar tidak terjebak dalam keempat kesalahan berikut:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 my-auto text-xs sm:text-sm">
+                        <div class="p-4 sm:p-5 rounded-3xl bg-rose-50/60 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800 space-y-2">
+                            <div class="font-extrabold text-rose-700 dark:text-rose-300"><i class="fa-solid fa-circle-xmark mr-1.5"></i>1. Terjebak Dekorasi Warna & Foto Asli Terlalu Dini</div>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Menghabiskan waktu mewarnai layar dan mencari foto produk padahal urutan tombol dan kelengkapan informasi utamanya belum selesai.
+                            </p>
+                        </div>
+
+                        <div class="p-4 sm:p-5 rounded-3xl bg-rose-50/60 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800 space-y-2">
+                            <div class="font-extrabold text-rose-700 dark:text-rose-300"><i class="fa-solid fa-circle-xmark mr-1.5"></i>2. Menulis "Lorem Ipsum" atau Label Tombol Abstrak</div>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Menulis kata <em>"Button"</em>, <em>"Submit"</em>, atau <em>"Lorem ipsum"</em> yang membuat pengguna bingung apa fungsi tombol tersebut.
+                            </p>
+                        </div>
+
+                        <div class="p-4 sm:p-5 rounded-3xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 space-y-2">
+                            <div class="font-extrabold text-amber-800 dark:text-amber-300"><i class="fa-solid fa-triangle-exclamation mr-1.5"></i>3. Lupa Menyediakan Navigasi Kembali (Back Button)</div>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Pada layar Level 1 dan Level 2 (seperti halaman pilih varian atau halaman pembayaran), lupa menyediakan tombol <code>&larr; Kembali</code> jika pengguna ingin mengubah pilihannya.
+                            </p>
+                        </div>
+
+                        <div class="p-4 sm:p-5 rounded-3xl bg-indigo-50/60 dark:bg-indigo-950/20 border border-indigo-200 dark:border-indigo-800 space-y-2">
+                            <div class="font-extrabold text-indigo-700 dark:text-indigo-300"><i class="fa-solid fa-store-slash mr-1.5"></i>4. Tidak Merancang Wireframe Layar Kasir UMKM (Backstage)</div>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Hanya menggambar layar untuk pembeli, tetapi lupa menggambar kerangka layar <code>SCR-05</code> tempat pemilik UMKM menerima dan menyelesaikan pesanan.
+                            </p>
+                        </div>
+                    </div>
+                    ${slideBridgeNext("Babak 4 selesai! Sekarang uji pemahaman Anda melalui Evaluasi Interaktif 3 Mode di Slide 16.")}
+                </div>
+            `;
+        }
+
+        function renderSlide16() {
+            let tabBodyHtml = '';
+
+            if (activeEvalTabM6 === 'refleksi') {
+                const questions = [
+                    {
+                        id: 1,
+                        title: "1. Mengapa Kita Menggunakan Kotak Silang [X] dan Skala Abu-Abu?",
+                        question: "Mengapa pada tahap Wireframing kita sengaja menghindari penggunaan warna-warni dan foto produk asli?",
+                        answer: "Agar perhatian perancang maupun pemilik UMKM terfokus 100% pada kejelasan struktur informasi, urutan langkah, dan kemudahan jangkauan tombol—bukan terdistraksi oleh selera warna atau foto."
+                    },
+                    {
+                        id: 2,
+                        title: "2. Bagaimana Perbedaan Zona Layar Mobile vs Web Desktop / Tablet POS?",
+                        question: "Mengapa letak tombol CTA utama di layar HP berada di bagian bawah (Sticky Bottom Bar), sedangkan di layar Web Desktop/Tablet POS berada di Panel Samping Kanan?",
+                        answer: "Pada HP (Mobile), interaksi menggunakan ibu jari satu tangan sehingga bagian bawah layar adalah Natural Thumb Zone. Sedangkan pada Desktop/Tablet POS yang melebar (landscape), layar dibagi menjadi Konten Kiri dan Panel Ringkasan Kanan agar jarak kursor mouse atau telunjuk kasir lebih dekat sesuai Fitts's Law."
+                    },
+                    {
+                        id: 3,
+                        title: "3. Bagaimana Kaitan Antara Sitemap LKM 05 dan Wireframe LKM 06?",
+                        question: "Bagaimana kode layar SCR-01 s/d SCR-05 yang Anda buat pada Sitemap minggu lalu digunakan pada praktikum hari ini?",
+                        answer: "Setiap kode layar (SCR) pada Sitemap LKM 05 langsung menjadi 1 kanvas Wireframe yang dibedah 3 zonanya dan dihubungkan panah Wireflow-nya pada LKM 06."
+                    }
+                ];
+
+                let cardsHtml = '';
+                for (let i = 0; i < questions.length; i++) {
+                    const q = questions[i];
+                    const isOpen = openReflectionKey[q.id];
+                    cardsHtml += `
+                        <div class="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-3">
+                            <div class="space-y-1.5">
+                                <div class="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">${q.title}</div>
+                                <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">${q.question}</p>
+                            </div>
+                            <div class="pt-2 border-t border-slate-200/70 dark:border-slate-700/70">
+                                <button type="button" onclick="toggleReflectionAnswer(${q.id})" class="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1.5">
+                                    <i class="fa-regular ${isOpen ? 'fa-eye-slash' : 'fa-lightbulb'}"></i>
+                                    <span>${isOpen ? 'Sembunyikan Kunci Konsep' : 'Lihat Kunci Konsep'}</span>
+                                </button>
+                                ${isOpen ? `<div class="mt-2.5 p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">${q.answer}</div>` : ''}
+                            </div>
+                        </div>
+                    `;
+                }
+                tabBodyHtml = `<div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-auto">${cardsHtml}</div>`;
+            } else if (activeEvalTabM6 === 'kasus') {
+                let cardsHtml = '';
+                for (let i = 0; i < BIZ_CASES_M6.length; i++) {
+                    const sc = BIZ_CASES_M6[i];
+                    const chosenIdx = bizChoicesM6[sc.id];
+                    const hasAnswered = chosenIdx !== undefined;
+                    let optsHtml = '';
+                    for (let j = 0; j < sc.opts.length; j++) {
+                        const o = sc.opts[j];
+                        let btnCls = 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 hover:border-indigo-500';
+                        let badgeCls = 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300';
+                        if (hasAnswered) {
+                            if (o.correct) { btnCls = 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 text-emerald-900 dark:text-emerald-200'; badgeCls = 'bg-emerald-600 text-white'; }
+                            else if (chosenIdx === j) { btnCls = 'bg-rose-50 dark:bg-rose-950/60 border-rose-500 text-rose-900 dark:text-rose-200'; badgeCls = 'bg-rose-600 text-white'; }
+                            else { btnCls = 'opacity-60 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800'; }
+                        }
+                        optsHtml += `<button type="button" ${hasAnswered ? 'disabled' : ''} onclick="chooseBizCaseM6(${sc.id}, ${j})" class="w-full text-left p-2.5 rounded-xl border-2 font-semibold text-xs flex items-start gap-2.5 transition ${btnCls}"><span class="w-5 h-5 rounded-md font-mono text-[11px] font-extrabold flex items-center justify-center shrink-0 mt-0.5 ${badgeCls}">${o.ltr}</span><span>${escapeHtml(o.text)}</span></button>`;
+                    }
+                    let fbHtml = '';
+                    if (hasAnswered) {
+                        const sel = sc.opts[chosenIdx];
+                        const fbCls = sel.correct ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-500 text-emerald-900 dark:text-emerald-200' : 'bg-rose-50 dark:bg-rose-950/50 border-rose-500 text-rose-900 dark:text-rose-200';
+                        fbHtml = `<div class="p-2 rounded-xl border-l-4 ${fbCls} text-[11px] leading-relaxed">${escapeHtml(sel.explain)}</div>`;
+                    }
+                    cardsHtml += `<div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-2"><div class="space-y-1"><span class="inline-block px-2 py-0.5 rounded-full bg-orange-100 dark:bg-orange-950 text-orange-800 dark:text-orange-300 text-[10px] font-extrabold uppercase">${sc.badge}</span><p class="text-xs font-bold text-slate-900 dark:text-white leading-snug">${escapeHtml(sc.title)}</p></div><div class="space-y-1.5">${optsHtml}${fbHtml}</div></div>`;
+                }
+                tabBodyHtml = `<div class="grid grid-cols-1 lg:grid-cols-2 gap-3 my-auto">${cardsHtml}</div>`;
+            } else {
+                let itemsHtml = '';
+                for (let i = 0; i < TF_QUIZ_M6.length; i++) {
+                    const q = TF_QUIZ_M6[i];
+                    const chosen = tfChoicesM6[q.id];
+                    const hasAns = chosen !== undefined;
+                    const isCorrect = chosen === q.answer;
+                    let rowCls = 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800';
+                    let numCls = 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200';
+                    if (hasAns) {
+                        rowCls = isCorrect ? 'bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-500' : 'bg-rose-50/70 dark:bg-rose-950/30 border-rose-500';
+                        numCls = isCorrect ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white';
+                    }
+                    const btnStyle = function (val) {
+                        if (!hasAns) return 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 hover:border-indigo-500';
+                        if (chosen === val) return isCorrect ? 'bg-emerald-600 border-emerald-600 text-white' : 'bg-rose-600 border-rose-600 text-white';
+                        if (q.answer === val) return 'bg-emerald-100 dark:bg-emerald-950 border-emerald-500 text-emerald-800 dark:text-emerald-300';
+                        return 'opacity-50 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800';
+                    };
+                    itemsHtml += `<div class="p-3 rounded-2xl border ${rowCls} space-y-1.5 transition"><div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5"><div class="flex items-start gap-2.5 text-xs font-bold text-slate-900 dark:text-white"><span class="w-5 h-5 rounded-md font-mono text-[11px] flex items-center justify-center shrink-0 ${numCls}">${q.id}</span><span>${escapeHtml(q.text)}</span></div><div class="flex gap-1.5 shrink-0"><button type="button" ${hasAns ? 'disabled' : ''} onclick="answerTfM6(${q.id}, 'true')" class="px-3 py-1 rounded-xl border font-extrabold text-xs transition ${btnStyle('true')}">Benar</button><button type="button" ${hasAns ? 'disabled' : ''} onclick="answerTfM6(${q.id}, 'false')" class="px-3 py-1 rounded-xl border font-extrabold text-xs transition ${btnStyle('false')}">Salah</button></div></div>${hasAns ? `<div class="p-2 rounded-xl bg-white/80 dark:bg-slate-900/80 border-l-4 ${isCorrect ? 'border-emerald-600' : 'border-rose-600'} text-[11px] text-slate-700 dark:text-slate-200">${escapeHtml(q.explain)}</div>` : ''}</div>`;
+                }
+                tabBodyHtml = `<div class="space-y-2 my-auto">${itemsHtml}</div>`;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">Babak 5 • Simulasi Evaluasi Wireframe & Tata Letak</span>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Refleksi Konsep, 4 Kasus Keputusan Wireframe, & Kuis Kilat</h2>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-1.5">
+                            <div class="inline-flex p-1 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                                <button type="button" onclick="activeEvalTabM6='refleksi';renderCurrentSlide();" class="px-3 py-1.5 rounded-xl text-xs font-extrabold transition ${activeEvalTabM6 === 'refleksi' ? 'bg-indigo-600 text-white' : 'text-slate-600 dark:text-slate-300'}">💡 3 Refleksi Konsep</button>
+                                <button type="button" onclick="activeEvalTabM6='kasus';renderCurrentSlide();" class="px-3 py-1.5 rounded-xl text-xs font-extrabold transition ${activeEvalTabM6 === 'kasus' ? 'bg-indigo-600 text-white' : 'text-slate-600 dark:text-slate-300'}">🎯 4 Kasus Wireframe</button>
+                                <button type="button" onclick="activeEvalTabM6='kuis';renderCurrentSlide();" class="px-3 py-1.5 rounded-xl text-xs font-extrabold transition ${activeEvalTabM6 === 'kuis' ? 'bg-indigo-600 text-white' : 'text-slate-600 dark:text-slate-300'}">⚡ 5 Kuis Benar/Salah</button>
+                            </div>
+                            <button type="button" onclick="bizChoicesM6={};tfChoicesM6={};openReflectionKey={1:false,2:false,3:false};renderCurrentSlide();" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 transition">Reset</button>
+                        </div>
+                    </div>
+                    ${tabBodyHtml}
+                    ${slideBridgeNext("Selanjutnya di Slide 17: rangkuman 5 poin kunci Pertemuan 6 dan daftar referensi utama.")}
+                </div>
+            `;
+        }
+
+        function renderSlide17() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Setelah menyelesaikan evaluasi di Slide 16, mari kita rangkum 5 prinsip utama Sketsa Antarmuka dan Low-Fidelity Wireframing.")}
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">Babak 5 • Rangkuman & Referensi Akademik</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Lima Poin Kunci Pertemuan 6 & Daftar Referensi</h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 my-auto">
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-3">
+                            <h3 class="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider"><i class="fa-solid fa-list-check text-indigo-600 mr-1.5"></i>5 Poin Kunci Pertemuan 6</h3>
+                            <ol class="space-y-2 text-xs text-slate-700 dark:text-slate-300 list-decimal list-inside leading-relaxed">
+                                <li><strong>Disiplin Low-Fidelity (Grayscale & <code>[X]</code>):</strong> Gunakan warna hitam-putih-abu dan kotak silang <code>[X]</code> agar fokus menguji tata letak tanpa membuang waktu pada dekorasi dini.</li>
+                                <li><strong>Anatomi 3 Zona Sesuai Perangkat:</strong> Susun bertumpuk vertikal (<em>Header–Body–Bottom Bar</em>) pada <strong>Mobile HP</strong>, atau bagi melebar horizontal (<em>Navbar–Konten Kiri 70%–Panel Kanan 30%</em>) pada <strong>Web Desktop & Tablet POS</strong>.</li>
+                                <li><strong>Ergonomi Interaksi (Thumb Zone & Fitts's Law):</strong> Tempatkan tombol utama di zona ibu jari bawah pada HP, atau di dalam panel rincian kanan pada Desktop/Tablet POS.</li>
+                                <li><strong>UX Microcopy Nyata (Anti-Lorem Ipsum):</strong> Tulislah judul halaman, harga, status stok, dan teks tombol menggunakan bahasa nyata yang dipahami pelanggan UMKM.</li>
+                                <li><strong>Wireflow, Error State, & Glanceability Kasir:</strong> Hubungkan tombol antar-layar, visualisasikan cabang kendala (<em>Decision</em>), dan buat layar kasir UMKM terbaca sekilas.</li>
+                            </ol>
+                        </div>
+
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 space-y-3">
+                            <h3 class="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider"><i class="fa-solid fa-book-open text-indigo-600 mr-1.5"></i>Daftar Referensi Utama</h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                                <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"><strong class="text-indigo-700 dark:text-indigo-300">Garrett, J. J. (2010)</strong><br><em>The Elements of User Experience: User-Centered Design for the Web and Beyond (Skeleton Plane).</em> New Riders.</div>
+                                <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"><strong class="text-indigo-700 dark:text-indigo-300">Hoober, S., & Berkman, E. (2011)</strong><br><em>Designing Mobile Interfaces: Patterns for Interaction Design (Thumb Zone).</em> O'Reilly.</div>
+                                <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"><strong class="text-indigo-700 dark:text-indigo-300">Laubheimer, P. (2016)</strong><br><em>Wireflows: A UX Deliverable for Workflows and Apps.</em> Nielsen Norman Group.</div>
+                                <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"><strong class="text-indigo-700 dark:text-indigo-300">Knapp, J., Zeratsky, J., & Kowitz, B. (2016)</strong><br><em>Sprint: How to Solve Big Problems (Crazy 8s Sketching).</em> Simon & Schuster.</div>
+                                <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"><strong class="text-indigo-700 dark:text-indigo-300">Yablonski, J. (2020)</strong><br><em>Laws of UX: Fitts's Law & Law of Proximity.</em> O'Reilly Media.</div>
+                                <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"><strong class="text-indigo-700 dark:text-indigo-300">Interaction Design Foundation</strong><br><em>Wireframing & Microcopy Guidelines for Usability.</em> interaction-design.org.</div>
+                            </div>
+                        </div>
+                    </div>
+                    ${slideBridgeNext("Terakhir di Slide 18: panduan langkah demi langkah mengerjakan Workspace Praktikum 6 (LKM 06)!")}
+                </div>
+            `;
+        }
+
+        function renderSlide18() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Seluruh materi Pertemuan 6 telah selesai! Sekarang saatnya menyusun spesifikasi 3 zona layar (baik Mobile, Desktop, maupun Tablet POS) di LKM 06.")}
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Babak 5 • Eksekusi Praktikum 6 (Bobot 5%)</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Langkah Kerja Menuju Workspace LKM 06</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                            Buka file <strong><code class="font-mono">Pertemuan 6 - Praktikum 6_ Workspace Spesifikasi & Kanvas Low-Fidelity Wireframe (LKM 06).html</code></strong> dan ikuti 4 langkah terstruktur berikut:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 my-auto text-xs">
+                        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <span class="w-7 h-7 rounded-xl bg-indigo-600 text-white font-extrabold flex items-center justify-center">1</span>
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Tarik 4 Layar Prioritas LKM 05</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Klik <strong>Tarik dari LKM 05 Lokal</strong> atau <strong>Muat .JSON</strong> untuk memanggil otomatis daftar layar prioritas (<code>SCR-01..05</code>) dan cabang <em>Decision</em> yang telah Anda buat minggu lalu.
+                            </p>
+                        </div>
+
+                        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <span class="w-7 h-7 rounded-xl bg-emerald-600 text-white font-extrabold flex items-center justify-center">2</span>
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Pilih Mode Layar & Isi 3 Zona</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Pilih mode perangkat per layar (<strong>📱 Mobile Vertikal</strong> atau <strong>💻 Desktop / 🖥️ Tablet POS Landscape</strong>), isi 3 zonanya, dan lihat <strong>Kanvas Blueprint Visual</strong> terbentuk otomatis!
+                            </p>
+                        </div>
+
+                        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <span class="w-7 h-7 rounded-xl bg-amber-500 text-slate-950 font-extrabold flex items-center justify-center">3</span>
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Visualisasikan Cabang Kendala (Error State)</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Di Slide 9, tuliskan wujud tampilan pada layar Wireframe ketika kondisi <em>Decision</em> bernilai "Tidak" (misal tampilan saat stok habis atau kolom belum diisi).
+                            </p>
+                        </div>
+
+                        <div class="p-4 rounded-3xl bg-emerald-50/80 dark:bg-emerald-950/30 border-2 border-emerald-500 space-y-2">
+                            <span class="w-7 h-7 rounded-xl bg-emerald-600 text-white font-extrabold flex items-center justify-center">4</span>
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Lampirkan Sketsa/Figma & Unduh PDF</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Unggah foto sketsa kertas atau <em>screenshot</em> Lo-Fi Figma Anda (opsional, otomatis dikompresi), lengkapi audit ergonomi, lalu unduh <strong>Master .JSON & PDF A4</strong>!
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="p-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-emerald-600 text-white text-center">
+                        <p class="text-xs sm:text-sm font-bold"><i class="fa-solid fa-clipboard-check mr-1.5"></i>Pertemuan Berikutnya (Pertemuan 7 — Penutup Tahap 2 Sebelum UTS): Evaluasi Heuristik Kerangka Layar, Review Konsistensi, & Persiapan Paket UTS!</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // =========================================================================
+        // DAFTAR 18 SLIDE PERTEMUAN 6
+        // =========================================================================
+        const SLIDES = [
+            { id: 1, category: "Pengantar", title: "Pengantar Pertemuan 6, Jembatan LKM 05, & Alur 5 Babak", render: renderSlide1 },
+            { id: 2, category: "Babak 1 · Ekonomi Desain", title: "Mengapa Wajib Mulai dari Low-Fidelity Wireframe?", render: renderSlide2 },
+            { id: 3, category: "Simulasi Interaktif 1", title: "Spektrum Fidelity: Paper Sketch vs Lo-Fi Wireframe vs Hi-Fi Mockup", render: renderSlide3 },
+            { id: 4, category: "Babak 1 · Eksplorasi Cepat", title: "Mengatasi Buntu Ide dengan Paper Sketching & Crazy 8s", render: renderSlide4 },
+            { id: 5, category: "Babak 1 · Disiplin Visual", title: "Empat Aturan Emas Penyusunan Low-Fidelity Wireframe (Grayscale)", render: renderSlide5 },
+            { id: 6, category: "Babak 2 · Zona Lintas Perangkat", title: "Anatomi 3 Zona Layar: Mobile HP vs Web Desktop vs Tablet POS", render: renderSlide6 },
+            { id: 7, category: "Simulasi Interaktif 2", title: "Ergonomi Fisik: Thumb Zone (Mobile) vs Fitts's Law (Desktop & POS)", render: renderSlide7 },
+            { id: 8, category: "Babak 2 · Hierarki & Pola Baca", title: "Pengelompokan Kartu (Card) & Pola Pindai Mobile vs Desktop", render: renderSlide8 },
+            { id: 9, category: "Babak 3 · Komponen UI", title: "Lima Komponen Standar Pembentuk Wireframe UMKM", render: renderSlide9 },
+            { id: 10, category: "Simulasi Interaktif 3", title: "Bahaya 'Lorem Ipsum' vs Kekuatan UX Microcopy Nyata", render: renderSlide10 },
+            { id: 11, category: "Babak 3 · Layar Backstage", title: "Tiga Aturan Wireframe Layar Kasir UMKM (HP vs Tablet POS)", render: renderSlide11 },
+            { id: 12, category: "Simulasi Interaktif 4", title: "Inspektor Blueprint 3 Zona pada 4 Layar Prioritas UMKM", render: renderSlide12 },
+            { id: 13, category: "Babak 4 · Wireflow", title: "Menyusun Wireflow & Catatan Anotasi Interaksi Layar", render: renderSlide13 },
+            { id: 14, category: "Babak 4 · Error State", title: "Merancang Wujud Visual Cabang Decision (Empty & Error State)", render: renderSlide14 },
+            { id: 15, category: "Babak 4 · Standar Mutu", title: "Empat Kesalahan Umum Saat Menyusun Wireframe", render: renderSlide15 },
+            { id: 16, category: "Babak 5 · Evaluasi Kasus", title: "Refleksi Konsep, 4 Kasus Keputusan Wireframe, & Kuis Kilat", render: renderSlide16 },
+            { id: 17, category: "Babak 5 · Rangkuman", title: "Lima Poin Kunci Pertemuan 6 & Daftar Referensi Utama", render: renderSlide17 },
+            { id: 18, category: "Babak 5 · Panduan LKM 06", title: "Langkah Kerja Menuju Workspace Praktikum 6 (LKM 06)", render: renderSlide18 }
+        ];
+
+        // =========================================================================
+        // NAVIGASI UTAMA & HANDLER INTERAKSI
+        // =========================================================================
+        function renderCurrentSlide() {
+            const slide = SLIDES[currentSlideIndex];
+            const viewport = document.getElementById('slideViewport');
+            if (!viewport || !slide) return;
+            viewport.innerHTML = slide.render();
+
+            const pct = Math.round(((currentSlideIndex + 1) / TOTAL_SLIDES) * 100);
+            document.getElementById('topProgressBar').style.width = pct + '%';
+            document.getElementById('slideCounterBadge').textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES;
+            document.getElementById('mobileFooterCounter').textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES;
+            document.getElementById('slideCategoryPill').textContent = slide.category;
+            document.getElementById('headerSlideTitle').textContent = slide.title;
+
+            const prevBtn = document.getElementById('prevSlideBtn');
+            const nextBtn = document.getElementById('nextSlideBtn');
+            const nextBtnText = document.getElementById('nextBtnText');
+
+            prevBtn.disabled = currentSlideIndex === 0;
+            if (currentSlideIndex === TOTAL_SLIDES - 1) {
+                nextBtnText.textContent = "Selesai";
+                nextBtn.disabled = true;
+            } else {
+                nextBtnText.textContent = "Selanjutnya";
+                nextBtn.disabled = false;
+            }
+            renderDotsAndDrawer();
+        }
+
+        function renderDotsAndDrawer() {
+            const dotsContainer = document.getElementById('slideDotsContainer');
+            let dotsHtml = '';
+            let drawerHtml = '';
+            for (let idx = 0; idx < SLIDES.length; idx++) {
+                const s = SLIDES[idx];
+                const isActive = idx === currentSlideIndex;
+                const isSim = s.category.indexOf('Simulasi') !== -1 || s.category.indexOf('Evaluasi') !== -1 || s.category.indexOf('Lintas Perangkat') !== -1;
+                const dotClass = isActive
+                    ? 'w-6 bg-indigo-600 dark:bg-indigo-400'
+                    : isSim
+                    ? 'w-2.5 bg-amber-400 dark:bg-amber-500 hover:bg-amber-600'
+                    : 'w-1.5 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400';
+                dotsHtml += `<button type="button" onclick="goToSlide(${idx})" title="${escapeHtml(s.title)}" class="h-2 rounded-full transition-all ${dotClass}"></button>`;
+
+                const itemClass = isActive ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 font-bold' : 'hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-300';
+                const badgeClass = isActive
+                    ? 'bg-indigo-600 text-white'
+                    : isSim
+                    ? 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500';
+                drawerHtml += `<button type="button" onclick="selectSlideFromDrawer(${idx})" class="w-full text-left p-3 rounded-xl transition flex items-start gap-3 ${itemClass}"><span class="w-6 h-6 rounded-lg text-xs font-extrabold flex items-center justify-center shrink-0 mt-0.5 ${badgeClass}">${s.id}</span><div class="min-w-0 flex-1"><div class="text-[10px] uppercase tracking-wider opacity-75">${escapeHtml(s.category)}</div><div class="text-xs sm:text-sm leading-snug break-words">${escapeHtml(s.title)}</div></div></button>`;
+            }
+            if (dotsContainer) dotsContainer.innerHTML = dotsHtml;
+            const drawerList = document.getElementById('drawerSlideList');
+            if (drawerList) drawerList.innerHTML = drawerHtml;
+        }
+
+        function selectSlideFromDrawer(index) {
+            goToSlide(index);
+            toggleSlideDrawer();
+        }
+
+        function changeSlide(direction) {
+            const nextIdx = currentSlideIndex + direction;
+            if (nextIdx >= 0 && nextIdx < TOTAL_SLIDES) {
+                currentSlideIndex = nextIdx;
+                renderCurrentSlide();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function goToSlide(index) {
+            if (index >= 0 && index < TOTAL_SLIDES) {
+                currentSlideIndex = index;
+                renderCurrentSlide();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function toggleSlideDrawer() {
+            const drawer = document.getElementById('slideDrawer');
+            const backdrop = document.getElementById('slideDrawerBackdrop');
+            const isClosed = drawer.classList.contains('-translate-x-full');
+            if (isClosed) {
+                backdrop.classList.remove('hidden');
+                setTimeout(function () { backdrop.classList.remove('opacity-0'); }, 10);
+                drawer.classList.remove('-translate-x-full');
+            } else {
+                backdrop.classList.add('opacity-0');
+                drawer.classList.add('-translate-x-full');
+                setTimeout(function () { backdrop.classList.add('hidden'); }, 200);
+            }
+        }
+
+        function setS3Tab(tabKey) { s3FidelityTab = tabKey; renderCurrentSlide(); }
+        function setS6Device(devKey) { s6DeviceTab = devKey; renderCurrentSlide(); }
+        function setS7ErgoMode(mKey) { s7ErgoMode = mKey; renderCurrentSlide(); }
+        function setS7Zone(zKey) { s7ThumbZone = zKey; renderCurrentSlide(); }
+        function setS8ScanMode(sKey) { s8ScanMode = sKey; renderCurrentSlide(); }
+        function setS10Copy(modeKey) { s10CopyMode = modeKey; renderCurrentSlide(); }
+        function setS11Pos(pKey) { s11PosMode = pKey; renderCurrentSlide(); }
+        function setS12Screen(idx) { s12ScreenIdx = idx; renderCurrentSlide(); }
+        function toggleReflectionAnswer(id) { openReflectionKey[id] = !openReflectionKey[id]; renderCurrentSlide(); }
+        function chooseBizCaseM6(id, idx) { bizChoicesM6[id] = idx; renderCurrentSlide(); }
+        function answerTfM6(id, val) { tfChoicesM6[id] = val; renderCurrentSlide(); }
+
+        // =========================================================================
+        // MODAL PENJELASAN ISTILAH & KAMUS
+        // =========================================================================
+        function showTerm(key) {
+            const item = GLOSSARY_DB[key];
+            if (!item) return;
+            document.getElementById('termCategoryBadge').textContent = item.category;
+            document.getElementById('termTitle').textContent = item.title;
+            document.getElementById('termMainDesc').textContent = item.main;
+            document.getElementById('termDetailDesc').textContent = item.detail;
+            document.getElementById('termSourceName').textContent = "Sumber: " + item.source;
+            document.getElementById('termSourceUrl').href = item.url;
+            const modal = document.getElementById('termModalBackdrop');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeTermModal() {
+            const modal = document.getElementById('termModalBackdrop');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function openGlossaryIndex() {
+            document.getElementById('glossarySearchInput').value = '';
+            renderGlossaryList('');
+            const modal = document.getElementById('glossaryModalBackdrop');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeGlossaryIndex() {
+            const modal = document.getElementById('glossaryModalBackdrop');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function selectGlossaryTerm(key) {
+            closeGlossaryIndex();
+            showTerm(key);
+        }
+
+        function renderGlossaryList(query) {
+            const q = String(query || '').trim().toLowerCase();
+            const allKeys = Object.keys(GLOSSARY_DB);
+            const matchedKeys = [];
+            for (let i = 0; i < allKeys.length; i++) {
+                const k = allKeys[i];
+                const item = GLOSSARY_DB[k];
+                if (item.title.toLowerCase().indexOf(q) !== -1 || item.category.toLowerCase().indexOf(q) !== -1 || item.main.toLowerCase().indexOf(q) !== -1) {
+                    matchedKeys.push(k);
+                }
+            }
+            const container = document.getElementById('glossaryListGrid');
+            if (matchedKeys.length === 0) {
+                container.innerHTML = '<div class="col-span-2 text-center py-8 text-xs text-slate-500">Istilah tidak ditemukan.</div>';
+                return;
+            }
+            let html = '';
+            for (let i = 0; i < matchedKeys.length; i++) {
+                const k = matchedKeys[i];
+                const item = GLOSSARY_DB[k];
+                html += `<button type="button" onclick="selectGlossaryTerm('${k}')" class="text-left p-4 rounded-2xl bg-slate-50 hover:bg-indigo-50/60 dark:bg-slate-800/50 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800 transition space-y-1"><div class="flex items-center justify-between"><span class="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">${escapeHtml(item.category)}</span><span class="text-[10px] text-slate-400">${escapeHtml(item.source)}</span></div><div class="text-sm font-extrabold text-slate-900 dark:text-white leading-snug">${escapeHtml(item.title)}</div><p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">${escapeHtml(item.main)}</p></button>`;
+            }
+            container.innerHTML = html;
+        }
+
+        function toggleTheme() {
+            const htmlEl = document.documentElement;
+            const icon = document.getElementById('themeIcon');
+            htmlEl.classList.toggle('dark');
+            const isDark = htmlEl.classList.contains('dark');
+            icon.className = isDark ? 'fa-solid fa-sun text-amber-400 text-sm' : 'fa-solid fa-moon text-sm';
+        }
+
+        document.addEventListener('keydown', function (e) {
+            const activeTag = document.activeElement && document.activeElement.tagName ? document.activeElement.tagName.toLowerCase() : '';
+            if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') return;
+            if (e.key === 'ArrowRight') changeSlide(1);
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+            if (e.key === 'Escape') { closeTermModal(); closeGlossaryIndex(); }
+        });
+
+        renderCurrentSlide();
+    </script>
+</body>
+</html>
