@@ -1,0 +1,1731 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pertemuan 5: Arsitektur Informasi, Sitemap, & User Flow</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <script>
+        if (typeof tailwind !== 'undefined') {
+            tailwind.config = {
+                darkMode: 'class',
+                theme: {
+                    extend: {
+                        fontFamily: {
+                            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                            mono: ['"JetBrains Mono"', 'monospace']
+                        }
+                    }
+                }
+            };
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Istilah teknis dengan garis bawah titik-titik yang jelas & kontras */
+        .tech-term {
+            color: #4f46e5;
+            font-weight: 700;
+            text-decoration: underline;
+            text-decoration-style: dotted;
+            text-underline-offset: 3px;
+            cursor: pointer;
+            transition: color 0.15s ease, opacity 0.15s ease;
+        }
+        .dark .tech-term {
+            color: #818cf8;
+        }
+        .tech-term:hover {
+            color: #3730a3;
+            opacity: 0.85;
+        }
+        .dark .tech-term:hover {
+            color: #a5b4fc;
+        }
+
+        /* Pengaman anti-terpotong di semua ukuran layar (Mobile & Desktop) */
+        #slideViewport,
+        #slideViewport p,
+        #slideViewport span,
+        #slideViewport div,
+        #slideViewport h2,
+        #slideViewport h3,
+        #slideViewport h4,
+        #slideViewport button {
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+        }
+
+        .slide-enter {
+            animation: fadeSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes fadeSlide {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+        .dark ::-webkit-scrollbar-thumb { background: #334155; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col justify-between transition-colors duration-200">
+
+    <!-- Header Navigasi Atas -->
+    <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800">
+        <div class="w-full h-1 bg-slate-100 dark:bg-slate-800">
+            <div id="topProgressBar" class="h-full bg-indigo-600 dark:bg-indigo-500 transition-all duration-300" style="width: 6%;"></div>
+        </div>
+
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+                <button type="button" onclick="toggleSlideDrawer()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition flex items-center gap-2 text-xs sm:text-sm font-bold shrink-0">
+                    <i class="fa-solid fa-bars-staggered text-indigo-600 dark:text-indigo-400"></i>
+                    <span class="hidden sm:inline">Alur Materi</span>
+                    <span id="slideCounterBadge" class="px-2 py-0.5 text-xs rounded-lg bg-indigo-600 text-white font-bold">1 / 18</span>
+                </button>
+
+                <div class="hidden md:flex items-center gap-2.5 min-w-0">
+                    <span id="slideCategoryPill" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 shrink-0">
+                        Pengantar
+                    </span>
+                    <h1 id="headerSlideTitle" class="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">
+                        Arsitektur Informasi, Sitemap, & User Flow
+                    </h1>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 shrink-0">
+                <button type="button" onclick="openGlossaryIndex()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 text-xs sm:text-sm font-bold flex items-center gap-2 transition">
+                    <i class="fa-solid fa-book-open text-indigo-600 dark:text-indigo-400"></i>
+                    <span>Kamus Istilah</span>
+                </button>
+
+                <button type="button" onclick="toggleTheme()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center transition" title="Ganti Tema Layar">
+                    <i id="themeIcon" class="fa-solid fa-moon text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Drawer Daftar Slide -->
+    <div id="slideDrawerBackdrop" onclick="toggleSlideDrawer()" class="fixed inset-0 bg-slate-950/50 backdrop-blur-xs z-40 hidden opacity-0 transition-opacity duration-200"></div>
+    <aside id="slideDrawer" class="fixed top-0 left-0 bottom-0 w-80 sm:w-96 bg-white dark:bg-slate-900 z-50 shadow-2xl border-r border-slate-200 dark:border-slate-800 transform -translate-x-full transition-transform duration-200 flex flex-col">
+        <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Pertemuan 5 • BD7401</span>
+                <h2 class="text-base font-extrabold text-slate-900 dark:text-white mt-0.5">Alur Cerita 18 Slide Pertemuan 5</h2>
+            </div>
+            <button type="button" onclick="toggleSlideDrawer()" class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div id="drawerSlideList" class="p-3.5 overflow-y-auto space-y-1 flex-1"></div>
+        <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 flex items-center justify-between">
+            <span>Gunakan tombol panah Kiri / Kanan</span>
+            <span class="font-bold">18 Slide Interaktif</span>
+        </div>
+    </aside>
+
+    <!-- Area Utama Slide -->
+    <main class="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-5 flex flex-col justify-center">
+        <div id="slideViewport" class="bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl shadow-xs border border-slate-200/80 dark:border-slate-800 p-4 sm:p-8 lg:p-10 min-h-[540px] flex flex-col justify-between relative">
+            <div class="py-12 text-center text-sm text-slate-500">Memuat materi perkuliahan Pertemuan 5...</div>
+        </div>
+    </main>
+
+    <!-- Footer Navigasi Bawah -->
+    <footer class="sticky bottom-0 z-20 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 py-3 px-4 sm:px-6">
+        <div class="max-w-6xl mx-auto flex items-center justify-between gap-4">
+            <button type="button" id="prevSlideBtn" onclick="changeSlide(-1)" class="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                <i class="fa-solid fa-arrow-left text-xs"></i>
+                <span>Sebelumnya</span>
+            </button>
+
+            <div id="slideDotsContainer" class="hidden md:flex items-center gap-1.5 flex-wrap justify-center"></div>
+
+            <div class="md:hidden text-xs font-bold text-slate-500 dark:text-slate-400" id="mobileFooterCounter">1 / 18</div>
+
+            <button type="button" id="nextSlideBtn" onclick="changeSlide(1)" class="px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-indigo-600 hover:bg-indigo-700 text-white transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                <span id="nextBtnText">Selanjutnya</span>
+                <i class="fa-solid fa-arrow-right text-xs"></i>
+            </button>
+        </div>
+    </footer>
+
+    <!-- Modal Penjelasan Istilah -->
+    <div id="termModalBackdrop" onclick="closeTermModal()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl slide-enter max-h-[90vh] overflow-y-auto">
+            <div class="flex items-start justify-between gap-4 mb-4">
+                <div>
+                    <span id="termCategoryBadge" class="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">Kategori</span>
+                    <h3 id="termTitle" class="text-xl font-extrabold text-slate-900 dark:text-white mt-1.5">Nama Istilah</h3>
+                </div>
+                <button type="button" onclick="closeTermModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <p id="termMainDesc" class="text-sm text-slate-700 dark:text-slate-200 leading-relaxed bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200/70 dark:border-slate-700/70"></p>
+                <div class="p-3.5 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-200/70 dark:border-indigo-800/70">
+                    <div class="text-[11px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-1">Konteks & Contoh Penerapan pada Sitemap & User Flow UMKM:</div>
+                    <p id="termDetailDesc" class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed"></p>
+                </div>
+                <div class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-200 dark:border-slate-800 text-xs px-1">
+                    <span id="termSourceName" class="font-semibold text-slate-400">Referensi</span>
+                    <div class="flex items-center gap-3">
+                        <button type="button" onclick="closeTermModal(); openGlossaryIndex();" class="font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1">
+                            <i class="fa-solid fa-book-open text-[10px]"></i>
+                            <span>Buka Kamus Lengkap</span>
+                        </button>
+                        <a id="termSourceUrl" href="#" target="_blank" rel="noopener noreferrer" class="font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1">
+                            <span>Referensi Web</span>
+                            <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Kamus Istilah Lengkap -->
+    <div id="glossaryModalBackdrop" onclick="closeGlossaryIndex()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-4xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden slide-enter">
+            <div class="p-5 sm:p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white">Kamus Istilah Pertemuan 5: Arsitektur Informasi, Sitemap, & User Flow</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Klik pada istilah mana pun untuk membaca arti dan contoh penerapannya dalam perancangan produk digital UMKM.</p>
+                </div>
+                <button type="button" onclick="closeGlossaryIndex()" class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-sm"></i>
+                    <input id="glossarySearchInput" oninput="renderGlossaryList(this.value)" type="text" placeholder="Cari istilah seperti Information Architecture, Sitemap, User Flow, Decision Node, Happy Path, Hick's Law..." class="w-full pl-10 pr-4 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+            <div id="glossaryListGrid" class="p-5 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+        </div>
+    </div>
+
+    <script>
+        // =========================================================================
+        // DATABASE KAMUS ISTILAH PERTEMUAN 5
+        // =========================================================================
+        const GLOSSARY_DB = {
+            ia: {
+                title: "Information Architecture (Arsitektur Informasi / IA)",
+                category: "Fondasi Struktur UX",
+                main: "Seni dan ilmu mengelompokkan, memberi label, serta menyusun struktur informasi di dalam produk digital agar pengguna dapat menemukan apa yang mereka cari dengan mudah.",
+                detail: "Menurut Morville & Rosenfeld (2015), IA pada UMKM memastikan pelanggan langsung menemukan daftar menu, rincian harga, dan status stok tanpa tersesat di dalam menu yang rumit.",
+                source: "Interaction Design Foundation",
+                url: "https://www.interaction-design.org/literature/topics/information-architecture"
+            },
+            mentalmodel: {
+                title: "Mental Model (Model Mental Pengguna)",
+                category: "Psikologi Kognitif UX",
+                main: "Ekspektasi atau gambaran yang sudah ada di kepala pengguna mengenai bagaimana suatu layanan seharusnya bekerja berdasarkan pengalaman mereka sehari-hari.",
+                detail: "Contoh: Pelanggan warung makan berharap menu dikelompokkan menjadi 'Makanan Utama', 'Lauk Tambahan', dan 'Minuman'—bukan menggunakan kode internal dapur seperti 'Kategori A1 & B2'.",
+                source: "Nielsen Norman Group",
+                url: "https://www.nngroup.com/articles/mental-models/"
+            },
+            cardsorting: {
+                title: "Card Sorting (Pengelompokan Kartu Informasi)",
+                category: "Metode IA",
+                main: "Teknik menyusun struktur menu dengan menuliskan butir-butir informasi di atas kartu, lalu mengelompokkannya ke dalam kategori yang paling masuk akal bagi pengguna.",
+                detail: "Membantu kita menentukan informasi apa saja yang harus digabung dalam satu layar dan mana yang perlu dipisah ke halaman tersendiri.",
+                source: "Nielsen Norman Group",
+                url: "https://www.nngroup.com/articles/card-sorting-definition/"
+            },
+            hickslaw: {
+                title: "Hick's Law (Hukum Hick)",
+                category: "Prinsip Psikologi UX",
+                main: "Waktu yang dibutuhkan seseorang untuk mengambil keputusan akan semakin lama seiring bertambahnya jumlah dan kerumitan pilihan yang disajikan.",
+                detail: "Pada produk UMKM, batasi navigasi utama maksimal 3 sampai 4 menu inti agar pelanggan maupun kasir dapat mengambil tindakan dalam hitungan detik.",
+                source: "Laws of UX",
+                url: "https://lawsofux.com/hicks-law/"
+            },
+            sitemap: {
+                title: "Sitemap (Peta Situs / Hierarki Halaman)",
+                category: "Artefak Struktur 1",
+                main: "Diagram pohon hierarkis yang memetakan seluruh daftar halaman/layar di dalam aplikasi atau web beserta hubungan induk-anak (parent-child) antar-halaman tersebut.",
+                detail: "Ibarat denah ruangan sebuah toko, Sitemap memperlihatkan berapa total layar yang akan kita buat (Screen Inventory) dari Level 0 (Beranda), Level 1 (Menu Utama), Level 2 (Aksi/Transaksi), hingga layar Backstage UMKM.",
+                source: "Nielsen Norman Group",
+                url: "https://www.nngroup.com/articles/ux-mapping-methods-compared/"
+            },
+            flathierarchy: {
+                title: "Flat Hierarchy (Hierarki Dangkal)",
+                category: "Struktur Navigasi",
+                main: "Struktur peta situs yang menjaga kedalaman halaman maksimal 2 hingga 3 level klik sehingga pengguna tidak perlu masuk terlalu dalam untuk mencapai tujuannya.",
+                detail: "Sangat disarankan untuk UMKM lokal: pelanggan cukup 1 klik dari Beranda ke Pilih Varian, lalu 1 klik ke Ringkasan Pesanan & Tiket.",
+                source: "Nielsen Norman Group",
+                url: "https://www.nngroup.com/articles/flat-vs-deep-hierarchy/"
+            },
+            screeninventory: {
+                title: "Screen Inventory (Daftar Inventaris Layar)",
+                category: "Perencanaan UI",
+                main: "Daftar terstruktur seluruh layar unik (diberi kode SCR-01, SCR-02, dst.) yang wajib dirancang untuk mengakomodasi fitur-fitur MVP.",
+                detail: "Menjadi jembatan langsung ke Pertemuan 6: setiap kode SCR pada Sitemap hari ini akan menjadi 1 Frame Wireframe di Figma minggu depan.",
+                source: "Interaction Design Foundation",
+                url: "https://www.interaction-design.org/literature/topics/wireframing"
+            },
+            userflow: {
+                title: "User Flow (Diagram Alur Pengguna)",
+                category: "Artefak Struktur 2",
+                main: "Diagram langkah demi langkah yang memvisualisasikan jalur interaksi yang dilalui pengguna dari titik masuk (Start) hingga berhasil menyelesaikan suatu tugas (End).",
+                detail: "Berbeda dengan Sitemap yang statis seperti denah gedung, User Flow bersifat dinamis karena memuat tindakan klik, tampilan layar, dan titik pemeriksaan kondisi (Decision).",
+                source: "Interaction Design Foundation",
+                url: "https://www.interaction-design.org/literature/topics/user-flows"
+            },
+            decisionnode: {
+                title: "Decision Node (Simbol Belah Ketupat / Percabangan)",
+                category: "Notasi User Flow",
+                main: "Titik pengecekan kondisi di dalam User Flow yang menghasilkan dua jalur keluar: Jalur 'Ya' (kondisi terpenuhi) dan Jalur 'Tidak' (kondisi kendala / belum lengkap).",
+                detail: "Contoh pada UMKM: 'Apakah stok porsi masih tersedia?' -> Jika Ya: lanjut ke ringkasan pesanan. Jika Tidak: tampilkan label Habis & tawarkan menu alternatif.",
+                source: "Nielsen Norman Group",
+                url: "https://www.nngroup.com/articles/user-journeys-vs-user-flows/"
+            },
+            happypath: {
+                title: "Happy Path (Jalur Ideal Tanpa Hambatan)",
+                category: "Skenario User Flow",
+                main: "Jalur utama paling lurus di mana pengguna berhasil menyelesaikan tujuannya dari awal hingga akhir tanpa mengalami kesalahan input atau kendala stok.",
+                detail: "Merupakan fondasi pertama saat menyusun User Flow sebelum menambahkan penanganan kondisi kendala (Edge Case) pada simbol Decision.",
+                source: "Interaction Design Foundation",
+                url: "https://www.interaction-design.org/literature/topics/user-flows"
+            },
+            edgecase: {
+                title: "Edge Case / Alternate Path (Jalur Kendala)",
+                category: "Skenario User Flow",
+                main: "Jalur alternatif di dalam User Flow ketika terjadi kondisi di luar skenario ideal, seperti stok mendadak habis, jam operasional tutup, atau kolom belum diisi.",
+                detail: "Pada LKM 05, jalur kendala ini langsung diintegrasikan ke dalam cabang 'Jika Tidak' pada simbol Decision agar alur aplikasi tidak buntu.",
+                source: "Nielsen Norman Group",
+                url: "https://www.nngroup.com/articles/error-message-guidelines/"
+            },
+            deadend: {
+                title: "Dead-End Flow (Alur Buntu)",
+                category: "Kesalahan User Flow",
+                main: "Kesalahan perancangan alur di mana pengguna tiba di suatu layar tanpa ada tombol aksi lanjutan yang jelas atau cara kembali ke langkah sebelumnya.",
+                detail: "Contoh Dead-End: Setelah pelanggan menekan tombol 'Kirim Pesanan', layar hanya menampilkan teks putih 'Terima Kasih' tanpa ada nomor tiket, rincian pesanan, atau tombol simpan bukti.",
+                source: "Nielsen Norman Group",
+                url: "https://www.nngroup.com/articles/user-journeys-vs-user-flows/"
+            }
+        };
+
+        function escapeHtml(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function term(key, customLabel) {
+            const item = GLOSSARY_DB[key];
+            if (!item) return customLabel || key;
+            const label = customLabel || item.title.split(' (')[0];
+            return '<span class="tech-term" onclick="showTerm(\'' + key + '\')">' + label + '</span>';
+        }
+
+        // Komponen Pita Jembatan Kognitif Atas & Bawah
+        function slideBridgeTop(prevHookText) {
+            return `
+                <div class="px-3.5 py-2 rounded-2xl bg-slate-100/90 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700/80 flex items-center gap-2.5 text-xs text-slate-600 dark:text-slate-300">
+                    <span class="px-2 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-extrabold text-[10px] uppercase shrink-0">🔗 Sambungan Cerita</span>
+                    <span class="font-medium leading-snug">${prevHookText}</span>
+                </div>
+            `;
+        }
+
+        function slideBridgeNext(nextTeaserText) {
+            return `
+                <div class="px-4 py-2.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/35 border border-indigo-200/80 dark:border-indigo-800/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-700 dark:text-slate-200">
+                    <div class="flex items-center gap-2">
+                        <span class="text-indigo-600 dark:text-indigo-400 font-extrabold shrink-0">👉 Selanjutnya:</span>
+                        <span class="font-semibold leading-snug">${nextTeaserText}</span>
+                    </div>
+                    <button type="button" onclick="changeSlide(1)" class="self-start sm:self-center px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-[11px] shrink-0 transition">
+                        Lanjut Slide Berikutnya &rarr;
+                    </button>
+                </div>
+            `;
+        }
+
+        // =========================================================================
+        // STATE INTERAKTIF 18 SLIDE PERTEMUAN 5
+        // =========================================================================
+        let currentSlideIndex = 0;
+        const TOTAL_SLIDES = 18;
+
+        let s4ArtifactTab = 'sitemap'; // 'cjm' | 'sitemap' | 'userflow'
+        let s6NavCaseIdx = 0; // 0 (Kuliner), 1 (Laundry), 2 (Servis/Barbershop)
+        let s6NavMode = 'good'; // 'bad' | 'good'
+        let s10NodeKey = 'decision'; // 'start' | 'screen' | 'decision' | 'end'
+        let s12FlowSide = 'frontstage'; // 'frontstage' | 'backstage'
+        let openReflectionKey = { 1: false, 2: false, 3: false };
+
+        // State Evaluasi Interaktif 3 Mode di Slide 16
+        let activeEvalTabM5 = 'refleksi'; // 'refleksi' | 'kasus' | 'kuis'
+        let bizChoicesM5 = {};
+        let tfChoicesM5 = {};
+
+        // =========================================================================
+        // FUNGSI RENDER SLIDE 1 s/d 10 (BAGIAN 1 DARI 2)
+        // =========================================================================
+
+        // SLIDE 1: Pengantar Pertemuan 5, Jembatan LKM 04, & Alur Cerita 5 Babak
+        function renderSlide1() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center my-auto">
+                        <div class="lg:col-span-7 space-y-4">
+                            <div class="inline-flex flex-wrap items-center gap-2">
+                                <span class="px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 text-xs font-bold border border-indigo-200/60 dark:border-indigo-800/60">Pertemuan 5 • Awal Tahap 2 (Struktur & Alur Solusi)</span>
+                                <span class="px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 text-xs font-bold border border-emerald-200/60 dark:border-emerald-800/60">S1 Bisnis Digital • Sub-CPMK 2.1 & 2.2 (Bobot 5%)</span>
+                            </div>
+
+                            <h2 class="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 dark:text-white leading-tight tracking-tight">
+                                Arsitektur Informasi, <span class="text-indigo-600 dark:text-indigo-400">Sitemap</span>, & <span class="text-emerald-600 dark:text-emerald-400">User Flow</span>
+                            </h2>
+
+                            <p class="text-xs sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Melanjutkan <strong>Daftar Fitur Inti MVP & UX Design Brief (LKM 04)</strong> minggu lalu, hari ini kita membuka Berlian Kedua (Ruang Solusi). Sebelum menggambar kerangka layar (*Wireframe*) di Figma pada Pertemuan 6, kita wajib menyusun cetak biru struktur halaman menggunakan ${term('ia', 'Information Architecture (IA)')} dan ${term('sitemap', 'Sitemap')}, serta memetakan logika langkah interaksi menggunakan ${term('userflow', 'User Flow')}.
+                            </p>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                                <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="px-2 py-0.5 rounded-md bg-indigo-600 text-white text-[11px] font-extrabold">Sub-CPMK 2.1</span>
+                                        <span class="text-xs font-bold text-slate-500">C4, P4</span>
+                                    </div>
+                                    <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">Menerjemahkan fitur MVP ke dalam struktur Arsitektur Informasi dan hierarki halaman (Sitemap) yang sesuai model mental pengguna.</p>
+                                </div>
+                                <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="px-2 py-0.5 rounded-md bg-emerald-600 text-white text-[11px] font-extrabold">Sub-CPMK 2.2</span>
+                                        <span class="text-xs font-bold text-slate-500">C4, P4</span>
+                                    </div>
+                                    <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">Merancang diagram alur pengguna (User Flow) beserta titik percabangan kondisi (Decision) untuk sisi pelanggan dan pengelola UMKM.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-5">
+                            <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 space-y-3">
+                                <div>
+                                    <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Alur Cerita 5 Babak (18 Slide)</span>
+                                    <h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white mt-0.5">Klik Babak untuk Melompat</h3>
+                                </div>
+                                <div class="space-y-2 text-xs">
+                                    <button type="button" onclick="goToSlide(1)" class="w-full text-left flex items-start gap-3 p-3 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <span class="w-7 h-7 rounded-xl bg-indigo-600 text-white font-extrabold flex items-center justify-center shrink-0">B1</span>
+                                        <div><strong class="text-slate-900 dark:text-white block">Babak 1: Fondasi Arsitektur Informasi (Slide 2–6)</strong><span class="text-slate-500">3 Pilar IA, CJM vs Sitemap vs Flow, Mental Model & Hick's Law.</span></div>
+                                    </button>
+                                    <button type="button" onclick="goToSlide(6)" class="w-full text-left flex items-start gap-3 p-3 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <span class="w-7 h-7 rounded-xl bg-emerald-600 text-white font-extrabold flex items-center justify-center shrink-0">B2</span>
+                                        <div><strong class="text-slate-900 dark:text-white block">Babak 2: Menyusun Sitemap & Screen Inventory (Slide 7–8)</strong><span class="text-slate-500">Hierarki Level 0–2, layar Backstage & kode layar SCR-01..05.</span></div>
+                                    </button>
+                                    <button type="button" onclick="goToSlide(8)" class="w-full text-left flex items-start gap-3 p-3 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <span class="w-7 h-7 rounded-xl bg-amber-600 text-white font-extrabold flex items-center justify-center shrink-0">B3</span>
+                                        <div><strong class="text-slate-900 dark:text-white block">Babak 3: Anatomi & Logika User Flow (Slide 9–12)</strong><span class="text-slate-500">4 simbol standar, percabangan Decision & alur 2 sisi UMKM.</span></div>
+                                    </button>
+                                    <button type="button" onclick="goToSlide(12)" class="w-full text-left flex items-start gap-3 p-3 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <span class="w-7 h-7 rounded-xl bg-rose-600 text-white font-extrabold flex items-center justify-center shrink-0">B4</span>
+                                        <div><strong class="text-slate-900 dark:text-white block">Babak 4: Efisiensi Klik & Jembatan Wireframe (Slide 13–15)</strong><span class="text-slate-500">Pangkas klik, persiapan Frame Figma & 4 kesalahan umum.</span></div>
+                                    </button>
+                                    <button type="button" onclick="goToSlide(15)" class="w-full text-left flex items-start gap-3 p-3 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <span class="w-7 h-7 rounded-xl bg-purple-600 text-white font-extrabold flex items-center justify-center shrink-0">B5</span>
+                                        <div><strong class="text-slate-900 dark:text-white block">Babak 5: Evaluasi 3 Mode & Panduan LKM 05 (Slide 16–18)</strong><span class="text-slate-500">4 kasus keputusan IA/Flow, kuis kilat & langkah kerja LKM 05.</span></div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    ${slideBridgeNext("Kita mulai di Slide 2 dengan memahami mengapa kita tidak boleh langsung menggambar layar di Figma sebelum memiliki Sitemap dan User Flow.")}
+                </div>
+            `;
+        }
+
+        // SLIDE 2: Mengapa Tidak Boleh Langsung Menggambar Wireframe Tanpa Sitemap & User Flow?
+        function renderSlide2() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Pada Pertemuan 4 Anda telah mengunci daftar Fitur Inti MVP. Mengapa hari ini kita perlu membuat Sitemap dan User Flow terlebih dahulu?")}
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Babak 1 • Jembatan dari Design Brief ke Layar Visual</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Analogi Arsitek Bangunan: Denah Ruangan vs Rute Langkah Kaki</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Membangun produk digital tanpa ${term('sitemap', 'Sitemap')} dan ${term('userflow', 'User Flow')} ibarat membangun gedung toko tanpa gambar denah: tukang bangunan langsung memasang batu bata dan mengecat tembok, lalu baru sadar tidak ada pintu menuju kasir!
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 my-auto text-xs sm:text-sm">
+                        <div class="p-5 rounded-3xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 space-y-2.5">
+                            <div class="flex items-center justify-between">
+                                <span class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-xs font-extrabold">1. Sitemap = Denah Ruangan Toko</span>
+                                <i class="fa-solid fa-sitemap text-xl text-indigo-600 dark:text-indigo-400"></i>
+                            </div>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Menjawab: "Ada Berapa Halaman & Apa Saja Isinya?"</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Memetakan struktur hierarki halaman dari atas ke bawah. Dengan Sitemap, kita tahu persis apakah aplikasi UMKM kita membutuhkan <strong>5 layar atau 7 layar</strong> sebelum mulai menggambar di Figma.
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 space-y-2.5">
+                            <div class="flex items-center justify-between">
+                                <span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-xs font-extrabold">2. User Flow = Rute Langkah Pembeli</span>
+                                <i class="fa-solid fa-route text-xl text-emerald-600 dark:text-emerald-400"></i>
+                            </div>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Menjawab: "Bagaimana Urutan Klik dari Awal hingga Selesai?"</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Memetakan pergerakan pengguna melintasi ruangan-ruangan tadi: mulai dari membuka katalog, memilih varian, melewati pengecekan stok, hingga menerima bukti pesanan.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="p-3.5 rounded-2xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-xs text-slate-700 dark:text-slate-200">
+                        <i class="fa-solid fa-lightbulb text-amber-600 mr-1.5"></i><strong>Manfaat Praktis bagi Anda:</strong> Menyelesaikan Sitemap dan User Flow di Pertemuan 5 akan menghemat 70% waktu Anda saat membuat <em>Wireframe</em> di Pertemuan 6 karena Anda tidak perlu lagi menebak-nebak layar apa yang kurang!
+                    </div>
+                    ${slideBridgeNext("Apa ilmu dasar yang mengatur cara menyusun informasi di dalam Sitemap? Kita pelajari 3 Pilar Arsitektur Informasi di Slide 3.")}
+                </div>
+            `;
+        }
+
+        // SLIDE 3: Mengenal Information Architecture (IA): 3 Pilar Morville & Rosenfeld
+        function renderSlide3() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Untuk membuat denah Sitemap yang rapi seperti analogi di Slide 2, kita menggunakan prinsip Information Architecture (IA).")}
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Babak 1 • Teori Morville & Rosenfeld ("Polar Bear Book")</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Tiga Pilar ${term('ia', 'Information Architecture (IA)')} pada Produk UMKM</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Pakar UX <strong>Peter Morville & Louis Rosenfeld</strong> merumuskan bahwa arsitektur informasi yang baik selalu berdiri di atas irisan <strong>3 Pilar Ekosistem Informasi</strong> berikut:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-auto text-xs sm:text-sm">
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                            <div class="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-bold"><i class="fa-solid fa-users"></i></div>
+                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Pilar 1: USERS (Pengguna)</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Kebiasaan & ${term('mentalmodel', 'Model Mental')}</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Siapa yang mencari informasi dan dalam kondisi apa? Pelanggan yang sedang lapar di jam istirahat kantor butuh melihat <strong>harga dan ketersediaan porsi</strong> pada pandangan pertama tanpa harus membaca teks panjang.
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                            <div class="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-bold"><i class="fa-solid fa-boxes-stacked"></i></div>
+                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Pilar 2: CONTENT (Isi Informasi)</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Data Produk, Harga, & Status</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Informasi apa saja yang wajib ditampilkan di layar? Mencakup nama produk/paket jasa, foto, harga transparan, indikator stok/slot jadwal, hingga nomor tiket pesanan.
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                            <div class="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center font-bold"><i class="fa-solid fa-store"></i></div>
+                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-amber-600 dark:text-amber-400">Pilar 3: CONTEXT (Bisnis UMKM)</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Tujuan Usaha & Batasan Operasional</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Apa tujuan bisnis UMKM dan apa batasan kerjanya? Struktur informasi harus sesederhana mungkin agar pemilik UMKM sanggup memperbarui stok/status pesanan dalam 1–2 klik.
+                            </p>
+                        </div>
+                    </div>
+                    ${slideBridgeNext("Banyak mahasiswa tertukar antara Customer Journey Map (LKM 03), Sitemap, dan User Flow. Mari kita bedakan ketiganya di Slide 4!")}
+                </div>
+            `;
+        }
+
+        // SLIDE 4: Simulasi Interaktif 1: Membedakan Customer Journey Map vs Sitemap vs User Flow
+        function renderSlide4() {
+            const artifacts = {
+                cjm: {
+                    badge: "Artefak Pertemuan 3 (LKM 03) • Sudah Anda Buat",
+                    title: "1. Customer Journey Map (Peta Perjalanan & Emosi Makro)",
+                    focus: "Fokus: Perasaan, titik sakit (Pain Points), dan pengalaman menyeluruh pelanggan di dunia nyata (sebelum ada solusi aplikasi).",
+                    question: 'Pertanyaan yang Dijawab: "Pada tahapan transaksi mana pelanggan merasa paling kecewa atau cemas saat ini?"',
+                    example: "Contoh Isi: Fase 1 Cari Info di IG -> Fase 2 Chat WA Admin -> Fase 3 Tunggu Balasan 1 Jam (Emosi: 😫 Sangat Cemas).",
+                    colorClass: "border-rose-400 bg-rose-50/50 dark:bg-rose-950/20"
+                },
+                sitemap: {
+                    badge: "Artefak 1 Pertemuan 5 (LKM 05 Hari Ini) • Struktur Hierarki",
+                    title: "2. Sitemap (Peta Hierarki Halaman & Navigasi)",
+                    focus: "Fokus: Daftar seluruh layar (Screen Inventory) dan pengelompokan menu dari halaman induk ke halaman anak.",
+                    question: 'Pertanyaan yang Dijawab: "Ada berapa halaman di dalam produk digital kita dan bagaimana susunan menu navigasinya?"',
+                    example: "Contoh Isi: [SCR-01 Beranda & Katalog] memiliki anak halaman -> [SCR-02 Detail & Pilih Varian] dan [SCR-03 Cek Status Tiket].",
+                    colorClass: "border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/20"
+                },
+                userflow: {
+                    badge: "Artefak 2 Pertemuan 5 (LKM 05 Hari Ini) • Logika Langkah & Keputusan",
+                    title: "3. User Flow (Diagram Alur Langkah & Percabangan Interaksi)",
+                    focus: "Fokus: Urutan langkah klik, respons sistem, dan titik pengecekan kondisi (Ya/Tidak) saat menyelesaikan satu tugas spesifik.",
+                    question: 'Pertanyaan yang Dijawab: "Langkah klik apa saja yang dilalui pengguna dari membuka layar hingga pesanan selesai, dan bagaimana jika stok habis?"',
+                    example: "Contoh Isi: (Start) Buka Katalog -> [Pilih Menu] -> <Apakah Stok Tersedia?> -> Jika Ya: [Isi Nama & Bayar QRIS] -> (End) Tiket Pesanan Terbit.",
+                    colorClass: "border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20"
+                }
+            };
+            const cur = artifacts[s4ArtifactTab];
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Agar tidak bingung saat mengerjakan LKM 05 nanti, pahami perbedaan fungsi antara Journey Map (LKM 03), Sitemap, dan User Flow.")}
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400">Simulasi Interaktif 1 • Perbandingan 3 Artefak Pemetaan UX</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Jangan Tertukar: Journey Map vs ${term('sitemap', 'Sitemap')} vs ${term('userflow', 'User Flow')}</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">Klik ketiga tab di bawah ini untuk membandingkan fokus, pertanyaan kunci, dan wujud isinya:</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        <button type="button" onclick="setS4Tab('cjm')" class="p-3 rounded-2xl border text-left transition ${s4ArtifactTab === 'cjm' ? 'bg-rose-600 text-white border-rose-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-[10px] font-bold uppercase opacity-80">LKM 03 (Masa Lalu)</div>
+                            <div class="text-xs sm:text-sm font-extrabold mt-0.5">1. Customer Journey Map</div>
+                        </button>
+                        <button type="button" onclick="setS4Tab('sitemap')" class="p-3 rounded-2xl border text-left transition ${s4ArtifactTab === 'sitemap' ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-[10px] font-bold uppercase opacity-80">LKM 05 Bagian A (Hari Ini)</div>
+                            <div class="text-xs sm:text-sm font-extrabold mt-0.5">2. Sitemap (Hierarki Layar)</div>
+                        </button>
+                        <button type="button" onclick="setS4Tab('userflow')" class="p-3 rounded-2xl border text-left transition ${s4ArtifactTab === 'userflow' ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-[10px] font-bold uppercase opacity-80">LKM 05 Bagian B (Hari Ini)</div>
+                            <div class="text-xs sm:text-sm font-extrabold mt-0.5">3. User Flow (Alur Klik)</div>
+                        </button>
+                    </div>
+
+                    <div class="p-5 sm:p-6 rounded-3xl border-2 ${cur.colorClass} space-y-3 my-auto text-xs sm:text-sm">
+                        <span class="px-2.5 py-1 rounded-lg bg-slate-900 text-white text-[11px] font-extrabold inline-block">${cur.badge}</span>
+                        <h3 class="text-base sm:text-xl font-extrabold text-slate-900 dark:text-white">${cur.title}</h3>
+                        <p class="text-slate-700 dark:text-slate-200 font-semibold">${cur.focus}</p>
+                        <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 space-y-1.5">
+                            <div class="font-bold text-indigo-600 dark:text-indigo-400">${cur.question}</div>
+                            <div class="text-slate-600 dark:text-slate-300 font-mono text-xs">${cur.example}</div>
+                        </div>
+                    </div>
+                    ${slideBridgeNext("Bagaimana cara mengelompokkan menu di Sitemap agar sesuai dengan isi kepala pelanggan? Kita pelajari Mental Model & Hick's Law di Slide 5.")}
+                </div>
+            `;
+        }
+
+        // SLIDE 5: Mengelompokkan Informasi dengan Mental Model, Card Sorting, & Hick's Law
+        function renderSlide5() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Saat menyusun Sitemap (Artefak 1 dari Slide 4), kita wajib mengikuti cara berpikir pengguna dan membatasi jumlah pilihan menu.")}
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Babak 1 • Psikologi Navigasi (Steve Krug & Laws of UX)</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Prinsip ${term('mentalmodel', 'Mental Model')}, ${term('cardsorting', 'Card Sorting')}, & ${term('hickslaw', "Hick's Law")}</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Dalam buku klasik <em>Don't Make Me Think</em>, <strong>Steve Krug</strong> menegaskan bahwa navigasi yang baik tidak pernah memaksa pengguna berpikir keras menebak arti sebuah menu:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-auto text-xs sm:text-sm">
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <span class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-xs font-extrabold">1. Bahasa Pengguna, Bukan Istilah Toko</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Sesuaikan ${term('mentalmodel', 'Mental Model')}</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Gunakan label menu yang akrab di telinga pelanggan. Jangan menamai tombol dengan istilah teknis seperti <em>"Modul Transaksi FIFO"</em> atau <em>"Database SKU"</em>; gunakan kata <strong>"Katalog Menu"</strong> atau <strong>"Cek Pesanan"</strong>.
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-xs font-extrabold">2. Kelompokkan yang Serupa</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Logika ${term('cardsorting', 'Card Sorting')}</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Satukan informasi yang dicari bersamaan ke dalam satu layar. Misalnya: <strong>Foto Menu, Harga, dan Status Stok</strong> harus berada di kartu yang sama—jangan dipisah ke halaman yang berbeda!
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <span class="px-2.5 py-1 rounded-lg bg-amber-500 text-white text-xs font-extrabold">3. Batasi 3–4 Menu Utama</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Terapkan ${term('hickslaw', "Hick's Law")}</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Semakin banyak tombol navigasi di layar, semakin bingung pengguna memilih. Untuk skala MVP UMKM, cukup sediakan <strong>3 hingga 4 menu navigasi utama</strong> yang paling krusial.
+                            </p>
+                        </div>
+                    </div>
+                    ${slideBridgeNext("Mari kita lihat contoh nyata perbandingan Sitemap UMKM yang membingungkan vs Sitemap yang terstruktur rapi di Slide 6!")}
+                </div>
+            `;
+        }
+
+        // SLIDE 6: Simulasi Interaktif 2: Klinik Pola Navigasi & Sitemap UMKM (Buruk vs Baik)
+        function renderSlide6() {
+            const cases = [
+                {
+                    name: "Kasus 1: UMKM Katering / Warung Makan",
+                    badMenu: ["Beranda", "Sejarah Warung", "Visi & Misi", "Galeri Foto Dapur", "Daftar Menu Makanan", "Daftar Harga Terpisah", "Tabel Stok Harian", "Form Kritik Saran", "Login Member"],
+                    badReason: "SALAH (9 Menu Berantakan): Memisahkan 'Daftar Menu', 'Daftar Harga', dan 'Tabel Stok' ke 3 halaman berbeda, serta memenuhi navigasi dengan halaman yang tidak dibutuhkan pelanggan saat lapar (Visi Misi, Sejarah).",
+                    goodMenu: ["1. Katalog Menu & Stok (Beranda)", "2. Ringkasan Pesanan & Bayar", "3. Tiket Status Pesanan", "4. Panel Kasir UMKM (Backstage)"],
+                    goodReason: "BENAR (4 Layar Inti Fokus MVP): Menggabungkan menu, harga, dan stok langsung di halaman pertama (Level 0), diikuti alur pemesanan ringkas dan 1 layar khusus pengelola toko."
+                },
+                {
+                    name: "Kasus 2: UMKM Jasa Laundry Kiloan",
+                    badMenu: ["Home", "Artikel Cara Mencuci", "Katalog Parfum", "Tabel Tarif Kiloan", "Tabel Tarif Satuan", "Kalkulator Berat", "Cek Nota", "Profil Pemilik"],
+                    badReason: "SALAH (8 Menu Membingungkan): Memecah tarif dan kalkulator ke banyak menu terpisah sehingga pelanggan kesulitan memperkirakan biaya cuciannya.",
+                    goodMenu: ["1. Cek Tarif & Estimasi Biaya (Beranda)", "2. Lacak Status Cucian (Input No. HP/Tiket)", "3. Detail Nota Digital & QRIS", "4. Layar Kasir Input Timbangan & Update Status (Backstage)"],
+                    goodReason: "BENAR (4 Layar Inti Fokus MVP): Fokus 100% pada 2 kebutuhan utama pelanggan (cek estimasi harga & lacak status cucian) serta 1 layar kerja cepat bagi staf laundry."
+                },
+                {
+                    name: "Kasus 3: UMKM Barbershop / Bengkel Servis",
+                    badMenu: ["Welcome Screen", "Daftar Riwayat Hidup Kapster", "Galeri Gaya Rambut", "Jadwal Hari Senin", "Jadwal Hari Selasa", "Form Registrasi Akun", "Form Booking", "Halaman FAQ"],
+                    badReason: "SALAH (Terlalu Dalam & Berbelit): Memisahkan jadwal per hari ke halaman berbeda dan memaksa pelanggan membuat akun/password dulu sebelum bisa melihat kursi kosong.",
+                    goodMenu: ["1. Jadwal Kursi Kosong Hari Ini & Tarif (Beranda)", "2. Pilih Jam & Isi Nama Singkat", "3. Tiket Antrean Digital", "4. Layar Antrean Meja Kapster/Montir (Backstage)"],
+                    goodReason: "BENAR (4 Layar Inti Fokus MVP): Pelanggan langsung melihat jam kosong hari ini di layar pertama dan memesan dalam 1 langkah tanpa registrasi akun yang rumit."
+                }
+            ];
+            const cur = cases[s6NavCaseIdx];
+            const isBad = s6NavMode === 'bad';
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Menerapkan Hick's Law dan Card Sorting dari Slide 5, mari kita bedah struktur navigasi pada 3 jenis UMKM berikut.")}
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400">Simulasi Interaktif 2 • Klinik Arsitektur Navigasi</span>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Menu Membingungkan vs ${term('flathierarchy', 'Flat Hierarchy')} (Fokus MVP)</h2>
+                        </div>
+                        <div class="flex flex-wrap gap-1.5">
+                            ${cases.map((c, idx) => `
+                                <button type="button" onclick="setS6Case(${idx})" class="px-3 py-1.5 rounded-xl text-xs font-extrabold transition ${s6NavCaseIdx === idx ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">UMKM ${idx + 1}</button>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <div class="p-4 sm:p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-3.5 my-auto text-xs">
+                        <div class="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-slate-200 dark:border-slate-700">
+                            <span class="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">${cur.name}</span>
+                            <div class="flex gap-1.5 bg-slate-200/80 dark:bg-slate-900 p-1 rounded-xl">
+                                <button type="button" onclick="setS6Mode('good')" class="px-3 py-1.5 rounded-lg text-xs font-extrabold transition ${!isBad ? 'bg-emerald-600 text-white' : 'text-slate-600 dark:text-slate-300'}">Struktur Ideal (Flat & Fokus MVP)</button>
+                                <button type="button" onclick="setS6Mode('bad')" class="px-3 py-1.5 rounded-lg text-xs font-extrabold transition ${isBad ? 'bg-rose-600 text-white' : 'text-slate-600 dark:text-slate-300'}">Struktur Buruk (Penuh Sampah Menu)</button>
+                            </div>
+                        </div>
+
+                        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border-2 ${isBad ? 'border-rose-400' : 'border-emerald-500'} space-y-2.5">
+                            <div class="font-bold uppercase text-[10px] ${isBad ? 'text-rose-600' : 'text-emerald-600'}">
+                                ${isBad ? '❌ Daftar Menu yang Memecah Fokus Pengguna:' : '✅ Daftar Layar Inti (Screen Inventory) yang Rapi & Terfokus:'}
+                            </div>
+                            <div class="flex flex-wrap gap-2">
+                                ${(isBad ? cur.badMenu : cur.goodMenu).map(m => `
+                                    <span class="px-3 py-2 rounded-xl font-bold ${isBad ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-800 dark:text-rose-200 border border-rose-200' : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-200 border border-emerald-300'}">${m}</span>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <div class="p-3.5 rounded-2xl ${isBad ? 'bg-rose-50/80 dark:bg-rose-950/30 text-rose-900 dark:text-rose-200 border border-rose-200' : 'bg-emerald-50/80 dark:bg-emerald-950/30 text-emerald-900 dark:text-emerald-200 border border-emerald-200'} leading-relaxed">
+                            <i class="fa-solid ${isBad ? 'fa-circle-xmark text-rose-600' : 'fa-circle-check text-emerald-600'} mr-1.5"></i>${isBad ? cur.badReason : cur.goodReason}
+                        </div>
+                    </div>
+                    ${slideBridgeNext("Babak 1 selesai! Sekarang kita masuk ke Babak 2 (Slide 7): bagaimana cara menggambar hierarki Level 0, Level 1, Level 2, dan Backstage pada Sitemap LKM 05?")}
+                </div>
+            `;
+        }
+
+        // SLIDE 7: Anatomi Hirarki Sitemap Produk UMKM (Level 0, Level 1, Level 2, & Backstage)
+        function renderSlide7() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Memasuki Babak 2, kita pelajari sistem level dan kode penomoran layar (SCR-01 s/d SCR-05) yang akan Anda gunakan di LKM 05.")}
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Babak 2 • Struktur Pohon Sitemap (Sinkron LKM 05)</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Anatomi 4 Kelompok Level pada ${term('sitemap', 'Sitemap')} UMKM</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Agar setiap layar mudah dilacak hingga ke pembuatan <em>Wireframe</em> minggu depan, setiap kotak halaman pada Sitemap diberi kode unik (<code>SCR-01</code>, <code>SCR-02</code>, dst.) dan dibagi ke dalam 4 kelompok level berikut:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 my-auto text-xs">
+                        <div class="p-4 rounded-3xl bg-indigo-50/80 dark:bg-indigo-950/30 border-2 border-indigo-500 space-y-2">
+                            <span class="px-2 py-0.5 rounded bg-indigo-600 text-white font-mono font-extrabold text-[10px]">LEVEL 0 • INDUK UTAMA</span>
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Halaman Beranda / Katalog Utama</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Pintu masuk pertama pelanggan (misal <code>SCR-01: Beranda & Katalog Menu/Layanan</code>). Menampilkan informasi paling krusial seperti daftar produk, harga, dan status stok/jadwal.
+                            </p>
+                        </div>
+
+                        <div class="p-4 rounded-3xl bg-sky-50/80 dark:bg-sky-950/30 border border-sky-300 dark:border-sky-800 space-y-2">
+                            <span class="px-2 py-0.5 rounded bg-sky-600 text-white font-mono font-extrabold text-[10px]">LEVEL 1 • NAVIGASI INTI</span>
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Menu Utama Pelanggan</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Halaman yang diakses langsung dari Beranda atau bilah navigasi (misal <code>SCR-02: Detail & Pilih Varian/Jam</code> serta <code>SCR-03: Lacak Status Pesanan</code>).
+                            </p>
+                        </div>
+
+                        <div class="p-4 rounded-3xl bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-800 space-y-2">
+                            <span class="px-2 py-0.5 rounded bg-emerald-600 text-white font-mono font-extrabold text-[10px]">LEVEL 2 • TRANSAKSI LANJUT</span>
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Konfirmasi, Bayar, & Bukti Tiket</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Halaman penyelesaian transaksi setelah pelanggan memilih item di Level 1 (misal <code>SCR-04: Ringkasan Tagihan, QRIS, & Tiket Nota Digital</code>).
+                            </p>
+                        </div>
+
+                        <div class="p-4 rounded-3xl bg-amber-50/80 dark:bg-amber-950/30 border-2 border-amber-400 dark:border-amber-700 space-y-2">
+                            <span class="px-2 py-0.5 rounded bg-amber-500 text-white font-mono font-extrabold text-[10px]">BACKSTAGE • SISI TOKO</span>
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Layar Kerja Pengelola UMKM</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Halaman khusus pemilik/kasir UMKM untuk menerima pesanan masuk dan mengubah status selesai/stok dalam 1–2 klik (misal <code>SCR-05: Panel Kasir Ringkas</code>).
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="p-3 rounded-2xl bg-slate-100 dark:bg-slate-800/80 text-xs text-slate-700 dark:text-slate-300">
+                        <i class="fa-solid fa-wand-magic-sparkles text-indigo-600 dark:text-indigo-400 mr-1.5"></i><strong>Kabar Baik di LKM 05:</strong> Saat Anda mengisi daftar layar (<code>SCR-01</code> s/d <code>SCR-05</code>) dan memilih levelnya di LKM 05 nanti, sistem akan <strong>menggambar Diagram Pohon Sitemap Visual secara otomatis</strong> untuk Anda!
+                    </div>
+                    ${slideBridgeNext("Bagaimana cara memastikan setiap layar di Sitemap benar-benar berasal dari Fitur MVP LKM 04? Kita lihat aturannya di Slide 8.")}
+                </div>
+            `;
+        }
+
+        // SLIDE 8: Menurunkan Fitur MVP LKM 04 Menjadi Daftar Halaman (Screen Inventory)
+        function renderSlide8() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Menyambung struktur 4 level Sitemap di Slide 7, setiap layar wajib memiliki keterhubungan langsung dengan Fitur MVP dari LKM 04.")}
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Babak 2 • Konsistensi LKM 04 ke LKM 05</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Menurunkan Fitur MVP Menjadi ${term('screeninventory', 'Screen Inventory')}</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Pada LKM 04 minggu lalu, Anda telah mengunci minimal 3 <strong>Fitur Inti MVP (Kuadran 1)</strong>. Pada LKM 05 hari ini, setiap fitur MVP tersebut wajib diterjemahkan menjadi layar di dalam Sitemap:
+                        </p>
+                    </div>
+
+                    <div class="p-4 sm:p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-3 my-auto text-xs">
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-center p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+                            <div class="md:col-span-4 font-bold text-emerald-700 dark:text-emerald-400">
+                                <span class="text-[10px] uppercase block text-slate-400">Dari LKM 04 (Kuadran 1 MVP)</span>
+                                [MVP-1] Katalog Menu & Indikator Stok Real-Time
+                            </div>
+                            <div class="md:col-span-1 text-center text-indigo-500 font-extrabold">&rarr;</div>
+                            <div class="md:col-span-4 font-bold text-indigo-700 dark:text-indigo-300">
+                                <span class="text-[10px] uppercase block text-slate-400">Menjadi Layar Sitemap LKM 05</span>
+                                [SCR-01 • Level 0] Beranda Katalog & Status Ketersediaan
+                            </div>
+                            <div class="md:col-span-3 text-slate-600 dark:text-slate-300">
+                                <strong>Isi & Tombol Aksi:</strong> Foto, harga jelas, badge 'Tersedia/Habis', & tombol 'Pilih Menu'.
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-center p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+                            <div class="md:col-span-4 font-bold text-emerald-700 dark:text-emerald-400">
+                                <span class="text-[10px] uppercase block text-slate-400">Dari LKM 04 (Kuadran 1 MVP)</span>
+                                [MVP-2] Form Pemesanan Ringkas & Hitung Otomatis
+                            </div>
+                            <div class="md:col-span-1 text-center text-indigo-500 font-extrabold">&rarr;</div>
+                            <div class="md:col-span-4 font-bold text-indigo-700 dark:text-indigo-300">
+                                <span class="text-[10px] uppercase block text-slate-400">Menjadi Layar Sitemap LKM 05</span>
+                                [SCR-02 • Level 1] Pilih Varian & Ringkasan Pesanan<br>[SCR-03 • Level 2] Pembayaran QRIS & Tiket Digital
+                            </div>
+                            <div class="md:col-span-3 text-slate-600 dark:text-slate-300">
+                                <strong>Isi & Tombol Aksi:</strong> Pilihan porsi/catatan, kalkulator total biaya, kode QRIS, & nomor tiket.
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-center p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+                            <div class="md:col-span-4 font-bold text-amber-700 dark:text-amber-400">
+                                <span class="text-[10px] uppercase block text-slate-400">Dari LKM 04 (Kuadran 1 MVP Backstage)</span>
+                                [MVP-3] Panel Kasir Saklar Stok & Update Status 1-Tap
+                            </div>
+                            <div class="md:col-span-1 text-center text-indigo-500 font-extrabold">&rarr;</div>
+                            <div class="md:col-span-4 font-bold text-amber-700 dark:text-amber-300">
+                                <span class="text-[10px] uppercase block text-slate-400">Menjadi Layar Sitemap LKM 05</span>
+                                [SCR-05 • Backstage] Layar Antrean Pesanan & Saklar Stok UMKM
+                            </div>
+                            <div class="md:col-span-3 text-slate-600 dark:text-slate-300">
+                                <strong>Isi & Tombol Aksi:</strong> Daftar pesanan masuk, tombol besar 'Siap Diambil', & saklar 'Stok Habis'.
+                            </div>
+                        </div>
+                    </div>
+                    ${slideBridgeNext("Babak 2 selesai! Setelah denah halaman (Sitemap) selesai, kita masuk ke Babak 3 (Slide 9): merancang alur langkah kaki pengguna dengan User Flow.")}
+                </div>
+            `;
+        }
+
+        // SLIDE 9: Apa Itu User Flow (Task Flow) & Mengapa Berbeda dari Sitemap?
+        function renderSlide9() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Memasuki Babak 3, kita menghubungkan halaman-halaman di Sitemap tadi menjadi urutan langkah interaksi melalui User Flow.")}
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">Babak 3 • Artefak Struktur 2 (Logika Interaksi)</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Apa Itu ${term('userflow', 'User Flow')} dan Apa Bedanya dengan Sitemap?</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Jika <em>Sitemap</em> memperlihatkan susunan seluruh halaman secara diam (statis), maka <strong>User Flow</strong> memvisualisasikan <strong>urutan langkah kronologis, tindakan klik, dan percabangan logika</strong> saat pengguna menyelesaikan satu tujuan spesifik:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-auto text-xs sm:text-sm">
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <div class="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-bold"><i class="fa-solid fa-play"></i></div>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">1. Berangkat dari Skenario Pemicu</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                User Flow selalu dimulai dari titik pemicu nyata (sesuai <em>Trigger Scenario</em> pada Persona LKM 03): misalnya pelanggan membuka tautan katalog di jam istirahat siang.
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <div class="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center font-bold"><i class="fa-solid fa-code-branch"></i></div>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">2. Memuat Pengecekan Kondisi</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Dunia nyata tidak selalu berjalan lurus. User Flow wajib memuat titik pemeriksaan (${term('decisionnode', 'Decision Node')}): <em>"Apakah stok masih ada?"</em> atau <em>"Apakah data pesanan sudah lengkap?"</em>.
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <div class="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-bold"><i class="fa-solid fa-flag-checkered"></i></div>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">3. Berakhir pada Bukti Konkret</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Setiap User Flow tidak boleh menggantung (${term('deadend', 'Dead-End')}), melainkan wajib berakhir pada kondisi sukses yang jelas (misal: tiket pesanan terbit dan tercatat di layar kasir UMKM).
+                            </p>
+                        </div>
+                    </div>
+                    ${slideBridgeNext("Apa saja 4 simbol standar yang digunakan saat menyusun User Flow di LKM 05? Kita pelajari secara interaktif di Slide 10.")}
+                </div>
+            `;
+        }
+
+        // SLIDE 10: Simulasi Interaktif 3: Anatomi 4 Simbol Standar Diagram User Flow
+        function renderSlide10() {
+            const nodes = {
+                start: {
+                    badge: "Simbol 1 • Kapsul / Oval Hijau (Start / Trigger)",
+                    title: "🟢 START / TRIGGER (Titik Masuk Pengguna)",
+                    shapePreview: `<div class="px-6 py-3 rounded-full bg-emerald-600 text-white font-extrabold text-xs sm:text-sm shadow-md inline-flex items-center gap-2"><i class="fa-solid fa-play"></i><span>Mulai: Pelanggan Membuka Katalog Menu UMKM</span></div>`,
+                    meaning: "Menandai dari mana dan dalam situasi apa pengguna memulai perjalanannya masuk ke dalam sistem.",
+                    example: "Contoh di LKM 05: Pelanggan mengklik tautan katalog dari profil WhatsApp/Instagram atau memindai kode QR di meja warung (masuk ke layar SCR-01)."
+                },
+                screen: {
+                    badge: "Simbol 2 • Persegi Panjang Biru (Screen & User Action)",
+                    title: "🟦 SCREEN / PROCESS (Tampilan Layar & Tindakan Klik)",
+                    shapePreview: `<div class="px-6 py-3.5 rounded-xl bg-indigo-600 text-white font-extrabold text-xs sm:text-sm shadow-md inline-flex items-center gap-2 border-2 border-indigo-300"><i class="fa-solid fa-mobile-screen"></i><span>[SCR-01] Lihat Harga & Klik Pilih Varian Ayam Bakar</span></div>`,
+                    meaning: "Menunjukkan halaman Sitemap mana (SCR) yang sedang dilihat pengguna serta tindakan apa yang ia lakukan di layar tersebut.",
+                    example: "Contoh di LKM 05: Pada layar [SCR-02], pelanggan memilih tingkat kepedasan, mengisi nama singkat, dan menekan tombol 'Lanjut ke Pembayaran'."
+                },
+                decision: {
+                    badge: "Simbol 3 • Belah Ketupat Kuning (Decision / Percabangan Kondisi)",
+                    title: "🟨 DECISION / CONDITION (Titik Pengecekan Ya vs Tidak)",
+                    shapePreview: `<div class="px-5 py-3 rounded-xl bg-amber-500 text-slate-950 font-extrabold text-xs sm:text-sm shadow-md inline-flex items-center gap-2 border-2 border-amber-700"><i class="fa-solid fa-diamond-turn-right"></i><span>❓ Keputusan: Apakah Stok Porsi Masih Tersedia & Data Lengkap?</span></div>`,
+                    meaning: "Titik percabangan logika yang memisahkan Jalur Ideal (Happy Path - Jika YA) dan Jalur Kendala (Edge Case - Jika TIDAK).",
+                    example: "Contoh di LKM 05: Jika YA (Stok Tersedia) -> lanjut ke layar QRIS [SCR-03]. Jika TIDAK (Stok Habis) -> tampilkan info 'Habis' & sarankan menu alternatif di [SCR-01]."
+                },
+                end: {
+                    badge: "Simbol 4 • Kapsul / Oval Ungu (End / Goal Completed)",
+                    title: "🏁 END / GOAL COMPLETED (Tujuan Selesai & Bukti Akhir)",
+                    shapePreview: `<div class="px-6 py-3 rounded-full bg-purple-600 text-white font-extrabold text-xs sm:text-sm shadow-md inline-flex items-center gap-2"><i class="fa-solid fa-flag-checkered"></i><span>Selesai: Tiket Pesanan Terbit & Masuk ke Layar Kasir UMKM</span></div>`,
+                    meaning: "Menandai bahwa pengguna telah berhasil mencapai tujuannya dan mendapatkan bukti/umpan balik akhir yang jelas.",
+                    example: "Contoh di LKM 05: Layar [SCR-04] menampilkan Nomor Tiket Antrean, estimasi waktu siap, dan tombol 'Simpan Tiket'."
+                }
+            };
+            const cur = nodes[s10NodeKey];
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Untuk menggambarkan ketiga elemen User Flow dari Slide 9, kita menggunakan 4 simbol standar Flowchart UX berikut.")}
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400">Simulasi Interaktif 3 • Notasi Standar User Flow (Sinkron LKM 05)</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Anatomi 4 Simbol Diagram ${term('userflow', 'User Flow')}</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                            Keempat simbol di bawah ini persis sama dengan pilihan <em>Dropdown Jenis Langkah</em> yang akan Anda gunakan pada <strong>Wizard User Flow LKM 05</strong>:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                        <button type="button" onclick="setS10Node('start')" class="p-3 rounded-2xl border text-left transition ${s10NodeKey === 'start' ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-[10px] font-bold uppercase opacity-80">Simbol 1</div>
+                            <div class="text-xs sm:text-sm font-extrabold mt-0.5">🟢 Start / Pemicu</div>
+                        </button>
+                        <button type="button" onclick="setS10Node('screen')" class="p-3 rounded-2xl border text-left transition ${s10NodeKey === 'screen' ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-[10px] font-bold uppercase opacity-80">Simbol 2</div>
+                            <div class="text-xs sm:text-sm font-extrabold mt-0.5">🟦 Screen / Aksi</div>
+                        </button>
+                        <button type="button" onclick="setS10Node('decision')" class="p-3 rounded-2xl border text-left transition ${s10NodeKey === 'decision' ? 'bg-amber-500 text-slate-950 border-amber-500 shadow-xs' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-[10px] font-bold uppercase opacity-80">Simbol 3 (Wajib Ada)</div>
+                            <div class="text-xs sm:text-sm font-extrabold mt-0.5">🟨 Decision (Ya/Tidak)</div>
+                        </button>
+                        <button type="button" onclick="setS10Node('end')" class="p-3 rounded-2xl border text-left transition ${s10NodeKey === 'end' ? 'bg-purple-600 text-white border-purple-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-[10px] font-bold uppercase opacity-80">Simbol 4</div>
+                            <div class="text-xs sm:text-sm font-extrabold mt-0.5">🏁 End / Selesai</div>
+                        </button>
+                    </div>
+
+                    <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-4 my-auto text-xs sm:text-sm">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200 dark:border-slate-700">
+                            <div>
+                                <span class="text-[11px] font-extrabold uppercase text-indigo-600 dark:text-indigo-400">${cur.badge}</span>
+                                <h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white mt-0.5">${cur.title}</h3>
+                            </div>
+                            <div class="shrink-0">${cur.shapePreview}</div>
+                        </div>
+                        <p class="text-slate-700 dark:text-slate-200 leading-relaxed"><strong>Fungsi Utama:</strong> ${cur.meaning}</p>
+                        <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
+                            <i class="fa-solid fa-circle-check text-emerald-600 mr-1.5"></i>${cur.example}
+                        </div>
+                    </div>
+                    ${slideBridgeNext("Mengapa simbol ke-3 (Decision / Belah Ketupat) sangat penting untuk menangani kondisi kendala (Edge Case)? Kita bahas di Slide 11.")}
+                </div>
+            `;
+        }
+        // === AKHIR BAGIAN 1 DARI 2 (TEMPELKAN BAGIAN 2 TEPAT DI BAWAH BARIS INI) ===
+        // === AWAL BAGIAN 2 DARI 2 ===
+
+        // Data Studi Kasus Keputusan IA/User Flow & Kuis Benar/Salah untuk Slide 16
+        const BIZ_CASES_M5 = [
+            {
+                id: 1,
+                badge: "🎯 Kasus Struktur 1 · Hick's Law & Pengelompokan Informasi",
+                title: "Seorang mahasiswa merancang Sitemap untuk UMKM Katering Harian dengan memisahkan 'Foto Makanan', 'Daftar Harga', dan 'Status Sisa Porsi' ke dalam 3 halaman menu yang berbeda. Mengapa struktur Sitemap ini buruk bagi pelanggan?",
+                opts: [
+                    { ltr: "A", text: "Karena melanggar prinsip Card Sorting dan Mental Model: pelanggan membutuhkan ketiga informasi tersebut secara bersamaan dalam satu layar katalog (SCR-01) untuk mengambil keputusan tanpa bolak-balik halaman.", correct: true, explain: "Tepat sekali! Informasi yang saling bergantung untuk satu keputusan wajib disatukan dalam satu layar agar beban ingatan (cognitive load) pengguna tetap rendah." },
+                    { ltr: "B", text: "Karena semakin sedikit halaman yang dibuka pelanggan, maka kuota internet pemilik warung akan semakin boros.", correct: false, explain: "Keliru. Menggabungkan informasi inti yang relevan justru mempercepat keputusan pengguna dan menghemat langkah navigasi." }
+                ]
+            },
+            {
+                id: 2,
+                badge: "🎯 Kasus Struktur 2 · Fungsi Simbol Decision (Belah Ketupat)",
+                title: "Saat menyusun User Flow pemesanan pangkas rambut (Barbershop), mahasiswa hanya membuat garis lurus: Buka Web -> Pilih Jam 14.00 -> Selesai. Mengapa alur lurus tanpa simbol Decision (Belah Ketupat) ini berbahaya?",
+                opts: [
+                    { ltr: "A", text: "Karena tidak mengantisipasi kondisi nyata (Edge Case), seperti bagaimana jika slot pukul 14.00 baru saja penuh dipesan orang lain atau pelanggan lupa mengisi nama.", correct: true, explain: "Sangat tajam! Setiap User Flow transaksi wajib memiliki minimal 1 titik Decision (Ya/Tidak) untuk menangani kondisi kendala agar pengguna tidak terjebak di layar yang error." },
+                    { ltr: "B", text: "Karena simbol belah ketupat hanya boleh dipakai untuk aplikasi perbankan berskala internasional.", correct: false, explain: "Salah. Sekecil apa pun layanan UMKM, pengecekan ketersediaan stok/jadwal dan kelengkapan input wajib dipetakan." }
+                ]
+            },
+            {
+                id: 3,
+                badge: "🎯 Kasus Struktur 3 · Mencegah Dead-End Flow (Alur Buntu)",
+                title: "Setelah pelanggan menekan tombol 'Kirim Pesanan', layar hanya menampilkan tulisan singkat 'Pesanan Terkirim' tanpa nomor antrean, tanpa rincian pesanan, dan tanpa tombol kembali. Kesalahan UX apa yang terjadi?",
+                opts: [
+                    { ltr: "A", text: "Dead-End Flow (Alur Buntu): pelanggan dibiarkan menggantung tanpa bukti transaksi yang bisa disimpan dan tanpa navigasi lanjutan yang jelas.", correct: true, explain: "Benar! Titik akhir (End Node) pada User Flow wajib memberikan kepastian bukti (seperti tiket nota digital) dan opsi tindakan lanjutan." },
+                    { ltr: "B", text: "Flat Hierarchy: struktur halaman terlalu dangkal sehingga terlalu mudah digunakan pelanggan.", correct: false, explain: "Flat Hierarchy adalah hal yang baik, sedangkan layar akhir tanpa bukti dan tanpa navigasi disebut Dead-End Flow." }
+                ]
+            },
+            {
+                id: 4,
+                badge: "🎯 Kasus Struktur 4 · Efisiensi Alur Backstage Pengelola UMKM",
+                title: "Berdasarkan Design Brief LKM 04, pemilik UMKM Laundry bekerja menimbang pakaian dengan tangan basah di jam ramai. Alur User Flow Backstage manakah yang paling sesuai dengan batasan operasional tersebut?",
+                opts: [
+                    { ltr: "A", text: "Buka Layar Kasir [SCR-05] -> Ketik berat Kg & pilih paket -> Klik 1 tombol besar 'Terbitkan Nota & Update Status' (Total hanya 2 langkah aksi).", correct: true, explain: "Tepat! Alur Backstage harus mematuhi aturan kesederhanaan operasional dari LKM 04 agar pemilik usaha sanggup menjalankannya di jam sibuk." },
+                    { ltr: "B", text: "Wajib login email & OTP setiap transaksi -> Buka 4 sub-menu pengaturan -> Ketik rincian warna setiap potong baju secara manual.", correct: false, explain: "Alur yang berbelit-belit di sisi Backstage akan membuat pemilik UMKM meninggalkan aplikasi dan kembali ke kertas nota." }
+                ]
+            }
+        ];
+
+        const TF_QUIZ_M5 = [
+            { id: 1, text: "Sitemap memetakan struktur hierarki daftar halaman (Screen Inventory), sedangkan User Flow memetakan urutan langkah interaksi dan percabangan logika pengguna.", answer: "true", explain: "Benar. Sitemap ibarat denah ruangan gedung, sedangkan User Flow adalah rute langkah kaki pengguna menyelesaikan tugas." },
+            { id: 2, text: "Menurut Hick's Law, semakin banyak pilihan menu yang ditampilkan sekaligus di bilah navigasi utama (misalnya 12 menu), semakin cepat pengguna mengambil keputusan.", answer: "false", explain: "Salah. Hick's Law membuktikan bahwa terlalu banyak pilihan justru memperlambat keputusan dan membingungkan pengguna. Batasi 3–4 menu utama untuk MVP UMKM." },
+            { id: 3, text: "Di LKM 05, skenario kendala (Edge Case) tidak perlu dibuatkan formulir terpisah, melainkan langsung dituliskan pada cabang 'Jika Tidak' di dalam langkah Decision (Belah Ketupat).", answer: "true", explain: "Benar! Mengintegrasikan Jalur Ya (Happy Path) dan Jalur Tidak (Edge Case) di dalam simbol Decision membuat alur lebih ringkas dan utuh." },
+            { id: 4, text: "Untuk pelanggan UMKM lokal yang ingin membeli makanan atau memesan jasa cepat, mewajibkan registrasi akun panjang (KTP, email, password rumit) di awal alur sangat dianjurkan.", answer: "false", explain: "Salah. Paksaan daftar akun di awal alur memicu pelanggan batal memesan (drop-off). Gunakan input identitas ringkas (Nama & No. WA) saat checkout." },
+            { id: 5, text: "Setiap kode layar (SCR-01, SCR-02, dst.) yang Anda daftarkan pada Sitemap LKM 05 hari ini akan menjadi daftar Frame Wireframe yang wajib digambar pada Pertemuan 6.", answer: "true", explain: "Benar! Sitemap dan User Flow adalah cetak biru langsung untuk pembuatan Wireframe minggu depan." }
+        ];
+
+        // SLIDE 11: Merancang Happy Path vs Edge Cases di Dalam Simbol Decision
+        function renderSlide11() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Mengapa simbol ke-3 (🟨 Decision / Belah Ketupat) di Slide 10 wajib ada di setiap User Flow? Karena di sanalah kita menyatukan Happy Path dan Edge Case.")}
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">Babak 3 • Logika Percabangan Tanpa Kerja Dua Kali</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Menyatukan ${term('happypath', 'Happy Path')} & ${term('edgecase', 'Edge Case')} di Simbol ${term('decisionnode', 'Decision')}</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Anda tidak perlu membuat dua dokumen terpisah untuk jalur normal dan jalur kendala. Cukup gunakan <strong>1 langkah simbol <code>🟨 Decision</code></strong> untuk memetakan kedua cabang sekaligus:
+                        </p>
+                    </div>
+
+                    <div class="p-4 sm:p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-4 my-auto text-xs sm:text-sm">
+                        <div class="p-3.5 rounded-2xl bg-amber-100/90 dark:bg-amber-950/60 border-2 border-amber-500 text-center font-extrabold text-amber-950 dark:text-amber-200">
+                            🟨 Titik Decision pada Layar [SCR-02]: "Apakah Stok Porsi Menu Masih Tersedia & Kolom Nama Sudah Terisi?"
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="p-4 rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/30 border-2 border-emerald-500 space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="px-2.5 py-0.5 rounded bg-emerald-600 text-white font-extrabold text-xs">CABANG 1: JIKA YA (Happy Path)</span>
+                                    <i class="fa-solid fa-circle-check text-emerald-600 text-base"></i>
+                                </div>
+                                <h3 class="font-extrabold text-slate-900 dark:text-white">Kondisi Terpenuhi &rarr; Lanjut Mulus</h3>
+                                <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    Sistem menghitung otomatis total tagihan dan mengarahkan pelanggan ke layar <strong>[SCR-03: Pembayaran QRIS & Penerbitan Tiket Pesanan]</strong>.
+                                </p>
+                            </div>
+
+                            <div class="p-4 rounded-2xl bg-rose-50/80 dark:bg-rose-950/30 border-2 border-rose-400 space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="px-2.5 py-0.5 rounded bg-rose-600 text-white font-extrabold text-xs">CABANG 2: JIKA TIDAK (Edge Case / Kendala)</span>
+                                    <i class="fa-solid fa-triangle-exclamation text-rose-600 text-base"></i>
+                                </div>
+                                <h3 class="font-extrabold text-slate-900 dark:text-white">Ada Kendala &rarr; Beri Solusi Pemulihan</h3>
+                                <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    Jika porsi habis, sistem menonaktifkan tombol pesan dan menyorot rekomendasi menu lain yang masih tersedia di <strong>[SCR-01]</strong> (atau menandai kolom nama yang belum diisi).
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-3 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-800/60 text-xs">
+                        <i class="fa-solid fa-bolt text-indigo-600 dark:text-indigo-400 mr-1.5"></i><strong>Kemudahan di LKM 05:</strong> Saat Anda memilih simbol <code>🟨 Decision</code> pada Wizard LKM 05 nanti, kotak input akan otomatis menyediakan kolom <strong>Cabang Jika Ya</strong> dan <strong>Cabang Jika Tidak</strong> sehingga alur Anda langsung lengkap!
+                    </div>
+                    ${slideBridgeNext("Bagaimana wujud rangkaian utuh User Flow dari sisi Pelanggan (Frontstage) hingga diselesaikan oleh Pengelola UMKM (Backstage)? Kita simulasikan di Slide 12.")}
+                </div>
+            `;
+        }
+
+        // SLIDE 12: Simulasi Interaktif 4: Laboratorium User Flow 2 Sisi (Pelanggan vs Pengelola UMKM)
+        function renderSlide12() {
+            let flowContent = '';
+            if (s12FlowSide === 'frontstage') {
+                flowContent = `
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                            <span>Alur 1: Sisi Pelanggan Sasaran (Frontstage — 5 Langkah Cepat)</span>
+                            <span class="px-2.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-950">Target Waktu: &lt; 90 Detik</span>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-5 gap-2.5 text-xs">
+                            <div class="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border-2 border-emerald-500 space-y-1">
+                                <span class="font-mono text-[10px] font-extrabold text-emerald-700 dark:text-emerald-300 block">🟢 LANGKAH 1 (START)</span>
+                                <div class="font-extrabold text-slate-900 dark:text-white">[SCR-01] Buka Katalog</div>
+                                <p class="text-slate-600 dark:text-slate-300 text-[11px]">Pelanggan klik link bio WA/IG, langsung melihat menu harian, harga, & badge stok.</p>
+                            </div>
+                            <div class="p-3 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-300 dark:border-indigo-700 space-y-1">
+                                <span class="font-mono text-[10px] font-extrabold text-indigo-700 dark:text-indigo-300 block">🟦 LANGKAH 2 (SCREEN)</span>
+                                <div class="font-extrabold text-slate-900 dark:text-white">[SCR-02] Pilih & Isi Nama</div>
+                                <p class="text-slate-600 dark:text-slate-300 text-[11px]">Pilih porsi/varian, ketik nama & jam ambil/antar tanpa wajib buat akun/password.</p>
+                            </div>
+                            <div class="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border-2 border-amber-500 space-y-1">
+                                <span class="font-mono text-[10px] font-extrabold text-amber-800 dark:text-amber-300 block">🟨 LANGKAH 3 (DECISION)</span>
+                                <div class="font-extrabold text-slate-900 dark:text-white">[SCR-02] Cek Stok & Input</div>
+                                <p class="text-slate-600 dark:text-slate-300 text-[11px]"><strong>Ya:</strong> Lanjut bayar.<br><strong>Tidak:</strong> Sorot kolom kosong / pilih menu pengganti.</p>
+                            </div>
+                            <div class="p-3 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-300 dark:border-indigo-700 space-y-1">
+                                <span class="font-mono text-[10px] font-extrabold text-indigo-700 dark:text-indigo-300 block">🟦 LANGKAH 4 (SCREEN)</span>
+                                <div class="font-extrabold text-slate-900 dark:text-white">[SCR-03] Rincian & QRIS</div>
+                                <p class="text-slate-600 dark:text-slate-300 text-[11px]">Tampil rincian total harga transparan & kode QRIS / opsi bayar di kasir.</p>
+                            </div>
+                            <div class="p-3 rounded-2xl bg-purple-50 dark:bg-purple-950/40 border-2 border-purple-500 space-y-1">
+                                <span class="font-mono text-[10px] font-extrabold text-purple-700 dark:text-purple-300 block">🏁 LANGKAH 5 (END)</span>
+                                <div class="font-extrabold text-slate-900 dark:text-white">[SCR-04] Tiket Digital</div>
+                                <p class="text-slate-600 dark:text-slate-300 text-[11px]">Terbit nomor tiket pesanan & indikator status real-time (Diterima -> Diproses -> Siap).</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                flowContent = `
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between text-xs font-bold text-amber-700 dark:text-amber-400">
+                            <span>Alur 2: Sisi Pengelola / Kasir UMKM (Backstage — Mematuhi Aturan LKM 04)</span>
+                            <span class="px-2.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950">Maksimal 2 Klik per Pesanan!</span>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-xs">
+                            <div class="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border-2 border-emerald-500 space-y-1.5">
+                                <span class="font-mono text-[10px] font-extrabold text-emerald-700 dark:text-emerald-300 block">🟢 LANGKAH 1 BACKSTAGE (START)</span>
+                                <div class="font-extrabold text-sm text-slate-900 dark:text-white">[SCR-05] Kartu Pesanan Masuk Muncul</div>
+                                <p class="text-slate-600 dark:text-slate-300 leading-relaxed">Begitu pelanggan selesai di [SCR-04], kartu pesanan (Nomor Tiket, Nama, & Item) langsung tampil besar di layar HP kasir disertai bunyi pengingat.</p>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border-2 border-amber-500 space-y-1.5">
+                                <span class="font-mono text-[10px] font-extrabold text-amber-800 dark:text-amber-300 block">🟨 LANGKAH 2 BACKSTAGE (1-TAP ACTION)</span>
+                                <div class="font-extrabold text-sm text-slate-900 dark:text-white">[SCR-05] Klik 1 Tombol Besar Status</div>
+                                <p class="text-slate-600 dark:text-slate-300 leading-relaxed">Tanpa perlu mengetik chat manual, pemilik cukup menekan <strong>1 tombol besar "Siap Diambil / Selesai"</strong> (atau menggeser saklar <em>Stok Habis</em> jika porsi habis).</p>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-purple-50 dark:bg-purple-950/40 border-2 border-purple-500 space-y-1.5">
+                                <span class="font-mono text-[10px] font-extrabold text-purple-700 dark:text-purple-300 block">🏁 LANGKAH 3 BACKSTAGE (END)</span>
+                                <div class="font-extrabold text-sm text-slate-900 dark:text-white">[SCR-05 & SCR-04] Status Pelanggan Terupdate</div>
+                                <p class="text-slate-600 dark:text-slate-300 leading-relaxed">Status pada tiket digital pelanggan di [SCR-04] otomatis berubah menjadi hijau ("Siap Diambil") dan pesanan masuk ke rekap harian toko.</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Mari kita lihat bagaimana simbol Start, Screen, Decision, dan End merangkai perjalanan Pelanggan (Frontstage) dan Kasir UMKM (Backstage).")}
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400">Simulasi Interaktif 4 • Alur 2 Sisi Ekosistem UMKM</span>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Laboratorium ${term('userflow', 'User Flow')}: Pelanggan vs Pengelola UMKM</h2>
+                        </div>
+                        <div class="flex gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl self-start shrink-0">
+                            <button type="button" onclick="setS12Side('frontstage')" class="px-3.5 py-1.5 rounded-lg text-xs font-extrabold transition ${s12FlowSide === 'frontstage' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 dark:text-slate-300'}">1. Alur Pelanggan (Frontstage)</button>
+                            <button type="button" onclick="setS12Side('backstage')" class="px-3.5 py-1.5 rounded-lg text-xs font-extrabold transition ${s12FlowSide === 'backstage' ? 'bg-amber-500 text-slate-950 shadow-2xs' : 'text-slate-600 dark:text-slate-300'}">2. Alur Kasir UMKM (Backstage)</button>
+                        </div>
+                    </div>
+
+                    <div class="p-4 sm:p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 my-auto">
+                        ${flowContent}
+                    </div>
+                    ${slideBridgeNext("Babak 3 selesai! Sekarang kita masuk ke Babak 4 (Slide 13): bagaimana cara memangkas klik yang mubazir agar alur di atas makin efisien?")}
+                </div>
+            `;
+        }
+
+        // SLIDE 13: Mengukur Efisiensi Alur: Aturan Minimalisasi Klik & Input Manual
+        function renderSlide13() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Perhatikan pada simulasi Slide 12 tadi: pelanggan hanya butuh 5 langkah dan kasir UMKM hanya butuh 3 langkah. Bagaimana cara memangkas langkah yang mubazir?")}
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">Babak 4 • Optimasi Efisiensi Interaksi</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Tiga Aturan Memangkas Hambatan Klik (Frictionless Flow)</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Setiap tambahan 1 layar atau 1 kolom ketikan yang tidak penting akan menurunkan niat pengguna menyelesaikan transaksi. Terapkan 3 prinsip efisiensi berikut pada User Flow Anda:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-auto text-xs sm:text-sm">
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-xs font-extrabold">1. Tanpa Paksaan Buat Akun di Awal</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Terapkan Guest Checkout</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Jangan memaksa pelanggan UMKM membuat akun, verifikasi email, dan menghafal password hanya untuk memesan 2 bungkus nasi atau mengecek status cucian! Cukup minta <strong>Nama & Nomor WA</strong> saat konfirmasi pesanan.
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <span class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-xs font-extrabold">2. Ganti Ketikan dengan Pilihan Klik</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Selection Over Typing</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Mengetik di layar HP sambil berjalan itu merepotkan. Ganti kolom ketik manual dengan <strong>tombol pilihan cepat (chips/radio button)</strong>: misalnya tombol pilihan jam ambil, tingkat kepedasan, atau jenis layanan.
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <span class="px-2.5 py-1 rounded-lg bg-amber-500 text-white text-xs font-extrabold">3. Kalkulator Klik Otomatis di LKM 05</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Patuhi Batas Backstage LKM 04</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Di Slide 11 LKM 05 nanti, sistem akan menghitung otomatis jumlah langkah klik pelanggan dan pengelola UMKM Anda, lalu menyandingkannya dengan aturan kesederhanaan dari LKM 04.
+                            </p>
+                        </div>
+                    </div>
+                    ${slideBridgeNext("Bagaimana Sitemap dan User Flow hari ini menjadi cetakan langsung untuk menggambar Wireframe di Pertemuan 6 minggu depan? Kita lihat di Slide 14.")}
+                </div>
+            `;
+        }
+
+        // SLIDE 14: Dari Sitemap & User Flow Menuju Daftar Layar Wireframe (Pertemuan 6)
+        function renderSlide14() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Setelah alur Anda ramping dan efisien seperti di Slide 13, mari kita lihat bagaimana dokumen LKM 05 hari ini digunakan pada Pertemuan 6.")}
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">Babak 4 • Jembatan Langsung ke Pertemuan 6 (Wireframing)</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">1 Kode Layar Sitemap = 1 Frame Wireframe di Pertemuan 6</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Perhatikan betapa mudahnya pekerjaan Anda minggu depan ketika ${term('screeninventory', 'Screen Inventory')} pada Sitemap dan langkah pada User Flow sudah terkunci hari ini:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-auto text-xs sm:text-sm">
+                        <div class="p-5 rounded-3xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 space-y-2">
+                            <span class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-extrabold text-xs">1. Sitemap LKM 05 &rarr; Jumlah Frame</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Menentukan Kanvas Layar</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Kode layar <code>SCR-01</code> s/d <code>SCR-05</code> yang Anda daftarkan di Sitemap hari ini langsung menjadi nama-nama Frame kanvas yang akan Anda gambar sketsa <em>Wireframe</em>-nya pada Pertemuan 6.
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 space-y-2">
+                            <span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-extrabold text-xs">2. Komponen Sitemap &rarr; Isi Layar</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Menentukan Elemen di Dalam Frame</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Daftar komponen informasi & tombol aksi utama (CTA) yang Anda tulis pada setiap kartu <code>SCR</code> hari ini menjadi daftar periksa elemen apa saja yang wajib ada di dalam layar tersebut.
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 space-y-2">
+                            <span class="px-2.5 py-1 rounded-lg bg-amber-500 text-white font-extrabold text-xs">3. User Flow &rarr; Garis Prototipe</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Menentukan Sambungan Antar-Layar</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Urutan langkah dari <code>SCR-01</code> &rarr; <code>SCR-02</code> &rarr; <code>SCR-03</code> pada User Flow menjadi panduan kemana arah panah interaksi saat membuat <em>Clickable Prototype</em> di Figma nanti.
+                            </p>
+                        </div>
+                    </div>
+                    ${slideBridgeNext("Sebelum masuk ke latihan evaluasi, mari kita kenali 4 kesalahan umum saat menyusun Sitemap & User Flow di Slide 15.")}
+                </div>
+            `;
+        }
+
+        // SLIDE 15: 4 Kesalahan Umum Saat Menyusun Sitemap & User Flow
+        function renderSlide15() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Sebagai penutup Babak 4, pastikan Sitemap dan User Flow yang Anda susun di LKM 05 terbebas dari 4 kesalahan klasik berikut.")}
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">Babak 4 • Standar Mutu Struktur & Alur (Sub-CPMK 2.1 & 2.2)</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Empat Kesalahan Umum pada Sitemap & User Flow</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                            Hindari keempat jebakan perancangan berikut ketika mengerjakan Workspace LKM 05:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 my-auto text-xs sm:text-sm">
+                        <div class="p-4 sm:p-5 rounded-3xl bg-rose-50/60 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800 space-y-2">
+                            <div class="font-extrabold text-rose-700 dark:text-rose-300"><i class="fa-solid fa-circle-xmark mr-1.5"></i>1. ${term('deadend', 'Dead-End Flow')} (Alur Berakhir Buntu)</div>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Alur berhenti begitu saja di layar pembayaran tanpa menampilkan bukti tiket pesanan, status pengerjaan, atau tombol kembali ke beranda.
+                            </p>
+                        </div>
+
+                        <div class="p-4 sm:p-5 rounded-3xl bg-rose-50/60 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800 space-y-2">
+                            <div class="font-extrabold text-rose-700 dark:text-rose-300"><i class="fa-solid fa-circle-xmark mr-1.5"></i>2. Alur Lurus Tanpa Pengecekan Kondisi (${term('decisionnode', 'Decision')})</div>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Menganggap semua pengguna selalu mengisi data dengan benar dan stok selalu ada, sehingga lupa menyertakan langkah <code>🟨 Decision</code> beserta cabang pemulihannya (<em>Jika Tidak</em>).
+                            </p>
+                        </div>
+
+                        <div class="p-4 sm:p-5 rounded-3xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 space-y-2">
+                            <div class="font-extrabold text-amber-800 dark:text-amber-300"><i class="fa-solid fa-triangle-exclamation mr-1.5"></i>3. Fitur MVP LKM 04 Tertinggal / Tidak Punya Layar</div>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Sudah menetapkan 3 fitur MVP di LKM 04, tetapi saat membuat Sitemap di LKM 05 salah satu fitur MVP tersebut lupa dibuatkan halamannya.
+                            </p>
+                        </div>
+
+                        <div class="p-4 sm:p-5 rounded-3xl bg-indigo-50/60 dark:bg-indigo-950/20 border border-indigo-200 dark:border-indigo-800 space-y-2">
+                            <div class="font-extrabold text-indigo-700 dark:text-indigo-300"><i class="fa-solid fa-store-slash mr-1.5"></i>4. Melupakan Layar & Alur Backstage Pengelola UMKM</div>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Hanya memetakan layar pembeli, namun lupa memetakan layar tempat pemilik/staf UMKM menerima pesanan dan mengubah status pesanan tersebut.
+                            </p>
+                        </div>
+                    </div>
+                    ${slideBridgeNext("Babak 4 selesai! Sekarang uji pemahaman Anda mengenai Sitemap dan User Flow melalui Evaluasi Interaktif 3 Mode di Slide 16.")}
+                </div>
+            `;
+        }
+
+        // SLIDE 16: Evaluasi Interaktif 3 Mode (Refleksi Konsep + 4 Kasus Keputusan IA/Flow + 5 Kuis Benar/Salah)
+        function renderSlide16() {
+            let tabBodyHtml = '';
+
+            if (activeEvalTabM5 === 'refleksi') {
+                const questions = [
+                    {
+                        id: 1,
+                        title: "1. Apa Perbedaan Utama Sitemap dan User Flow?",
+                        question: "Mengapa kita harus membuat Sitemap sekaligus User Flow? Apakah salah satu saja tidak cukup?",
+                        answer: "Sitemap memetakan struktur hierarki seluruh halaman secara statis (menjawab: 'Ada berapa layar dan di mana letak menunya?'), sedangkan User Flow memetakan urutan langkah dinamis dan logika percabangan (menjawab: 'Bagaimana urutan klik pengguna dari awal sampai selesai?'). Keduanya saling melengkapi sebelum menggambar Wireframe."
+                    },
+                    {
+                        id: 2,
+                        title: "2. Mengapa Kita Mengintegrasikan Edge Case ke Simbol Decision?",
+                        question: "Apa keuntungan memetakan cabang 'Jika Ya' (Happy Path) dan 'Jika Tidak' (Edge Case) langsung di dalam simbol Decision pada User Flow?",
+                        answer: "Pengguna di dunia nyata sering menghadapi kendala seperti stok habis atau lupa mengisi kolom. Dengan memetakan cabang 'Jika Tidak' langsung di titik Decision, kita memastikan antarmuka memberikan jalan keluar yang ramah tanpa membuat alur aplikasi menjadi buntu (Dead-End)."
+                    },
+                    {
+                        id: 3,
+                        title: "3. Mengapa Alur Backstage UMKM Harus Sesederhana Mungkin?",
+                        question: "Mengapa jumlah klik pada User Flow pengelola UMKM (Backstage) harus dibatasi seminimal mungkin (1–2 klik)?",
+                        answer: "Karena di lapangan, pemilik atau staf UMKM bekerja sambil melayani pembeli fisik, memasak, atau mencuci barang. Alur Backstage dengan 1 tombol aksi besar memastikan aplikasi benar-benar sanggup dipakai di jam ramai."
+                    }
+                ];
+
+                let cardsHtml = '';
+                for (let i = 0; i < questions.length; i++) {
+                    const q = questions[i];
+                    const isOpen = openReflectionKey[q.id];
+                    cardsHtml += `
+                        <div class="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-3">
+                            <div class="space-y-1.5">
+                                <div class="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">${q.title}</div>
+                                <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">${q.question}</p>
+                            </div>
+                            <div class="pt-2 border-t border-slate-200/70 dark:border-slate-700/70">
+                                <button type="button" onclick="toggleReflectionAnswer(${q.id})" class="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1.5">
+                                    <i class="fa-regular ${isOpen ? 'fa-eye-slash' : 'fa-lightbulb'}"></i>
+                                    <span>${isOpen ? 'Sembunyikan Kunci Konsep' : 'Lihat Kunci Konsep'}</span>
+                                </button>
+                                ${isOpen ? `<div class="mt-2.5 p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">${q.answer}</div>` : ''}
+                            </div>
+                        </div>
+                    `;
+                }
+                tabBodyHtml = `<div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-auto">${cardsHtml}</div>`;
+            } else if (activeEvalTabM5 === 'kasus') {
+                let cardsHtml = '';
+                for (let i = 0; i < BIZ_CASES_M5.length; i++) {
+                    const sc = BIZ_CASES_M5[i];
+                    const chosenIdx = bizChoicesM5[sc.id];
+                    const hasAnswered = chosenIdx !== undefined;
+                    let optsHtml = '';
+                    for (let j = 0; j < sc.opts.length; j++) {
+                        const o = sc.opts[j];
+                        let btnCls = 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 hover:border-indigo-500';
+                        let badgeCls = 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300';
+                        if (hasAnswered) {
+                            if (o.correct) { btnCls = 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 text-emerald-900 dark:text-emerald-200'; badgeCls = 'bg-emerald-600 text-white'; }
+                            else if (chosenIdx === j) { btnCls = 'bg-rose-50 dark:bg-rose-950/60 border-rose-500 text-rose-900 dark:text-rose-200'; badgeCls = 'bg-rose-600 text-white'; }
+                            else { btnCls = 'opacity-60 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800'; }
+                        }
+                        optsHtml += `<button type="button" ${hasAnswered ? 'disabled' : ''} onclick="chooseBizCaseM5(${sc.id}, ${j})" class="w-full text-left p-2.5 rounded-xl border-2 font-semibold text-xs flex items-start gap-2.5 transition ${btnCls}"><span class="w-5 h-5 rounded-md font-mono text-[11px] font-extrabold flex items-center justify-center shrink-0 mt-0.5 ${badgeCls}">${o.ltr}</span><span>${escapeHtml(o.text)}</span></button>`;
+                    }
+                    let fbHtml = '';
+                    if (hasAnswered) {
+                        const sel = sc.opts[chosenIdx];
+                        const fbCls = sel.correct ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-500 text-emerald-900 dark:text-emerald-200' : 'bg-rose-50 dark:bg-rose-950/50 border-rose-500 text-rose-900 dark:text-rose-200';
+                        fbHtml = `<div class="p-2 rounded-xl border-l-4 ${fbCls} text-[11px] leading-relaxed">${escapeHtml(sel.explain)}</div>`;
+                    }
+                    cardsHtml += `<div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-2"><div class="space-y-1"><span class="inline-block px-2 py-0.5 rounded-full bg-orange-100 dark:bg-orange-950 text-orange-800 dark:text-orange-300 text-[10px] font-extrabold uppercase">${sc.badge}</span><p class="text-xs font-bold text-slate-900 dark:text-white leading-snug">${escapeHtml(sc.title)}</p></div><div class="space-y-1.5">${optsHtml}${fbHtml}</div></div>`;
+                }
+                tabBodyHtml = `<div class="grid grid-cols-1 lg:grid-cols-2 gap-3 my-auto">${cardsHtml}</div>`;
+            } else {
+                let itemsHtml = '';
+                for (let i = 0; i < TF_QUIZ_M5.length; i++) {
+                    const q = TF_QUIZ_M5[i];
+                    const chosen = tfChoicesM5[q.id];
+                    const hasAns = chosen !== undefined;
+                    const isCorrect = chosen === q.answer;
+                    let rowCls = 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800';
+                    let numCls = 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200';
+                    if (hasAns) {
+                        rowCls = isCorrect ? 'bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-500' : 'bg-rose-50/70 dark:bg-rose-950/30 border-rose-500';
+                        numCls = isCorrect ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white';
+                    }
+                    const btnStyle = function (val) {
+                        if (!hasAns) return 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 hover:border-indigo-500';
+                        if (chosen === val) return isCorrect ? 'bg-emerald-600 border-emerald-600 text-white' : 'bg-rose-600 border-rose-600 text-white';
+                        if (q.answer === val) return 'bg-emerald-100 dark:bg-emerald-950 border-emerald-500 text-emerald-800 dark:text-emerald-300';
+                        return 'opacity-50 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800';
+                    };
+                    itemsHtml += `<div class="p-3 rounded-2xl border ${rowCls} space-y-1.5 transition"><div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5"><div class="flex items-start gap-2.5 text-xs font-bold text-slate-900 dark:text-white"><span class="w-5 h-5 rounded-md font-mono text-[11px] flex items-center justify-center shrink-0 ${numCls}">${q.id}</span><span>${escapeHtml(q.text)}</span></div><div class="flex gap-1.5 shrink-0"><button type="button" ${hasAns ? 'disabled' : ''} onclick="answerTfM5(${q.id}, 'true')" class="px-3 py-1 rounded-xl border font-extrabold text-xs transition ${btnStyle('true')}">Benar</button><button type="button" ${hasAns ? 'disabled' : ''} onclick="answerTfM5(${q.id}, 'false')" class="px-3 py-1 rounded-xl border font-extrabold text-xs transition ${btnStyle('false')}">Salah</button></div></div>${hasAns ? `<div class="p-2 rounded-xl bg-white/80 dark:bg-slate-900/80 border-l-4 ${isCorrect ? 'border-emerald-600' : 'border-rose-600'} text-[11px] text-slate-700 dark:text-slate-200">${escapeHtml(q.explain)}</div>` : ''}</div>`;
+                }
+                tabBodyHtml = `<div class="space-y-2 my-auto">${itemsHtml}</div>`;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">Babak 5 • Simulasi Evaluasi Struktur & Alur</span>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Refleksi Konsep, 4 Kasus Keputusan IA/Flow, & Kuis Kilat</h2>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-1.5">
+                            <div class="inline-flex p-1 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                                <button type="button" onclick="activeEvalTabM5='refleksi';renderCurrentSlide();" class="px-3 py-1.5 rounded-xl text-xs font-extrabold transition ${activeEvalTabM5 === 'refleksi' ? 'bg-indigo-600 text-white' : 'text-slate-600 dark:text-slate-300'}">💡 3 Refleksi Konsep</button>
+                                <button type="button" onclick="activeEvalTabM5='kasus';renderCurrentSlide();" class="px-3 py-1.5 rounded-xl text-xs font-extrabold transition ${activeEvalTabM5 === 'kasus' ? 'bg-indigo-600 text-white' : 'text-slate-600 dark:text-slate-300'}">🎯 4 Kasus Struktur</button>
+                                <button type="button" onclick="activeEvalTabM5='kuis';renderCurrentSlide();" class="px-3 py-1.5 rounded-xl text-xs font-extrabold transition ${activeEvalTabM5 === 'kuis' ? 'bg-indigo-600 text-white' : 'text-slate-600 dark:text-slate-300'}">⚡ 5 Kuis Benar/Salah</button>
+                            </div>
+                            <button type="button" onclick="bizChoicesM5={};tfChoicesM5={};openReflectionKey={1:false,2:false,3:false};renderCurrentSlide();" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 transition">Reset</button>
+                        </div>
+                    </div>
+                    ${tabBodyHtml}
+                    ${slideBridgeNext("Selanjutnya di Slide 17: rangkuman 5 poin kunci Pertemuan 5 dan daftar referensi utama.")}
+                </div>
+            `;
+        }
+
+        // SLIDE 17: 5 Poin Kunci Pertemuan 5 & Daftar Referensi Utama
+        function renderSlide17() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Setelah menyelesaikan evaluasi di Slide 16, mari kita rangkum 5 prinsip utama Arsitektur Informasi, Sitemap, dan User Flow.")}
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">Babak 5 • Rangkuman & Referensi Akademik</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Lima Poin Kunci Pertemuan 5 & Daftar Referensi</h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 my-auto">
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-3">
+                            <h3 class="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider"><i class="fa-solid fa-list-check text-indigo-600 mr-1.5"></i>5 Poin Kunci Pertemuan 5</h3>
+                            <ol class="space-y-2 text-xs text-slate-700 dark:text-slate-300 list-decimal list-inside leading-relaxed">
+                                <li><strong>Tiga Pilar IA (Users, Content, Context):</strong> Susun informasi mengikuti <em>Mental Model</em> pelanggan dan batasan operasional pemilik UMKM.</li>
+                                <li><strong>Flat Hierarchy & Hick's Law:</strong> Batasi navigasi utama maksimal 3–4 menu inti agar pengguna tidak mengalami kelelahan memilih.</li>
+                                <li><strong>Sitemap & Screen Inventory (<code>SCR-01..05</code>):</strong> Setiap fitur Kuadran 1 MVP dari LKM 04 wajib memiliki halaman rumah di Sitemap (Level 0, Level 1, Level 2, & Backstage).</li>
+                                <li><strong>User Flow & Simbol Decision:</strong> Gunakan 4 simbol standar (<code>🟢 Start</code>, <code>🟦 Screen</code>, <code>🟨 Decision</code>, <code>🏁 End</code>) dan satukan <em>Happy Path</em> serta <em>Edge Case</em> di dalam cabang <em>Decision</em>.</li>
+                                <li><strong>Sinkronisasi 2 Sisi (Pelanggan & Toko):</strong> Pastikan alur pelanggan bebas paksaan akun berbelit dan alur <em>Backstage</em> UMKM selesai dalam $\le 2$ klik.</li>
+                            </ol>
+                        </div>
+
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 space-y-3">
+                            <h3 class="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider"><i class="fa-solid fa-book-open text-indigo-600 mr-1.5"></i>Daftar Referensi Utama</h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                                <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"><strong class="text-indigo-700 dark:text-indigo-300">Rosenfeld, Morville, & Arango (2015)</strong><br><em>Information Architecture: For the Web and Beyond (4th ed.).</em> O'Reilly Media.</div>
+                                <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"><strong class="text-indigo-700 dark:text-indigo-300">Krug, S. (2014)</strong><br><em>Don't Make Me Think, Revisited: A Common Sense Approach to Web Usability.</em> New Riders.</div>
+                                <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"><strong class="text-indigo-700 dark:text-indigo-300">Cooper, Reimann, & Cronin (2014)</strong><br><em>About Face: The Essentials of Interaction Design (4th ed.).</em> Wiley.</div>
+                                <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"><strong class="text-indigo-700 dark:text-indigo-300">Yablonski, J. (2020)</strong><br><em>Laws of UX: Using Psychology to Design Better Products & Services (Hick's Law).</em> O'Reilly.</div>
+                                <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"><strong class="text-indigo-700 dark:text-indigo-300">Kalbach, J. (2007)</strong><br><em>Designing Web Navigation: Optimizing the User Experience.</em> O'Reilly Media.</div>
+                                <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"><strong class="text-indigo-700 dark:text-indigo-300">Nielsen Norman Group</strong><br><em>Flat vs. Deep Hierarchy & User Journeys vs. User Flows.</em> nngroup.com.</div>
+                            </div>
+                        </div>
+                    </div>
+                    ${slideBridgeNext("Terakhir di Slide 18: panduan langkah demi langkah mengerjakan Workspace Praktikum 5 (LKM 05)!")}
+                </div>
+            `;
+        }
+
+        // SLIDE 18: Panduan Langkah Kerja Menuju Workspace LKM 05
+        function renderSlide18() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Seluruh materi Pertemuan 5 telah selesai! Sekarang saatnya menerjemahkan Fitur MVP dari LKM 04 menjadi Sitemap & User Flow di LKM 05.")}
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Babak 5 • Eksekusi Praktikum 5 (Bobot 5%)</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Langkah Kerja Menuju Workspace LKM 05</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                            Buka file <strong><code class="font-mono">Pertemuan 5 - Praktikum 5_ Workspace Arsitektur Informasi, Sitemap, & User Flow (LKM 05).html</code></strong> dan ikuti 4 langkah terstruktur berikut:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 my-auto text-xs">
+                        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <span class="w-7 h-7 rounded-xl bg-indigo-600 text-white font-extrabold flex items-center justify-center">1</span>
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Tarik Otomatis Fitur MVP LKM 04</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Klik <strong>Tarik dari LKM 04 Lokal</strong> atau <strong>Muat .JSON</strong> untuk memanggil daftar Fitur MVP (<code>MVP-1..3</code>), aturan <em>Backstage</em>, dan alur inti dari LKM 04 Anda, lalu pilih pola navigasi utama.
+                            </p>
+                        </div>
+
+                        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <span class="w-7 h-7 rounded-xl bg-emerald-600 text-white font-extrabold flex items-center justify-center">2</span>
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Susun Sitemap (Min. 5 Layar SCR)</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Daftarkan minimal 5 layar (<code>SCR-01</code> s/d <code>SCR-05</code>), pilih levelnya (Level 0, Level 1, Level 2, & Backstage), dan tautkan ke dropdown Fitur MVP. <strong>Pohon Sitemap Visual akan tergambar otomatis!</strong>
+                            </p>
+                        </div>
+
+                        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <span class="w-7 h-7 rounded-xl bg-amber-500 text-white font-extrabold flex items-center justify-center">3</span>
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Petakan User Flow 2 Sisi + Decision</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Susun minimal 5 langkah <em>User Flow Pelanggan</em> (wajib memuat <code>🟢 Start</code>, <code>🟦 Screen</code>, <code>🟨 Decision Ya/Tidak</code>, & <code>🏁 End</code>) serta minimal 3 langkah <em>User Flow Backstage UMKM</em>.
+                            </p>
+                        </div>
+
+                        <div class="p-4 rounded-3xl bg-emerald-50/80 dark:bg-emerald-950/30 border-2 border-emerald-500 space-y-2">
+                            <span class="w-7 h-7 rounded-xl bg-emerald-600 text-white font-extrabold flex items-center justify-center">4</span>
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Audit Klik & Unduh PDF + .JSON</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Periksa kalkulator efisiensi klik otomatis, pilih 4 layar prioritas untuk <em>Wireframe</em> Pertemuan 6, lalu unduh <strong>Master .JSON</strong> dan <strong>Laporan PDF A4</strong>!
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="p-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-emerald-600 text-white text-center">
+                        <p class="text-xs sm:text-sm font-bold"><i class="fa-solid fa-object-group mr-1.5"></i>Pertemuan Berikutnya (Pertemuan 6): Menerjemahkan Sitemap & User Flow LKM 05 Menjadi Sketsa Kerangka Layar (Low-Fidelity Wireframe) di Figma!</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // =========================================================================
+        // DAFTAR 18 SLIDE PERTEMUAN 5
+        // =========================================================================
+        const SLIDES = [
+            { id: 1, category: "Pengantar", title: "Pengantar Pertemuan 5, Jembatan LKM 04, & Alur 5 Babak", render: renderSlide1 },
+            { id: 2, category: "Babak 1 · Analogi Struktur", title: "Analogi Arsitek Bangunan: Denah Sitemap vs Rute User Flow", render: renderSlide2 },
+            { id: 3, category: "Babak 1 · Konsep IA", title: "Tiga Pilar Information Architecture (Users, Content, Context)", render: renderSlide3 },
+            { id: 4, category: "Simulasi Interaktif 1", title: "Membedakan Customer Journey Map vs Sitemap vs User Flow", render: renderSlide4 },
+            { id: 5, category: "Babak 1 · Psikologi Navigasi", title: "Prinsip Mental Model, Card Sorting, & Hick's Law", render: renderSlide5 },
+            { id: 6, category: "Simulasi Interaktif 2", title: "Klinik Arsitektur Navigasi: Menu Membingungkan vs Flat Hierarchy", render: renderSlide6 },
+            { id: 7, category: "Babak 2 · Anatomi Sitemap", title: "Anatomi 4 Kelompok Level pada Sitemap UMKM (SCR-01..05)", render: renderSlide7 },
+            { id: 8, category: "Babak 2 · Screen Inventory", title: "Menurunkan Fitur MVP LKM 04 Menjadi Daftar Halaman Sitemap", render: renderSlide8 },
+            { id: 9, category: "Babak 3 · Konsep User Flow", title: "Apa Itu User Flow dan Apa Bedanya dengan Sitemap?", render: renderSlide9 },
+            { id: 10, category: "Simulasi Interaktif 3", title: "Anatomi 4 Simbol Standar Diagram User Flow (Start, Screen, Decision, End)", render: renderSlide10 },
+            { id: 11, category: "Babak 3 · Cabang Decision", title: "Menyatukan Happy Path & Edge Case di Dalam Simbol Decision", render: renderSlide11 },
+            { id: 12, category: "Simulasi Interaktif 4", title: "Laboratorium User Flow 2 Sisi: Pelanggan (Frontstage) vs Kasir UMKM (Backstage)", render: renderSlide12 },
+            { id: 13, category: "Babak 4 · Efisiensi Klik", title: "Tiga Aturan Memangkas Hambatan Klik (Frictionless Flow)", render: renderSlide13 },
+            { id: 14, category: "Babak 4 · Jembatan Wireframe", title: "Dari Sitemap & User Flow Menuju Frame Wireframe (Pertemuan 6)", render: renderSlide14 },
+            { id: 15, category: "Babak 4 · Standar Mutu", title: "Empat Kesalahan Umum pada Sitemap & User Flow", render: renderSlide15 },
+            { id: 16, category: "Babak 5 · Evaluasi Kasus", title: "Refleksi Konsep, 4 Kasus Keputusan IA/Flow, & Kuis Kilat", render: renderSlide16 },
+            { id: 17, category: "Babak 5 · Rangkuman", title: "Lima Poin Kunci Pertemuan 5 & Daftar Referensi Utama", render: renderSlide17 },
+            { id: 18, category: "Babak 5 · Panduan LKM 05", title: "Langkah Kerja Menuju Workspace Praktikum 5 (LKM 05)", render: renderSlide18 }
+        ];
+
+        // =========================================================================
+        // NAVIGASI UTAMA & HANDLER INTERAKSI
+        // =========================================================================
+        function renderCurrentSlide() {
+            const slide = SLIDES[currentSlideIndex];
+            const viewport = document.getElementById('slideViewport');
+            if (!viewport || !slide) return;
+            viewport.innerHTML = slide.render();
+
+            const pct = Math.round(((currentSlideIndex + 1) / TOTAL_SLIDES) * 100);
+            document.getElementById('topProgressBar').style.width = pct + '%';
+            document.getElementById('slideCounterBadge').textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES;
+            document.getElementById('mobileFooterCounter').textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES;
+            document.getElementById('slideCategoryPill').textContent = slide.category;
+            document.getElementById('headerSlideTitle').textContent = slide.title;
+
+            const prevBtn = document.getElementById('prevSlideBtn');
+            const nextBtn = document.getElementById('nextSlideBtn');
+            const nextBtnText = document.getElementById('nextBtnText');
+
+            prevBtn.disabled = currentSlideIndex === 0;
+            if (currentSlideIndex === TOTAL_SLIDES - 1) {
+                nextBtnText.textContent = "Selesai";
+                nextBtn.disabled = true;
+            } else {
+                nextBtnText.textContent = "Selanjutnya";
+                nextBtn.disabled = false;
+            }
+            renderDotsAndDrawer();
+        }
+
+        function renderDotsAndDrawer() {
+            const dotsContainer = document.getElementById('slideDotsContainer');
+            let dotsHtml = '';
+            let drawerHtml = '';
+            for (let idx = 0; idx < SLIDES.length; idx++) {
+                const s = SLIDES[idx];
+                const isActive = idx === currentSlideIndex;
+                const isSim = s.category.indexOf('Simulasi') !== -1 || s.category.indexOf('Evaluasi') !== -1;
+                const dotClass = isActive
+                    ? 'w-6 bg-indigo-600 dark:bg-indigo-400'
+                    : isSim
+                    ? 'w-2.5 bg-amber-400 dark:bg-amber-500 hover:bg-amber-600'
+                    : 'w-1.5 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400';
+                dotsHtml += `<button type="button" onclick="goToSlide(${idx})" title="${escapeHtml(s.title)}" class="h-2 rounded-full transition-all ${dotClass}"></button>`;
+
+                const itemClass = isActive ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 font-bold' : 'hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-300';
+                const badgeClass = isActive
+                    ? 'bg-indigo-600 text-white'
+                    : isSim
+                    ? 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500';
+                drawerHtml += `<button type="button" onclick="selectSlideFromDrawer(${idx})" class="w-full text-left p-3 rounded-xl transition flex items-start gap-3 ${itemClass}"><span class="w-6 h-6 rounded-lg text-xs font-extrabold flex items-center justify-center shrink-0 mt-0.5 ${badgeClass}">${s.id}</span><div class="min-w-0 flex-1"><div class="text-[10px] uppercase tracking-wider opacity-75">${escapeHtml(s.category)}</div><div class="text-xs sm:text-sm leading-snug break-words">${escapeHtml(s.title)}</div></div></button>`;
+            }
+            if (dotsContainer) dotsContainer.innerHTML = dotsHtml;
+            const drawerList = document.getElementById('drawerSlideList');
+            if (drawerList) drawerList.innerHTML = drawerHtml;
+        }
+
+        function selectSlideFromDrawer(index) {
+            goToSlide(index);
+            toggleSlideDrawer();
+        }
+
+        function changeSlide(direction) {
+            const nextIdx = currentSlideIndex + direction;
+            if (nextIdx >= 0 && nextIdx < TOTAL_SLIDES) {
+                currentSlideIndex = nextIdx;
+                renderCurrentSlide();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function goToSlide(index) {
+            if (index >= 0 && index < TOTAL_SLIDES) {
+                currentSlideIndex = index;
+                renderCurrentSlide();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function toggleSlideDrawer() {
+            const drawer = document.getElementById('slideDrawer');
+            const backdrop = document.getElementById('slideDrawerBackdrop');
+            const isClosed = drawer.classList.contains('-translate-x-full');
+            if (isClosed) {
+                backdrop.classList.remove('hidden');
+                setTimeout(function () { backdrop.classList.remove('opacity-0'); }, 10);
+                drawer.classList.remove('-translate-x-full');
+            } else {
+                backdrop.classList.add('opacity-0');
+                drawer.classList.add('-translate-x-full');
+                setTimeout(function () { backdrop.classList.add('hidden'); }, 200);
+            }
+        }
+
+        function setS4Tab(tabKey) { s4ArtifactTab = tabKey; renderCurrentSlide(); }
+        function setS6Case(idx) { s6NavCaseIdx = idx; renderCurrentSlide(); }
+        function setS6Mode(mode) { s6NavMode = mode; renderCurrentSlide(); }
+        function setS10Node(nodeKey) { s10NodeKey = nodeKey; renderCurrentSlide(); }
+        function setS12Side(sideKey) { s12FlowSide = sideKey; renderCurrentSlide(); }
+        function toggleReflectionAnswer(id) { openReflectionKey[id] = !openReflectionKey[id]; renderCurrentSlide(); }
+        function chooseBizCaseM5(id, idx) { bizChoicesM5[id] = idx; renderCurrentSlide(); }
+        function answerTfM5(id, val) { tfChoicesM5[id] = val; renderCurrentSlide(); }
+
+        // =========================================================================
+        // MODAL PENJELASAN ISTILAH & KAMUS
+        // =========================================================================
+        function showTerm(key) {
+            const item = GLOSSARY_DB[key];
+            if (!item) return;
+            document.getElementById('termCategoryBadge').textContent = item.category;
+            document.getElementById('termTitle').textContent = item.title;
+            document.getElementById('termMainDesc').textContent = item.main;
+            document.getElementById('termDetailDesc').textContent = item.detail;
+            document.getElementById('termSourceName').textContent = "Sumber: " + item.source;
+            document.getElementById('termSourceUrl').href = item.url;
+            const modal = document.getElementById('termModalBackdrop');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeTermModal() {
+            const modal = document.getElementById('termModalBackdrop');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function openGlossaryIndex() {
+            document.getElementById('glossarySearchInput').value = '';
+            renderGlossaryList('');
+            const modal = document.getElementById('glossaryModalBackdrop');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeGlossaryIndex() {
+            const modal = document.getElementById('glossaryModalBackdrop');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function selectGlossaryTerm(key) {
+            closeGlossaryIndex();
+            showTerm(key);
+        }
+
+        function renderGlossaryList(query) {
+            const q = String(query || '').trim().toLowerCase();
+            const allKeys = Object.keys(GLOSSARY_DB);
+            const matchedKeys = [];
+            for (let i = 0; i < allKeys.length; i++) {
+                const k = allKeys[i];
+                const item = GLOSSARY_DB[k];
+                if (item.title.toLowerCase().indexOf(q) !== -1 || item.category.toLowerCase().indexOf(q) !== -1 || item.main.toLowerCase().indexOf(q) !== -1) {
+                    matchedKeys.push(k);
+                }
+            }
+            const container = document.getElementById('glossaryListGrid');
+            if (matchedKeys.length === 0) {
+                container.innerHTML = '<div class="col-span-2 text-center py-8 text-xs text-slate-500">Istilah tidak ditemukan.</div>';
+                return;
+            }
+            let html = '';
+            for (let i = 0; i < matchedKeys.length; i++) {
+                const k = matchedKeys[i];
+                const item = GLOSSARY_DB[k];
+                html += `<button type="button" onclick="selectGlossaryTerm('${k}')" class="text-left p-4 rounded-2xl bg-slate-50 hover:bg-indigo-50/60 dark:bg-slate-800/50 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800 transition space-y-1"><div class="flex items-center justify-between"><span class="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">${escapeHtml(item.category)}</span><span class="text-[10px] text-slate-400">${escapeHtml(item.source)}</span></div><div class="text-sm font-extrabold text-slate-900 dark:text-white leading-snug">${escapeHtml(item.title)}</div><p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">${escapeHtml(item.main)}</p></button>`;
+            }
+            container.innerHTML = html;
+        }
+
+        function toggleTheme() {
+            const htmlEl = document.documentElement;
+            const icon = document.getElementById('themeIcon');
+            htmlEl.classList.toggle('dark');
+            const isDark = htmlEl.classList.contains('dark');
+            icon.className = isDark ? 'fa-solid fa-sun text-amber-400 text-sm' : 'fa-solid fa-moon text-sm';
+        }
+
+        document.addEventListener('keydown', function (e) {
+            const activeTag = document.activeElement && document.activeElement.tagName ? document.activeElement.tagName.toLowerCase() : '';
+            if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') return;
+            if (e.key === 'ArrowRight') changeSlide(1);
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+            if (e.key === 'Escape') { closeTermModal(); closeGlossaryIndex(); }
+        });
+
+        renderCurrentSlide();
+    </script>
+</body>
+</html>
