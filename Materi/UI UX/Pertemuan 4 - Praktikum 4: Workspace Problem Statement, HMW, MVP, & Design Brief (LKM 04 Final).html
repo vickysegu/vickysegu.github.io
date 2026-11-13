@@ -33,9 +33,14 @@
             overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
         }
+
+        /* Penanda istilah klik dengan garis bawah titik-titik yang jelas & kontras */
         .tech-term {
             color: #4f46e5;
             font-weight: 700;
+            text-decoration: underline;
+            text-decoration-style: dotted;
+            text-underline-offset: 3px;
             cursor: pointer;
             transition: color 0.15s ease, opacity 0.15s ease;
         }
@@ -128,12 +133,13 @@
     <!-- Input File Tersembunyi untuk Muat Data Proyek (.json) -->
     <input type="file" id="jsonFileInput" accept=".json,application/json" class="hidden" onchange="handleJsonFileImport(event)">
 
-    <!-- Toast Peringatan Validasi & Status File -->
+    <!-- Bilah Batalkan Reset (10 Detik) -->
     <div id="undoBar" class="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-[60] hidden items-center gap-3 px-4 py-2.5 rounded-2xl bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 text-xs sm:text-sm font-bold shadow-2xl no-print">
         <span id="undoMessage">Perubahan diterapkan.</span>
         <button type="button" onclick="undoLastChange()" class="px-3 py-1 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-900 font-extrabold">Batalkan (<span id="undoCountdown">10</span>)</button>
     </div>
 
+    <!-- Toast Peringatan Validasi & Status File -->
     <div id="toastBanner" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 hidden max-w-lg w-[92%] sm:w-full px-4 py-3.5 rounded-2xl shadow-2xl border flex items-start gap-3 transition-all duration-200 no-print">
         <i id="toastIcon" class="fa-solid fa-circle-exclamation text-lg mt-0.5 shrink-0"></i>
         <div class="flex-1 text-xs sm:text-sm font-bold leading-snug" id="toastMessage">Pesan notifikasi</div>
@@ -155,7 +161,7 @@
                 </div>
             </div>
             <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700">
-                Jika Anda belum menyimpan cadangan, klik <strong>Simpan .JSON Dulu</strong> agar pekerjaan Anda tidak hilang. Apakah Anda yakin ingin mereset semua isian sekarang?
+                Jika Anda belum menyimpan cadangan, klik <strong>Simpan .JSON Dulu</strong> agar pekerjaan Anda tidak hilang. Setelah direset, Anda masih punya waktu 10 detik untuk membatalkan.
             </p>
             <div class="flex items-center justify-end gap-2.5 pt-2">
                 <button type="button" onclick="closeResetModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-extrabold transition">Batal</button>
@@ -279,12 +285,21 @@
             </div>
             <div class="space-y-4">
                 <p id="termMainDesc" class="text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200/70 dark:border-slate-700/70"></p>
-                <p id="termDetailDesc" class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed px-1"></p>
-                <div class="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800 text-xs px-1">
+                <div class="p-3.5 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-200/70 dark:border-indigo-800/70">
+                    <div class="text-[11px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-1">Konteks & Contoh Penerapan pada Design Brief UMKM:</div>
+                    <p id="termDetailDesc" class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed"></p>
+                </div>
+                <div class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-200 dark:border-slate-800 text-xs px-1">
                     <span id="termSourceName" class="font-semibold text-slate-400">Referensi</span>
-                    <a id="termSourceUrl" href="#" target="_blank" rel="noopener noreferrer" class="font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1.5">
-                        <span>Pelajari lebih lanjut</span><i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
-                    </a>
+                    <div class="flex items-center gap-3">
+                        <button type="button" onclick="closeTermModal(); openGlossaryIndex();" class="font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1">
+                            <i class="fa-solid fa-book-open text-[10px]"></i>
+                            <span>Buka Kamus Lengkap</span>
+                        </button>
+                        <a id="termSourceUrl" href="#" target="_blank" rel="noopener noreferrer" class="font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1">
+                            <span>Referensi Web</span><i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -455,6 +470,30 @@
             return '<span class="tech-term" data-term="' + escapeHtml(key) + '" onclick="showTerm(this.dataset.term)">' + escapeHtml(text) + '</span>';
         }
 
+        // Komponen Pita Jembatan Narasi Atas & Bawah
+        function slideBridgeTop(prevHookText) {
+            return `
+                <div class="px-3.5 py-2 rounded-2xl bg-slate-100/90 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700/80 flex items-center gap-2.5 text-xs text-slate-600 dark:text-slate-300">
+                    <span class="px-2 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-extrabold text-[10px] uppercase shrink-0">🔗 Sambungan Cerita</span>
+                    <span class="font-medium leading-snug">${prevHookText}</span>
+                </div>
+            `;
+        }
+
+        function slideBridgeNext(nextTeaserText) {
+            return `
+                <div class="px-4 py-2.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/35 border border-indigo-200/80 dark:border-indigo-800/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-700 dark:text-slate-200">
+                    <div class="flex items-center gap-2">
+                        <span class="text-indigo-600 dark:text-indigo-400 font-extrabold shrink-0">👉 Selanjutnya:</span>
+                        <span class="font-semibold leading-snug">${nextTeaserText}</span>
+                    </div>
+                    <button type="button" onclick="changeSlide(1)" class="self-start sm:self-center px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-[11px] shrink-0 transition">
+                        Lanjut Slide Berikutnya &rarr;
+                    </button>
+                </div>
+            `;
+        }
+
         function autoResizeTextarea(el) {
             if (!el) return;
             el.style.height = 'auto';
@@ -524,6 +563,12 @@
         const MASTER_BUNDLE_KEY = 'upertis_uiux_master_bundle';
         let currentSlideIndex = 0;
         const TOTAL_SLIDES = 12;
+        let hintState = {};
+
+        function toggleHint(key) {
+            hintState[key] = !hintState[key];
+            renderCurrentSlide();
+        }
 
         const MIN_EVIDENCE_ITEMS = 5;
         const MIN_POV_ITEMS = 3;
@@ -662,7 +707,6 @@
             'halaman', 'form', 'formulir', 'login', 'akun', 'filter'
         ];
 
-        // Contoh isian (ghost text) pada butir pertama; butir lain memakai petunjuk biasa
         function exPh(example, base) {
             return escapeHtml(example ? 'Contoh: ' + example : base);
         }
@@ -1812,11 +1856,11 @@
         }
 
         // =========================================================================
-        // RENDER SLIDE 1 s/d 12 SECARA LENGKAP
+        // RENDER SLIDE 1 s/d 6 (BAGIAN 1 DARI 2)
         // =========================================================================
         function renderSlide1() {
             return `
-                <div class="slide-enter flex flex-col justify-between h-full gap-6">
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
                     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center my-auto">
                         <div class="lg:col-span-7 space-y-4">
                             <div class="inline-flex flex-wrap items-center gap-2">
@@ -1876,14 +1920,16 @@
                             </div>
                         </div>
                     </div>
+                    ${slideBridgeNext("Kita mulai di Slide 2 dengan memahami bagaimana bukti sintesis dari LKM 03 ditarik otomatis ke LKM 04 ini.")}
                 </div>
             `;
         }
 
         function renderSlide2() {
             return `
-                <div class="slide-enter flex flex-col justify-between h-full gap-5">
-                    <div class="space-y-1.5">
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Dari 5 tahap praktikum di Slide 1, langkah pertama kita adalah mengunci rantai bukti dari hasil sintesis LKM 03 minggu lalu.")}
+                    <div class="space-y-1">
                         <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Tahap 1 • Penjelasan Rantai Bukti (${term('traceability', 'Traceability')})</span>
                         <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Mengunci Konsistensi dari Sintesis LKM 03 ke Rumusan Masalah LKM 04</h2>
                         <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -1915,129 +1961,7 @@
                         </div>
                     </div>
 
-                    <div class="p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-800/60 text-xs leading-relaxed">
-                        <i class="fa-solid fa-list-check text-indigo-600 dark:text-indigo-400 mr-1.5"></i><strong>Instruksi Slide Berikutnya:</strong> Periksa atau lengkapi Bagian 1A (Identitas), Bagian 1B (Ringkasan Persona & Pengelola), dan Bagian 1C (Minimal ${MIN_EVIDENCE_ITEMS} Bukti Riset dari LKM 03).
-                    </div>
-                </div>
-            `;
-        }
-
-        function renderSlide4() {
-            return `
-                <div class="slide-enter flex flex-col justify-between h-full gap-5">
-                    <div class="space-y-1.5">
-                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Tahap 2 • Penjelasan Perangkai POV Otomatis</span>
-                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Cara Menyusun Minimal ${MIN_POV_ITEMS} ${term('pov', 'Point of View (POV)')}: Pelanggan & Pengelola</h2>
-                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                            Pada Slide 5 nanti, Anda wajib menyusun <strong>minimal ${MIN_POV_ITEMS} pernyataan masalah (${term('problemstatement', 'Problem Statement')})</strong> (2 dari sudut pandang Pelanggan Sasaran dan 1 dari sudut pandang Pengelola UMKM):
-                        </p>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-auto text-xs sm:text-sm">
-                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
-                            <span class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-xs font-extrabold">1. USER & MULTI-BUKTI</span>
-                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Centang Min. ${MIN_EVIDENCE_PER_POV} Bukti LKM 03</h3>
-                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
-                                Tuliskan karakter spesifik pengguna beserta situasinya, lalu centang <strong>minimal ${MIN_EVIDENCE_PER_POV} kode bukti pendukung</strong> (misal memadukan <code>[INS-1]</code> dan <code>[CJM-1]</code>).
-                            </p>
-                        </div>
-
-                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
-                            <span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-xs font-extrabold">2. NEED (Kata Kerja)</span>
-                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Detektor Anti-Kata Fitur!</h3>
-                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
-                                Awali dengan kata kerja tujuan manusia (misal: <em>"memastikan ketersediaan porsi secara langsung"</em>). Sistem otomatis menolak jika Anda mengetik kata benda teknis seperti <em>"aplikasi", "fitur", "tombol",</em> atau <em>"notifikasi"</em>.
-                            </p>
-                        </div>
-
-                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
-                            <span class="px-2.5 py-1 rounded-lg bg-amber-500 text-white text-xs font-extrabold">3. INSIGHT ("Karena...")</span>
-                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Akar Masalah Lapangan</h3>
-                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
-                                Jelaskan akar masalah nyata di lapangan. Sistem akan otomatis merangkai ketiganya menjadi kalimat <em>Problem Statement</em> yang utuh!
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        function renderSlide6() {
-            return `
-                <div class="slide-enter flex flex-col justify-between h-full gap-5">
-                    <div class="space-y-1.5">
-                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Tahap 3 • Penjelasan HMW & Batasan Operasional UMKM</span>
-                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Menyusun Pertanyaan ${term('hmw', 'How Might We')} & ${term('serviceblueprint', 'Kesiapan Backstage UMKM')}</h2>
-                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                            Pada Slide 7 nanti, Anda wajib menurunkan seluruh <em>POV</em> di Slide 5 menjadi <strong>minimal ${MIN_HMW_ITEMS} pertanyaan How Might We (HMW)</strong>, sekaligus mendokumentasikan <strong>Batasan Operasional Pengelola UMKM</strong>:
-                        </p>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 my-auto text-xs sm:text-sm">
-                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2.5">
-                            <span class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-xs font-extrabold">Bagian 3A: Minimal ${MIN_HMW_ITEMS} Pertanyaan HMW</span>
-                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Wajib Diawali "Bagaimana kita dapat..."</h3>
-                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
-                                Setiap POV yang Anda buat di Slide 5 wajib memiliki minimal 1 pertanyaan HMW. Kalimat HMW tidak boleh mengunci kata benda fitur teknis agar ruang eksplorasi ide tetap terbuka.
-                            </p>
-                        </div>
-
-                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2.5">
-                            <span class="px-2.5 py-1 rounded-lg bg-amber-500 text-white text-xs font-extrabold">Bagian 3B: Batasan Operasional UMKM (Backstage)</span>
-                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Agar Desain Realistis Dijalankan Mitra</h3>
-                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
-                                Catat siapa yang memegang perangkat di toko, apa kesibukan fisik mereka saat jam ramai (misal memasak/mencuci), perangkat apa yang dipakai, dan aturan kesederhanaan layar adminnya.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        function renderSlide8() {
-            return `
-                <div class="slide-enter flex flex-col justify-between h-full gap-5">
-                    <div class="space-y-1.5">
-                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Tahap 4 • Penjelasan Seleksi Fitur MVP</span>
-                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Mengelompokkan Ide Solusi ke dalam ${term('impacteffort', 'Impact vs Effort Matrix')}</h2>
-                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                            Pada Slide 9 nanti, Anda wajib mengusulkan <strong>minimal ${MIN_FEATURE_ITEMS} Ide Fitur Solusi</strong> yang menjawab seluruh pertanyaan HMW Anda, lalu menilai <strong>Dampak bagi Pengguna</strong> serta <strong>Kemudahan Penerapan bagi UMKM</strong>:
-                        </p>
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 my-auto text-xs sm:text-sm">
-                        <div class="p-4 sm:p-5 rounded-3xl bg-emerald-50/70 dark:bg-emerald-950/30 border-2 border-emerald-500 space-y-1.5">
-                            <span class="px-2.5 py-0.5 rounded bg-emerald-600 text-white font-extrabold text-[11px]">KUADRAN 1: MVP UTAMA (QUICK WINS)</span>
-                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Dampak Tinggi + Penerapan Mudah</h3>
-                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
-                                Fitur yang langsung memecahkan masalah utama pelanggan dan sanggup dijalankan pemilik UMKM tanpa beban. <strong>Wajib ada minimal ${MIN_MVP_COUNT} fitur di kuadran ini!</strong>
-                            </p>
-                        </div>
-
-                        <div class="p-4 sm:p-5 rounded-3xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 space-y-1.5">
-                            <span class="px-2.5 py-0.5 rounded bg-indigo-600 text-white font-extrabold text-[11px]">KUADRAN 2: PROYEK TAHAP LANJUT</span>
-                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Dampak Tinggi + Penerapan Sulit</h3>
-                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
-                                Fitur yang bermanfaat tetapi membutuhkan kesiapan teknis/operasional tinggi sehingga disimpan untuk pengembangan fase berikutnya.
-                            </p>
-                        </div>
-
-                        <div class="p-4 sm:p-5 rounded-3xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 space-y-1.5">
-                            <span class="px-2.5 py-0.5 rounded bg-amber-500 text-white font-extrabold text-[11px]">KUADRAN 3: FITUR PELENGKAP</span>
-                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Dampak Rendah + Penerapan Mudah</h3>
-                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
-                                Fitur tambahan sederhana yang bersifat pelengkap (opsional).
-                            </p>
-                        </div>
-
-                        <div class="p-4 sm:p-5 rounded-3xl bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 space-y-1.5">
-                            <span class="px-2.5 py-0.5 rounded bg-rose-600 text-white font-extrabold text-[11px]">KUADRAN 4: HINDARI / CORET!</span>
-                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Dampak Rendah + Penerapan Sulit</h3>
-                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
-                                Fitur berlebihan (<em>Feature Creep</em>) yang membuang waktu dan membebani UMKM.
-                            </p>
-                        </div>
-                    </div>
+                    ${slideBridgeNext("Pada Slide 3, periksa atau lengkapi Bagian 1A (Identitas), Bagian 1B (Persona & Pengelola), dan Bagian 1C (Minimal 5 Bukti Riset LKM 03).")}
                 </div>
             `;
         }
@@ -2055,6 +1979,7 @@
             const p1Min = !!uiWizard.infoMin[1];
             const p2Min = !!uiWizard.infoMin[2];
             const p3Min = !!uiWizard.infoMin[3];
+            const showHint1C = !!hintState['s3_1c'];
 
             let card1Html = '';
             if (p1Editing) {
@@ -2187,11 +2112,15 @@
                         ${renderWizardCardHeader('Bagian 1C', 'Daftar Bukti User Insight, CJM, & Observasi dari LKM 03 (' + formState.evidences.length + ' Bukti — Minimal ' + MIN_EVIDENCE_ITEMS + ')', p3Saved, true, false, '', '')}
                         <div class="p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
                             <span class="text-slate-700 dark:text-slate-300"><i class="fa-solid fa-wand-magic-sparkles text-indigo-600 mr-1.5"></i>Sudah mengerjakan LKM 03 di browser ini atau punya file <code>.json</code> LKM 03? Tarik otomatis bukti Anda:</span>
-                            <div class="flex gap-2 shrink-0">
+                            <div class="flex flex-wrap gap-2 shrink-0">
+                                <button type="button" onclick="toggleHint('s3_1c')" class="px-3 py-1.5 rounded-xl bg-amber-100 hover:bg-amber-200 dark:bg-amber-950 text-amber-800 dark:text-amber-300 font-extrabold transition">
+                                    <i class="fa-regular fa-lightbulb mr-1"></i>${showHint1C ? 'Tutup Petunjuk' : 'Petunjuk Bukti'}
+                                </button>
                                 <button type="button" onclick="pullDataFromLocalLkm03()" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold transition shadow-sm">Tarik dari LKM 03 Lokal</button>
                                 <button type="button" onclick="triggerImportJson()" class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-extrabold transition shadow-sm">Muat File .JSON</button>
                             </div>
                         </div>
+                        ${showHint1C ? `<div class="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-xs text-amber-900 dark:text-amber-200 whitespace-pre-line leading-relaxed">Panduan Daftar Bukti LKM 03 (Bagian 1C):\n• INS-1..3: Salin kesimpulan User Insight dari 3 klaster Affinity Diagram Anda.\n• CJM-1: Salin titik masalah (Pain Point) pada fase dengan emosi paling negatif di Customer Journey Map.\n• OBS-1 / EMD-1: Salin fakta observasi lapangan atau analisis kontradiksi Says vs Does dari Empathy Map.</div>` : ''}
                         <div class="space-y-3">${evRowsHtml}</div>
                         <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
                             <button type="button" onclick="addEvidenceItem()" class="px-4 py-2.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-xs sm:text-sm font-extrabold transition flex items-center gap-2">
@@ -2226,6 +2155,48 @@
             `;
         }
 
+        function renderSlide4() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Seluruh kode bukti dari LKM 03 Anda telah terdaftar di Slide 3. Sekarang di Tahap 2, kita merangkai bukti tersebut menjadi kalimat Point of View (POV).")}
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Tahap 2 • Penjelasan Perangkai POV Otomatis</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Cara Menyusun Minimal ${MIN_POV_ITEMS} ${term('pov', 'Point of View (POV)')}: Pelanggan & Pengelola</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Pada Slide 5 nanti, Anda wajib menyusun <strong>minimal ${MIN_POV_ITEMS} pernyataan masalah (${term('problemstatement', 'Problem Statement')})</strong> (2 dari sudut pandang Pelanggan Sasaran dan 1 dari sudut pandang Pengelola UMKM):
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-auto text-xs sm:text-sm">
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <span class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-xs font-extrabold">1. USER & MULTI-BUKTI</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Centang Min. ${MIN_EVIDENCE_PER_POV} Bukti LKM 03</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Tuliskan karakter spesifik pengguna beserta situasinya, lalu centang <strong>minimal ${MIN_EVIDENCE_PER_POV} kode bukti pendukung</strong> (misal memadukan <code>[INS-1]</code> dan <code>[CJM-1]</code>).
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-xs font-extrabold">2. NEED (Kata Kerja)</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Detektor Anti-Kata Fitur!</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Awali dengan kata kerja tujuan manusia (misal: <em>"memastikan ketersediaan porsi secara langsung"</em>). Sistem otomatis menolak jika Anda mengetik kata benda teknis seperti <em>"aplikasi", "fitur", "tombol",</em> atau <em>"notifikasi"</em>.
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <span class="px-2.5 py-1 rounded-lg bg-amber-500 text-white text-xs font-extrabold">3. INSIGHT ("Karena...")</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Akar Masalah Lapangan</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Jelaskan akar masalah nyata di lapangan. Sistem akan otomatis merangkai ketiganya menjadi kalimat <em>Problem Statement</em> yang utuh!
+                            </p>
+                        </div>
+                    </div>
+                    ${slideBridgeNext("Pada Slide 5, rangkailah minimal 3 Point of View (POV #1 & #2 untuk Pelanggan, serta POV #3 untuk Pengelola UMKM).")}
+                </div>
+            `;
+        }
+
         // SLIDE 5 [FORM ISIAN 2]: Wizard Generator Point of View (Min 3 POV)
         function renderSlide5() {
             let cardsHtml = '';
@@ -2237,6 +2208,7 @@
                 const isSaved = isPovItemComplete(i);
                 const isMin = !!uiWizard.povMin[i];
                 const fullSentence = buildPovSentence(p);
+                const showHintPov = !!hintState['pov_' + i];
 
                 const delBtnHtml = canDelPov
                     ? `<button type="button" onclick="removePovCard(${i})" class="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold transition" title="Hapus POV Ini"><i class="fa-solid fa-trash-can"></i></button>`
@@ -2262,7 +2234,15 @@
                         <div class="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border-2 border-indigo-600 dark:border-indigo-400 shadow-md space-y-4">
                             ${renderWizardCardHeader(p.code, p.roleLabel, isSaved, true, false, '', '', delBtnHtml)}
 
-                            <div class="grid grid-cols-1 sm:grid-cols-12 gap-4 pt-2 border-t border-slate-100 dark:border-slate-800">
+                            <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                                <span class="text-xs font-bold text-slate-500">Susun komponen User, Bukti LKM 03, Need (kata kerja), dan Insight di bawah ini:</span>
+                                <button type="button" onclick="toggleHint('pov_${i}')" class="px-3 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 dark:bg-amber-950 text-amber-800 dark:text-amber-300 text-[11px] font-extrabold transition">
+                                    <i class="fa-regular fa-lightbulb mr-1"></i>${showHintPov ? 'Sembunyikan Petunjuk' : 'Butuh Petunjuk Kerangka?'}
+                                </button>
+                            </div>
+                            ${showHintPov ? `<div class="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-xs text-amber-900 dark:text-amber-200 whitespace-pre-line leading-relaxed">Kerangka Point of View (POV #${i + 1}):\n• 1. [USER]: Sebutkan pengguna beserta situasi kontekstualnya.\n• 2. [EVIDENCE]: Centang minimal 2 kode bukti berbeda jenis (misal [INS-1] + [CJM-1] atau [OBS-1]).\n• 3. [NEED]: Wajib diawali kata kerja tujuan manusia (contoh: "mengetahui kepastian stok dan total harga sebelum berangkat"), JANGAN menulis kata "fitur/aplikasi/website".\n• 4. [INSIGHT]: Tulis akar penyebabnya tanpa mengulang kata "karena" di awal.</div>` : ''}
+
+                            <div class="grid grid-cols-1 sm:grid-cols-12 gap-4">
                                 <div class="sm:col-span-6">
                                     <label class="text-xs sm:text-sm font-bold text-indigo-700 dark:text-indigo-300 block mb-1.5">1. [USER] Siapa Pengguna Spesifik & Konteks Situasinya? *</label>
                                     <input type="text" id="inp_pov_user_${i}" value="${escapeHtml(p.userDesc)}" oninput="updatePovField(${i}, 'userDesc', this.value)" placeholder="${i === formState.povs.length - 1 ? 'Misal: Pemilik/kasir UMKM yang melayani pesanan sendirian...' : 'Misal: Pelanggan yang ingin memesan di jam sibuk...'}" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
@@ -2339,6 +2319,42 @@
             `;
         }
 
+        function renderSlide6() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Ketiga pernyataan masalah (POV) Anda di Slide 5 telah terkunci. Sekarang di Tahap 3, kita mengubahnya menjadi pertanyaan How Might We dan memetakan batasan operasional UMKM.")}
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Tahap 3 • Penjelasan HMW & Batasan Operasional UMKM</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Menyusun Pertanyaan ${term('hmw', 'How Might We')} & ${term('serviceblueprint', 'Kesiapan Backstage UMKM')}</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Pada Slide 7 nanti, Anda wajib menurunkan seluruh <em>POV</em> di Slide 5 menjadi <strong>minimal ${MIN_HMW_ITEMS} pertanyaan How Might We (HMW)</strong>, sekaligus mendokumentasikan <strong>Batasan Operasional Pengelola UMKM</strong>:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 my-auto text-xs sm:text-sm">
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                            <span class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-xs font-extrabold">Bagian 3A: Minimal ${MIN_HMW_ITEMS} Pertanyaan HMW</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Wajib Diawali "Bagaimana kita dapat..."</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Setiap POV yang Anda buat di Slide 5 wajib memiliki minimal 1 pertanyaan HMW. Kalimat HMW tidak boleh mengunci kata benda fitur teknis agar ruang eksplorasi ide tetap terbuka.
+                            </p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                            <span class="px-2.5 py-1 rounded-lg bg-amber-500 text-white text-xs font-extrabold">Bagian 3B: Batasan Operasional UMKM (Backstage)</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Agar Desain Realistis Dijalankan Mitra</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Catat siapa yang memegang perangkat di toko, apa kesibukan fisik mereka saat jam ramai (misal memasak/mencuci), perangkat apa yang dipakai, dan aturan kesederhanaan layar adminnya.
+                            </p>
+                        </div>
+                    </div>
+                    ${slideBridgeNext("Pada Slide 7, lengkapi Bagian 3A (Pertanyaan HMW) dan Bagian 3B (Batasan Operasional UMKM).")}
+                </div>
+            `;
+        }
+        // === AKHIR BAGIAN 1 DARI 2 (TEMPELKAN BAGIAN 2 TEPAT DI BAWAH BARIS INI) ===
+        // === AWAL BAGIAN 2 DARI 2 ===
+
         // SLIDE 7 [FORM ISIAN 3]: Wizard Pertanyaan How Might We & Batasan Operasional UMKM
         function renderSlide7() {
             const h1Edit = uiWizard.hmwOpsActive === 1;
@@ -2347,6 +2363,8 @@
             const h2Saved = isHmwOpsPartComplete(2);
             const h1Min = !!uiWizard.hmwOpsMin[1];
             const h2Min = !!uiWizard.hmwOpsMin[2];
+            const showHint3A = !!hintState['hmw_3a'];
+            const showHint3B = !!hintState['ops_3b'];
 
             let card1Html = '';
             if (h1Edit) {
@@ -2387,7 +2405,14 @@
                 card1Html = `
                     <div class="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border-2 border-indigo-600 dark:border-indigo-400 shadow-md space-y-4">
                         ${renderWizardCardHeader('Bagian 3A', 'Daftar Pertanyaan How Might We (' + formState.hmws.length + ' HMW — Minimal ' + MIN_HMW_ITEMS + ' & Semua POV Wajib Terjawab)', h1Saved, true, false, '', '')}
-                        <div class="space-y-3 pt-2 border-t border-slate-100 dark:border-slate-800">${hmwRows}</div>
+                        <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                            <span class="text-xs font-bold text-slate-500">Pastikan setiap POV memiliki minimal 1 pertanyaan HMW yang diawali "Bagaimana kita dapat...":</span>
+                            <button type="button" onclick="toggleHint('hmw_3a')" class="px-3 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 dark:bg-amber-950 text-amber-800 dark:text-amber-300 text-[11px] font-extrabold transition">
+                                <i class="fa-regular fa-lightbulb mr-1"></i>${showHint3A ? 'Sembunyikan Petunjuk' : 'Butuh Petunjuk Kerangka?'}
+                            </button>
+                        </div>
+                        ${showHint3A ? `<div class="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-xs text-amber-900 dark:text-amber-200 whitespace-pre-line leading-relaxed">Kerangka Pertanyaan HMW (Bagian 3A):\n• Gunakan pola: "Bagaimana kita dapat membantu [pengguna] untuk [mencapai tujuan/Need] sehingga tidak lagi mengalami [hambatan]?"\n• Jangan menyebut kata benda teknis seperti "aplikasi", "tombol", "fitur", atau "notifikasi" di dalam kalimat tanya HMW.</div>` : ''}
+                        <div class="space-y-3">${hmwRows}</div>
                         <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
                             <button type="button" onclick="addHmwItem()" class="px-4 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 text-xs font-extrabold flex items-center gap-1.5">
                                 <i class="fa-solid fa-plus"></i><span>Tambah Pertanyaan HMW</span>
@@ -2416,7 +2441,14 @@
                 card2Html = `
                     <div class="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border-2 border-indigo-600 dark:border-indigo-400 shadow-md space-y-4">
                         ${renderWizardCardHeader('Bagian 3B', 'Kesiapan & Batasan Operasional Pengelola UMKM (Service Blueprint Ringkas)', h2Saved, true, false, '', '')}
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100 dark:border-slate-800">
+                        <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                            <span class="text-xs font-bold text-slate-500">Petakan batasan fisik dan waktu pengelola UMKM di balik layar (Backstage):</span>
+                            <button type="button" onclick="toggleHint('ops_3b')" class="px-3 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 dark:bg-amber-950 text-amber-800 dark:text-amber-300 text-[11px] font-extrabold transition">
+                                <i class="fa-regular fa-lightbulb mr-1"></i>${showHint3B ? 'Sembunyikan Petunjuk' : 'Butuh Petunjuk Kerangka?'}
+                            </button>
+                        </div>
+                        ${showHint3B ? `<div class="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-xs text-amber-900 dark:text-amber-200 whitespace-pre-line leading-relaxed">Kerangka Batasan Operasional Backstage UMKM (Bagian 3B):\n• 1. Pelaku: Siapa yang memegang HP di lokasi usaha? Apakah ia merangkap pekerjaan fisik lain?\n• 2. Perangkat: Apakah hanya memakai 1 HP Android di kasir atau punya tablet/laptop?\n• 3. Kesibukan Jam Ramai: Mengapa mereka tidak sempat mengetik chat panjang di jam sibuk?\n• 4. Aturan Kesederhanaan: Tetapkan batas klik (misal maksimal 1–2 tap tombol besar) untuk mengelola pesanan.</div>` : ''}
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">1. Siapa yang Mengelola Pesanan di Sisi Toko Sehari-hari? *</label>
                                 <input type="text" id="inp_ops_role" value="${escapeHtml(o.operatorRole)}" oninput="updateOpsField('operatorRole', this.value)" placeholder="Misal: Pemilik bekerja sendirian merangkap kasir & peracik..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
@@ -2469,6 +2501,56 @@
             `;
         }
 
+        function renderSlide8() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Seluruh pertanyaan HMW dan batasan operasional Backstage UMKM di Slide 7 telah tersimpan. Sekarang di Tahap 4, kita mengusulkan ide fitur dan menyaringnya ke dalam Matriks 2x2.")}
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Tahap 4 • Penjelasan Seleksi Fitur MVP</span>
+                        <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Mengelompokkan Ide Solusi ke dalam ${term('impacteffort', 'Impact vs Effort Matrix')}</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Pada Slide 9 nanti, Anda wajib mengusulkan <strong>minimal ${MIN_FEATURE_ITEMS} Ide Fitur Solusi</strong> yang menjawab seluruh pertanyaan HMW Anda, lalu menilai <strong>Dampak bagi Pengguna</strong> serta <strong>Kemudahan Penerapan bagi UMKM</strong>:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 my-auto text-xs sm:text-sm">
+                        <div class="p-4 sm:p-5 rounded-3xl bg-emerald-50/70 dark:bg-emerald-950/30 border-2 border-emerald-500 space-y-1.5">
+                            <span class="px-2.5 py-0.5 rounded bg-emerald-600 text-white font-extrabold text-[11px]">KUADRAN 1: MVP UTAMA (QUICK WINS)</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Dampak Tinggi + Penerapan Mudah</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Fitur yang langsung memecahkan masalah utama pelanggan dan sanggup dijalankan pemilik UMKM tanpa beban. <strong>Wajib ada minimal ${MIN_MVP_COUNT} fitur di kuadran ini!</strong>
+                            </p>
+                        </div>
+
+                        <div class="p-4 sm:p-5 rounded-3xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 space-y-1.5">
+                            <span class="px-2.5 py-0.5 rounded bg-indigo-600 text-white font-extrabold text-[11px]">KUADRAN 2: PROYEK TAHAP LANJUT</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Dampak Tinggi + Penerapan Sulit</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Fitur yang bermanfaat tetapi membutuhkan kesiapan teknis/operasional tinggi sehingga disimpan untuk pengembangan fase berikutnya.
+                            </p>
+                        </div>
+
+                        <div class="p-4 sm:p-5 rounded-3xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 space-y-1.5">
+                            <span class="px-2.5 py-0.5 rounded bg-amber-500 text-white font-extrabold text-[11px]">KUADRAN 3: FITUR PELENGKAP</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Dampak Rendah + Penerapan Mudah</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Fitur tambahan sederhana yang bersifat pelengkap (opsional).
+                            </p>
+                        </div>
+
+                        <div class="p-4 sm:p-5 rounded-3xl bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 space-y-1.5">
+                            <span class="px-2.5 py-0.5 rounded bg-rose-600 text-white font-extrabold text-[11px]">KUADRAN 4: HINDARI / CORET!</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Dampak Rendah + Penerapan Sulit</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Fitur berlebihan (<em>Feature Creep</em>) yang membuang waktu dan membebani UMKM.
+                            </p>
+                        </div>
+                    </div>
+                    ${slideBridgeNext("Pada Slide 9, evaluasi minimal 5 ide fitur Anda dan kunci minimal 3 fitur di Kuadran 1 (MVP Utama).")}
+                </div>
+            `;
+        }
+
         // SLIDE 9 [FORM ISIAN 4]: Wizard Matriks Prioritas Fitur & Live 2x2 Matrix Board
         function renderSlide9() {
             let cardsHtml = '';
@@ -2482,6 +2564,7 @@
                 const isMin = !!uiWizard.featMin[i];
                 const qInfo = getQuadrantInfo(f.impact, f.effort);
                 const titleSummary = f.name.trim() ? f.name : 'Ide Fitur Solusi #' + (i + 1);
+                const showHintFeat = !!hintState['feat_' + i];
 
                 const delBtn = canDelFeat
                     ? `<button type="button" onclick="removeFeatureItem(${i})" class="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold transition" title="Hapus Fitur Ini"><i class="fa-solid fa-trash-can"></i></button>`
@@ -2492,7 +2575,15 @@
                         <div class="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border-2 border-indigo-600 dark:border-indigo-400 shadow-md space-y-4">
                             ${renderWizardCardHeader('Ide Fitur #' + (i + 1), titleSummary, isSaved, true, false, '', '', delBtn)}
 
-                            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3.5 pt-2 border-t border-slate-100 dark:border-slate-800">
+                            <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                                <span class="text-xs font-bold text-slate-500">Hubungkan ide fitur ke pertanyaan HMW dan tentukan tingkat Impact serta Effort-nya:</span>
+                                <button type="button" onclick="toggleHint('feat_${i}')" class="px-3 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 dark:bg-amber-950 text-amber-800 dark:text-amber-300 text-[11px] font-extrabold transition">
+                                    <i class="fa-regular fa-lightbulb mr-1"></i>${showHintFeat ? 'Sembunyikan Petunjuk' : 'Butuh Petunjuk Kerangka?'}
+                                </button>
+                            </div>
+                            ${showHintFeat ? `<div class="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-xs text-amber-900 dark:text-amber-200 whitespace-pre-line leading-relaxed">Kerangka Evaluasi Ide Fitur #${i + 1}:\n• Pastikan setiap pertanyaan HMW (HMW-1, HMW-2, HMW-3) memiliki minimal 1 ide fitur yang menjawabnya.\n• Agar lolos sebagai MVP Utama (Kuadran 1), fitur harus berdampak Tinggi bagi pengguna sekaligus Mudah/Realistis dijalankan pemilik UMKM sesuai batasan Backstage di Slide 7.\n• Sertakan juga minimal 1–2 fitur pembanding di Kuadran 2/3/4 untuk memperlihatkan proses penyaringan yang objektif.</div>` : ''}
+
+                            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3.5">
                                 <div class="sm:col-span-6">
                                     <label class="text-xs font-bold text-slate-700 dark:text-slate-200 block mb-1.5">1. Nama Ide Fitur / Komponen Solusi #${i + 1} *</label>
                                     <input type="text" id="inp_feat_name_${i}" value="${escapeHtml(f.name)}" oninput="updateFeatureField(${i}, 'name', this.value)" placeholder="Contoh: Katalog Menu dengan Status Stok Real-Time..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
@@ -2612,8 +2703,9 @@
 
         function renderSlide10() {
             return `
-                <div class="slide-enter flex flex-col justify-between h-full gap-5">
-                    <div class="space-y-1.5">
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Daftar fitur MVP Utama (Kuadran 1) Anda telah terkunci di Slide 9. Sekarang di Tahap 5, kita menyatukannya ke dalam dokumen UX Design Brief.")}
+                    <div class="space-y-1">
                         <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Tahap 5 • Penjelasan UX Design Brief</span>
                         <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Mengunci ${term('designbrief', 'UX Design Brief')} & ${term('uxmetrics', 'Metrik Keberhasilan')}</h2>
                         <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -2638,6 +2730,7 @@
                             </p>
                         </div>
                     </div>
+                    ${slideBridgeNext("Pada Slide 11, lengkapi Bagian 5A (Alur Inti MVP) dan Bagian 5B (Metrik Keberhasilan Berangka).")}
                 </div>
             `;
         }
@@ -2650,6 +2743,8 @@
             const b2Saved = isBriefPartComplete(2);
             const b1Min = !!uiWizard.briefMin[1];
             const b2Min = !!uiWizard.briefMin[2];
+            const showHint5A = !!hintState['brief_5a'];
+            const showHint5B = !!hintState['brief_5b'];
 
             const mvpListHtml = getMvpFeaturesList()
                 .map(function (f) { return `<span class="px-2.5 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[11px] font-extrabold border border-emerald-300"><i class="fa-solid fa-check mr-1"></i>${escapeHtml(f.name)}</span>`; })
@@ -2696,10 +2791,16 @@
                         </div>
 
                         <div class="space-y-3 pt-2 border-t border-slate-100 dark:border-slate-800">
-                            <div class="flex items-center justify-between">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
                                 <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200">3. Urutan Langkah Alur MVP (Minimal ${MIN_FLOW_STEPS} Langkah Berurutan) *</label>
-                                <button type="button" onclick="addBriefFlowStep()" class="px-2.5 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-xs font-bold transition flex items-center gap-1"><i class="fa-solid fa-plus"></i>Tambah Langkah</button>
+                                <div class="flex items-center gap-2">
+                                    <button type="button" onclick="toggleHint('brief_5a')" class="px-3 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 dark:bg-amber-950 text-amber-800 dark:text-amber-300 text-[11px] font-extrabold transition">
+                                        <i class="fa-regular fa-lightbulb mr-1"></i>${showHint5A ? 'Sembunyikan Petunjuk' : 'Butuh Petunjuk Kerangka?'}
+                                    </button>
+                                    <button type="button" onclick="addBriefFlowStep()" class="px-2.5 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-xs font-bold transition flex items-center gap-1"><i class="fa-solid fa-plus"></i>Tambah Langkah</button>
+                                </div>
                             </div>
+                            ${showHint5A ? `<div class="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-xs text-amber-900 dark:text-amber-200 whitespace-pre-line leading-relaxed">Kerangka Urutan Alur MVP (Bagian 5A):\n• Langkah 1 (Cek Info): Bagaimana pelanggan melihat katalog, harga, dan ketersediaan?\n• Langkah 2 (Pilih & Pesan): Bagaimana pelanggan memilih varian dan mengisi data ringkas?\n• Langkah 3 (Bayar & Tiket): Bagaimana pelanggan menyelesaikan pembayaran dan menerima bukti pesanan?\n• Langkah 4 (Sisi Toko & Status): Bagaimana pengelola UMKM memproses dan memperbarui status pesanan dengan 1 klik?</div>` : ''}
                             <div class="space-y-2">${flowRowsHtml}</div>
                         </div>
 
@@ -2743,7 +2844,7 @@
                                 </select>
                                 <button type="button" onclick="removeBriefMetric('uxMetrics', ${idx})" ${!canDelUx ? 'disabled' : ''} class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 text-xs font-bold transition disabled:opacity-30"><i class="fa-solid fa-trash-can"></i></button>
                             </div>
-                            <input type="text" id="inp_uxm_ind_${idx}" value="${escapeHtml(m.indicator)}" oninput="updateBriefMetric('uxMetrics', ${idx}, 'indicator', this.value)" placeholder="Tuliskan target keberhasilan untuk pengguna (misal: 100% sukses menyelesaikan pesanan di bawah 1 menit)..." class="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <input type="text" id="inp_uxm_ind_${idx}" value="${escapeHtml(m.indicator)}" oninput="updateBriefMetric('uxMetrics', ${idx}, 'indicator', this.value)" placeholder="Tuliskan target keberhasilan berangka (misal: 100% sukses menyelesaikan pesanan di bawah 2 menit)..." class="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                         </div>
                     `;
                 }).join('');
@@ -2758,7 +2859,7 @@
                                 </select>
                                 <button type="button" onclick="removeBriefMetric('bizMetrics', ${idx})" ${!canDelBiz ? 'disabled' : ''} class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 text-xs font-bold transition disabled:opacity-30"><i class="fa-solid fa-trash-can"></i></button>
                             </div>
-                            <input type="text" id="inp_bizm_ind_${idx}" value="${escapeHtml(m.indicator)}" oninput="updateBriefMetric('bizMetrics', ${idx}, 'indicator', this.value)" placeholder="Tuliskan dampak yang diharapkan bagi UMKM (misal: memangkas waktu kasir menjawab stok hingga 80%)..." class="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <input type="text" id="inp_bizm_ind_${idx}" value="${escapeHtml(m.indicator)}" oninput="updateBriefMetric('bizMetrics', ${idx}, 'indicator', this.value)" placeholder="Tuliskan dampak berangka bagi UMKM (misal: memangkas waktu kasir menjawab stok hingga 80%)..." class="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                         </div>
                     `;
                 }).join('');
@@ -2766,7 +2867,14 @@
                 card2Html = `
                     <div class="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border-2 border-indigo-600 dark:border-indigo-400 shadow-md space-y-4">
                         ${renderWizardCardHeader('Bagian 5B', 'Tolok Ukur Keberhasilan Desain (UX & Business Metrics)', b2Saved, true, false, '', '')}
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-100 dark:border-slate-800">
+                        <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                            <span class="text-xs font-bold text-slate-500">Pilih fitur MVP dari dropdown dan sertakan angka target (misal 100%, 2 menit, atau 80%):</span>
+                            <button type="button" onclick="toggleHint('brief_5b')" class="px-3 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 dark:bg-amber-950 text-amber-800 dark:text-amber-300 text-[11px] font-extrabold transition">
+                                <i class="fa-regular fa-lightbulb mr-1"></i>${showHint5B ? 'Sembunyikan Petunjuk' : 'Butuh Petunjuk Kerangka?'}
+                            </button>
+                        </div>
+                        ${showHint5B ? `<div class="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-xs text-amber-900 dark:text-amber-200 whitespace-pre-line leading-relaxed">Kerangka Metrik Keberhasilan Berangka (Bagian 5B):\n• UX Metrics (Sisi Pengguna): Sertakan angka target seperti "Task Success Rate 100%", "Waktu pilih menu < 60 detik", atau "Skor SUS > 75".\n• Business Metrics (Sisi UMKM): Sertakan angka target operasional seperti "Mengurangi chat tanya stok hingga 80%" atau "Waktu rekap harian kasir < 5 menit".</div>` : ''}
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="space-y-3">
                                 <div class="flex items-center justify-between">
                                     <label class="text-xs sm:text-sm font-bold text-indigo-700 dark:text-indigo-300">1. UX Metrics (Min. ${MIN_METRICS_EACH}) *</label>
@@ -2826,7 +2934,6 @@
 
         function computeSelfCheck() {
             const checks = [];
-            // 1. triangulasi: tiap POV didukung bukti dari >= 2 jenis asal
             const weak = [];
             formState.povs.forEach(function (p, i) {
                 const kinds = new Set();
@@ -2838,17 +2945,17 @@
                 if (kinds.size < 2) weak.push('#' + (i + 1));
             });
             checks.push({ ok: weak.length === 0, label: 'Tiap POV didukung bukti dari lebih dari satu jenis (misal insight + observasi)', detail: 'Periksa POV ' + weak.join(', ') });
-            // 2. kontradiksi dipakai
+
             const emdCodes = formState.evidences.filter(function (e) { return /^EMD-/i.test(e.code); }).map(function (e) { return e.code; });
             if (emdCodes.length > 0) {
                 const used = formState.povs.some(function (p) { return (p.evidenceCodes || []).some(function (c) { return emdCodes.indexOf(c) !== -1; }); });
                 checks.push({ ok: used, label: 'Bukti kontradiksi (EMD) dipakai di minimal satu POV', detail: 'Kontradiksi ucapan vs tindakan biasanya sumber insight terkuat' });
             }
-            // 3. "karena" di awal alasan
+
             const karenaPov = [];
             formState.povs.forEach(function (p, i) { if (povReasonHintMsg(p.insightReason)) karenaPov.push('#' + (i + 1)); });
             checks.push({ ok: karenaPov.length === 0, label: 'Alasan POV tidak diawali kata "karena"', detail: 'Periksa POV ' + karenaPov.join(', ') });
-            // 4. HMW tidak kembar
+
             let dupHmw = 0;
             for (let a = 0; a < formState.hmws.length; a++) {
                 for (let b = a + 1; b < formState.hmws.length; b++) {
@@ -2856,14 +2963,14 @@
                 }
             }
             checks.push({ ok: dupHmw === 0, label: 'Tidak ada pertanyaan HMW yang hampir sama', detail: dupHmw + ' pasangan HMW terlalu mirip' });
-            // 5. metrik berangka
+
             let noNum = 0, totalM = 0;
             (formState.brief.uxMetrics || []).concat(formState.brief.bizMetrics || []).forEach(function (m) {
                 totalM++;
                 if (!/\d/.test(m.indicator || '')) noNum++;
             });
             checks.push({ ok: totalM > 0 && noNum === 0, label: 'Setiap indikator metrik memuat angka target (misal 80% atau 1 menit)', detail: noNum + ' indikator belum berangka' });
-            // 6. unduh
+
             checks.push({ ok: !hasUnexportedChanges, label: 'Data sudah diunduh sebagai file .JSON', detail: 'Klik Simpan Data (.JSON) di atas' });
             return checks;
         }
@@ -3197,7 +3304,6 @@
         }
 
         const FORM_SLIDE_INDEXES = [2, 4, 6, 8, 10];
-        // Perkiraan waktu pengerjaan per slide (menit); bukan hasil pengukuran
         const SLIDE_MINUTES = [3, 3, 10, 3, 25, 3, 15, 3, 20, 3, 15, 5];
         function getSlideCompletion(idx) {
             let done = 0, total = 0, unit = 'bagian';
