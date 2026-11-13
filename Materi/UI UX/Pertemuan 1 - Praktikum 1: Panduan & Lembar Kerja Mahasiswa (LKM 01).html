@@ -34,9 +34,13 @@
             -webkit-font-smoothing: antialiased;
         }
 
+        /* Penanda istilah klik dengan garis bawah titik-titik yang jelas & kontras */
         .tech-term {
             color: #4f46e5;
             font-weight: 700;
+            text-decoration: underline;
+            text-decoration-style: dotted;
+            text-underline-offset: 3px;
             cursor: pointer;
             transition: color 0.15s ease, opacity 0.15s ease;
         }
@@ -146,7 +150,7 @@
     <!-- Input File Tersembunyi untuk Muat Data Proyek (.json) -->
     <input type="file" id="jsonFileInput" accept=".json,application/json" class="hidden" onchange="handleJsonFileImport(event)">
 
-    <!-- Toast Peringatan Validasi & Status File -->
+    <!-- Modal Konfirmasi Reset -->
     <div id="resetModalBackdrop" onclick="closeResetModal()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4 no-print">
         <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-md w-full p-5 sm:p-7 shadow-2xl space-y-4">
             <div class="flex items-start gap-3">
@@ -166,11 +170,13 @@
         </div>
     </div>
 
+    <!-- Bilah Batalkan Reset (10 Detik) -->
     <div id="undoBar" class="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-[60] hidden items-center gap-3 px-4 py-2.5 rounded-2xl bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 text-xs sm:text-sm font-bold shadow-2xl no-print">
         <span id="undoMessage">Perubahan diterapkan.</span>
         <button type="button" onclick="undoLastChange()" class="px-3 py-1 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-900 font-extrabold">Batalkan (<span id="undoCountdown">10</span>)</button>
     </div>
 
+    <!-- Toast Peringatan Validasi & Status File -->
     <div id="toastBanner" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-[60] hidden max-w-md w-[92%] sm:w-full px-4 py-3.5 rounded-2xl shadow-2xl border flex items-start gap-3 transition-all duration-200 no-print">
         <i id="toastIcon" class="fa-solid fa-circle-exclamation text-lg mt-0.5 shrink-0"></i>
         <div class="flex-1 text-xs sm:text-sm font-bold leading-snug" id="toastMessage">Pesan notifikasi</div>
@@ -209,7 +215,6 @@
                     <i class="fa-solid fa-cloud-arrow-up"></i> Tersimpan
                 </span>
 
-                <!-- Tombol Simpan & Muat File Data (.json) -->
                 <button type="button" onclick="exportJsonData()" class="px-2.5 sm:px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:hover:bg-emerald-900 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-extrabold flex items-center gap-1.5 transition" title="Simpan File Data Proyek (.json) untuk dibawa ke perangkat lain">
                     <i class="fa-solid fa-download"></i>
                     <span class="hidden sm:inline">Simpan .JSON</span>
@@ -304,12 +309,18 @@
             <div class="space-y-4">
                 <p id="termMainDesc" class="text-sm text-slate-700 dark:text-slate-200 leading-relaxed bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200/70 dark:border-slate-700/70"></p>
                 <p id="termDetailDesc" class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed px-1"></p>
-                <div class="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800 text-xs px-1">
+                <div class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-200 dark:border-slate-800 text-xs px-1">
                     <span id="termSourceName" class="font-semibold text-slate-400">Referensi</span>
-                    <a id="termSourceUrl" href="#" target="_blank" rel="noopener noreferrer" class="font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1.5">
-                        <span>Pelajari lebih lanjut</span>
-                        <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
-                    </a>
+                    <div class="flex items-center gap-3">
+                        <button type="button" onclick="closeTermModal(); openGlossaryIndex();" class="font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1">
+                            <i class="fa-solid fa-book-open text-[10px]"></i>
+                            <span>Buka Kamus Lengkap</span>
+                        </button>
+                        <a id="termSourceUrl" href="#" target="_blank" rel="noopener noreferrer" class="font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1">
+                            <span>Referensi Web</span>
+                            <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -431,6 +442,30 @@
             return '<span class="tech-term" data-term="' + escapeHtml(key) + '" onclick="showTerm(this.dataset.term)">' + escapeHtml(text) + '</span>';
         }
 
+        // Komponen Pita Jembatan Narasi Atas & Bawah
+        function slideBridgeTop(prevHookText) {
+            return `
+                <div class="px-3.5 py-2 rounded-2xl bg-slate-100/90 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700/80 flex items-center gap-2.5 text-xs text-slate-600 dark:text-slate-300">
+                    <span class="px-2 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-extrabold text-[10px] uppercase shrink-0">🔗 Sambungan Cerita</span>
+                    <span class="font-medium leading-snug">${prevHookText}</span>
+                </div>
+            `;
+        }
+
+        function slideBridgeNext(nextTeaserText) {
+            return `
+                <div class="px-4 py-2.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/35 border border-indigo-200/80 dark:border-indigo-800/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-700 dark:text-slate-200">
+                    <div class="flex items-center gap-2">
+                        <span class="text-indigo-600 dark:text-indigo-400 font-extrabold shrink-0">👉 Selanjutnya:</span>
+                        <span class="font-semibold leading-snug">${nextTeaserText}</span>
+                    </div>
+                    <button type="button" onclick="changeSlide(1)" class="self-start sm:self-center px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-[11px] shrink-0 transition">
+                        Lanjut Slide Berikutnya &rarr;
+                    </button>
+                </div>
+            `;
+        }
+
         function autoResizeTextarea(el) {
             if (!el) return;
             el.style.height = 'auto';
@@ -491,6 +526,12 @@
         let currentSlideIndex = 0;
         const TOTAL_SLIDES = 12;
         let activeFigmaTool = 'frame';
+        let hintState = {};
+
+        function toggleHint(key) {
+            hintState[key] = !hintState[key];
+            renderCurrentSlide();
+        }
 
         let formState = {
             nama: '',
@@ -515,6 +556,8 @@
                 { k: '', m: '', d: '' },
                 { k: '', m: '', d: '' }
             ],
+            img_bukti_1: '',
+            img_bukti_2: '',
             a1: '', t1: '',
             a2: '', t2: '',
             a3: '', t3: '',
@@ -590,9 +633,7 @@
             }
         }
 
-        // Validasi masing-masing slide form sebelum diizinkan pindah ke slide berikutnya
         function validateFormSlide(slideIdx) {
-            // Slide 3 (index 2): Identitas Mahasiswa
             if (slideIdx === 2) {
                 if (!formState.nama.trim()) {
                     uiWizard.identitasEditing = true;
@@ -622,7 +663,6 @@
                 return true;
             }
 
-            // Slide 5 (index 4): 3 Pertanyaan Refleksi Diri
             if (slideIdx === 4) {
                 for (let n = 1; n <= 3; n++) {
                     if (!isRefleksiComplete(n)) {
@@ -637,7 +677,6 @@
                 return true;
             }
 
-            // Slide 7 (index 6): Profil Usaha UMKM Mitra (Bagian 3A & 3B)
             if (slideIdx === 6) {
                 if (!formState.un.trim()) { uiWizard.profilActive = 1; renderCurrentSlide(); highlightEmptyInput('inp_un', 'Nama Usaha UMKM Mitra (Bagian 3A) wajib diisi.'); return false; }
                 if (!formState.ub.trim()) { uiWizard.profilActive = 1; renderCurrentSlide(); highlightEmptyInput('inp_ub', 'Bidang / Kategori Usaha (Bagian 3A) wajib diisi.'); return false; }
@@ -653,7 +692,6 @@
                 return true;
             }
 
-            // Slide 9 (index 8): Skenario & 5 Hambatan (Titik Friksi)
             if (slideIdx === 8) {
                 if (!formState.skenario.trim()) {
                     uiWizard.skenarioEditing = true;
@@ -674,7 +712,6 @@
                 return true;
             }
 
-            // Slide 11 (index 10): 3 Pasang Dugaan & Pertanyaan + Rencana Riset
             if (slideIdx === 10) {
                 for (let p = 1; p <= 3; p++) {
                     if (!formState['a' + p].trim()) { uiWizard.risetActive = p; renderCurrentSlide(); highlightEmptyInput('inp_a' + p, 'Dugaan Sementara (Asumsi) #' + p + ' wajib diisi.'); return false; }
@@ -711,7 +748,7 @@
             const union = sa.size + sb.size - inter;
             return union > 0 && (inter / union) >= 0.85;
         }
-        // Pertanyaan wawancara harus terbuka & netral (sesuai materi slide 10)
+
         function questionIssue(text) {
             const t = (text || '').trim();
             if (!t) return null;
@@ -748,6 +785,36 @@
             if (!formState.aud[idx]) formState.aud[idx] = { k: '', m: '', d: '' };
             formState.aud[idx][subKey] = val;
             triggerAutoSave();
+        }
+
+        // Unggah Bukti Gambar Terkompresi Otomatis via <canvas>
+        function handleImageUpload(event, stateKey) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const img = new Image();
+                img.onload = function () {
+                    const canvas = document.createElement('canvas');
+                    const maxW = 800;
+                    const scale = img.width > maxW ? (maxW / img.width) : 1;
+                    canvas.width = Math.round(img.width * scale);
+                    canvas.height = Math.round(img.height * scale);
+                    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                    formState[stateKey] = canvas.toDataURL('image/jpeg', 0.82);
+                    triggerAutoSave();
+                    renderCurrentSlide();
+                    showToast('Foto/Screenshot bukti pengamatan berhasil dilampirkan!', 'success');
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeUploadedImage(stateKey) {
+            formState[stateKey] = '';
+            triggerAutoSave();
+            renderCurrentSlide();
         }
 
         // =========================================================================
@@ -1070,7 +1137,7 @@
         // SLIDE 1: Pengantar Praktikum 1
         function renderSlide1() {
             return `
-                <div class="slide-enter flex flex-col justify-between h-full gap-6">
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
                     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center my-auto">
                         <div class="lg:col-span-7 space-y-4">
                             <div class="inline-flex flex-wrap items-center gap-2">
@@ -1083,7 +1150,7 @@
                             </h2>
 
                             <p class="text-xs sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
-                                Selamat datang di modul kerja <strong>Lembar Kerja Mahasiswa (LKM 01)</strong>. Seluruh bagian isian pada lembar kerja ini <strong>wajib dilengkapi secara berurutan</strong> sebelum Anda dapat melangkah ke slide berikutnya dan mengunduh laporan PDF A4. Jika Anda berpindah perangkat (misalnya dari komputer laboratorium ke ponsel atau laptop pribadi), gunakan tombol <strong>Simpan .JSON</strong> dan <strong>Muat .JSON</strong> di bagian atas layar.
+                                Selamat datang di modul kerja <strong>Lembar Kerja Mahasiswa (LKM 01)</strong>. Seluruh bagian isian pada lembar kerja ini <strong>wajib dilengkapi secara berurutan</strong> sebelum Anda dapat melangkah ke slide berikutnya dan mengunduh laporan PDF A4. Klik istilah bergaris bawah titik-titik untuk membuka kamus. Jika Anda berpindah perangkat, gunakan tombol <strong>Simpan .JSON</strong> dan <strong>Muat .JSON</strong> di bagian atas layar.
                             </p>
 
                             <div class="flex flex-wrap items-center gap-2.5 pt-2">
@@ -1133,6 +1200,8 @@
                             </div>
                         </div>
                     </div>
+
+                    ${slideBridgeNext("Kita mulai di Slide 2 dengan mempelajari 6 titik pengamatan alur layanan UMKM (baik online maupun offline).")}
                 </div>
             `;
         }
@@ -1157,8 +1226,10 @@
             }
 
             return `
-                <div class="slide-enter flex flex-col justify-between h-full gap-5">
-                    <div class="space-y-1.5">
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Dari peta 5 tahap di Slide 1, langkah pertama kita adalah memahami cara mengamati alur layanan sebuah UMKM.")}
+
+                    <div class="space-y-1">
                         <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Tahap 1 • Orientasi Pengamatan Lapangan</span>
                         <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Enam Titik Pengamatan Alur Layanan UMKM (Online vs Offline)</h2>
                         <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -1185,9 +1256,7 @@
                         </div>
                     </div>
 
-                    <div class="p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-800/60 text-xs">
-                        <i class="fa-solid fa-circle-info text-indigo-600 dark:text-indigo-400 mr-1.5"></i>Setelah memahami keenam titik pengamatan di atas, klik tombol <strong>Selanjutnya</strong> untuk mengisi identitas mahasiswa pelaksana.
-                    </div>
+                    ${slideBridgeNext("Setelah memahami keenam titik pengamatan di atas, lanjut ke Slide 3 untuk mengisi identitas mahasiswa pelaksana.")}
                 </div>
             `;
         }
@@ -1279,8 +1348,10 @@
 
         function renderSlide4() {
             return `
-                <div class="slide-enter flex flex-col justify-between h-full gap-6">
-                    <div class="space-y-2">
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Identitas Anda di Slide 3 sudah tercatat. Sekarang kita masuk ke Tahap 2: menyadari sudut pandang pribadi sebelum meneliti pengguna.")}
+
+                    <div class="space-y-1.5">
                         <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Tahap 2 • Penjelasan Refleksi Diri</span>
                         <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Menyadari Sudut Pandang Diri Sendiri Sebelum Meneliti Pengguna</h2>
                         <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -1314,9 +1385,7 @@
                         </div>
                     </div>
 
-                    <div class="p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-800/60 text-xs">
-                        <i class="fa-solid fa-arrow-right text-indigo-600 dark:text-indigo-400 mr-1.5"></i>Pada slide berikutnya, Anda wajib menjawab ketiga pertanyaan refleksi satu per satu sebelum melangkah ke tahap berikutnya.
-                    </div>
+                    ${slideBridgeNext("Pada Slide 5, jawablah ketiga pertanyaan refleksi tersebut satu per satu berdasarkan pengalaman nyata Anda.")}
                 </div>
             `;
         }
@@ -1327,19 +1396,22 @@
                     num: 1,
                     key: 'r1',
                     title: 'Pengalaman Menggunakan Aplikasi atau Layanan Digital *',
-                    prompt: 'Pilih satu aplikasi atau situs web yang sering Anda gunakan. Ceritakan apa tujuan Anda saat membukanya, bagaimana pengalaman Anda saat mengoperasikan alurnya, serta alasan mengapa Anda merasakan hal tersebut.'
+                    prompt: 'Pilih satu aplikasi atau situs web yang sering Anda gunakan. Ceritakan apa tujuan Anda saat membukanya, bagaimana pengalaman Anda saat mengoperasikan alurnya, serta alasan mengapa Anda merasakan hal tersebut.',
+                    hint: 'Kerangka Jawaban Refleksi 1:\n• Sebutkan nama aplikasi dan tujuan Anda membukanya (misal: memesan makanan / transfer bank).\n• Ceritakan bagian mana dari alurnya yang terasa cepat/mudah atau justru membingungkan.\n• Jelaskan mengapa hal tersebut membuat Anda nyaman atau kesal.'
                 },
                 {
                     num: 2,
                     key: 'r2',
                     title: 'Pengamatan Alur Transaksi pada Usaha di Sekitar Anda *',
-                    prompt: 'Amati satu usaha kecil atau UMKM yang pernah Anda kunjungi atau gunakan layanannya. Bagaimana urutan proses pelanggan saat mencari informasi hingga bertransaksi di tempat tersebut, dan bagaimana pandangan Anda terhadap alur itu?'
+                    prompt: 'Amati satu usaha kecil atau UMKM yang pernah Anda kunjungi atau gunakan layanannya. Bagaimana urutan proses pelanggan saat mencari informasi hingga bertransaksi di tempat tersebut, dan bagaimana pandangan Anda terhadap alur itu?',
+                    hint: 'Kerangka Jawaban Refleksi 2:\n• Sebutkan jenis usaha yang pernah Anda kunjungi (misal: laundry, warung makan, fotokopi, bengkel).\n• Urutkan langkahnya dari awal datang/bertanya, memesan, membayar, hingga menerima barang/jasa.\n• Berikan pendapat Anda apakah alur tersebut sudah praktis atau masih ada langkah yang merepotkan.'
                 },
                 {
                     num: 3,
                     key: 'r3',
                     title: 'Pandangan tentang Hubungan Pembuat Produk dan Penggunanya *',
-                    prompt: 'Menurut pendapat Anda pribadi, sejauh mana sudut pandang pembuat aplikasi dapat mewakili cara berpikir penggunanya, dan mengapa keselarasan antara tampilan visual serta kemudahan alur itu penting?'
+                    prompt: 'Menurut pendapat Anda pribadi, sejauh mana sudut pandang pembuat aplikasi dapat mewakili cara berpikir penggunanya, dan mengapa keselarasan antara tampilan visual serta kemudahan alur itu penting?',
+                    hint: 'Kerangka Jawaban Refleksi 3:\n• Jelaskan mengapa pembuat aplikasi tidak boleh hanya menebak sendiri kebiasaan pengguna (prinsip "You Are Not The User").\n• Jelaskan apa yang terjadi jika tampilan aplikasi tampak bagus (UI), tetapi alurnya membingungkan pengguna (UX).'
                 }
             ];
 
@@ -1350,14 +1422,21 @@
                 const isEditing = uiWizard.refleksiActive === it.num;
                 const isSaved = isRefleksiComplete(it.num);
                 const isMin = !!uiWizard.refleksiMinimized[it.num];
+                const showHint = !!hintState['ref_' + it.num];
 
                 if (isEditing) {
                     cardsHtml += `
                         <div class="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border-2 border-indigo-600 dark:border-indigo-400 shadow-md space-y-4">
                             ${renderWizardCardHeader('Refleksi ' + it.num + ' / 3', it.title, isSaved, true, false, '', '')}
-                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed pt-1 border-t border-slate-100 dark:border-slate-800">
-                                ${it.prompt}
-                            </p>
+                            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
+                                <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed flex-1">
+                                    ${it.prompt}
+                                </p>
+                                <button type="button" onclick="toggleHint('ref_${it.num}')" class="px-3 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 dark:bg-amber-950 text-amber-800 dark:text-amber-300 text-[11px] font-extrabold transition shrink-0 self-start">
+                                    <i class="fa-regular fa-lightbulb mr-1"></i>${showHint ? 'Sembunyikan Petunjuk' : 'Butuh Petunjuk Kerangka?'}
+                                </button>
+                            </div>
+                            ${showHint ? `<div class="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-xs text-amber-900 dark:text-amber-200 whitespace-pre-line leading-relaxed">${escapeHtml(it.hint)}</div>` : ''}
                             <textarea id="inp_ref_${it.num}" rows="5" oninput="autoResizeTextarea(this); updateField('${it.key}', this.value)" placeholder="Tuliskan uraian pendapat dan pengalaman Anda secara lengkap di sini (wajib diisi)..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(val)}</textarea>
                             <div class="flex items-center justify-between gap-3 pt-1">
                                 <span class="text-xs text-slate-400">Wajib diisi sebelum lanjut ke nomor berikutnya</span>
@@ -1410,8 +1489,10 @@
 
         function renderSlide6() {
             return `
-                <div class="slide-enter flex flex-col justify-between h-full gap-6">
-                    <div class="space-y-2">
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Setelah merefleksikan pengalaman pribadi di Slide 5, kini kita beralih ke Tahap 3: menentukan 1 UMKM nyata sebagai mitra proyek Anda.")}
+
+                    <div class="space-y-1.5">
                         <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Tahap 3 • Penjelasan Konteks UMKM Mitra</span>
                         <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Menentukan UMKM Mitra (Sudah Online maupun Masih 100% Offline)</h2>
                         <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -1443,9 +1524,7 @@
                         </div>
                     </div>
 
-                    <div class="p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-800/60 text-xs">
-                        <i class="fa-solid fa-check-circle text-indigo-600 dark:text-indigo-400 mr-1.5"></i>Klik <strong>Selanjutnya</strong> untuk menuliskan profil dasar UMKM mitra serta uraian alur pelayanan mereka saat ini.
-                    </div>
+                    ${slideBridgeNext("Pada Slide 7, tuliskan profil dasar UMKM mitra pilihan Anda beserta urutan alur pelayanan mereka saat ini.")}
                 </div>
             `;
         }
@@ -1575,8 +1654,10 @@
 
         function renderSlide8() {
             return `
-                <div class="slide-enter flex flex-col justify-between h-full gap-6">
-                    <div class="space-y-2">
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Profil dan alur layanan UMKM mitra sudah tercatat di Slide 7. Kini di Tahap 4, kita menelusuri alur tersebut untuk menemukan 5 titik hambatan.")}
+
+                    <div class="space-y-1.5">
                         <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Tahap 4 • Penjelasan Pengamatan Masalah</span>
                         <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Cara Mengamati 5 Hambatan (${term('friksi', 'Titik Friksi')}) pada Alur Layanan</h2>
                         <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -1610,9 +1691,7 @@
                         </div>
                     </div>
 
-                    <div class="p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-800/60 text-xs">
-                        <i class="fa-solid fa-arrow-right text-indigo-600 dark:text-indigo-400 mr-1.5"></i>Pada slide berikutnya, Anda wajib mencatat Skenario Aktivitas beserta kelima titik hambatan secara lengkap.
-                    </div>
+                    ${slideBridgeNext("Pada Slide 9, catatlah Skenario Aktivitas beserta kelima titik hambatan yang Anda temukan (dilengkapi slot unggah foto bukti opsional).")}
                 </div>
             `;
         }
@@ -1649,6 +1728,14 @@
                 `;
             }
 
+            const auditHints = [
+                "Petunjuk Hambatan #1 (Contoh Fokus: Pencarian Informasi & Harga):\nAmati apakah calon pelanggan mudah mengetahui daftar produk, harga, atau ketersediaan stok tanpa harus bertanya berulang-ulang.",
+                "Petunjuk Hambatan #2 (Contoh Fokus: Proses Penyampaian Pesanan):\nAmati apakah langkah memesan terasa panjang, berulang, atau rawan salah tangkap saat jam ramai.",
+                "Petunjuk Hambatan #3 (Contoh Fokus: Pencatatan oleh Pengelola UMKM):\nAmati bagaimana pemilik atau kasir mencatat pesanan masuk (apakah di kertas nota/chat acak yang rawan terselip).",
+                "Petunjuk Hambatan #4 (Contoh Fokus: Perhitungan Biaya & Pembayaran):\nAmati proses hitung total biaya/ongkir, metode bayar, serta bukti nota transaksi yang diterima pembeli.",
+                "Petunjuk Hambatan #5 (Contoh Fokus: Waktu Tunggu & Pengambilan/Penerimaan):\nAmati bagaimana pelanggan mengetahui status pesanannya sudah selesai atau belum."
+            ];
+
             let auditCardsHtml = '';
             for (let i = 0; i < 5; i++) {
                 const r = formState.aud[i] || { k: '', m: '', d: '' };
@@ -1656,13 +1743,22 @@
                 const isSaved = isAuditItemComplete(i);
                 const isMin = !!uiWizard.auditMinimized[i];
                 const titleSummary = r.k.trim() ? r.k : 'Titik Hambatan Ke-' + (i + 1);
+                const showHint = !!hintState['aud_' + i];
 
                 if (isEditing) {
                     auditCardsHtml += `
                         <div class="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border-2 border-indigo-600 dark:border-indigo-400 shadow-md space-y-4">
                             ${renderWizardCardHeader('Hambatan #' + (i + 1), titleSummary, isSaved, true, false, '', '')}
 
-                            <div class="space-y-4 pt-2 border-t border-slate-100 dark:border-slate-800">
+                            <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                                <span class="text-xs font-bold text-indigo-600 dark:text-indigo-400">Catat temuan pengamatan nyata Anda pada Hambatan #${i + 1}:</span>
+                                <button type="button" onclick="toggleHint('aud_${i}')" class="px-3 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 dark:bg-amber-950 text-amber-800 dark:text-amber-300 text-[11px] font-extrabold transition">
+                                    <i class="fa-regular fa-lightbulb mr-1"></i>${showHint ? 'Sembunyikan Petunjuk' : 'Butuh Petunjuk Kerangka?'}
+                                </button>
+                            </div>
+                            ${showHint ? `<div class="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-xs text-amber-900 dark:text-amber-200 whitespace-pre-line leading-relaxed">${escapeHtml(auditHints[i])}</div>` : ''}
+
+                            <div class="space-y-4">
                                 <div>
                                     <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">
                                         1. Titik atau Tahapan Layanan Tempat Masalah Terjadi *
@@ -1743,6 +1839,26 @@
                     <div class="space-y-3.5 my-auto">
                         ${skenarioCardHtml}
                         ${auditCardsHtml}
+
+                        <!-- Slot Unggah Bukti Foto / Screenshot Pengamatan Awal (Opsional) -->
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-extrabold text-slate-700 dark:text-slate-200"><i class="fa-solid fa-camera text-indigo-600 dark:text-indigo-400 mr-1.5"></i>Lampirkan Foto / Screenshot Bukti Pengamatan Awal (Opsional — Otomatis Tercetak di PDF)</span>
+                                <span class="text-[11px] text-slate-400">Maks. 2 Gambar</span>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 space-y-1.5">
+                                    <label class="text-xs font-bold text-indigo-700 dark:text-indigo-300 block">📸 Bukti 1: Foto Layanan / Screenshot Media UMKM (Opsional)</label>
+                                    <input type="file" accept="image/*" onchange="handleImageUpload(event, 'img_bukti_1')" class="text-xs w-full">
+                                    ${formState.img_bukti_1 ? `<div class="flex items-center gap-2 pt-1"><img src="${formState.img_bukti_1}" class="h-16 rounded border object-contain bg-slate-50"><button type="button" onclick="removeUploadedImage('img_bukti_1')" class="px-2 py-1 rounded bg-rose-50 text-rose-600 text-[11px] font-bold">Hapus</button></div>` : ''}
+                                </div>
+                                <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 space-y-1.5">
+                                    <label class="text-xs font-bold text-emerald-700 dark:text-emerald-300 block">📸 Bukti 2: Foto Nota / Antrean / Chat Pesanan (Opsional)</label>
+                                    <input type="file" accept="image/*" onchange="handleImageUpload(event, 'img_bukti_2')" class="text-xs w-full">
+                                    ${formState.img_bukti_2 ? `<div class="flex items-center gap-2 pt-1"><img src="${formState.img_bukti_2}" class="h-16 rounded border object-contain bg-slate-50"><button type="button" onclick="removeUploadedImage('img_bukti_2')" class="px-2 py-1 rounded bg-rose-50 text-rose-600 text-[11px] font-bold">Hapus</button></div>` : ''}
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             `;
@@ -1750,8 +1866,10 @@
 
         function renderSlide10() {
             return `
-                <div class="slide-enter flex flex-col justify-between h-full gap-6">
-                    <div class="space-y-2">
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Kelima titik hambatan dari pengamatan Anda telah tercatat di Slide 9. Namun ingat: hasil pengamatan pribadi tersebut masih berupa Dugaan Sementara!")}
+
+                    <div class="space-y-1.5">
                         <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Tahap 5 • Penjelasan Dugaan & Wawancara</span>
                         <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Merumuskan Dugaan Awal (${term('asumsi', 'Asumsi')}) & ${term('openquestion', 'Pertanyaan Terbuka')}</h2>
                         <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -1781,18 +1899,32 @@
                         </div>
                     </div>
 
-                    <div class="p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-800/60 text-xs">
-                        <i class="fa-solid fa-shield-halved text-indigo-600 dark:text-indigo-400 mr-1.5"></i><strong>Etika Riset:</strong> Setiap kegiatan wawancara dan observasi wajib diawali dengan meminta persetujuan responden (${term('informedconsent', 'Informed Consent')}).
+                    <div class="p-3 rounded-2xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/70 dark:border-amber-800/60 text-xs">
+                        <i class="fa-solid fa-shield-halved text-amber-600 dark:text-amber-400 mr-1.5"></i><strong>Etika Riset:</strong> Setiap kegiatan wawancara dan observasi wajib diawali dengan meminta persetujuan responden (${term('informedconsent', 'Informed Consent')}).
                     </div>
+
+                    ${slideBridgeNext("Lanjut ke Slide 11 untuk menyusun 3 pasangan Dugaan & Pertanyaan Terbuka beserta Rencana Riset Pertemuan 2.")}
                 </div>
             `;
         }
 
         function renderSlide11() {
             const pairs = [
-                { num: 1, aKey: 'a1', tKey: 't1', title: 'Pasangan Dugaan & Pertanyaan #1 (Aspek Pencarian Informasi / Katalog)' },
-                { num: 2, aKey: 'a2', tKey: 't2', title: 'Pasangan Dugaan & Pertanyaan #2 (Aspek Kemudahan Alur Transaksi)' },
-                { num: 3, aKey: 'a3', tKey: 't3', title: 'Pasangan Dugaan & Pertanyaan #3 (Aspek Pengelolaan / Operasional Mitra)' }
+                {
+                    num: 1, aKey: 'a1', tKey: 't1',
+                    title: 'Pasangan Dugaan & Pertanyaan #1 (Aspek Pencarian Informasi / Katalog)',
+                    hint: 'Petunjuk Pasangan #1 (Informasi/Katalog):\n• Dugaan (Pernyataan): Tuliskan perkiraan kendala saat pelanggan mencari informasi produk, harga, atau ketersediaan.\n• Pertanyaan Uji (Kalimat Tanya Terbuka): Awali dengan "Bagaimana..." atau "Ceritakan pengalaman Anda saat mencari tahu..." (jangan awali dengan kata "Apakah").'
+                },
+                {
+                    num: 2, aKey: 'a2', tKey: 't2',
+                    title: 'Pasangan Dugaan & Pertanyaan #2 (Aspek Kemudahan Alur Transaksi)',
+                    hint: 'Petunjuk Pasangan #2 (Alur Transaksi):\n• Dugaan (Pernyataan): Tuliskan perkiraan kendala saat pelanggan memesan, mengantre, atau membayar.\n• Pertanyaan Uji (Kalimat Tanya Terbuka): Minta narasumber menceritakan urutan langkah terakhir kali mereka memesan dari awal hingga selesai.'
+                },
+                {
+                    num: 3, aKey: 'a3', tKey: 't3',
+                    title: 'Pasangan Dugaan & Pertanyaan #3 (Aspek Pengelolaan / Operasional Mitra)',
+                    hint: 'Petunjuk Pasangan #3 (Operasional Pengelola UMKM):\n• Dugaan (Pernyataan): Tuliskan perkiraan kerepotan pemilik/staf UMKM saat mencatat atau merekap pesanan di jam ramai.\n• Pertanyaan Uji (Kalimat Tanya Terbuka): Tanyakan kepada pengelola bagaimana cara mereka menangani pesanan yang masuk bersamaan.'
+                }
             ];
 
             let cardsHtml = '';
@@ -1803,12 +1935,20 @@
                 const isEditing = uiWizard.risetActive === p.num;
                 const isSaved = isRisetPartComplete(p.num);
                 const isMin = !!uiWizard.risetMinimized[p.num];
+                const showHint = !!hintState['riset_' + p.num];
 
                 if (isEditing) {
                     cardsHtml += `
                         <div class="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border-2 border-indigo-600 dark:border-indigo-400 shadow-md space-y-4">
                             ${renderWizardCardHeader('Bagian 5.' + p.num, p.title, isSaved, true, false, '', '')}
-                            <div class="space-y-4 pt-2 border-t border-slate-100 dark:border-slate-800">
+                            <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                                <span class="text-xs font-bold text-slate-500">Pasangkan 1 pernyataan dugaan dengan 1 pertanyaan terbuka:</span>
+                                <button type="button" onclick="toggleHint('riset_${p.num}')" class="px-3 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 dark:bg-amber-950 text-amber-800 dark:text-amber-300 text-[11px] font-extrabold transition">
+                                    <i class="fa-regular fa-lightbulb mr-1"></i>${showHint ? 'Sembunyikan Petunjuk' : 'Butuh Petunjuk Kerangka?'}
+                                </button>
+                            </div>
+                            ${showHint ? `<div class="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-xs text-amber-900 dark:text-amber-200 whitespace-pre-line leading-relaxed">${escapeHtml(p.hint)}</div>` : ''}
+                            <div class="space-y-4">
                                 <div>
                                     <label class="text-xs sm:text-sm font-bold text-indigo-700 dark:text-indigo-300 block mb-1.5">
                                         Dugaan Sementara (Asumsi) #${p.num} Berdasarkan Pengamatan Anda *
@@ -1985,7 +2125,7 @@
                         <div>
                             <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-circle-check mr-1"></i>Seluruh Bagian Telah Lengkap • Siap Kumpul</span>
                             <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Pratinjau Lembar Kerja Mahasiswa (LKM 01)</h2>
-                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Unduh <strong>File Data (.JSON)</strong> untuk cadangan lintas perangkat, dan klik <strong>Generate & Unduh PDF</strong> untuk mengumpulkan laporan resmi format A4.</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Unduh <strong>File Data (.JSON)</strong> untuk cadangan lintas perangkat ke LKM 02, dan klik <strong>Generate & Unduh PDF</strong> untuk mengumpulkan laporan resmi format A4.</p>
                         </div>
 
                         <div class="flex flex-wrap items-center gap-2 shrink-0">
@@ -2032,6 +2172,16 @@
                         <td style="width:42%;">${dash(r.m)}</td>
                         <td style="width:33%;">${dash(r.d)}</td>
                     </tr>
+                `;
+            }
+
+            let imagesHtml = '';
+            if (d.img_bukti_1 || d.img_bukti_2) {
+                imagesHtml = `
+                    <div style="margin-top: 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; page-break-inside: avoid;">
+                        ${d.img_bukti_1 ? `<div style="border:1px solid #cbd5e1; padding:6px; border-radius:6px;"><div style="font-size:9.5px; font-weight:700; margin-bottom:4px;">Bukti Pengamatan 1:</div><img src="${d.img_bukti_1}" style="max-height:145px; width:100%; object-fit:contain;"></div>` : ''}
+                        ${d.img_bukti_2 ? `<div style="border:1px solid #cbd5e1; padding:6px; border-radius:6px;"><div style="font-size:9.5px; font-weight:700; margin-bottom:4px;">Bukti Pengamatan 2:</div><img src="${d.img_bukti_2}" style="max-height:145px; width:100%; object-fit:contain;"></div>` : ''}
+                    </div>
                 `;
             }
 
@@ -2145,6 +2295,7 @@
                         </thead>
                         <tbody>${auditRowsStr}</tbody>
                     </table>
+                    ${imagesHtml}
                 </div>
 
                 <div style="margin-bottom: 16px;">
@@ -2423,7 +2574,6 @@
         }
 
         const FORM_SLIDE_INDEXES = [2, 4, 6, 8, 10];
-        // Perkiraan waktu pengerjaan per slide (menit); bukan hasil pengukuran
         const SLIDE_MINUTES = [3, 5, 3, 3, 10, 3, 12, 3, 25, 3, 20, 5];
         function getSlideCompletion(idx) {
             let done = 0, total = 0, unit = 'bagian';
@@ -2545,7 +2695,6 @@
             goToSlide(index);
         }
 
-        // Navigasi dikunci apabila ada slide form sebelumnya yang belum lengkap
         function changeSlide(direction) {
             const nextIdx = currentSlideIndex + direction;
             if (nextIdx >= 0 && nextIdx < TOTAL_SLIDES) {
@@ -2556,7 +2705,6 @@
         function goToSlide(targetIdx) {
             if (targetIdx < 0 || targetIdx >= TOTAL_SLIDES) return;
 
-            // Jika mahasiswa bergerak maju, periksa semua slide form dari posisi sekarang hingga sebelum targetIdx
             if (targetIdx > currentSlideIndex) {
                 for (let checkIdx = currentSlideIndex; checkIdx < targetIdx; checkIdx++) {
                     if ([2, 4, 6, 8, 10].indexOf(checkIdx) !== -1) {
@@ -2660,6 +2808,7 @@
                     { k: '', m: '', d: '' },
                     { k: '', m: '', d: '' }
                 ],
+                img_bukti_1: "", img_bukti_2: "",
                 a1: "", t1: "", a2: "", t2: "", a3: "", t3: "",
                 rt: "", rn: "", rj: ""
             };
@@ -2688,7 +2837,6 @@
         }
 
         function downloadPdf() {
-            // Pastikan seluruh slide form telah tervalidasi sebelum mengunduh PDF
             for (let i = 0; i < TOTAL_SLIDES - 1; i++) {
                 if ([2, 4, 6, 8, 10].indexOf(i) !== -1) {
                     if (!validateFormSlide(i)) {
