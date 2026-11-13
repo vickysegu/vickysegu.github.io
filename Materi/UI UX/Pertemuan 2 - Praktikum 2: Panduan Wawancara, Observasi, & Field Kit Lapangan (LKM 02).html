@@ -34,9 +34,13 @@
             -webkit-font-smoothing: antialiased;
         }
 
+        /* Penanda istilah klik dengan garis bawah titik-titik yang jelas & kontras */
         .tech-term {
             color: #4f46e5;
             font-weight: 700;
+            text-decoration: underline;
+            text-decoration-style: dotted;
+            text-underline-offset: 3px;
             cursor: pointer;
             transition: color 0.15s ease, opacity 0.15s ease;
         }
@@ -168,7 +172,7 @@
     <!-- Input File Tersembunyi untuk Muat Data Proyek (.json) -->
     <input type="file" id="jsonFileInput" accept=".json,application/json" class="hidden" onchange="handleJsonFileImport(event)">
 
-    <!-- Toast Peringatan Validasi & Status File -->
+    <!-- Modal Konfirmasi Reset -->
     <div id="resetModalBackdrop" onclick="closeResetModal()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4 no-print">
         <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-md w-full p-5 sm:p-7 shadow-2xl space-y-4">
             <div class="flex items-start gap-3">
@@ -188,11 +192,13 @@
         </div>
     </div>
 
+    <!-- Bilah Batalkan Reset (10 Detik) -->
     <div id="undoBar" class="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-[60] hidden items-center gap-3 px-4 py-2.5 rounded-2xl bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 text-xs sm:text-sm font-bold shadow-2xl no-print">
         <span id="undoMessage">Perubahan diterapkan.</span>
         <button type="button" onclick="undoLastChange()" class="px-3 py-1 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-900 font-extrabold">Batalkan (<span id="undoCountdown">10</span>)</button>
     </div>
 
+    <!-- Toast Peringatan Validasi & Status File -->
     <div id="toastBanner" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-[60] hidden max-w-md w-[92%] sm:w-full px-4 py-3.5 rounded-2xl shadow-2xl border flex items-start gap-3 transition-all duration-200 no-print">
         <i id="toastIcon" class="fa-solid fa-circle-exclamation text-lg mt-0.5 shrink-0"></i>
         <div class="flex-1 text-xs sm:text-sm font-bold leading-snug" id="toastMessage">Pesan notifikasi</div>
@@ -325,13 +331,22 @@
             </div>
             <div class="space-y-4">
                 <p id="termMainDesc" class="text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200/70 dark:border-slate-700/70"></p>
-                <p id="termDetailDesc" class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed px-1"></p>
-                <div class="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800 text-xs px-1">
+                <div class="p-3.5 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-200/70 dark:border-indigo-800/70">
+                    <div class="text-[11px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-1">Konteks & Contoh Penerapan di Lapangan:</div>
+                    <p id="termDetailDesc" class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed"></p>
+                </div>
+                <div class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-200 dark:border-slate-800 text-xs px-1">
                     <span id="termSourceName" class="font-semibold text-slate-400">Referensi</span>
-                    <a id="termSourceUrl" href="#" target="_blank" rel="noopener noreferrer" class="font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1.5">
-                        <span>Pelajari lebih lanjut</span>
-                        <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
-                    </a>
+                    <div class="flex items-center gap-3">
+                        <button type="button" onclick="closeTermModal(); openGlossaryIndex();" class="font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1">
+                            <i class="fa-solid fa-book-open text-[10px]"></i>
+                            <span>Buka Kamus Lengkap</span>
+                        </button>
+                        <a id="termSourceUrl" href="#" target="_blank" rel="noopener noreferrer" class="font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1">
+                            <span>Referensi Web</span>
+                            <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -469,6 +484,30 @@
             return '<span class="tech-term" data-term="' + escapeHtml(key) + '" onclick="showTerm(this.dataset.term)">' + escapeHtml(text) + '</span>';
         }
 
+        // Komponen Pita Jembatan Narasi Atas & Bawah
+        function slideBridgeTop(prevHookText) {
+            return `
+                <div class="px-3.5 py-2 rounded-2xl bg-slate-100/90 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700/80 flex items-center gap-2.5 text-xs text-slate-600 dark:text-slate-300">
+                    <span class="px-2 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-extrabold text-[10px] uppercase shrink-0">🔗 Sambungan Cerita</span>
+                    <span class="font-medium leading-snug">${prevHookText}</span>
+                </div>
+            `;
+        }
+
+        function slideBridgeNext(nextTeaserText) {
+            return `
+                <div class="px-4 py-2.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/35 border border-indigo-200/80 dark:border-indigo-800/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-700 dark:text-slate-200">
+                    <div class="flex items-center gap-2">
+                        <span class="text-indigo-600 dark:text-indigo-400 font-extrabold shrink-0">👉 Selanjutnya:</span>
+                        <span class="font-semibold leading-snug">${nextTeaserText}</span>
+                    </div>
+                    <button type="button" onclick="changeSlide(1)" class="self-start sm:self-center px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-[11px] shrink-0 transition">
+                        Lanjut Slide Berikutnya &rarr;
+                    </button>
+                </div>
+            `;
+        }
+
         function autoResizeTextarea(el) {
             if (!el) return;
             el.style.height = 'auto';
@@ -528,6 +567,12 @@
         const STORAGE_KEY = 'upertis_lkm02_neutral_v2';
         let currentSlideIndex = 0;
         const TOTAL_SLIDES = 13;
+        let hintState = {};
+
+        function toggleHint(key) {
+            hintState[key] = !hintState[key];
+            renderCurrentSlide();
+        }
 
         function createEmptyQuestions() {
             const arr = [];
@@ -590,73 +635,85 @@
                 num: 1,
                 babak: "Babak 1: Pemanasan",
                 label: "Pertanyaan #1: Perkenalan & Latar Belakang Aktivitas Narasumber",
-                instruction: "Buatlah pertanyaan pembuka yang santai untuk mengenal aktivitas sehari-hari narasumber agar suasana wawancara terasa nyaman (membangun rapport)."
+                instruction: "Buatlah pertanyaan pembuka yang santai untuk mengenal aktivitas sehari-hari narasumber agar suasana wawancara terasa nyaman (membangun rapport).",
+                hint: "Kerangka Pertanyaan #1:\n• Pertanyaan Utama: Minta narasumber menceritakan kesibukan/rutinitas harian mereka.\n• Rencana Probing: Tanyakan jam berapa mereka biasanya paling sibuk atau kapan mereka membutuhkan produk/jasa UMKM."
             },
             {
                 num: 2,
                 babak: "Babak 1: Pemanasan",
                 label: "Pertanyaan #2: Awal Mula Mengenal & Frekuensi Bertransaksi di UMKM",
-                instruction: "Tanyakan sejak kapan narasumber mengenal UMKM tersebut dan seberapa sering mereka membeli produk atau menggunakan layanannya."
+                instruction: "Tanyakan sejak kapan narasumber mengenal UMKM tersebut dan seberapa sering mereka membeli produk atau menggunakan layanannya.",
+                hint: "Kerangka Pertanyaan #2:\n• Pertanyaan Utama: Tanyakan bagaimana awal mula mereka tahu tentang usaha ini dan seberapa sering bertransaksi.\n• Rencana Probing: Gali alasan apa yang membuat mereka memilih tempat ini dibandingkan tempat lain."
             },
             {
                 num: 3,
                 babak: "Babak 2: Alur Saat Ini",
                 label: "Pertanyaan #3: Cara Mencari Informasi Produk, Harga, atau Ketersediaan",
-                instruction: "Minta narasumber menceritakan bagaimana cara mereka selama ini mencari tahu informasi menu/produk, daftar harga, atau status ketersediaan layanan."
+                instruction: "Minta narasumber menceritakan bagaimana cara mereka selama ini mencari tahu informasi menu/produk, daftar harga, atau status ketersediaan layanan.",
+                hint: "Kerangka Pertanyaan #3:\n• Pertanyaan Utama: Awali dengan 'Bagaimana cara Anda biasanya mencari tahu...' atau 'Informasi apa saja yang Anda lihat sebelum memesan?'\n• Rencana Probing: Tanyakan apa yang mereka lakukan jika informasi harga/stok tidak langsung terlihat."
             },
             {
                 num: 4,
                 babak: "Babak 2: Alur Saat Ini",
                 label: "Pertanyaan #4: Urutan Langkah Saat Terakhir Kali Memesan / Bertransaksi",
-                instruction: "Minta narasumber menceritakan secara berurutan pengalaman nyata terakhir kali mereka melakukan pemesanan di UMKM tersebut dari awal hingga akhir."
+                instruction: "Minta narasumber menceritakan secara berurutan pengalaman nyata terakhir kali mereka melakukan pemesanan di UMKM tersebut dari awal hingga akhir.",
+                hint: "Kerangka Pertanyaan #4:\n• Pertanyaan Utama: Gunakan kalimat 'Ceritakan pengalaman terakhir kali Anda memesan di sini dari awal sampai selesai.'\n• Rencana Probing: Tanyakan berapa lama waktu yang dibutuhkan pada tahap tersebut."
             },
             {
                 num: 5,
                 babak: "Babak 2: Alur Saat Ini",
                 label: "Pertanyaan #5: Pengalaman Saat Proses Pembayaran & Penerimaan Barang/Jasa",
-                instruction: "Gali bagaimana pengalaman narasumber saat menyelesaikan pembayaran, menunggu konfirmasi, hingga menerima barang atau layanan."
+                instruction: "Gali bagaimana pengalaman narasumber saat menyelesaikan pembayaran, menunggu konfirmasi, hingga menerima barang atau layanan.",
+                hint: "Kerangka Pertanyaan #5:\n• Pertanyaan Utama: Tanyakan bagaimana proses mereka membayar dan menerima bukti nota atau pesanan.\n• Rencana Probing: Gali bagaimana cara mereka memastikan pesanan sudah benar atau sudah selesai dikerjakan."
             },
             {
                 num: 6,
                 babak: "Babak 3: Penggalian Masalah",
                 label: "Pertanyaan #6: Menguji Dugaan Awal 1 (Kendala Pencarian Informasi / Katalog)",
-                instruction: "Susun pertanyaan terbuka dan netral (tanpa mengarahkan jawaban) untuk menguji apakah narasumber mengalami kesulitan saat mencari informasi produk/layanan."
+                instruction: "Susun pertanyaan terbuka dan netral (tanpa mengarahkan jawaban) untuk menguji apakah narasumber mengalami kesulitan saat mencari informasi produk/layanan.",
+                hint: "Kerangka Pertanyaan #6 (Bebas Kata Fitur):\n• Pertanyaan Utama: Tanyakan bagian informasi apa yang pernah terasa kurang jelas saat mereka ingin memesan.\n• Rencana Probing: Tanyakan mengapa hal itu menyulitkan mereka dan apa dampaknya."
             },
             {
                 num: 7,
                 babak: "Babak 3: Penggalian Masalah",
                 label: "Pertanyaan #7: Menguji Dugaan Awal 2 (Hambatan Waktu / Kerumitan Alur)",
-                instruction: "Susun pertanyaan terbuka untuk menggali bagian mana dari proses pemesanan atau antrean yang dirasa paling memakan waktu atau merepotkan."
+                instruction: "Susun pertanyaan terbuka untuk menggali bagian mana dari proses pemesanan atau antrean yang dirasa paling memakan waktu atau merepotkan.",
+                hint: "Kerangka Pertanyaan #7:\n• Pertanyaan Utama: Tanyakan tahap mana dari keseluruhan proses transaksi yang paling menyita waktu mereka.\n• Rencana Probing: Minta contoh kejadian nyata saat mereka mengalami antrean atau keterlambatan tersebut."
             },
             {
                 num: 8,
                 babak: "Babak 3: Penggalian Masalah",
                 label: "Pertanyaan #8: Kejadian Paling Membingungkan atau Tidak Nyaman yang Pernah Dialami",
-                instruction: "Tanyakan apakah narasumber pernah mengalami kejadian yang kurang menyenangkan, kebingungan, atau kesalahan pesanan saat bertransaksi di UMKM tersebut."
+                instruction: "Tanyakan apakah narasumber pernah mengalami kejadian yang kurang menyenangkan, kebingungan, atau kesalahan pesanan saat bertransaksi di UMKM tersebut.",
+                hint: "Kerangka Pertanyaan #8:\n• Pertanyaan Utama: Minta narasumber menceritakan momen ketika pesanan tidak sesuai harapan atau terjadi miskomunikasi.\n• Rencana Probing: Gali apa yang mereka rasakan saat kejadian itu berlangsung."
             },
             {
                 num: 9,
                 babak: "Babak 3: Penggalian Masalah",
                 label: "Pertanyaan #9: Tindakan atau Jalan Pintas (Workaround) Saat Menghadapi Kendala",
-                instruction: "Tanyakan apa yang biasanya dilakukan oleh narasumber untuk mengatasi atau mengakali kesulitan yang mereka hadapi pada pertanyaan sebelumnya."
+                instruction: "Tanyakan apa yang biasanya dilakukan oleh narasumber untuk mengatasi atau mengakali kesulitan yang mereka hadapi pada pertanyaan sebelumnya.",
+                hint: "Kerangka Pertanyaan #9:\n• Pertanyaan Utama: Tanyakan 'Apa yang biasanya Anda lakukan ketika mengalami kendala tersebut?'\n• Rencana Probing: Gali apakah cara darurat tersebut cukup membantu atau justru masih merepotkan."
             },
             {
                 num: 10,
                 babak: "Babak 4: Pengelola & Harapan",
                 label: "Pertanyaan #10: Pertanyaan Khusus Pengelola/Pemilik UMKM (Kendala Operasional)",
-                instruction: "Susun pertanyaan santun bagi pemilik atau staf UMKM untuk menggali kerepotan mereka saat melayani pembeli dan merekap pesanan di jam sibuk."
+                instruction: "Susun pertanyaan santun bagi pemilik atau staf UMKM untuk menggali kerepotan mereka saat melayani pembeli dan merekap pesanan di jam sibuk.",
+                hint: "Kerangka Pertanyaan #10 (Untuk Pemilik/Staf):\n• Pertanyaan Utama: Tanyakan bagaimana alur mereka mencatat pesanan di jam ramai dan bagian mana yang paling melelahkan.\n• Rencana Probing: Gali bagaimana cara mereka mencegah pesanan terlewat atau salah hitung."
             },
             {
                 num: 11,
                 babak: "Babak 4: Pengelola & Harapan",
                 label: "Pertanyaan #11: Harapan Utama untuk Kemudahan Layanan ke Depannya",
-                instruction: "Tanyakan hal apa yang paling diharapkan narasumber agar proses pencarian informasi atau transaksi di UMKM tersebut menjadi lebih nyaman (hindari menawarkan pengandaian fitur)."
+                instruction: "Tanyakan hal apa yang paling diharapkan narasumber agar proses pencarian informasi atau transaksi di UMKM tersebut menjadi lebih nyaman (hindari menawarkan pengandaian fitur).",
+                hint: "Kerangka Pertanyaan #11:\n• Pertanyaan Utama: Tanyakan perubahan atau kemudahan seperti apa yang paling mereka harapkan saat bertransaksi.\n• Rencana Probing: Tanyakan mengapa hal tersebut paling penting bagi mereka."
             },
             {
                 num: 12,
                 babak: "Babak 4: Pengelola & Harapan",
                 label: "Pertanyaan #12: Pertanyaan Penutup (Hal Penting Lain yang Ingin Disampaikan)",
-                instruction: "Tutup wawancara dengan menanyakan apakah masih ada pengalaman atau masukan penting lain yang belum sempat terbahas dalam percakapan tadi."
+                instruction: "Tutup wawancara dengan menanyakan apakah masih ada pengalaman atau masukan penting lain yang belum sempat terbahas dalam percakapan tadi.",
+                hint: "Kerangka Pertanyaan #12:\n• Pertanyaan Utama: 'Sebelum kita akhiri, apakah ada pengalaman atau masukan lain yang ingin Anda tambahkan?'\n• Rencana Probing: Ucapkan terima kasih dan tanyakan kesediaan jika nanti dihubungi kembali saat uji coba."
             }
         ];
 
@@ -706,7 +763,6 @@
         }
 
         function validateFormSlide(slideIdx) {
-            // Slide 3 (idx 2): Identitas & Kriteria Narasumber
             if (slideIdx === 2) {
                 if (!formState.nama.trim()) { uiWizard.infoActive = 1; renderCurrentSlide(); highlightEmptyInput('inp_nama', 'Nama Lengkap Mahasiswa (Bagian 1A) wajib diisi.'); return false; }
                 if (!formState.nim.trim()) { uiWizard.infoActive = 1; renderCurrentSlide(); highlightEmptyInput('inp_nim', 'Nomor Induk Mahasiswa (Bagian 1A) wajib diisi.'); return false; }
@@ -725,7 +781,6 @@
                 return true;
             }
 
-            // Slide 5 (idx 4): Pertanyaan #1 s/d #5
             if (slideIdx === 4) {
                 for (let i = 0; i <= 4; i++) {
                     const qObj = formState.questions[i];
@@ -737,7 +792,6 @@
                 return true;
             }
 
-            // Slide 7 (idx 6): Pertanyaan #6 s/d #9
             if (slideIdx === 6) {
                 for (let i = 5; i <= 8; i++) {
                     const qObj = formState.questions[i];
@@ -749,7 +803,6 @@
                 return true;
             }
 
-            // Slide 8 (idx 7): Pertanyaan #10 s/d #12
             if (slideIdx === 7) {
                 for (let i = 9; i <= 11; i++) {
                     const qObj = formState.questions[i];
@@ -761,7 +814,6 @@
                 return true;
             }
 
-            // Slide 10 (idx 9): 4 Fokus Observasi Lapangan
             if (slideIdx === 9) {
                 for (let n = 1; n <= 4; n++) {
                     if (!isObsItemComplete(n)) {
@@ -776,7 +828,6 @@
                 return true;
             }
 
-            // Slide 11 (idx 10): Klausul Informed Consent
             if (slideIdx === 10) {
                 if (!formState.ic_tujuan.trim()) { uiWizard.icActive = 1; renderCurrentSlide(); highlightEmptyInput('inp_ic_tujuan', 'Kalimat Penjelasan Tujuan Riset (Informed Consent 1) wajib diisi.'); return false; }
                 if (!formState.ic_durasi.trim()) { uiWizard.icActive = 1; renderCurrentSlide(); highlightEmptyInput('inp_ic_durasi', 'Estimasi Durasi & Prosedur Wawancara (Informed Consent 1) wajib diisi.'); return false; }
@@ -975,7 +1026,6 @@
                 try {
                     const parsed = JSON.parse(e.target.result);
 
-                    // Kasus 1: File memiliki data LKM 02 lengkap
                     if (parsed && parsed.lkm02 && parsed.lkm02.form) {
                         formState = Object.assign(formState, parsed.lkm02.form);
                         if (!Array.isArray(formState.questions) || formState.questions.length !== 12) {
@@ -995,7 +1045,6 @@
                         return;
                     }
 
-                    // Kasus 2: Mahasiswa memuat file .json dari LKM 01 untuk meneruskan identitas & nama UMKM
                     if (parsed && parsed.lkm01 && parsed.lkm01.form) {
                         const f1 = parsed.lkm01.form;
                         formState.nama = f1.nama || formState.nama;
@@ -1015,7 +1064,6 @@
                         return;
                     }
 
-                    // Kasus 3: Format langsung { form, ui }
                     if (parsed && parsed.form && Array.isArray(parsed.form.questions)) {
                         formState = Object.assign(formState, parsed.form);
                         if (parsed.ui) uiWizard = Object.assign(uiWizard, parsed.ui);
@@ -1092,15 +1140,20 @@
                 const isEditing = uiWizard[activeProp] === i;
                 const isSaved = isQuestionComplete(i);
                 const isMin = !!uiWizard[minProp][i];
+                const showHint = !!hintState['q_' + i];
 
                 if (isEditing) {
                     html += `
                         <div class="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border-2 border-indigo-600 dark:border-indigo-400 shadow-md space-y-4">
                             ${renderWizardCardHeader(meta.babak, meta.label, isSaved, true, false, '', '')}
 
-                            <div class="p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-800 text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
-                                <i class="fa-solid fa-circle-info text-indigo-600 dark:text-indigo-400 mr-1.5"></i><strong>Instruksi Penyusunan:</strong> ${escapeHtml(meta.instruction)}
+                            <div class="p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+                                <div><i class="fa-solid fa-circle-info text-indigo-600 dark:text-indigo-400 mr-1.5"></i><strong>Instruksi Penyusunan:</strong> ${escapeHtml(meta.instruction)}</div>
+                                <button type="button" onclick="toggleHint('q_${i}')" class="px-3 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 dark:bg-amber-950 text-amber-800 dark:text-amber-300 text-[11px] font-extrabold transition shrink-0 self-start sm:self-center">
+                                    <i class="fa-regular fa-lightbulb mr-1"></i>${showHint ? 'Sembunyikan Petunjuk' : 'Butuh Petunjuk Kerangka?'}
+                                </button>
                             </div>
+                            ${showHint ? `<div class="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-xs text-amber-900 dark:text-amber-200 whitespace-pre-line leading-relaxed">${escapeHtml(meta.hint)}</div>` : ''}
 
                             <div class="space-y-4 pt-1">
                                 <div>
@@ -1166,7 +1219,7 @@
         // SLIDE 1: Pengantar Praktikum 2 & Alur Kerja Kelas ke Lapangan
         function renderSlide1() {
             return `
-                <div class="slide-enter flex flex-col justify-between h-full gap-6">
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
                     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center my-auto">
                         <div class="lg:col-span-7 space-y-4">
                             <div class="inline-flex flex-wrap items-center gap-2">
@@ -1179,7 +1232,7 @@
                             </h2>
 
                             <p class="text-xs sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
-                                Pada Praktikum 2 ini, Anda wajib menyusun <strong>12 pertanyaan wawancara terbuka</strong>, <strong>4 fokus observasi</strong>, dan <strong>klausul ${term('informedconsent', 'Informed Consent')}</strong> secara berurutan sebelum dapat mengunduh <strong>PDF Field Kit 4 Bagian</strong>. Jika Anda membawa file data <code>.json</code> dari LKM 01 atau perangkat lain, klik tombol <strong>Muat File Data Proyek (.json)</strong> di bawah ini.
+                                Pada Praktikum 2 ini, Anda wajib menyusun <strong>12 pertanyaan wawancara terbuka</strong>, <strong>4 fokus observasi</strong>, dan <strong>klausul ${term('informedconsent', 'Informed Consent')}</strong> secara berurutan sebelum dapat mengunduh <strong>PDF Field Kit 4 Bagian</strong>. Jika Anda membawa file data <code>.json</code> dari LKM 01 atau perangkat lain, klik tombol <strong>Muat Data Proyek (.json)</strong> di bawah ini.
                             </p>
 
                             <div class="flex flex-wrap items-center gap-2.5 pt-2">
@@ -1230,6 +1283,7 @@
                             </div>
                         </div>
                     </div>
+                    ${slideBridgeNext("Kita mulai di Slide 2 dengan menetapkan kriteria narasumber dari sisi pengelola UMKM dan sisi pelanggan sasaran.")}
                 </div>
             `;
         }
@@ -1237,8 +1291,9 @@
         // SLIDE 2 [PENJELASAN 1]: Menentukan Kriteria Narasumber Wawancara
         function renderSlide2() {
             return `
-                <div class="slide-enter flex flex-col justify-between h-full gap-5">
-                    <div class="space-y-1.5">
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Dari alur kerja 3 langkah di Slide 1, tahap pertama kita adalah memastikan siapa narasumber yang tepat untuk diwawancarai.")}
+                    <div class="space-y-1">
                         <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Tahap 1 • Penjelasan Kriteria Responden</span>
                         <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Siapa yang Harus Diwawancarai pada Tahap ${term('empathize', 'Empathize')}?</h2>
                         <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -1270,9 +1325,7 @@
                         </div>
                     </div>
 
-                    <div class="p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-800/60 text-xs leading-relaxed">
-                        <i class="fa-solid fa-list-check text-indigo-600 dark:text-indigo-400 mr-1.5"></i><strong>Instruksi Slide Berikutnya:</strong> Pada Slide 3, lengkapi Bagian 1A (Identitas & UMKM) serta Bagian 1B (Kriteria Pengelola & Pelanggan) secara lengkap sebelum masuk ke penyusunan pertanyaan.
-                    </div>
+                    ${slideBridgeNext("Pada Slide 3, lengkapi Bagian 1A (Identitas & UMKM) serta Bagian 1B (Kriteria Pengelola & Pelanggan) secara lengkap.")}
                 </div>
             `;
         }
@@ -1285,6 +1338,7 @@
             const p2Saved = isInfoPartComplete(2);
             const p1Min = !!uiWizard.infoMin[1];
             const p2Min = !!uiWizard.infoMin[2];
+            const showHint1B = !!hintState['info_1b'];
 
             let card1Html = '';
             if (p1Editing) {
@@ -1347,7 +1401,14 @@
                 card2Html = `
                     <div class="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border-2 border-indigo-600 dark:border-indigo-400 shadow-md space-y-4">
                         ${renderWizardCardHeader('Bagian 1B', 'Kriteria Narasumber & Lokasi Pelaksanaan Riset', p2Saved, true, false, '', '')}
-                        <div class="space-y-4 pt-2 border-t border-slate-100 dark:border-slate-800">
+                        <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                            <span class="text-xs font-bold text-slate-500">Tetapkan kriteria spesifik untuk pengelola usaha dan pelanggan sasaran:</span>
+                            <button type="button" onclick="toggleHint('info_1b')" class="px-3 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 dark:bg-amber-950 text-amber-800 dark:text-amber-300 text-[11px] font-extrabold transition">
+                                <i class="fa-regular fa-lightbulb mr-1"></i>${showHint1B ? 'Sembunyikan Petunjuk' : 'Butuh Petunjuk Kerangka?'}
+                            </button>
+                        </div>
+                        ${showHint1B ? `<div class="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-xs text-amber-900 dark:text-amber-200 whitespace-pre-line leading-relaxed">Petunjuk Kriteria Responden:\n• Pengelola UMKM: Sebutkan siapa yang terlibat langsung menerima/mencatat pesanan (pemilik/kasir/admin WA).\n• Pelanggan Sasaran: Sebutkan frekuensi transaksi (misal pernah membeli minimal 2x sebulan) agar mereka punya pengalaman nyata yang bisa diceritakan.\n• Target Jumlah: Cantumkan angka jelas (misal: 1 pemilik dan 4 pelanggan).</div>` : ''}
+                        <div class="space-y-4">
                             <div>
                                 <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">Kriteria Narasumber dari Sisi Pengelola / Pemilik UMKM *</label>
                                 <textarea id="inp_kriteria_pemilik" rows="3" oninput="autoResizeTextarea(this); updateField('kriteria_pemilik', this.value)" placeholder="${exPh('Pemilik sekaligus pengelola harian yang menangani pesanan dan melayani pelanggan', 'Tuliskan siapa pihak pengelola/staf UMKM yang akan Anda wawancarai beserta peran mereka sehari-hari...')}" class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(formState.kriteria_pemilik)}</textarea>
@@ -1412,8 +1473,9 @@
         // SLIDE 4 [PENJELASAN 2]: Menyusun Pertanyaan Babak 1 (Pemanasan) & Babak 2 (Alur Saat Ini)
         function renderSlide4() {
             return `
-                <div class="slide-enter flex flex-col justify-between h-full gap-5">
-                    <div class="space-y-1.5">
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Kriteria responden Anda di Slide 3 sudah tersimpan. Sekarang kita masuk ke Tahap 2: menyusun 5 pertanyaan pertama (Babak 1 & Babak 2).")}
+                    <div class="space-y-1">
                         <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Tahap 2 • Penjelasan Babak 1 & Babak 2 Wawancara</span>
                         <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Menyusun Pertanyaan Pemanasan & Alur Kebiasaan Saat Ini (No. 1 - 5)</h2>
                         <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -1439,9 +1501,7 @@
                         </div>
                     </div>
 
-                    <div class="p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-800/60 text-xs leading-relaxed">
-                        <i class="fa-solid fa-list-check text-indigo-600 dark:text-indigo-400 mr-1.5"></i><strong>Instruksi Slide Berikutnya:</strong> Pada Slide 5, Anda wajib menyusun kalimat <strong>Pertanyaan Utama #1 s/d #5</strong> menggunakan ${term('openquestion', 'pertanyaan terbuka')} beserta rencana ${term('probing', 'probing (pertanyaan lanjutan)')}-nya.
-                    </div>
+                    ${slideBridgeNext("Pada Slide 5, susunlah Pertanyaan Utama #1 s/d #5 menggunakan pertanyaan terbuka beserta rencana Probing-nya.")}
                 </div>
             `;
         }
@@ -1471,8 +1531,9 @@
         // SLIDE 6 [PENJELASAN 3]: Menyusun Pertanyaan Babak 3 (Penggalian Masalah) & Babak 4 (Harapan)
         function renderSlide6() {
             return `
-                <div class="slide-enter flex flex-col justify-between h-full gap-5">
-                    <div class="space-y-1.5">
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Pertanyaan #1 s/d #5 di Slide 5 telah lengkap. Kini di Tahap 3, kita masuk ke jantung wawancara: menggali Pain Points dan harapan (#6 s/d #12).")}
+                    <div class="space-y-1">
                         <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Tahap 3 • Penjelasan Babak 3 & Babak 4 Wawancara</span>
                         <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Menggali Hambatan Terdalam & Harapan Tanpa ${term('leadingquestion', 'Leading Questions')}</h2>
                         <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -1498,9 +1559,7 @@
                         </div>
                     </div>
 
-                    <div class="p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-800/60 text-xs leading-relaxed">
-                        <i class="fa-solid fa-list-check text-indigo-600 dark:text-indigo-400 mr-1.5"></i><strong>Instruksi Slide Berikutnya:</strong> Lengkapi <strong>Pertanyaan #6 s/d #9 pada Slide 7</strong> dan <strong>Pertanyaan #10 s/d #12 pada Slide 8</strong>.
-                    </div>
+                    ${slideBridgeNext("Lengkapi Pertanyaan #6 s/d #9 pada Slide 7, lalu Pertanyaan #10 s/d #12 pada Slide 8.")}
                 </div>
             `;
         }
@@ -1552,8 +1611,9 @@
         // SLIDE 9 [PENJELASAN 4]: Merancang Lembar Panduan Observasi Kontekstual
         function renderSlide9() {
             return `
-                <div class="slide-enter flex flex-col justify-between h-full gap-5">
-                    <div class="space-y-1.5">
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Seluruh 12 pertanyaan wawancara di Slide 5–8 sudah selesai! Kini di Tahap 4, kita merancang 4 Fokus Observasi untuk memverifikasi perilaku nyata di lapangan.")}
+                    <div class="space-y-1">
                         <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Tahap 4 • Penjelasan Rencana Observasi</span>
                         <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Merancang Fokus ${term('shadowing', 'Observasi Lapangan')} untuk Menangkap ${term('saydo', 'Say vs Do')}</h2>
                         <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -1580,9 +1640,7 @@
                         </div>
                     </div>
 
-                    <div class="p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-800/60 text-xs leading-relaxed">
-                        <i class="fa-solid fa-list-check text-indigo-600 dark:text-indigo-400 mr-1.5"></i><strong>Instruksi Slide Berikutnya:</strong> Tuliskan keempat rencana pengamatan Anda pada Slide 10 secara lengkap.
-                    </div>
+                    ${slideBridgeNext("Tuliskan keempat rencana pengamatan perilaku tersebut pada Slide 10 secara lengkap.")}
                 </div>
             `;
         }
@@ -1590,10 +1648,30 @@
         // SLIDE 10 [FORM ISIAN 4]: Wizard Rencana Observasi Lapangan
         function renderSlide10() {
             const obsItems = [
-                { num: 1, key: 'obs_activities', title: 'Fokus 1: Urutan Aktivitas & Langkah Transaksi yang Akan Diamati *', prompt: 'Tuliskan aktivitas spesifik dari pelanggan maupun pengelola UMKM yang akan Anda amati secara langsung dari awal hingga selesai.' },
-                { num: 2, key: 'obs_env', title: 'Fokus 2: Kondisi Lingkungan Fisik / Media & Waktu Pengamatan *', prompt: 'Tuliskan di mana dan pada situasi/jam seperti apa Anda akan melakukan pengamatan agar melihat kondisi transaksi yang sebenarnya.' },
-                { num: 3, key: 'obs_nonverbal', title: 'Fokus 3: Petunjuk Bahasa Tubuh, Hambatan Waktu, & Kontradiksi Perilaku *', prompt: 'Tuliskan reaksi non-verbal atau potensi perbedaan antara ucapan dan tindakan nyata (Say vs Do) yang ingin Anda perhatikan.' },
-                { num: 4, key: 'obs_workaround', title: 'Fokus 4: Alat Bantu Manual atau Jalan Pintas (Workarounds) yang Diamati *', prompt: 'Tuliskan benda, catatan manual, atau kebiasaan darurat di lokasi/media UMKM yang akan Anda perhatikan.' }
+                {
+                    num: 1, key: 'obs_activities',
+                    title: 'Fokus 1: Urutan Aktivitas & Langkah Transaksi yang Akan Diamati *',
+                    prompt: 'Tuliskan aktivitas spesifik dari pelanggan maupun pengelola UMKM yang akan Anda amati secara langsung dari awal hingga selesai.',
+                    hint: 'Contoh Fokus 1 (Activities):\nMengamati urutan langkah sejak pelanggan tiba/bertanya informasi menu, menyampaikan pesanan, menunggu kasir mencatat dan menghitung harga, hingga menyerahkan pembayaran.'
+                },
+                {
+                    num: 2, key: 'obs_env',
+                    title: 'Fokus 2: Kondisi Lingkungan Fisik / Media & Waktu Pengamatan *',
+                    prompt: 'Tuliskan di mana dan pada situasi/jam seperti apa Anda akan melakukan pengamatan agar melihat kondisi transaksi yang sebenarnya.',
+                    hint: 'Contoh Fokus 2 (Environment):\nMengamati langsung di area meja kasir/ruang tunggu pada jam ramai (misal pukul 12.00–13.30) serta memeriksa keterbacaan papan daftar menu atau tampilan katalog chat.'
+                },
+                {
+                    num: 3, key: 'obs_nonverbal',
+                    title: 'Fokus 3: Petunjuk Bahasa Tubuh, Hambatan Waktu, & Kontradiksi Perilaku *',
+                    prompt: 'Tuliskan reaksi non-verbal atau potensi perbedaan antara ucapan dan tindakan nyata (Say vs Do) yang ingin Anda perhatikan.',
+                    hint: 'Contoh Fokus 3 (Non-Verbal & Say vs Do):\nMemperhatikan berapa menit pelanggan menunggu, raut wajah ragu saat melihat daftar produk tanpa harga, atau apakah kasir tampak kewalahan mencari arsip nota.'
+                },
+                {
+                    num: 4, key: 'obs_workaround',
+                    title: 'Fokus 4: Alat Bantu Manual atau Jalan Pintas (Workarounds) yang Diamati *',
+                    prompt: 'Tuliskan benda, catatan manual, atau kebiasaan darurat di lokasi/media UMKM yang akan Anda perhatikan.',
+                    hint: 'Contoh Fokus 4 (Workarounds):\nMemperhatikan apakah pelanggan memotret nota kertas dengan kamera HP agar tidak hilang, atau apakah staf menempelkan kertas catatan kecil di meja agar pesanan khusus tidak terlupa.'
+                }
             ];
 
             let cardsHtml = '';
@@ -1603,12 +1681,19 @@
                 const isEditing = uiWizard.obsActive === it.num;
                 const isSaved = isObsItemComplete(it.num);
                 const isMin = !!uiWizard.obsMin[it.num];
+                const showHint = !!hintState['obs_' + it.num];
 
                 if (isEditing) {
                     cardsHtml += `
                         <div class="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border-2 border-indigo-600 dark:border-indigo-400 shadow-md space-y-4">
                             ${renderWizardCardHeader('Observasi ' + it.num + ' / 4', it.title, isSaved, true, false, '', '')}
-                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed pt-1 border-t border-slate-100 dark:border-slate-800">${it.prompt}</p>
+                            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
+                                <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed flex-1">${it.prompt}</p>
+                                <button type="button" onclick="toggleHint('obs_${it.num}')" class="px-3 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 dark:bg-amber-950 text-amber-800 dark:text-amber-300 text-[11px] font-extrabold transition shrink-0 self-start">
+                                    <i class="fa-regular fa-lightbulb mr-1"></i>${showHint ? 'Sembunyikan Petunjuk' : 'Butuh Petunjuk Kerangka?'}
+                                </button>
+                            </div>
+                            ${showHint ? `<div class="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-xs text-amber-900 dark:text-amber-200 whitespace-pre-line leading-relaxed">${escapeHtml(it.hint)}</div>` : ''}
                             <textarea id="inp_obs_${it.num}" rows="4" oninput="autoResizeTextarea(this); updateField('${it.key}', this.value)" placeholder="Tuliskan rencana pengamatan Anda secara lengkap di sini (wajib diisi)..." class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(val)}</textarea>
                             <div class="flex justify-end pt-1">
                                 <button type="button" onclick="saveObsCard(${it.num})" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-extrabold transition flex items-center gap-2 shadow-sm">
@@ -1662,6 +1747,7 @@
             const c2Saved = isIcPartComplete(2);
             const c1Min = !!uiWizard.icMin[1];
             const c2Min = !!uiWizard.icMin[2];
+            const showHintIc2 = !!hintState['ic_2'];
 
             let card1Html = '';
             if (c1Editing) {
@@ -1707,7 +1793,14 @@
                 card2Html = `
                     <div class="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border-2 border-indigo-600 dark:border-indigo-400 shadow-md space-y-4">
                         ${renderWizardCardHeader('Informed Consent 2', 'Jaminan Kerahasiaan Data (Anonimisasi) & Hak Kesukarelaan', c2Saved, true, false, '', '')}
-                        <div class="space-y-4 pt-2 border-t border-slate-100 dark:border-slate-800">
+                        <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                            <span class="text-xs font-bold text-slate-500">Pastikan klausul privasi menyebut penyamaran kode dan klausul kesukarelaan menyebut hak menolak/berhenti:</span>
+                            <button type="button" onclick="toggleHint('ic_2')" class="px-3 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 dark:bg-amber-950 text-amber-800 dark:text-amber-300 text-[11px] font-extrabold transition">
+                                <i class="fa-regular fa-lightbulb mr-1"></i>${showHintIc2 ? 'Sembunyikan Petunjuk' : 'Butuh Petunjuk Kerangka?'}
+                            </button>
+                        </div>
+                        ${showHintIc2 ? `<div class="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-xs text-amber-900 dark:text-amber-200 whitespace-pre-line leading-relaxed">Petunjuk Klausul Etika:\n• Klausul 3 (Privasi): Sertakan kata kunci seperti "dirahasiakan", "disamarkan", atau "kode/inisial (P1, P2)" agar lolos cek kualitas.\n• Klausul 4 (Kesukarelaan): Sertakan kata "sukarela" serta hak narasumber untuk "menolak" atau "berhenti" kapan saja.</div>` : ''}
+                        <div class="space-y-4">
                             <div>
                                 <label class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 block mb-1.5">3. Pernyataan Jaminan Kerahasiaan & Anonimisasi Identitas Narasumber *</label>
                                 <textarea id="inp_ic_privasi" rows="3" oninput="autoResizeTextarea(this); updateField('ic_privasi', this.value)" placeholder="${exPh('Nama dan rekaman Anda hanya dipakai untuk tugas ini dan disamarkan menjadi kode (P1, P2) pada laporan', 'Tuliskan komitmen Anda dalam menjaga kerahasiaan rekaman/catatan dan menyamarkan identitas pribadi narasumber pada laporan...')}" class="auto-expand w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm sm:text-base text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(formState.ic_privasi)}</textarea>
@@ -1762,8 +1855,9 @@
         // SLIDE 12 [PENJELASAN 5]: Instruksi Cara Mencatat Jawaban di Lapangan (Field Kit)
         function renderSlide12() {
             return `
-                <div class="slide-enter flex flex-col justify-between h-full gap-5">
-                    <div class="space-y-1.5">
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideBridgeTop("Seluruh form wajib dari Slide 3 hingga Slide 11 telah Anda lengkapi! Sebelum mencetak PDF, pahami fungsi keempat halaman Field Kit Anda.")}
+                    <div class="space-y-1">
                         <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Panduan Eksekusi Lapangan</span>
                         <h2 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Di Mana dan Bagaimana Mencatat Jawaban Narasumber Saat di UMKM?</h2>
                         <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -1813,12 +1907,7 @@
                         </div>
                     </div>
 
-                    <div class="p-4 rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                        <span class="font-bold text-emerald-900 dark:text-emerald-200"><i class="fa-solid fa-file-pdf text-emerald-600 mr-1.5"></i>Klik tombol di kanan untuk melihat pratinjau keempat halaman dokumen Field Kit Anda dan mengunduh PDF-nya.</span>
-                        <button type="button" onclick="changeSlide(1)" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold shrink-0 transition">
-                            Buka Pratinjau & Unduh PDF <i class="fa-solid fa-arrow-right ml-1"></i>
-                        </button>
-                    </div>
+                    ${slideBridgeNext("Lanjut ke Slide 13 untuk memeriksa Saran Kualitas Sebelum ke Lapangan, mengunduh .JSON, dan mencetak PDF Field Kit 4 Bagian!")}
                 </div>
             `;
         }
@@ -2449,7 +2538,6 @@
         }
 
         const FORM_SLIDE_INDEXES = [2, 4, 6, 7, 9, 10];
-        // Perkiraan waktu pengerjaan per slide (menit); bukan hasil pengukuran
         const SLIDE_MINUTES = [3, 3, 8, 3, 20, 3, 15, 10, 3, 12, 10, 3, 5];
         function getSlideCompletion(idx) {
             let done = 0, total = 0, unit = 'bagian';
