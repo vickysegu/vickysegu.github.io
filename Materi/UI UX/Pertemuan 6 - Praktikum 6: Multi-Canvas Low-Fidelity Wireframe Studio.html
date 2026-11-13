@@ -1,0 +1,2760 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Praktikum 6: Multi-Canvas Low-Fidelity Wireframe Studio (LKM 06)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" defer></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <script>
+        if (typeof tailwind !== 'undefined') {
+            tailwind.config = {
+                darkMode: 'class',
+                theme: {
+                    extend: {
+                        fontFamily: {
+                            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                            mono: ['"JetBrains Mono"', 'monospace']
+                        }
+                    }
+                }
+            };
+        }
+    </script>
+
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .tech-term {
+            color: #4f46e5;
+            font-weight: 700;
+            text-decoration: underline;
+            text-decoration-style: dotted;
+            text-underline-offset: 3px;
+            cursor: pointer;
+            transition: color 0.15s ease, opacity 0.15s ease;
+        }
+        .dark .tech-term { color: #818cf8; }
+        .tech-term:hover { color: #3730a3; opacity: 0.85; }
+        .dark .tech-term:hover { color: #a5b4fc; }
+
+        .slide-enter { animation: fadeSlide 0.22s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes fadeSlide {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes shakeError {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .input-error {
+            border-color: #e11d48 !important;
+            box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.18) !important;
+            animation: shakeError 0.3s ease-in-out;
+        }
+
+        /* ===== Kanvas Studio Wireframe Multi-Device ===== */
+        .wf-canvas-surface {
+            position: relative;
+            background-color: #ffffff;
+            background-image:
+                linear-gradient(rgba(148, 163, 184, 0.18) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(148, 163, 184, 0.18) 1px, transparent 1px);
+            background-size: 16px 16px;
+            box-shadow: 0 0 0 2px #334155, 0 10px 28px rgba(15, 23, 42, 0.12);
+            border-radius: 14px;
+            overflow: hidden;
+            transform-origin: top center;
+            transition: width 0.2s ease, height 0.2s ease;
+            color: #0f172a;
+        }
+
+        /* Elemen di atas kanvas */
+        .wf-el {
+            position: absolute;
+            cursor: move;
+            user-select: none;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+        .wf-el.selected {
+            outline: 2px solid #4f46e5;
+            outline-offset: 0;
+            z-index: 950 !important;
+            touch-action: none;
+        }
+        .wf-el.play-clickable {
+            cursor: pointer !important;
+            outline: 2px dashed #10b981;
+            outline-offset: 1px;
+        }
+        .wf-el.play-clickable:hover {
+            filter: brightness(0.92);
+        }
+
+        /* Titik Resize Kanan-Bawah */
+        .wf-resize {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            right: -6px;
+            bottom: -6px;
+            background: #4f46e5;
+            border: 2px solid #ffffff;
+            border-radius: 3px;
+            cursor: nwse-resize;
+            z-index: 1000;
+            touch-action: none;
+        }
+
+        /* Item Palet Komponen */
+        .palette-item {
+            cursor: grab;
+            transition: all 0.15s;
+            user-select: none;
+        }
+        .palette-item:active { cursor: grabbing; }
+        .palette-item:hover {
+            background: #eef2ff !important;
+            border-color: #818cf8 !important;
+        }
+        .dark .palette-item:hover {
+            background: #1e1b4b !important;
+            border-color: #6366f1 !important;
+        }
+
+        /* Kontrol Form Kecil Lo-Fi */
+        .wf-check-box {
+            display: inline-block;
+            width: 15px; height: 15px;
+            border: 1.5px solid #334155;
+            border-radius: 3px;
+            flex-shrink: 0;
+            background: #fff;
+        }
+        .wf-radio-dot {
+            display: inline-block;
+            width: 15px; height: 15px;
+            border: 1.5px solid #334155;
+            border-radius: 50%;
+            flex-shrink: 0;
+            background: #fff;
+            position: relative;
+        }
+        .wf-radio-dot::after {
+            content: "";
+            position: absolute;
+            width: 7px; height: 7px;
+            background: #334155;
+            border-radius: 50%;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .wf-toggle-track {
+            display: inline-block;
+            width: 30px; height: 16px;
+            background: #475569;
+            border-radius: 999px;
+            position: relative;
+            flex-shrink: 0;
+        }
+        .wf-toggle-thumb {
+            position: absolute;
+            width: 12px; height: 12px;
+            background: #fff;
+            border-radius: 50%;
+            top: 2px; right: 2px;
+        }
+
+        ::-webkit-scrollbar { width: 7px; height: 7px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+        .dark ::-webkit-scrollbar-thumb { background: #334155; }
+
+        /* Area Cetak PDF A4 */
+        #pdfPrintArea {
+            background: #ffffff;
+            color: #0f172a;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .pdf-table { width: 100%; border-collapse: collapse; }
+        .pdf-table tr, .pdf-keep-together {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        .pdf-table th, .pdf-table td {
+            border: 1px solid #cbd5e1;
+            padding: 6px 8px;
+            vertical-align: top;
+            font-size: 10px;
+            line-height: 1.45;
+            white-space: pre-line;
+        }
+        .pdf-table th {
+            background-color: #f1f5f9;
+            font-weight: 700;
+            color: #1e293b;
+            text-align: left;
+        }
+        .pdf-page-break {
+            page-break-before: always;
+            break-before: page;
+        }
+
+        @media print {
+            body * { visibility: hidden; }
+            #pdfWrapper, #pdfWrapper * { visibility: visible; }
+            #pdfWrapper {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
+            }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col justify-between transition-colors duration-200">
+
+    <!-- Input File Tersembunyi untuk Muat Data Proyek (.json) -->
+    <input type="file" id="jsonFileInput" accept=".json,application/json" class="hidden" onchange="handleJsonFileImport(event)">
+
+    <!-- Bilah Batalkan Reset (10 Detik) -->
+    <div id="undoBar" class="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-[60] hidden items-center gap-3 px-4 py-2.5 rounded-2xl bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 text-xs sm:text-sm font-bold shadow-2xl no-print">
+        <span id="undoMessage">Perubahan diterapkan.</span>
+        <button type="button" onclick="undoLastReset()" class="px-3 py-1 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-900 font-extrabold">Batalkan (<span id="undoCountdown">10</span>)</button>
+    </div>
+
+    <!-- Toast Peringatan Validasi & Status File -->
+    <div id="toastBanner" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 hidden max-w-lg w-[92%] sm:w-full px-4 py-3.5 rounded-2xl shadow-2xl border flex items-start gap-3 transition-all duration-200 no-print">
+        <i id="toastIcon" class="fa-solid fa-circle-exclamation text-lg mt-0.5 shrink-0"></i>
+        <div class="flex-1 text-xs sm:text-sm font-bold leading-snug" id="toastMessage">Pesan notifikasi</div>
+        <button type="button" onclick="hideToast()" class="text-current opacity-70 hover:opacity-100 shrink-0">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+
+    <!-- Modal Konfirmasi Reset Data -->
+    <div id="resetModalBackdrop" onclick="closeResetModal()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4 no-print">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl slide-enter space-y-4">
+            <div class="flex items-center gap-3 text-rose-600 dark:text-rose-400">
+                <div class="w-10 h-10 rounded-2xl bg-rose-100 dark:bg-rose-950 flex items-center justify-center text-lg shrink-0">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <div>
+                    <h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">Reset Seluruh Kanvas LKM 06?</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Mengosongkan seluruh kanvas dan isian di layar.</p>
+                </div>
+            </div>
+            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700">
+                Klik <strong>Simpan .JSON Dulu</strong> jika Anda belum mencadangkan pekerjaan Anda. Setelah direset, Anda punya waktu 10 detik untuk membatalkan.
+            </p>
+            <div class="flex items-center justify-end gap-2.5 pt-2">
+                <button type="button" onclick="closeResetModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-extrabold transition">Batal</button>
+                <button type="button" onclick="exportJsonData(); closeResetModal();" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-download"></i><span>Simpan .JSON Dulu</span>
+                </button>
+                <button type="button" onclick="confirmResetAllData()" class="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-extrabold transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-trash-can"></i><span>Ya, Reset</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header Navigasi Atas -->
+    <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 no-print">
+        <div class="w-full h-1 bg-slate-100 dark:bg-slate-800">
+            <div id="topProgressBar" class="h-full bg-indigo-600 dark:bg-indigo-500 transition-all duration-300" style="width: 20%;"></div>
+        </div>
+
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 h-14 flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+                <button type="button" onclick="toggleSlideDrawer()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:text-slate-200 transition flex items-center gap-2 text-xs font-bold shrink-0">
+                    <i class="fa-solid fa-list-ul text-indigo-600 dark:text-indigo-400"></i>
+                    <span class="hidden sm:inline">Tahap LKM 06</span>
+                    <span id="slideCounterBadge" class="px-2 py-0.5 text-xs rounded-lg bg-indigo-600 text-white font-bold">1 / 5</span>
+                </button>
+
+                <div class="hidden md:flex items-center gap-2 min-w-0">
+                    <span id="slideCategoryPill" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 shrink-0">Pengantar</span>
+                    <h1 id="headerSlideTitle" class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 truncate">Multi-Canvas Low-Fidelity Wireframe Studio (LKM 06)</h1>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                <span id="saveBadge" class="hidden xl:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Tersimpan
+                </span>
+
+                <button type="button" onclick="exportJsonData()" class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-extrabold flex items-center gap-1.5 transition" title="Simpan Master File Data Proyek (.json)">
+                    <i class="fa-solid fa-download"></i><span class="hidden sm:inline">Simpan .JSON</span>
+                </button>
+
+                <button type="button" onclick="triggerImportJson()" class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-200 dark:border-amber-800 text-xs font-extrabold flex items-center gap-1.5 transition" title="Muat File Data Proyek (.json) dari LKM 05 atau LKM 06">
+                    <i class="fa-solid fa-upload"></i><span class="hidden sm:inline">Muat .JSON</span>
+                </button>
+
+                <button type="button" onclick="openGlossaryIndex()" class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:text-slate-200 text-xs font-bold flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-book-open text-indigo-600 dark:text-indigo-400"></i><span class="hidden md:inline">Kamus</span>
+                </button>
+
+                <button type="button" onclick="goToSlide(4)" class="hidden sm:flex px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold items-center gap-1.5 transition shadow-xs">
+                    <i class="fa-solid fa-file-pdf"></i><span>PDF</span>
+                </button>
+
+                <button type="button" onclick="toggleTheme()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-center transition">
+                    <i id="themeIcon" class="fa-solid fa-moon text-xs"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Drawer Daftar Slide -->
+    <div id="slideDrawerBackdrop" onclick="toggleSlideDrawer()" class="fixed inset-0 bg-slate-950/50 backdrop-blur-xs z-40 hidden opacity-0 transition-opacity duration-200 no-print"></div>
+    <aside id="slideDrawer" class="fixed top-0 left-0 bottom-0 w-80 sm:w-96 bg-white dark:bg-slate-900 z-50 shadow-2xl border-r border-slate-200 dark:border-slate-800 transform -translate-x-full transition-transform duration-200 flex flex-col no-print">
+        <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Praktikum 6 • LKM 06</span>
+                <h2 class="text-base font-extrabold text-slate-900 dark:text-white mt-0.5">5 Tahap Ringkas LKM 06</h2>
+            </div>
+            <button type="button" onclick="toggleSlideDrawer()" class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div id="drawerSlideList" class="p-3.5 overflow-y-auto space-y-1.5 flex-1"></div>
+        <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400">
+            Seluruh rakitan kanvas tersimpan otomatis dan dapat dilanjutkan lewat tombol Simpan/Muat .JSON.
+        </div>
+    </aside>
+
+    <!-- Area Utama Slide (Lebar Penuh max-w-7xl untuk Studio Kanvas) -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-2 sm:px-5 py-3 sm:py-4 flex flex-col justify-center">
+        <div id="slideViewport" class="bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl shadow-xs border border-slate-200/80 dark:border-slate-800 p-3 sm:p-6 min-h-[520px] flex flex-col justify-between relative">
+            <div class="py-12 text-center text-sm text-slate-500">Memuat Multi-Canvas Wireframe Studio LKM 06...</div>
+        </div>
+    </main>
+
+    <!-- Footer Navigasi Bawah -->
+    <footer class="sticky bottom-0 z-20 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 py-2.5 px-4 sm:px-6 no-print">
+        <div class="max-w-7xl mx-auto flex items-center justify-between gap-3">
+            <button type="button" id="prevSlideBtn" onclick="changeSlide(-1)" class="px-3.5 sm:px-4 py-2 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-200 transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                <i class="fa-solid fa-arrow-left text-xs"></i><span>Sebelumnya</span>
+            </button>
+
+            <div id="slideDotsContainer" class="hidden md:flex items-center gap-2 justify-center"></div>
+            <div class="md:hidden text-xs font-bold text-slate-500 dark:text-slate-400" id="mobileFooterCounter">1 / 5</div>
+
+            <button type="button" id="nextSlideBtn" onclick="changeSlide(1)" class="px-4 sm:px-5 py-2 rounded-xl font-bold text-xs sm:text-sm bg-indigo-600 hover:bg-indigo-700 text-white transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                <span id="nextBtnText">Selanjutnya</span><i class="fa-solid fa-arrow-right text-xs"></i>
+            </button>
+        </div>
+    </footer>
+
+    <!-- Modal Penjelasan Istilah -->
+    <div id="termModalBackdrop" onclick="closeTermModal()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4 no-print">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-lg w-full p-5 sm:p-7 shadow-2xl slide-enter max-h-[90vh] overflow-y-auto">
+            <div class="flex items-start justify-between gap-4 mb-4">
+                <div>
+                    <span id="termCategoryBadge" class="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">Kategori</span>
+                    <h3 id="termTitle" class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white mt-1.5">Nama Istilah</h3>
+                </div>
+                <button type="button" onclick="closeTermModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <p id="termMainDesc" class="text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200/70 dark:border-slate-700/70"></p>
+                <div class="p-3.5 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-200/70 dark:border-indigo-800/70">
+                    <div class="text-[11px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-1">Konteks Penerapan pada Studio Wireframe LKM 06:</div>
+                    <p id="termDetailDesc" class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Kamus Istilah Lengkap -->
+    <div id="glossaryModalBackdrop" onclick="closeGlossaryIndex()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4 no-print">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-3xl w-full max-h-[82vh] flex flex-col shadow-2xl overflow-hidden slide-enter">
+            <div class="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
+                <h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">Kamus Istilah Praktikum 6: Multi-Canvas Wireframe Studio</h3>
+                <button type="button" onclick="closeGlossaryIndex()" class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div id="glossaryListGrid" class="p-4 sm:p-5 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+        </div>
+    </div>
+
+    <script>
+        // =========================================================================
+        // PENGAMAN LOCALSTORAGE (ANTI TRACKING PREVENTION ERROR DI FILE://)
+        // =========================================================================
+        let memoryFallbackStore = {};
+        let storageAvailable = null;
+
+        function checkStorageAvailable() {
+            if (storageAvailable !== null) return storageAvailable;
+            try {
+                const testKey = '__upertis_test_lkm06__';
+                window.localStorage.setItem(testKey, '1');
+                window.localStorage.removeItem(testKey);
+                storageAvailable = true;
+            } catch (e) {
+                storageAvailable = false;
+            }
+            return storageAvailable;
+        }
+
+        function safeGetStorage(key) {
+            if (checkStorageAvailable()) {
+                try { return window.localStorage.getItem(key); } catch (e) {}
+            }
+            return memoryFallbackStore[key] || null;
+        }
+
+        function safeSetStorage(key, val) {
+            memoryFallbackStore[key] = val;
+            if (checkStorageAvailable()) {
+                try { window.localStorage.setItem(key, val); return true; } catch (e) { return false; }
+            }
+            return false;
+        }
+
+        function safeRemoveStorage(key) {
+            delete memoryFallbackStore[key];
+            if (checkStorageAvailable()) {
+                try { window.localStorage.removeItem(key); } catch (e) {}
+            }
+        }
+
+        // =========================================================================
+        // KAMUS ISTILAH PRAKTIKUM 6
+        // =========================================================================
+        const GLOSSARY_DB = {
+            wireframe: {
+                title: "Low-Fidelity Wireframe (Kerangka Hitam-Putih)",
+                category: "Artefak Utama LKM 06",
+                main: "Cetak biru visual dua dimensi yang memetakan susunan kotak kontainer, gambar [X], teks, dan tombol dalam skala abu-abu (Grayscale).",
+                detail: "Pada LKM 06, setiap layar (SCR-01 s/d SCR-ERR) dirakit secara mandiri dari komponen dasar tanpa template instan."
+            },
+            devicegate: {
+                title: "Ukuran Kanvas Perangkat (Mobile vs Tablet POS vs Desktop)",
+                category: "Standar Kanvas",
+                main: "Dimensi bingkai layar tempat komponen dirakit: Mobile HP (360x640 px vertikal), Tablet Kasir POS (768x520 px melebar), atau Web Desktop (920x560 px melebar).",
+                detail: "Wajib dipilih di awal untuk setiap layar agar proporsi tata letak sesuai dengan perangkat pengguna."
+            },
+            wireflow: {
+                title: "Wireflow Link (Target Layar Tombol)",
+                category: "Interaksi Antar-Layar",
+                main: "Sambungan logika pada komponen Tombol (Button) yang menentukan layar tujuan (SCR) ketika tombol tersebut ditekan.",
+                detail: "Dapat diuji langsung di atas kanvas menggunakan tombol saklar 'Uji Klik (Play Wireflow)'."
+            },
+            microcopy: {
+                title: "UX Microcopy (Teks Antarmuka Nyata)",
+                category: "Komunikasi UI",
+                main: "Teks nyata berbahasa Indonesia pada Heading, Label, dan Tombol yang memandu pengguna menyelesaikan transaksi.",
+                detail: "Penggunaan teks palsu 'Lorem Ipsum' tidak diperbolehkan di dalam kanvas."
+            }
+        };
+
+        function escapeHtml(str) {
+            return String(str ?? '').replace(/[&<>"']/g, function (c) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+            });
+        }
+
+        function term(key, label) {
+            const item = GLOSSARY_DB[key];
+            if (!item) return label || key;
+            const text = label || item.title.split(' (')[0];
+            return '<span class="tech-term" onclick="showTerm(\'' + key + '\')">' + escapeHtml(text) + '</span>';
+        }
+
+        // =========================================================================
+        // TOAST & HIGHLIGHT VALIDASI
+        // =========================================================================
+        let toastTimer = null;
+        function showToast(message, type) {
+            clearTimeout(toastTimer);
+            const banner = document.getElementById('toastBanner');
+            const icon = document.getElementById('toastIcon');
+            const msgEl = document.getElementById('toastMessage');
+            if (!banner || !msgEl) return;
+
+            msgEl.textContent = message;
+            banner.className = 'fixed top-20 left-1/2 transform -translate-x-1/2 z-50 max-w-lg w-[92%] sm:w-full px-4 py-3.5 rounded-2xl shadow-2xl border flex items-start gap-3 transition-all duration-200 no-print slide-enter ';
+            if (type === 'success') {
+                banner.className += 'bg-emerald-600 text-white border-emerald-500';
+                icon.className = 'fa-solid fa-circle-check text-lg mt-0.5 shrink-0';
+            } else {
+                banner.className += 'bg-rose-600 text-white border-rose-500';
+                icon.className = 'fa-solid fa-triangle-exclamation text-lg mt-0.5 shrink-0';
+            }
+            banner.classList.remove('hidden');
+            toastTimer = setTimeout(hideToast, 4800);
+        }
+
+        function hideToast() {
+            const banner = document.getElementById('toastBanner');
+            if (banner) banner.classList.add('hidden');
+        }
+
+        function highlightEmptyInput(inputId, message) {
+            showToast(message, 'error');
+            setTimeout(function () {
+                const el = document.getElementById(inputId);
+                if (el) {
+                    el.classList.add('input-error');
+                    el.focus();
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    el.addEventListener('input', function removeErr() {
+                        el.classList.remove('input-error');
+                        el.removeEventListener('input', removeErr);
+                    });
+                }
+            }, 60);
+        }
+
+        function openResetModal() {
+            const m = document.getElementById('resetModalBackdrop');
+            if (m) { m.classList.remove('hidden'); m.classList.add('flex'); }
+        }
+        function closeResetModal() {
+            const m = document.getElementById('resetModalBackdrop');
+            if (m) { m.classList.add('hidden'); m.classList.remove('flex'); }
+        }
+
+        // =========================================================================
+        // KONFIGURASI PERANGKAT & PALET KOMPONEN PRIMITIF MURNI (TANPA TEKS INSTAN)
+        // =========================================================================
+        const STORAGE_KEY = 'upertis_lkm06_studio_v1';
+        const MASTER_BUNDLE_KEY = 'upertis_uiux_master_bundle';
+        let currentSlideIndex = 0;
+        const TOTAL_SLIDES = 5;
+
+        const MIN_SCREENS_COUNT = 5; // Minimal 4 layar utama + 1 layar State Kendala (SCR-ERR)
+        const MIN_ELEMENTS_PER_CANVAS = 4; // Minimal 4 komponen dirakit di setiap kanvas layar
+
+        const DEVICE_PRESETS = {
+            mobile: {
+                key: 'mobile',
+                label: '📱 Mobile Smartphone',
+                sub: '360 × 640 px (Portrait / Tegak)',
+                w: 360,
+                h: 640
+            },
+            tablet: {
+                key: 'tablet',
+                label: '🖥️ Tablet Kasir / POS',
+                sub: '768 × 520 px (Landscape Meja Kasir)',
+                w: 768,
+                h: 520
+            },
+            desktop: {
+                key: 'desktop',
+                label: '💻 Web Desktop / Laptop',
+                sub: '920 × 560 px (Landscape Widescreen)',
+                w: 920,
+                h: 560
+            }
+        };
+
+        // 5 Warna Standar Lo-Fi Grayscale (Mencegah Jebakan High-Fidelity Warna-Warni)
+        const GRAYSCALE_SWATCHES = [
+            { label: 'Putih', hex: '#ffffff', textDefault: '#0f172a' },
+            { label: 'Abu Terang', hex: '#f8fafc', textDefault: '#0f172a' },
+            { label: 'Abu Muda', hex: '#e2e8f0', textDefault: '#0f172a' },
+            { label: 'Abu Tua', hex: '#475569', textDefault: '#ffffff' },
+            { label: 'Hitam Pekat', hex: '#0f172a', textDefault: '#ffffff' }
+        ];
+
+        // Komponen Primitif Polos (Bentuk & Teks Terpisah!)
+        const DEFAULTS = {
+            box:      { w: 280, h: 96,  text: '',          bg: '#f8fafc', borderStyle: 'solid', radius: 8,  color: '#0f172a', fontSize: 12, weight: '400', align: 'left',   targetScreen: '' },
+            divider:  { w: 280, h: 2,   text: '',          bg: '#94a3b8', borderStyle: 'none',  radius: 0,  color: '#0f172a', fontSize: 12, weight: '400', align: 'left',   targetScreen: '' },
+            image:    { w: 96,  h: 96,  text: '',          bg: '#e2e8f0', borderStyle: 'solid', radius: 6,  color: '#475569', fontSize: 10, weight: '700', align: 'center', targetScreen: '' },
+            heading:  { w: 220, h: 32,  text: 'Judul...',  bg: 'transparent', borderStyle: 'none', radius: 0, color: '#0f172a', fontSize: 18, weight: '800', align: 'left', targetScreen: '' },
+            text:     { w: 200, h: 24,  text: 'Teks...',   bg: 'transparent', borderStyle: 'none', radius: 0, color: '#334155', fontSize: 12, weight: '500', align: 'left', targetScreen: '' },
+            badge:    { w: 88,  h: 26,  text: 'Label',     bg: '#e2e8f0', borderStyle: 'solid', radius: 99, color: '#0f172a', fontSize: 11, weight: '700', align: 'center', targetScreen: '' },
+            icon:     { w: 36,  h: 36,  text: '★',         bg: '#f1f5f9', borderStyle: 'solid', radius: 8,  color: '#0f172a', fontSize: 14, weight: '700', align: 'center', targetScreen: '' },
+            button:   { w: 160, h: 44,  text: 'Tombol',    bg: '#0f172a', borderStyle: 'solid', radius: 8,  color: '#ffffff', fontSize: 13, weight: '700', align: 'center', targetScreen: '' },
+            input:    { w: 240, h: 40,  text: 'Ketik...',  bg: '#ffffff', borderStyle: 'solid', radius: 6,  color: '#64748b', fontSize: 12, weight: '400', align: 'left',   targetScreen: '' },
+            textarea: { w: 240, h: 72,  text: 'Catatan...',bg: '#ffffff', borderStyle: 'solid', radius: 6,  color: '#64748b', fontSize: 12, weight: '400', align: 'left',   targetScreen: '' },
+            dropdown: { w: 200, h: 40,  text: 'Pilih...',  bg: '#ffffff', borderStyle: 'solid', radius: 6,  color: '#0f172a', fontSize: 12, weight: '500', align: 'left',   targetScreen: '' },
+            stepper:  { w: 120, h: 36,  text: '1',         bg: '#ffffff', borderStyle: 'solid', radius: 6,  color: '#0f172a', fontSize: 12, weight: '700', align: 'center', targetScreen: '' },
+            checkbox: { w: 150, h: 24,  text: 'Opsi',      bg: 'transparent', borderStyle: 'none', radius: 0, color: '#0f172a', fontSize: 12, weight: '500', align: 'left', targetScreen: '' },
+            radio:    { w: 150, h: 24,  text: 'Pilihan',   bg: 'transparent', borderStyle: 'none', radius: 0, color: '#0f172a', fontSize: 12, weight: '500', align: 'left', targetScreen: '' },
+            toggle:   { w: 150, h: 26,  text: 'Status',    bg: 'transparent', borderStyle: 'none', radius: 0, color: '#0f172a', fontSize: 12, weight: '600', align: 'left', targetScreen: '' }
+        };
+
+        const PALETTE = [
+            { group: 'layout',  type: 'box',      label: 'Box / Container', icon: 'fa-vector-square' },
+            { group: 'layout',  type: 'divider',  label: 'Garis Pemisah',   icon: 'fa-minus' },
+            { group: 'content', type: 'heading',  label: 'Teks Besar (H)',  icon: 'fa-heading' },
+            { group: 'content', type: 'text',     label: 'Teks Kecil',      icon: 'fa-font' },
+            { group: 'content', type: 'image',    label: 'Gambar [X]',      icon: 'fa-image' },
+            { group: 'content', type: 'badge',    label: 'Kapsul / Badge',  icon: 'fa-tag' },
+            { group: 'content', type: 'icon',     label: 'Kotak Ikon',      icon: 'fa-icons' },
+            { group: 'form',    type: 'button',   label: 'Button (Tombol)', icon: 'fa-hand-pointer' },
+            { group: 'form',    type: 'input',    label: 'Kotak Input',     icon: 'fa-i-cursor' },
+            { group: 'form',    type: 'dropdown', label: 'Dropdown',        icon: 'fa-caret-down' },
+            { group: 'form',    type: 'stepper',  label: 'Stepper [- 1 +]', icon: 'fa-plus-minus' },
+            { group: 'form',    type: 'toggle',   label: 'Saklar Toggle',   icon: 'fa-toggle-on' },
+            { group: 'form',    type: 'checkbox', label: 'Checkbox',        icon: 'fa-square-check' },
+            { group: 'form',    type: 'radio',    label: 'Radio',           icon: 'fa-circle-dot' },
+            { group: 'form',    type: 'textarea', label: 'Textarea',        icon: 'fa-align-left' }
+        ];
+
+        function createDefaultCanvases() {
+            return [
+                { code: 'SCR-01', name: 'Beranda / Katalog Utama', role: 'Layar Pelanggan (Level 0)', lkm05Plan: '', deviceType: '', elements: [], nextId: 1, undoStack: [], rationale: '', sketchImg: '' },
+                { code: 'SCR-02', name: 'Pilih Varian / Form Ringkas', role: 'Layar Pelanggan (Level 1)', lkm05Plan: '', deviceType: '', elements: [], nextId: 1, undoStack: [], rationale: '', sketchImg: '' },
+                { code: 'SCR-03', name: 'Konfirmasi & Bukti Tiket Nota', role: 'Layar Pelanggan (Level 2)', lkm05Plan: '', deviceType: '', elements: [], nextId: 1, undoStack: [], rationale: '', sketchImg: '' },
+                { code: 'SCR-05', name: 'Panel Kasir / Pengelola UMKM', role: 'Layar Backstage UMKM (Sisi Toko)', lkm05Plan: '', deviceType: '', elements: [], nextId: 1, undoStack: [], rationale: '', sketchImg: '' },
+                { code: 'SCR-ERR', name: 'Tampilan Saat Kendala (Stok Habis / Error)', role: 'Visualisasi Cabang Decision "Jika Tidak"', lkm05Plan: '', deviceType: '', elements: [], nextId: 1, undoStack: [], rationale: '', sketchImg: '' }
+            ];
+        }
+
+        let formState = {
+            nama: '',
+            nim: '',
+            kelas: '',
+            tgl: new Date().toISOString().split('T')[0],
+            umkm: '',
+            bidang: '',
+            productName: '',
+            navPattern: 'Bottom Navigation Bar (3 - 4 Menu Utama)',
+            canvases: createDefaultCanvases(),
+            summaryNote: ''
+        };
+
+        // State Studio Interaktif
+        let activeScreenIdx = 0;
+        let selectedElementId = null;
+        let gridSnap = true;
+        let showGuideLines = false;
+        let playModeActive = false;
+        let canvasZoom = 1; // 1 | 0.75 | 0.55
+
+        // =========================================================================
+        // HELPER STUDIO MULTI-CANVAS
+        // =========================================================================
+        function getCurrentScreen() {
+            if (!formState.canvases[activeScreenIdx]) activeScreenIdx = 0;
+            return formState.canvases[activeScreenIdx];
+        }
+
+        function getDeviceDims(deviceType) {
+            return DEVICE_PRESETS[deviceType] || DEVICE_PRESETS.mobile;
+        }
+
+        function snapVal(v) {
+            return gridSnap ? Math.round(v / 8) * 8 : Math.round(v);
+        }
+
+        function clampVal(v, min, max) {
+            return Math.max(min, Math.min(max, v));
+        }
+
+        function hasLoremIpsum(text) {
+            return /\b(lorem|ipsum|dolor|sit\s+amet)\b/i.test(String(text || ''));
+        }
+
+        function screenHasLoremIpsum(scr) {
+            if (!scr || !Array.isArray(scr.elements)) return false;
+            return scr.elements.some(function (el) { return hasLoremIpsum(el.text); });
+        }
+
+        function isScreenCanvasComplete(scr) {
+            if (!scr || !scr.deviceType) return false;
+            if (!Array.isArray(scr.elements) || scr.elements.length < MIN_ELEMENTS_PER_CANVAS) return false;
+            if (screenHasLoremIpsum(scr)) return false;
+            if (!(scr.rationale || '').trim()) return false;
+            return true;
+        }
+
+        // === AKHIR BAGIAN 1 DARI 2 (TEMPELKAN BAGIAN 2 TEPAT DI BAWAH BARIS INI) ===
+        // === AWAL BAGIAN 2 DARI 2 ===
+
+        // =========================================================================
+        // TARIK OTOMATIS DAFTAR LAYAR & CABANG DECISION DARI LKM 05
+        // =========================================================================
+        function importFromLkm05Object(lkm05Form, showSuccessNotif) {
+            if (!lkm05Form) return false;
+            const snapForUndo = showSuccessNotif ? JSON.stringify({ form: formState, slide: currentSlideIndex }) : null;
+
+            if (lkm05Form.nama) formState.nama = lkm05Form.nama;
+            if (lkm05Form.nim) formState.nim = lkm05Form.nim;
+            if (lkm05Form.kelas) formState.kelas = lkm05Form.kelas;
+            if (lkm05Form.umkm) formState.umkm = lkm05Form.umkm;
+            if (lkm05Form.bidang) formState.bidang = lkm05Form.bidang;
+            if (lkm05Form.productName) formState.productName = lkm05Form.productName;
+            if (lkm05Form.navPattern) formState.navPattern = lkm05Form.navPattern;
+
+            if (Array.isArray(lkm05Form.screens) && lkm05Form.screens.length > 0) {
+                const prioCodes = (lkm05Form.audit && Array.isArray(lkm05Form.audit.priorityScreens) && lkm05Form.audit.priorityScreens.length >= 4)
+                    ? lkm05Form.audit.priorityScreens
+                    : lkm05Form.screens.map(function (s) { return s.code; });
+
+                const selectedScreens = lkm05Form.screens.filter(function (s) {
+                    return prioCodes.indexOf(s.code) !== -1;
+                });
+                const sourceList = selectedScreens.length >= 4 ? selectedScreens : lkm05Form.screens;
+
+                const newCanvases = sourceList.map(function (s, idx) {
+                    const existing = formState.canvases.find(function (c) { return c.code === s.code; });
+                    return {
+                        code: s.code || ('SCR-0' + (idx + 1)),
+                        name: s.name || ('Layar #' + (idx + 1)),
+                        role: s.level || 'Layar Utama',
+                        lkm05Plan: (s.mvpCode ? '[' + s.mvpCode + '] ' : '') + (s.contentCta || ''),
+                        deviceType: existing ? existing.deviceType : '',
+                        elements: existing && Array.isArray(existing.elements) ? existing.elements : [],
+                        nextId: existing ? (existing.nextId || 1) : 1,
+                        undoStack: [],
+                        rationale: existing ? (existing.rationale || '') : '',
+                        sketchImg: existing ? (existing.sketchImg || '') : ''
+                    };
+                });
+
+                // Cari cabang Decision "Jika Tidak (Edge Case)" dari User Flow LKM 05
+                let errPlanText = 'Visualisasikan tampilan layar saat stok habis atau input belum lengkap.';
+                if (Array.isArray(lkm05Form.userFlow)) {
+                    const decStep = lkm05Form.userFlow.find(function (st) { return st.nodeType === 'decision' && (st.noBranch || '').trim() !== ''; });
+                    if (decStep) {
+                        errPlanText = 'Pada [' + decStep.screenCode + '] Saat Kondisi TIDAK Terpenuhi: ' + decStep.noBranch;
+                    }
+                }
+
+                const existingErr = formState.canvases.find(function (c) { return c.code === 'SCR-ERR'; });
+                newCanvases.push({
+                    code: 'SCR-ERR',
+                    name: 'State Kendala (Stok Habis / Error Input)',
+                    role: 'Visualisasi Cabang Decision "Jika Tidak"',
+                    lkm05Plan: errPlanText,
+                    deviceType: existingErr ? existingErr.deviceType : '',
+                    elements: existingErr && Array.isArray(existingErr.elements) ? existingErr.elements : [],
+                    nextId: existingErr ? (existingErr.nextId || 1) : 1,
+                    undoStack: [],
+                    rationale: existingErr ? (existingErr.rationale || '') : '',
+                    sketchImg: existingErr ? (existingErr.sketchImg || '') : ''
+                });
+
+                formState.canvases = newCanvases;
+                activeScreenIdx = 0;
+                selectedElementId = null;
+            }
+
+            triggerAutoSave();
+            if (showSuccessNotif) {
+                renderCurrentSlide();
+                showToast('Daftar Layar Sitemap, Rencana Komponen, & Skenario Kendala (Decision) dari LKM 05 berhasil ditarik ke Studio LKM 06!', 'success');
+                if (snapForUndo) showUndoBar(snapForUndo, 'Daftar layar diperbarui dari LKM 05.');
+            }
+            return true;
+        }
+
+        function pullDataFromLocalLkm05() {
+            try {
+                const raw5 = safeGetStorage('upertis_lkm05_dynamic_v1');
+                if (raw5) {
+                    const parsed5 = JSON.parse(raw5);
+                    if (parsed5 && parsed5.form) {
+                        importFromLkm05Object(parsed5.form, true);
+                        return;
+                    }
+                }
+                const rawMaster = safeGetStorage(MASTER_BUNDLE_KEY);
+                if (rawMaster) {
+                    const master = JSON.parse(rawMaster);
+                    if (master && master.lkm05 && master.lkm05.form) {
+                        importFromLkm05Object(master.lkm05.form, true);
+                        return;
+                    }
+                }
+                showToast('Data LKM 05 tidak ditemukan di browser ini. Klik tombol "Muat .JSON" di atas untuk memilih file .JSON LKM 05 Anda.', 'error');
+            } catch (e) {
+                showToast('Gagal membaca penyimpanan lokal browser.', 'error');
+            }
+        }
+
+        // =========================================================================
+        // SIMPAN & MUAT MASTER BUNDLE (.JSON) LKM 01 s/d LKM 06
+        // =========================================================================
+        let saveTimer = null;
+        let hasUnexportedChanges = false;
+        let storageWarned = false;
+
+        function setSaveBadge(ok) {
+            const badge = document.getElementById('saveBadge');
+            if (!badge) return;
+            if (ok) {
+                badge.className = 'hidden xl:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold';
+                badge.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Tersimpan';
+                badge.onclick = null;
+            } else {
+                badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-100 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300 text-[11px] font-bold cursor-pointer';
+                badge.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Unduh .JSON';
+                badge.onclick = exportJsonData;
+            }
+        }
+
+        function triggerAutoSave() {
+            hasUnexportedChanges = true;
+            clearTimeout(saveTimer);
+            const badge = document.getElementById('saveBadge');
+            if (badge) badge.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
+            saveTimer = setTimeout(function () {
+                const cleanCanvases = formState.canvases.map(function (c) {
+                    const copy = Object.assign({}, c);
+                    delete copy.undoStack;
+                    return copy;
+                });
+                const stateToSave = Object.assign({}, formState, { canvases: cleanCanvases });
+                const savedOk = safeSetStorage(STORAGE_KEY, JSON.stringify({ form: stateToSave }));
+                try {
+                    let master = {};
+                    const rawMaster = safeGetStorage(MASTER_BUNDLE_KEY);
+                    if (rawMaster) master = JSON.parse(rawMaster) || {};
+                    master.lkm06 = { form: stateToSave };
+                    safeSetStorage(MASTER_BUNDLE_KEY, JSON.stringify(master));
+                } catch (e) {}
+                setSaveBadge(savedOk);
+                renderDotsAndDrawer();
+            }, 350);
+        }
+
+        function loadSavedState() {
+            try {
+                const raw = safeGetStorage(STORAGE_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (parsed && parsed.form) {
+                        formState = Object.assign(formState, parsed.form);
+                        if (!Array.isArray(formState.canvases) || formState.canvases.length < MIN_SCREENS_COUNT) {
+                            formState.canvases = createDefaultCanvases();
+                        }
+                        formState.canvases.forEach(function (c) {
+                            if (!Array.isArray(c.elements)) c.elements = [];
+                            if (!Array.isArray(c.undoStack)) c.undoStack = [];
+                            if (!c.nextId) c.nextId = c.elements.length + 1;
+                        });
+                        return;
+                    }
+                }
+                const raw5 = safeGetStorage('upertis_lkm05_dynamic_v1');
+                if (raw5) {
+                    const p5 = JSON.parse(raw5);
+                    if (p5 && p5.form) {
+                        importFromLkm05Object(p5.form, false);
+                    }
+                }
+            } catch (e) {}
+        }
+
+        function exportJsonData() {
+            triggerAutoSave();
+            const cleanNim = (formState.nim || 'NIM').replace(/[^a-zA-Z0-9_-]/g, '');
+            const cleanNama = (formState.nama || 'Mahasiswa').trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '');
+            const filename = 'Data_Proyek_UIUX_LKM06_' + cleanNim + '_' + cleanNama + '.json';
+
+            let master = {};
+            try {
+                const rawMaster = safeGetStorage(MASTER_BUNDLE_KEY);
+                if (rawMaster) master = JSON.parse(rawMaster) || {};
+                const r1 = safeGetStorage('upertis_lkm01_neutral_v5');
+                if (r1) master.lkm01 = JSON.parse(r1);
+                const r2 = safeGetStorage('upertis_lkm02_neutral_v2');
+                if (r2) master.lkm02 = JSON.parse(r2);
+                const r3 = safeGetStorage('upertis_lkm03_dynamic_v2');
+                if (r3) master.lkm03 = JSON.parse(r3);
+                const r4 = safeGetStorage('upertis_lkm04_dynamic_v2');
+                if (r4) master.lkm04 = JSON.parse(r4);
+                const r5 = safeGetStorage('upertis_lkm05_dynamic_v1');
+                if (r5) master.lkm05 = JSON.parse(r5);
+            } catch (e) {}
+
+            const payload = {
+                app: 'UPERTIS_UIUX_WORKSPACE',
+                version: '3.0',
+                exportedAt: new Date().toISOString(),
+                lkm01: master.lkm01 || null,
+                lkm02: master.lkm02 || null,
+                lkm03: master.lkm03 || null,
+                lkm04: master.lkm04 || null,
+                lkm05: master.lkm05 || null,
+                lkm06: { form: formState }
+            };
+
+            const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            hasUnexportedChanges = false;
+            showToast('Master File Data Proyek (.json) LKM 01 s/d LKM 06 berhasil diunduh!', 'success');
+        }
+
+        function triggerImportJson() {
+            const inp = document.getElementById('jsonFileInput');
+            if (inp) { inp.value = ''; inp.click(); }
+        }
+
+        function handleJsonFileImport(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    let master = {};
+                    try {
+                        const rawMaster = safeGetStorage(MASTER_BUNDLE_KEY);
+                        if (rawMaster) master = JSON.parse(rawMaster) || {};
+                    } catch (err) {}
+
+                    if (parsed && parsed.lkm01) { master.lkm01 = parsed.lkm01; safeSetStorage('upertis_lkm01_neutral_v5', JSON.stringify(parsed.lkm01)); }
+                    if (parsed && parsed.lkm02) { master.lkm02 = parsed.lkm02; safeSetStorage('upertis_lkm02_neutral_v2', JSON.stringify(parsed.lkm02)); }
+                    if (parsed && parsed.lkm03) { master.lkm03 = parsed.lkm03; safeSetStorage('upertis_lkm03_dynamic_v2', JSON.stringify(parsed.lkm03)); }
+                    if (parsed && parsed.lkm04) { master.lkm04 = parsed.lkm04; safeSetStorage('upertis_lkm04_dynamic_v2', JSON.stringify(parsed.lkm04)); }
+                    if (parsed && parsed.lkm05) { master.lkm05 = parsed.lkm05; safeSetStorage('upertis_lkm05_dynamic_v1', JSON.stringify(parsed.lkm05)); }
+
+                    if (parsed && parsed.lkm06 && parsed.lkm06.form) {
+                        formState = Object.assign(formState, parsed.lkm06.form);
+                        formState.canvases.forEach(function (c) {
+                            if (!Array.isArray(c.elements)) c.elements = [];
+                            if (!Array.isArray(c.undoStack)) c.undoStack = [];
+                        });
+                        master.lkm06 = parsed.lkm06;
+                        safeSetStorage(MASTER_BUNDLE_KEY, JSON.stringify(master));
+                        safeSetStorage(STORAGE_KEY, JSON.stringify({ form: formState }));
+                        hasUnexportedChanges = false;
+                        renderCurrentSlide();
+                        showToast('Seluruh Kanvas Wireframe LKM 06 berhasil dimuat dari file .json!', 'success');
+                        return;
+                    }
+
+                    if (parsed && parsed.lkm05 && parsed.lkm05.form) {
+                        safeSetStorage(MASTER_BUNDLE_KEY, JSON.stringify(master));
+                        importFromLkm05Object(parsed.lkm05.form, true);
+                        return;
+                    }
+
+                    if (parsed && parsed.form && Array.isArray(parsed.form.screens)) {
+                        importFromLkm05Object(parsed.form, true);
+                        return;
+                    }
+
+                    showToast('Format file .json tidak dikenali untuk LKM 06.', 'error');
+                } catch (err) {
+                    showToast('Gagal membaca file .json. Pastikan file tidak rusak.', 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // =========================================================================
+        // MESIN UTAMA MULTI-CANVAS WIREFRAME STUDIO (SLIDE 3)
+        // =========================================================================
+        function selectScreenTab(idx) {
+            if (idx < 0 || idx >= formState.canvases.length) return;
+            activeScreenIdx = idx;
+            selectedElementId = null;
+            renderCurrentSlide();
+        }
+
+        function chooseScreenDevice(deviceKey) {
+            const scr = getCurrentScreen();
+            if (!scr || !DEVICE_PRESETS[deviceKey]) return;
+            scr.deviceType = deviceKey;
+            if (!Array.isArray(scr.undoStack)) scr.undoStack = [];
+            // Sesuaikan zoom default pada layar kecil jika memilih Desktop/Tablet
+            if (window.innerWidth < 640 && (deviceKey === 'desktop' || deviceKey === 'tablet')) {
+                canvasZoom = 0.55;
+            } else if (window.innerWidth < 1024 && deviceKey === 'desktop') {
+                canvasZoom = 0.75;
+            } else {
+                canvasZoom = 1;
+            }
+            pushCanvasUndo();
+            triggerAutoSave();
+            renderCurrentSlide();
+        }
+
+        function setCanvasZoom(zVal) {
+            canvasZoom = parseFloat(zVal) || 1;
+            renderCurrentSlide();
+        }
+
+        function togglePlayMode() {
+            playModeActive = !playModeActive;
+            selectedElementId = null;
+            renderCurrentSlide();
+            if (playModeActive) {
+                showToast('Mode Uji Klik (Play Wireflow) Aktif! Klik pada Tombol (Button) yang memiliki tautan layar untuk menguji perpindahan antar-layar.', 'success');
+            }
+        }
+
+        function copyElementsFromOtherScreen(srcIdxStr) {
+            const srcIdx = parseInt(srcIdxStr, 10);
+            if (isNaN(srcIdx) || !formState.canvases[srcIdx]) return;
+            const srcScr = formState.canvases[srcIdx];
+            const dstScr = getCurrentScreen();
+            if (!srcScr || !dstScr || srcScr.code === dstScr.code) return;
+
+            if (!dstScr.deviceType && srcScr.deviceType) {
+                dstScr.deviceType = srcScr.deviceType;
+            }
+            const cloned = (srcScr.elements || []).map(function (el, k) {
+                return Object.assign({}, el, { id: (dstScr.nextId || 1) + k });
+            });
+            dstScr.nextId = (dstScr.nextId || 1) + cloned.length + 1;
+            dstScr.elements = dstScr.elements.concat(cloned);
+            pushCanvasUndo();
+            triggerAutoSave();
+            renderCurrentSlide();
+            showToast('Komponen dari [' + srcScr.code + '] berhasil disalin ke [' + dstScr.code + ']!', 'success');
+        }
+
+        function pushCanvasUndo() {
+            const scr = getCurrentScreen();
+            if (!scr) return;
+            if (!Array.isArray(scr.undoStack)) scr.undoStack = [];
+            scr.undoStack.push(JSON.stringify(scr.elements.map(function (e) { return Object.assign({}, e); })));
+            if (scr.undoStack.length > 40) scr.undoStack.shift();
+        }
+
+        function undoCanvasAction() {
+            const scr = getCurrentScreen();
+            if (!scr || !Array.isArray(scr.undoStack) || scr.undoStack.length < 2) return;
+            scr.undoStack.pop();
+            const prev = scr.undoStack[scr.undoStack.length - 1];
+            scr.elements = JSON.parse(prev);
+            selectedElementId = null;
+            triggerAutoSave();
+            refreshStudioDomOnly();
+        }
+
+        function addCanvasElement(type, x, y, overrides) {
+            const scr = getCurrentScreen();
+            if (!scr || !scr.deviceType) {
+                showToast('Pilih ukuran perangkat (Mobile / Tablet / Desktop) terlebih dahulu!', 'error');
+                return null;
+            }
+            const dims = getDeviceDims(scr.deviceType);
+            const d = DEFAULTS[type] || DEFAULTS.box;
+            const w = (overrides && overrides.w) ? overrides.w : d.w;
+            const h = (overrides && overrides.h) ? overrides.h : d.h;
+
+            const safeX = clampVal(snapVal(x !== undefined ? x : Math.round((dims.w - w) / 2)), 0, Math.max(0, dims.w - w));
+            const safeY = clampVal(snapVal(y !== undefined ? y : 48), 0, Math.max(0, dims.h - h));
+
+            const el = Object.assign({
+                id: scr.nextId++,
+                type: type,
+                x: safeX,
+                y: safeY,
+                w: w,
+                h: h,
+                text: d.text,
+                fontSize: d.fontSize,
+                weight: d.weight,
+                color: d.color,
+                bg: d.bg,
+                borderStyle: d.borderStyle,
+                radius: d.radius,
+                align: d.align || 'left',
+                targetScreen: d.targetScreen || ''
+            }, overrides || {});
+
+            // Smart Auto-Layering: Box/Container ditaruh di lapisan belakang agar tidak menutupi teks/tombol
+            if (type === 'box') {
+                scr.elements.unshift(el);
+            } else {
+                scr.elements.push(el);
+            }
+
+            selectedElementId = el.id;
+            pushCanvasUndo();
+            triggerAutoSave();
+            refreshStudioDomOnly();
+            return el;
+        }
+
+        function duplicateSelectedElement() {
+            const scr = getCurrentScreen();
+            if (!scr || !selectedElementId) return;
+            const orig = scr.elements.find(function (x) { return x.id === selectedElementId; });
+            if (!orig) return;
+            const dims = getDeviceDims(scr.deviceType);
+            const copy = Object.assign({}, orig, {
+                id: scr.nextId++,
+                x: clampVal(orig.x + 16, 0, Math.max(0, dims.w - orig.w)),
+                y: clampVal(orig.y + 16, 0, Math.max(0, dims.h - orig.h))
+            });
+            scr.elements.push(copy);
+            selectedElementId = copy.id;
+            pushCanvasUndo();
+            triggerAutoSave();
+            refreshStudioDomOnly();
+        }
+
+        function deleteCanvasElement(id) {
+            const scr = getCurrentScreen();
+            if (!scr) return;
+            scr.elements = scr.elements.filter(function (e) { return e.id !== id; });
+            if (selectedElementId === id) selectedElementId = null;
+            pushCanvasUndo();
+            triggerAutoSave();
+            refreshStudioDomOnly();
+        }
+
+        function moveElementLayer(id, dir) {
+            const scr = getCurrentScreen();
+            if (!scr) return;
+            const idx = scr.elements.findIndex(function (e) { return e.id === id; });
+            if (idx < 0) return;
+            const item = scr.elements.splice(idx, 1)[0];
+            if (dir > 0) scr.elements.push(item);
+            else scr.elements.unshift(item);
+            pushCanvasUndo();
+            triggerAutoSave();
+            refreshStudioDomOnly();
+        }
+
+        function clearCurrentCanvas() {
+            const scr = getCurrentScreen();
+            if (!scr) return;
+            scr.elements = [];
+            selectedElementId = null;
+            pushCanvasUndo();
+            triggerAutoSave();
+            refreshStudioDomOnly();
+            showToast('Kanvas [' + scr.code + '] telah dikosongkan.', 'success');
+        }
+
+        function getBorderCss(el) {
+            if (el.borderStyle === 'none') return 'none';
+            const col = (el.bg === '#0f172a' || el.bg === '#475569') ? '#334155' : '#94a3b8';
+            if (el.borderStyle === 'dashed') return '1.5px dashed ' + col;
+            return (el.type === 'box' || el.type === 'image' ? '1.5px solid ' : '1px solid ') + col;
+        }
+
+        // Fungsi Render Elemen (Dipakai di Kanvas Interaktif & di Cetakan Vektor PDF A4)
+        function renderSingleElementHtml(el, isInteractive) {
+            const borderCss = getBorderCss(el);
+            const justifyMap = { left: 'flex-start', center: 'center', right: 'flex-end' };
+            const justifyVal = justifyMap[el.align || 'left'] || 'flex-start';
+
+            const baseStyle =
+                'left:' + el.x + 'px; top:' + el.y + 'px; width:' + el.w + 'px; height:' + el.h + 'px;' +
+                'font-size:' + el.fontSize + 'px; font-weight:' + el.weight + '; color:' + el.color + ';' +
+                'background:' + el.bg + '; border:' + borderCss + '; border-radius:' + el.radius + 'px;' +
+                'text-align:' + (el.align || 'left') + ';';
+
+            const isSel = isInteractive && !playModeActive && selectedElementId === el.id;
+            const isPlayBtn = isInteractive && playModeActive && el.type === 'button' && el.targetScreen;
+            const cls = 'wf-el' + (isSel ? ' selected' : '') + (isPlayBtn ? ' play-clickable' : '');
+
+            let inner = '';
+            if (el.type === 'box') {
+                inner = el.text
+                    ? `<div style="position:absolute;inset:0;padding:6px 8px;display:flex;align-items:flex-start;justify-content:${justifyVal};">${escapeHtml(el.text)}</div>`
+                    : '';
+            } else if (el.type === 'image') {
+                inner = `
+                    <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;" viewBox="0 0 100 100" preserveAspectRatio="none">
+                        <line x1="0" y1="0" x2="100" y2="100" stroke="#94a3b8" stroke-width="1.5" vector-effect="non-scaling-stroke"/>
+                        <line x1="100" y1="0" x2="0" y2="100" stroke="#94a3b8" stroke-width="1.5" vector-effect="non-scaling-stroke"/>
+                    </svg>
+                    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+                        <span style="font-size:10px;font-weight:700;color:#475569;background:rgba(255,255,255,0.88);padding:1px 5px;border-radius:3px;">${escapeHtml(el.text || '[X]')}</span>
+                    </div>`;
+            } else if (el.type === 'heading' || el.type === 'text' || el.type === 'badge' || el.type === 'icon') {
+                inner = `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:${justifyVal};padding:0 4px;line-height:1.25;">${escapeHtml(el.text)}</div>`;
+            } else if (el.type === 'button') {
+                const targetBadge = el.targetScreen
+                    ? `<span style="position:absolute;top:2px;right:4px;font-size:8px;font-family:monospace;background:rgba(99,102,241,0.9);color:#fff;padding:0 4px;border-radius:3px;line-height:1.3;">&rarr;${escapeHtml(el.targetScreen)}</span>`
+                    : '';
+                inner = `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:${justifyVal};padding:0 10px;">${escapeHtml(el.text)}</div>${targetBadge}`;
+            } else if (el.type === 'input') {
+                inner = `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:${justifyVal};padding:0 10px;">${escapeHtml(el.text)}</div>`;
+            } else if (el.type === 'textarea') {
+                inner = `<div style="position:absolute;inset:0;padding:6px 10px;line-height:1.35;">${escapeHtml(el.text)}</div>`;
+            } else if (el.type === 'dropdown') {
+                inner = `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;padding:0 10px;">
+                    <span>${escapeHtml(el.text)}</span>
+                    <span style="font-size:9px;color:#64748b;">&#9662;</span>
+                </div>`;
+            } else if (el.type === 'stepper') {
+                inner = `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;padding:0 8px;font-family:monospace;font-weight:800;">
+                    <span>[ - ]</span><span>${escapeHtml(el.text || '1')}</span><span>[ + ]</span>
+                </div>`;
+            } else if (el.type === 'checkbox') {
+                inner = `<div style="position:absolute;inset:0;display:flex;align-items:center;gap:7px;padding:0 2px;">
+                    <span class="wf-check-box"></span><span>${escapeHtml(el.text)}</span>
+                </div>`;
+            } else if (el.type === 'radio') {
+                inner = `<div style="position:absolute;inset:0;display:flex;align-items:center;gap:7px;padding:0 2px;">
+                    <span class="wf-radio-dot"></span><span>${escapeHtml(el.text)}</span>
+                </div>`;
+            } else if (el.type === 'toggle') {
+                inner = `<div style="position:absolute;inset:0;display:flex;align-items:center;gap:7px;padding:0 2px;">
+                    <span class="wf-toggle-track"><span class="wf-toggle-thumb"></span></span><span>${escapeHtml(el.text)}</span>
+                </div>`;
+            }
+
+            const resizeHandle = isSel
+                ? `<div class="wf-resize" data-resize="${el.id}"></div>`
+                : '';
+
+            return `<div class="${cls}" data-id="${el.id}" style="${baseStyle}">${inner}${resizeHandle}</div>`;
+        }
+
+        function renderGuideLinesOverlay(scr) {
+            if (!showGuideLines || !scr || !scr.deviceType) return '';
+            if (scr.deviceType === 'mobile') {
+                return `
+                    <div style="position:absolute;top:56px;left:0;right:0;border-top:1.5px dashed rgba(99,102,241,0.45);pointer-events:none;z-index:900;padding-left:6px;">
+                        <span style="font-size:9px;font-weight:800;color:#6366f1;background:rgba(255,255,255,0.85);padding:0 4px;">Batas Header Atas (56px)</span>
+                    </div>
+                    <div style="position:absolute;bottom:76px;left:0;right:0;border-top:1.5px dashed rgba(16,185,129,0.55);pointer-events:none;z-index:900;padding-left:6px;">
+                        <span style="font-size:9px;font-weight:800;color:#059669;background:rgba(255,255,255,0.85);padding:0 4px;">Area Natural Thumb Zone (76px Bawah)</span>
+                    </div>
+                `;
+            }
+            return `
+                <div style="position:absolute;top:52px;left:0;right:0;border-top:1.5px dashed rgba(99,102,241,0.45);pointer-events:none;z-index:900;padding-left:8px;">
+                    <span style="font-size:9px;font-weight:800;color:#6366f1;background:rgba(255,255,255,0.85);padding:0 4px;">Batas Top Bar (52px)</span>
+                </div>
+                <div style="position:absolute;top:52px;bottom:0;left:64%;border-left:1.5px dashed rgba(16,185,129,0.55);pointer-events:none;z-index:900;padding-left:6px;padding-top:6px;">
+                    <span style="font-size:9px;font-weight:800;color:#059669;background:rgba(255,255,255,0.85);padding:0 4px;">Panel Kanan (36%)</span>
+                </div>
+            `;
+        }
+
+        function refreshStudioDomOnly() {
+            const scr = getCurrentScreen();
+            const canvasEl = document.getElementById('wfCanvasSurface');
+            if (canvasEl && scr) {
+                const elsHtml = (scr.elements || []).map(function (el) {
+                    return renderSingleElementHtml(el, true);
+                }).join('');
+                canvasEl.innerHTML = renderGuideLinesOverlay(scr) + elsHtml;
+                bindCanvasSurfaceEvents();
+            }
+            const propsContainer = document.getElementById('wfPropsContainer');
+            if (propsContainer) {
+                propsContainer.innerHTML = buildPropertiesPanelHtml();
+                bindPropertiesInputs();
+            }
+            const layerContainer = document.getElementById('wfLayerListContainer');
+            if (layerContainer) {
+                layerContainer.innerHTML = buildMiniLayerListHtml();
+            }
+        }
+
+        // =========================================================================
+        // EVENT DRAG, RESIZE, INLINE EDIT, & PLAY WIREFLOW
+        // =========================================================================
+        let dragState = null;
+
+        function bindCanvasSurfaceEvents() {
+            const canvasEl = document.getElementById('wfCanvasSurface');
+            if (!canvasEl) return;
+
+            canvasEl.querySelectorAll('.wf-el').forEach(function (domEl) {
+                domEl.addEventListener('pointerdown', function (e) {
+                    if (e.target.classList.contains('wf-resize')) return;
+                    const id = +domEl.dataset.id;
+                    e.stopPropagation();
+
+                    const scr = getCurrentScreen();
+                    const item = scr ? scr.elements.find(function (x) { return x.id === id; }) : null;
+
+                    // Jika Mode Uji Klik (Play Mode) aktif dan tombol memiliki Target Screen
+                    if (playModeActive) {
+                        if (item && item.type === 'button' && item.targetScreen) {
+                            const targetIdx = formState.canvases.findIndex(function (c) { return c.code === item.targetScreen; });
+                            if (targetIdx !== -1) {
+                                showToast('Uji Klik Wireflow: Tombol "' + (item.text || 'Button') + '" berpindah ke [' + item.targetScreen + ']!', 'success');
+                                selectScreenTab(targetIdx);
+                                return;
+                            }
+                        }
+                        return;
+                    }
+
+                    selectedElementId = id;
+                    refreshStudioDomOnly();
+                    startElementDrag(e, id);
+                });
+
+                domEl.addEventListener('dblclick', function (e) {
+                    if (playModeActive) return;
+                    e.stopPropagation();
+                    startInlineElementEdit(+domEl.dataset.id);
+                });
+
+                const handle = domEl.querySelector('.wf-resize');
+                if (handle) {
+                    handle.addEventListener('pointerdown', function (e) {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        startElementResize(e, +handle.dataset.resize);
+                    });
+                }
+            });
+
+            canvasEl.onpointerdown = function (e) {
+                if (e.target === canvasEl) {
+                    selectedElementId = null;
+                    refreshStudioDomOnly();
+                }
+            };
+
+            canvasEl.ondragover = function (e) {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'copy';
+            };
+
+            canvasEl.ondrop = function (e) {
+                e.preventDefault();
+                if (playModeActive) return;
+                const type = e.dataTransfer.getData('text/plain');
+                if (!type || !DEFAULTS[type]) return;
+                const rect = canvasEl.getBoundingClientRect();
+                const d = DEFAULTS[type];
+                const rawX = (e.clientX - rect.left) / canvasZoom - (d.w / 2);
+                const rawY = (e.clientY - rect.top) / canvasZoom - (d.h / 2);
+                addCanvasElement(type, rawX, rawY);
+            };
+        }
+
+        function startElementDrag(e, id) {
+            const scr = getCurrentScreen();
+            if (!scr) return;
+            const item = scr.elements.find(function (x) { return x.id === id; });
+            const domEl = document.querySelector('#wfCanvasSurface [data-id="' + id + '"]');
+            if (!item || !domEl) return;
+
+            dragState = {
+                mode: 'move',
+                id: id,
+                startX: e.clientX,
+                startY: e.clientY,
+                origX: item.x,
+                origY: item.y,
+                domEl: domEl,
+                item: item,
+                dims: getDeviceDims(scr.deviceType)
+            };
+            document.addEventListener('pointermove', onPointerDragMove);
+            document.addEventListener('pointerup', onPointerDragEnd);
+        }
+
+        function startElementResize(e, id) {
+            const scr = getCurrentScreen();
+            if (!scr) return;
+            const item = scr.elements.find(function (x) { return x.id === id; });
+            const domEl = document.querySelector('#wfCanvasSurface [data-id="' + id + '"]');
+            if (!item || !domEl) return;
+
+            dragState = {
+                mode: 'resize',
+                id: id,
+                startX: e.clientX,
+                startY: e.clientY,
+                origW: item.w,
+                origH: item.h,
+                domEl: domEl,
+                item: item,
+                dims: getDeviceDims(scr.deviceType)
+            };
+            document.addEventListener('pointermove', onPointerDragMove);
+            document.addEventListener('pointerup', onPointerDragEnd);
+        }
+
+        function onPointerDragMove(e) {
+            if (!dragState) return;
+            const dx = (e.clientX - dragState.startX) / canvasZoom;
+            const dy = (e.clientY - dragState.startY) / canvasZoom;
+            const item = dragState.item;
+            const domEl = dragState.domEl;
+            const dims = dragState.dims;
+
+            if (dragState.mode === 'move') {
+                let nx = snapVal(dragState.origX + dx);
+                let ny = snapVal(dragState.origY + dy);
+                nx = clampVal(nx, 0, Math.max(0, dims.w - item.w));
+                ny = clampVal(ny, 0, Math.max(0, dims.h - item.h));
+                domEl.style.left = nx + 'px';
+                domEl.style.top = ny + 'px';
+                item._tmpX = nx;
+                item._tmpY = ny;
+            } else {
+                let nw = Math.max(20, snapVal(dragState.origW + dx));
+                let nh = Math.max(item.type === 'divider' ? 2 : 16, snapVal(dragState.origH + dy));
+                nw = Math.min(nw, dims.w - item.x);
+                nh = Math.min(nh, dims.h - item.y);
+                domEl.style.width = nw + 'px';
+                domEl.style.height = nh + 'px';
+                item._tmpW = nw;
+                item._tmpH = nh;
+            }
+        }
+
+        function onPointerDragEnd() {
+            if (!dragState) return;
+            const item = dragState.item;
+            let changed = false;
+            if (dragState.mode === 'move' && item._tmpX !== undefined) {
+                item.x = item._tmpX;
+                item.y = item._tmpY;
+                delete item._tmpX;
+                delete item._tmpY;
+                changed = true;
+            } else if (dragState.mode === 'resize' && item._tmpW !== undefined) {
+                item.w = item._tmpW;
+                item.h = item._tmpH;
+                delete item._tmpW;
+                delete item._tmpH;
+                changed = true;
+            }
+            dragState = null;
+            document.removeEventListener('pointermove', onPointerDragMove);
+            document.removeEventListener('pointerup', onPointerDragEnd);
+            if (changed) {
+                pushCanvasUndo();
+                triggerAutoSave();
+            }
+            refreshStudioDomOnly();
+        }
+
+        function startInlineElementEdit(id) {
+            const scr = getCurrentScreen();
+            if (!scr) return;
+            const item = scr.elements.find(function (x) { return x.id === id; });
+            if (!item || item.type === 'divider') return;
+
+            const domEl = document.querySelector('#wfCanvasSurface [data-id="' + id + '"]');
+            if (!domEl) return;
+
+            const currentText = item.text || '';
+            domEl.innerHTML = `
+                <div style="position:absolute;inset:0;display:flex;align-items:center;padding:0 6px;">
+                    <span contenteditable="true" id="inline-edit-${id}" style="outline:none;width:100%;font-size:${item.fontSize}px;font-weight:${item.weight};color:${item.color};text-align:${item.align || 'left'};">${escapeHtml(currentText)}</span>
+                </div>
+            `;
+            const span = document.getElementById('inline-edit-' + id);
+            if (!span) return;
+            span.focus();
+            const range = document.createRange();
+            range.selectNodeContents(span);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+
+            let committed = false;
+            function commit() {
+                if (committed) return;
+                committed = true;
+                const newTxt = span.innerText.trim();
+                if (hasLoremIpsum(newTxt)) {
+                    showToast('DILARANG LOREM IPSUM: Gunakan teks berbahasa Indonesia yang nyata sesuai konteks UMKM Anda!', 'error');
+                }
+                item.text = newTxt;
+                pushCanvasUndo();
+                triggerAutoSave();
+                refreshStudioDomOnly();
+            }
+
+            span.addEventListener('blur', commit, { once: true });
+            span.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); span.blur(); }
+                if (e.key === 'Escape') { span.innerText = currentText; span.blur(); }
+            });
+        }
+
+        // =========================================================================
+        // PANEL PROPERTIES KANAN & MINI LAYER LIST
+        // =========================================================================
+        function buildPropertiesPanelHtml() {
+            const scr = getCurrentScreen();
+            if (!scr || !selectedElementId) {
+                return `<p class="text-xs text-slate-500 dark:text-slate-400 italic">Klik salah satu elemen di kanvas untuk mengatur teks, warna skala abu-abu, ukuran, atau tautan layar Wireflow.</p>`;
+            }
+            const el = scr.elements.find(function (x) { return x.id === selectedElementId; });
+            if (!el) return `<p class="text-xs text-slate-500 italic">Elemen tidak ditemukan.</p>`;
+
+            const supportsText = el.type !== 'divider';
+            const isBtn = el.type === 'button';
+
+            const bgSwatchesHtml = GRAYSCALE_SWATCHES.map(function (sw) {
+                const isAct = el.bg.toLowerCase() === sw.hex.toLowerCase();
+                return `<button type="button" onclick="setElementGrayscaleBg('${sw.hex}', '${sw.textDefault}')" title="${sw.label}" style="background:${sw.hex};" class="h-7 rounded-lg border-2 ${isAct ? 'border-indigo-600 ring-2 ring-indigo-400/40' : 'border-slate-300'} transition"></button>`;
+            }).join('') + `<button type="button" onclick="setElementGrayscaleBg('transparent', '#0f172a')" title="Transparan" class="h-7 rounded-lg border-2 ${el.bg === 'transparent' ? 'border-indigo-600' : 'border-slate-300'} text-[9px] font-bold bg-white text-slate-600">Kosong</button>`;
+
+            const targetOptionsHtml = ['<option value="">-- Tanpa Tautan Layar --</option>'].concat(
+                formState.canvases.filter(function (c) { return c.code !== scr.code; }).map(function (c) {
+                    return `<option value="${escapeHtml(c.code)}" ${el.targetScreen === c.code ? 'selected' : ''}>Menuju [${escapeHtml(c.code)}] ${escapeHtml(c.name)}</option>`;
+                })
+            ).join('');
+
+            const loremWarn = hasLoremIpsum(el.text)
+                ? `<div class="text-[11px] font-bold text-rose-600 mt-1"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Hindari teks "Lorem Ipsum"!</div>`
+                : '';
+
+            return `
+                <div class="space-y-3 text-xs">
+                    <div class="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
+                        <div>
+                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">${escapeHtml(el.type)}</span>
+                            <span class="text-[10px] text-slate-400 ml-1">#${el.id}</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <button type="button" onclick="duplicateSelectedElement()" class="px-2 py-1 rounded bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-bold text-[10px]" title="Duplikat Elemen (Ctrl+D)">
+                                <i class="fa-regular fa-copy mr-0.5"></i>Copy
+                            </button>
+                            <button type="button" onclick="moveElementLayer(${el.id}, 1)" class="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px]" title="Naik ke Depan">
+                                <i class="fa-solid fa-arrow-up"></i>
+                            </button>
+                            <button type="button" onclick="moveElementLayer(${el.id}, -1)" class="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px]" title="Turun ke Belakang">
+                                <i class="fa-solid fa-arrow-down"></i>
+                            </button>
+                            <button type="button" onclick="deleteCanvasElement(${el.id})" class="w-6 h-6 rounded bg-rose-100 hover:bg-rose-200 text-rose-600 text-[10px]" title="Hapus (Delete)">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    ${supportsText ? `
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Teks Microcopy (Bebas Lorem Ipsum)</label>
+                            <input type="text" id="prop-text" value="${escapeHtml(el.text)}" placeholder="Ketik teks nyata..." class="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            ${loremWarn}
+                        </div>
+                    ` : ''}
+
+                    ${isBtn ? `
+                        <div class="p-2.5 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 space-y-1">
+                            <label class="text-[10px] font-extrabold text-indigo-700 dark:text-indigo-300 uppercase block"><i class="fa-solid fa-link mr-1"></i>Target Wireflow (Klik Menuju Layar)</label>
+                            <select id="prop-target" class="w-full px-2 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-indigo-300 dark:border-indigo-700 text-[11px] font-bold">
+                                ${targetOptionsHtml}
+                            </select>
+                        </div>
+                    ` : ''}
+
+                    <div class="grid grid-cols-4 gap-1.5">
+                        <div><label class="text-[9px] font-bold text-slate-400 block">X</label><input type="number" id="prop-x" value="${el.x}" class="w-full px-1.5 py-1 rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-[11px] font-mono"></div>
+                        <div><label class="text-[9px] font-bold text-slate-400 block">Y</label><input type="number" id="prop-y" value="${el.y}" class="w-full px-1.5 py-1 rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-[11px] font-mono"></div>
+                        <div><label class="text-[9px] font-bold text-slate-400 block">Lebar</label><input type="number" id="prop-w" value="${el.w}" class="w-full px-1.5 py-1 rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-[11px] font-mono"></div>
+                        <div><label class="text-[9px] font-bold text-slate-400 block">Tinggi</label><input type="number" id="prop-h" value="${el.h}" class="w-full px-1.5 py-1 rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-[11px] font-mono"></div>
+                    </div>
+
+                    ${supportsText ? `
+                        <div class="grid grid-cols-2 gap-2 items-end">
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Ukuran Huruf</label>
+                                <input type="number" id="prop-fs" value="${el.fontSize}" class="w-full px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Perataan Teks</label>
+                                <div class="grid grid-cols-3 gap-1">
+                                    <button type="button" onclick="setElementAlign('left')" class="py-1 rounded border text-[10px] font-bold ${el.align === 'left' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700'}"><i class="fa-solid fa-align-left"></i></button>
+                                    <button type="button" onclick="setElementAlign('center')" class="py-1 rounded border text-[10px] font-bold ${el.align === 'center' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700'}"><i class="fa-solid fa-align-center"></i></button>
+                                    <button type="button" onclick="setElementAlign('right')" class="py-1 rounded border text-[10px] font-bold ${el.align === 'right' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700'}"><i class="fa-solid fa-align-right"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Warna Latar Lo-Fi (Grayscale)</label>
+                        <div class="grid grid-cols-6 gap-1">${bgSwatchesHtml}</div>
+                    </div>
+
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Garis Tepi Kotak (Border)</label>
+                        <div class="grid grid-cols-3 gap-1 text-[10px] font-bold">
+                            <button type="button" onclick="setElementBorder('solid')" class="py-1 rounded border ${el.borderStyle === 'solid' ? 'bg-slate-800 text-white' : 'bg-slate-50 dark:bg-slate-800'}">Utuh</button>
+                            <button type="button" onclick="setElementBorder('dashed')" class="py-1 rounded border ${el.borderStyle === 'dashed' ? 'bg-slate-800 text-white' : 'bg-slate-50 dark:bg-slate-800'}">Putus</button>
+                            <button type="button" onclick="setElementBorder('none')" class="py-1 rounded border ${el.borderStyle === 'none' ? 'bg-slate-800 text-white' : 'bg-slate-50 dark:bg-slate-800'}">Tanpa</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function buildMiniLayerListHtml() {
+            const scr = getCurrentScreen();
+            if (!scr || !Array.isArray(scr.elements) || scr.elements.length === 0) {
+                return `<div class="text-[11px] text-slate-400 italic">Kanvas masih kosong.</div>`;
+            }
+            return scr.elements.slice().reverse().map(function (el) {
+                const isSel = selectedElementId === el.id;
+                const label = el.text ? el.text.substring(0, 18) : ('(' + el.type + ')');
+                return `
+                    <button type="button" onclick="selectedElementId=${el.id};refreshStudioDomOnly();" class="w-full text-left px-2 py-1 rounded-lg text-[11px] flex items-center justify-between transition ${isSel ? 'bg-indigo-600 text-white font-bold' : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'}">
+                        <span class="truncate"><strong class="font-mono text-[10px] uppercase opacity-75">${escapeHtml(el.type)}</strong> • ${escapeHtml(label)}</span>
+                        <span class="font-mono text-[9px] opacity-70">#${el.id}</span>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function setElementGrayscaleBg(bgHex, defaultTextHex) {
+            const scr = getCurrentScreen();
+            if (!scr || !selectedElementId) return;
+            const el = scr.elements.find(function (x) { return x.id === selectedElementId; });
+            if (!el) return;
+            el.bg = bgHex;
+            el.color = defaultTextHex;
+            pushCanvasUndo();
+            triggerAutoSave();
+            refreshStudioDomOnly();
+        }
+
+        function setElementAlign(alignVal) {
+            const scr = getCurrentScreen();
+            if (!scr || !selectedElementId) return;
+            const el = scr.elements.find(function (x) { return x.id === selectedElementId; });
+            if (!el) return;
+            el.align = alignVal;
+            pushCanvasUndo();
+            triggerAutoSave();
+            refreshStudioDomOnly();
+        }
+
+        function setElementBorder(bStyle) {
+            const scr = getCurrentScreen();
+            if (!scr || !selectedElementId) return;
+            const el = scr.elements.find(function (x) { return x.id === selectedElementId; });
+            if (!el) return;
+            el.borderStyle = bStyle;
+            pushCanvasUndo();
+            triggerAutoSave();
+            refreshStudioDomOnly();
+        }
+
+        function bindPropertiesInputs() {
+            const scr = getCurrentScreen();
+            if (!scr || !selectedElementId) return;
+            const el = scr.elements.find(function (x) { return x.id === selectedElementId; });
+            if (!el) return;
+            const dims = getDeviceDims(scr.deviceType);
+
+            const bind = function (id, prop, transform) {
+                const inp = document.getElementById(id);
+                if (!inp) return;
+                inp.addEventListener('input', function () {
+                    let v = inp.value;
+                    if (transform) v = transform(v);
+                    el[prop] = v;
+                    const canvasEl = document.getElementById('wfCanvasSurface');
+                    if (canvasEl) {
+                        const elsHtml = (scr.elements || []).map(function (item) {
+                            return renderSingleElementHtml(item, true);
+                        }).join('');
+                        canvasEl.innerHTML = renderGuideLinesOverlay(scr) + elsHtml;
+                        bindCanvasSurfaceEvents();
+                    }
+                    triggerAutoSave();
+                });
+                inp.addEventListener('change', function () {
+                    pushCanvasUndo();
+                });
+            };
+
+            bind('prop-text', 'text');
+            bind('prop-target', 'targetScreen');
+            bind('prop-x', 'x', function (v) { return clampVal(+v, 0, dims.w - 10); });
+            bind('prop-y', 'y', function (v) { return clampVal(+v, 0, dims.h - 10); });
+            bind('prop-w', 'w', function (v) { return clampVal(+v, 16, dims.w); });
+            bind('prop-h', 'h', function (v) { return clampVal(+v, 2, dims.h); });
+            bind('prop-fs', 'fontSize', function (v) { return clampVal(+v, 8, 36); });
+        }
+
+        // Export PNG untuk Kanvas Aktif
+        async function exportCurrentCanvasPng() {
+            const scr = getCurrentScreen();
+            const canvasEl = document.getElementById('wfCanvasSurface');
+            if (!scr || !canvasEl || typeof html2canvas === 'undefined') return;
+
+            const prevSel = selectedElementId;
+            const prevZoom = canvasZoom;
+            selectedElementId = null;
+            canvasEl.style.transform = 'scale(1)';
+            refreshStudioDomOnly();
+
+            try {
+                const c = await html2canvas(canvasEl, {
+                    backgroundColor: '#ffffff',
+                    scale: 2,
+                    useCORS: true,
+                    logging: false
+                });
+                const link = document.createElement('a');
+                link.download = 'Wireframe_' + scr.code + '_' + (formState.nim || 'NIM') + '.png';
+                link.href = c.toDataURL('image/png');
+                link.click();
+                showToast('Gambar PNG untuk [' + scr.code + '] berhasil diunduh!', 'success');
+            } catch (err) {
+                showToast('Gagal mengekspor PNG.', 'error');
+            } finally {
+                selectedElementId = prevSel;
+                canvasEl.style.transform = 'scale(' + prevZoom + ')';
+                refreshStudioDomOnly();
+            }
+        }
+
+        // Unggah Foto Sketsa Kertas Opsional per Layar
+        function handleSketchImageUpload(event) {
+            const file = event.target.files && event.target.files[0];
+            const scr = getCurrentScreen();
+            if (!file || !scr) return;
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const img = new Image();
+                img.onload = function () {
+                    const c = document.createElement('canvas');
+                    const maxW = 750;
+                    const scale = img.width > maxW ? (maxW / img.width) : 1;
+                    c.width = Math.round(img.width * scale);
+                    c.height = Math.round(img.height * scale);
+                    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+                    scr.sketchImg = c.toDataURL('image/jpeg', 0.80);
+                    triggerAutoSave();
+                    renderCurrentSlide();
+                    showToast('Foto sketsa kertas untuk [' + scr.code + '] berhasil dilampirkan!', 'success');
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeSketchImage() {
+            const scr = getCurrentScreen();
+            if (!scr) return;
+            scr.sketchImg = '';
+            triggerAutoSave();
+            renderCurrentSlide();
+        }
+
+        // =========================================================================
+        // RENDER 5 SLIDE LKM 06
+        // =========================================================================
+
+        // SLIDE 1: Pengantar Multi-Canvas Wireframe Studio LKM 06
+        function renderSlide1() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-6 p-2 sm:p-4">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center my-auto">
+                        <div class="lg:col-span-7 space-y-4">
+                            <div class="inline-flex flex-wrap items-center gap-2">
+                                <span class="px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 text-xs font-bold border border-indigo-200/60">Praktikum Pertemuan 6 • Multi-Canvas Studio</span>
+                                <span class="px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 text-xs font-bold border border-emerald-200/60">Sub-CPMK 2.2 & 2.3 (Bobot 5%)</span>
+                            </div>
+
+                            <h2 class="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white leading-tight">
+                                Multi-Canvas ${term('wireframe', 'Low-Fidelity Wireframe')} Studio
+                            </h2>
+
+                            <p class="text-xs sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Selamat datang di <strong>Studio Perancangan Kerangka Layar (LKM 06)</strong>. Pada praktikum ini, setiap layar dari Sitemap LKM 05 Anda memiliki <strong>kanvas mandiri yang terpisah</strong>. Anda wajib memilih ${term('devicegate', 'Ukuran Perangkat')} di awal setiap layar, lalu merakit sendiri tata letaknya dari komponen dasar (kotak kontainer, gambar <code>[X]</code>, teks judul, label, dan tombol ber-tautan ${term('wireflow', 'Wireflow')}).
+                            </p>
+
+                            <div class="flex flex-wrap items-center gap-2.5 pt-2">
+                                <button type="button" onclick="changeSlide(1)" class="px-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-extrabold transition flex items-center gap-2 shadow-sm">
+                                    <span>Buka Daftar Layar & Studio</span><i class="fa-solid fa-arrow-right"></i>
+                                </button>
+                                <button type="button" onclick="triggerImportJson()" class="px-4 py-3 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-200 text-xs sm:text-sm font-extrabold transition flex items-center gap-2">
+                                    <i class="fa-solid fa-upload"></i><span>Muat File .JSON (LKM 05 / LKM 06)</span>
+                                </button>
+                                <button type="button" onclick="openResetModal()" class="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300 text-xs sm:text-sm font-bold transition flex items-center gap-2">
+                                    <i class="fa-solid fa-rotate-left"></i><span>Reset</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-5">
+                            <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 space-y-3.5 text-xs">
+                                <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Aturan Studio LKM 06</span>
+                                <h3 class="text-base font-extrabold text-slate-900 dark:text-white">4 Langkah Kerja Utama</h3>
+                                <div class="space-y-2">
+                                    <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 flex items-center gap-3">
+                                        <span class="w-6 h-6 rounded-lg bg-indigo-600 text-white font-extrabold flex items-center justify-center shrink-0">1</span>
+                                        <div><strong>Sinkronisasi Layar LKM 05 (Slide 2):</strong> Tarik otomatis daftar layar <code>SCR-01..05</code> dan skenario kendala <code>SCR-ERR</code>.</div>
+                                    </div>
+                                    <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 flex items-center gap-3">
+                                        <span class="w-6 h-6 rounded-lg bg-indigo-600 text-white font-extrabold flex items-center justify-center shrink-0">2</span>
+                                        <div><strong>Pilih Perangkat & Rakit Kanvas (Slide 3):</strong> Pilih Mobile/Tablet/Desktop, tarik minimal ${MIN_ELEMENTS_PER_CANVAS} komponen per layar, & tulis alasan tata letaknya.</div>
+                                    </div>
+                                    <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 flex items-center gap-3">
+                                        <span class="w-6 h-6 rounded-lg bg-indigo-600 text-white font-extrabold flex items-center justify-center shrink-0">3</span>
+                                        <div><strong>Uji Klik Wireflow (Slide 3 & 4):</strong> Tautkan tombol ke layar tujuan dan uji dengan mode <em>Play Wireflow</em>.</div>
+                                    </div>
+                                    <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 flex items-center gap-3">
+                                        <span class="w-6 h-6 rounded-lg bg-emerald-600 text-white font-extrabold flex items-center justify-center shrink-0">4</span>
+                                        <div><strong>Unduh PDF A4 & Master .JSON (Slide 5):</strong> Seluruh kanvas tercetak otomatis menjadi laporan visual A4.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 2: Sinkronisasi Identitas & Daftar Layar Kanvas dari LKM 05
+        function updateBasicField(key, val) {
+            formState[key] = val;
+            triggerAutoSave();
+        }
+        function updateScreenMeta(idx, key, val) {
+            if (!formState.canvases[idx]) return;
+            formState.canvases[idx][key] = val;
+            triggerAutoSave();
+        }
+        function addNewScreenCanvas() {
+            const nextNum = formState.canvases.length;
+            formState.canvases.splice(formState.canvases.length - 1, 0, {
+                code: 'SCR-0' + nextNum,
+                name: 'Layar Tambahan #' + nextNum,
+                role: 'Layar Tambahan',
+                lkm05Plan: '',
+                deviceType: '',
+                elements: [],
+                nextId: 1,
+                undoStack: [],
+                rationale: '',
+                sketchImg: ''
+            });
+            triggerAutoSave();
+            renderCurrentSlide();
+        }
+        function removeScreenCanvas(idx) {
+            if (formState.canvases.length <= MIN_SCREENS_COUNT) return;
+            formState.canvases.splice(idx, 1);
+            activeScreenIdx = 0;
+            triggerAutoSave();
+            renderCurrentSlide();
+        }
+
+        function renderSlide2() {
+            const canDel = formState.canvases.length > MIN_SCREENS_COUNT;
+            const scrRows = formState.canvases.map(function (c, i) {
+                const devBadge = c.deviceType ? DEVICE_PRESETS[c.deviceType].label : 'Belum Dipilih';
+                return `
+                    <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-center text-xs">
+                        <div class="sm:col-span-2">
+                            <label class="text-[10px] font-bold text-indigo-600 block">Kode Layar *</label>
+                            <input type="text" value="${escapeHtml(c.code)}" oninput="updateScreenMeta(${i}, 'code', this.value)" class="w-full px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 font-mono font-extrabold">
+                        </div>
+                        <div class="sm:col-span-4">
+                            <label class="text-[10px] font-bold text-slate-500 block">Nama Halaman / Layar *</label>
+                            <input type="text" id="inp_scr_name_${i}" value="${escapeHtml(c.name)}" oninput="updateScreenMeta(${i}, 'name', this.value)" class="w-full px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 font-semibold">
+                        </div>
+                        <div class="sm:col-span-4">
+                            <label class="text-[10px] font-bold text-slate-500 block">Catatan Rencana Komponen (Dari LKM 05)</label>
+                            <input type="text" value="${escapeHtml(c.lkm05Plan)}" oninput="updateScreenMeta(${i}, 'lkm05Plan', this.value)" placeholder="Rencana isi layar..." class="w-full px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700">
+                        </div>
+                        <div class="sm:col-span-2 flex items-center justify-between sm:justify-end gap-2 pt-3">
+                            <span class="px-2 py-1 rounded bg-slate-200 dark:bg-slate-700 text-[10px] font-bold truncate">${escapeHtml(devBadge)}</span>
+                            <button type="button" onclick="removeScreenCanvas(${i})" ${!canDel || c.code === 'SCR-ERR' ? 'disabled' : ''} class="px-2 py-1 rounded bg-rose-50 text-rose-600 font-bold disabled:opacity-30"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <div class="slide-enter space-y-4 p-1 sm:p-2">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Tahap 1 • Sinkronisasi Identitas & Daftar Kanvas Layar (Minimal ${MIN_SCREENS_COUNT} Layar)</span>
+                            <h2 class="text-lg sm:text-2xl font-extrabold text-slate-900 dark:text-white">Daftar Layar Sitemap yang Akan Dirakit di Studio</h2>
+                        </div>
+                        <div class="flex flex-wrap gap-2 shrink-0">
+                            <button type="button" onclick="pullDataFromLocalLkm05()" class="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold transition shadow-xs">
+                                <i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Tarik Otomatis dari LKM 05 Lokal
+                            </button>
+                            <button type="button" onclick="triggerImportJson()" class="px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-extrabold transition shadow-xs">
+                                <i class="fa-solid fa-upload mr-1"></i>Muat File .JSON LKM 05
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-6 gap-3 text-xs">
+                        <div><label class="font-bold text-slate-600 dark:text-slate-300 block mb-1">Nama Mahasiswa *</label><input type="text" id="inp_nama" value="${escapeHtml(formState.nama)}" oninput="updateBasicField('nama', this.value)" class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 font-semibold"></div>
+                        <div><label class="font-bold text-slate-600 dark:text-slate-300 block mb-1">NIM *</label><input type="text" id="inp_nim" value="${escapeHtml(formState.nim)}" oninput="updateBasicField('nim', this.value)" class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 font-mono font-semibold"></div>
+                        <div><label class="font-bold text-slate-600 dark:text-slate-300 block mb-1">Kelas *</label><input type="text" id="inp_kelas" value="${escapeHtml(formState.kelas)}" oninput="updateBasicField('kelas', this.value)" class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700"></div>
+                        <div><label class="font-bold text-slate-600 dark:text-slate-300 block mb-1">UMKM Mitra *</label><input type="text" id="inp_umkm" value="${escapeHtml(formState.umkm)}" oninput="updateBasicField('umkm', this.value)" class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 font-semibold"></div>
+                        <div><label class="font-bold text-slate-600 dark:text-slate-300 block mb-1">Bidang UMKM *</label><input type="text" id="inp_bidang" value="${escapeHtml(formState.bidang)}" oninput="updateBasicField('bidang', this.value)" class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700"></div>
+                        <div><label class="font-bold text-slate-600 dark:text-slate-300 block mb-1">Nama Produk Digital *</label><input type="text" id="inp_prod" value="${escapeHtml(formState.productName)}" oninput="updateBasicField('productName', this.value)" class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 font-semibold"></div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-extrabold text-slate-700 dark:text-slate-200">Daftar Kanvas Layar (Setiap Baris Memiliki Kanvas Terpisah di Slide 3):</span>
+                            <button type="button" onclick="addNewScreenCanvas()" class="px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-extrabold"><i class="fa-solid fa-plus mr-1"></i>Tambah Layar Kanvas</button>
+                        </div>
+                        ${scrRows}
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 3: MULTI-SCREEN WIREFRAME STUDIO (INTI PRAKTIKUM 6)
+        function renderSlide3() {
+            const scr = getCurrentScreen();
+            const dims = getDeviceDims(scr.deviceType);
+
+            // Baris Tab Layar di Atas Studio
+            const screenTabsHtml = formState.canvases.map(function (c, idx) {
+                const isAct = idx === activeScreenIdx;
+                const isDone = isScreenCanvasComplete(c);
+                const statusIcon = isDone
+                    ? '<i class="fa-solid fa-circle-check text-emerald-400 ml-1"></i>'
+                    : '<span class="text-[10px] opacity-75 ml-1">(' + c.elements.length + ')</span>';
+                const btnCls = isAct
+                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                    : isDone
+                    ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border-emerald-300'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700';
+                return `
+                    <button type="button" onclick="selectScreenTab(${idx})" class="px-3 py-2 rounded-xl border text-xs font-extrabold transition flex items-center gap-1 shrink-0 ${btnCls}">
+                        <span>[${escapeHtml(c.code)}]</span>
+                        <span class="max-w-[130px] truncate">${escapeHtml(c.name)}</span>
+                        ${statusIcon}
+                    </button>
+                `;
+            }).join('');
+
+            // Pita Pengingat 1 Baris dari Rencana LKM 05 Mahasiswa Sendiri
+            const planReminder = scr.lkm05Plan && scr.lkm05Plan.trim()
+                ? `<div class="px-3.5 py-2 rounded-xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-xs text-amber-950 dark:text-amber-200 flex items-center justify-between gap-2">
+                    <div><i class="fa-solid fa-thumbtack text-amber-600 mr-1.5"></i><strong>Catatan Rencana Anda di LKM 05 untuk [${escapeHtml(scr.code)}]:</strong> ${escapeHtml(scr.lkm05Plan)}</div>
+                    <span class="font-mono text-[10px] font-bold shrink-0">${escapeHtml(scr.role)}</span>
+                   </div>`
+                : '';
+
+            // GERBANG WAJIB PILIH UKURAN PERANGKAT DI AWAL (Jika scr.deviceType masih kosong)
+            if (!scr.deviceType) {
+                return `
+                    <div class="slide-enter space-y-4">
+                        <div class="flex items-center gap-2 overflow-x-auto pb-1">${screenTabsHtml}</div>
+                        ${planReminder}
+                        <div class="p-6 sm:p-10 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border-2 border-dashed border-indigo-400 text-center space-y-5 my-4">
+                            <div class="w-14 h-14 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-2xl mx-auto shadow-md">
+                                <i class="fa-solid fa-ruler-combined"></i>
+                            </div>
+                            <div class="max-w-xl mx-auto space-y-1.5">
+                                <span class="text-xs font-extrabold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Langkah Wajib Sebelum Membuka Kanvas [${escapeHtml(scr.code)}]</span>
+                                <h3 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Pilih Ukuran Layar Perangkat untuk "${escapeHtml(scr.name)}"</h3>
+                                <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                                    Sesuai kesepakatan desain, setiap layar wajib memiliki ukuran kanvas perangkat yang jelas sejak awal. Pilih salah satu ukuran kanvas di bawah ini:
+                                </p>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto text-left">
+                                ${Object.keys(DEVICE_PRESETS).map(function (k) {
+                                    const d = DEVICE_PRESETS[k];
+                                    return `
+                                        <button type="button" onclick="chooseScreenDevice('${k}')" class="p-5 rounded-2xl bg-white hover:bg-indigo-50/70 dark:bg-slate-900 dark:hover:bg-slate-800 border-2 border-slate-200 hover:border-indigo-600 transition space-y-2 shadow-xs">
+                                            <div class="text-base font-extrabold text-slate-900 dark:text-white">${d.label}</div>
+                                            <div class="text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400">${d.sub}</div>
+                                            <div class="text-[11px] text-slate-500">Klik untuk membuka kanvas ${d.w}×${d.h} px &rarr;</div>
+                                        </button>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // JIKA PERANGKAT SUDAH DIPILIH: TAMPILKAN STUDIO KANVAS PENUH
+            const paletteHtml = PALETTE.map(function (p) {
+                return `
+                    <div draggable="true" data-type="${p.type}" onclick="addCanvasElement('${p.type}')" class="palette-item px-2.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-[11px] font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2 shrink-0">
+                        <i class="fa-solid ${p.icon} text-indigo-600 dark:text-indigo-400 w-4 text-center"></i>
+                        <span>${p.label}</span>
+                    </div>
+                `;
+            }).join('');
+
+            const copyFromOptions = ['<option value="">-- Salin Isi dari Layar Lain --</option>'].concat(
+                formState.canvases.map(function (c, i) {
+                    if (i === activeScreenIdx || c.elements.length === 0) return '';
+                    return `<option value="${i}">Salin dari [${escapeHtml(c.code)}] (${c.elements.length} elemen)</option>`;
+                }).filter(Boolean)
+            ).join('');
+
+            const elsHtml = (scr.elements || []).map(function (el) {
+                return renderSingleElementHtml(el, true);
+            }).join('');
+
+            const scaledWrapperHeight = Math.round(dims.h * canvasZoom) + 24;
+
+            return `
+                <div class="slide-enter space-y-3">
+                    <!-- Baris 1: Tab Layar Kanvas -->
+                    <div class="flex items-center gap-2 overflow-x-auto pb-1">${screenTabsHtml}</div>
+                    ${planReminder}
+
+                    <!-- Baris 2: Toolbar Studio Kanvas -->
+                    <div class="p-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex flex-wrap items-center justify-between gap-2 text-xs">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <select onchange="chooseScreenDevice(this.value)" class="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 font-extrabold text-xs">
+                                ${Object.keys(DEVICE_PRESETS).map(function (k) {
+                                    const d = DEVICE_PRESETS[k];
+                                    return `<option value="${k}" ${scr.deviceType === k ? 'selected' : ''}>${d.label} (${d.w}×${d.h})</option>`;
+                                }).join('')}
+                            </select>
+
+                            <select onchange="if(this.value!==''){copyElementsFromOtherScreen(this.value);this.value='';}" class="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 font-bold text-xs">
+                                ${copyFromOptions}
+                            </select>
+
+                            <label class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-semibold cursor-pointer">
+                                <input type="checkbox" ${gridSnap ? 'checked' : ''} onchange="gridSnap=this.checked" class="accent-indigo-600">
+                                <span>Snap 8px</span>
+                            </label>
+
+                            <label class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-semibold cursor-pointer">
+                                <input type="checkbox" ${showGuideLines ? 'checked' : ''} onchange="showGuideLines=this.checked;refreshStudioDomOnly();" class="accent-indigo-600">
+                                <span>Garis Proporsi</span>
+                            </label>
+                        </div>
+
+                        <div class="flex flex-wrap items-center gap-1.5">
+                            <div class="inline-flex rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-0.5">
+                                <button type="button" onclick="setCanvasZoom(0.55)" class="px-2 py-1 rounded-lg text-[11px] font-bold ${canvasZoom === 0.55 ? 'bg-indigo-600 text-white' : ''}">55%</button>
+                                <button type="button" onclick="setCanvasZoom(0.75)" class="px-2 py-1 rounded-lg text-[11px] font-bold ${canvasZoom === 0.75 ? 'bg-indigo-600 text-white' : ''}">75%</button>
+                                <button type="button" onclick="setCanvasZoom(1)" class="px-2 py-1 rounded-lg text-[11px] font-bold ${canvasZoom === 1 ? 'bg-indigo-600 text-white' : ''}">100%</button>
+                            </div>
+
+                            <button type="button" onclick="togglePlayMode()" class="px-3 py-1.5 rounded-xl font-extrabold transition flex items-center gap-1.5 ${playModeActive ? 'bg-emerald-600 text-white shadow-sm' : 'bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 border border-emerald-300'}">
+                                <i class="fa-solid ${playModeActive ? 'fa-stop' : 'fa-play'}"></i>
+                                <span>${playModeActive ? 'Selesai Uji Klik' : 'Uji Klik Wireflow'}</span>
+                            </button>
+
+                            <button type="button" onclick="undoCanvasAction()" class="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-bold" title="Undo (Ctrl+Z)">
+                                <i class="fa-solid fa-rotate-left"></i>
+                            </button>
+                            <button type="button" onclick="exportCurrentCanvasPng()" class="px-2.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold" title="Unduh PNG Layar Ini">
+                                <i class="fa-solid fa-image mr-1"></i>PNG
+                            </button>
+                            <button type="button" onclick="clearCurrentCanvas()" class="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold" title="Kosongkan Kanvas Ini">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Baris 3: Area Utama Studio 3 Kolom (Responsif di Mobile & Desktop) -->
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 items-start">
+                        <!-- Kolom Kiri: Palet Komponen Primitif (Horizontal Scroll di HP, Vertikal di Desktop) -->
+                        <div class="lg:col-span-2 p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <div class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 flex items-center justify-between">
+                                <span>Komponen Dasar</span>
+                                <span class="lg:hidden text-[9px] text-indigo-500">Geser / Klik &rarr;</span>
+                            </div>
+                            <div id="wfPaletteList" class="flex lg:flex-col gap-1.5 overflow-x-auto lg:overflow-x-visible pb-1 lg:pb-0">
+                                ${paletteHtml}
+                            </div>
+                            <div class="hidden lg:block pt-2 border-t border-slate-200 dark:border-slate-700 text-[10px] text-slate-500 space-y-1 leading-snug">
+                                <div>• Klik atau tarik ke kanvas</div>
+                                <div>• 2x klik elemen untuk ketik teks</div>
+                                <div>• Panah keyboard untuk geser presisi</div>
+                            </div>
+                        </div>
+
+                        <!-- Kolom Tengah: Area Kanvas Perangkat -->
+                        <div class="lg:col-span-7 p-3 sm:p-5 rounded-2xl bg-slate-200/70 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 overflow-x-auto flex flex-col items-center justify-start" style="min-height:${scaledWrapperHeight}px;">
+                            <div class="text-[11px] font-mono font-bold text-slate-500 mb-2">
+                                Kanvas [${escapeHtml(scr.code)}] • ${dims.w} × ${dims.h} px • ${scr.elements.length} Komponen (Min. ${MIN_ELEMENTS_PER_CANVAS})
+                            </div>
+                            <div id="wfCanvasSurface" class="wf-canvas-surface" style="width:${dims.w}px; height:${dims.h}px; transform:scale(${canvasZoom});">
+                                ${renderGuideLinesOverlay(scr)}
+                                ${elsHtml}
+                            </div>
+                        </div>
+
+                        <!-- Kolom Kanan: Panel Properties & Mini Layer List -->
+                        <div class="lg:col-span-3 space-y-3">
+                            <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800">
+                                <div class="text-xs font-extrabold text-slate-900 dark:text-white mb-2.5 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-sliders text-indigo-600"></i><span>Properti Elemen</span>
+                                </div>
+                                <div id="wfPropsContainer">${buildPropertiesPanelHtml()}</div>
+                            </div>
+
+                            <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                                <div class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Urutan Lapisan (Layers — ${scr.elements.length})</div>
+                                <div id="wfLayerListContainer" class="max-h-36 overflow-y-auto space-y-1">${buildMiniLayerListHtml()}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Baris 4: Alasan Tata Letak (Design Rationale) & Lampiran Foto Sketsa Kertas Opsional -->
+                    <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 grid grid-cols-1 lg:grid-cols-12 gap-4 items-start text-xs">
+                        <div class="lg:col-span-8">
+                            <label class="font-extrabold text-slate-800 dark:text-slate-100 block mb-1">
+                                Alasan Tata Letak & Penempatan Tombol pada [${escapeHtml(scr.code)}: ${escapeHtml(scr.name)}] *
+                            </label>
+                            <textarea id="inp_rationale_${activeScreenIdx}" rows="2" oninput="updateScreenMeta(${activeScreenIdx}, 'rationale', this.value)" placeholder="Jelaskan alasan Anda menyusun posisi informasi dan menempatkan tombol aksi seperti pada kanvas di atas..." class="w-full p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(scr.rationale)}</textarea>
+                        </div>
+                        <div class="lg:col-span-4 space-y-1.5">
+                            <label class="font-bold text-slate-700 dark:text-slate-200 block">📸 Lampirkan Foto Sketsa Kertas [${escapeHtml(scr.code)}] (Opsional)</label>
+                            <input type="file" accept="image/*" onchange="handleSketchImageUpload(event)" class="text-[11px] w-full">
+                            ${scr.sketchImg ? `<div class="flex items-center gap-2 pt-1"><img src="${scr.sketchImg}" class="h-12 rounded border object-contain bg-white"><button type="button" onclick="removeSketchImage()" class="px-2 py-1 rounded bg-rose-50 text-rose-600 text-[10px] font-bold">Hapus</button></div>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 4: Rekap Otomatis Sambungan Wireflow & Refleksi Konsistensi Antarmuka
+        function collectAllWireflowLinks() {
+            const links = [];
+            formState.canvases.forEach(function (c) {
+                (c.elements || []).forEach(function (el) {
+                    if (el.type === 'button' && el.targetScreen) {
+                        links.push({
+                            fromCode: c.code,
+                            fromName: c.name,
+                            btnText: el.text || 'Tombol',
+                            toCode: el.targetScreen
+                        });
+                    }
+                });
+            });
+            return links;
+        }
+
+        function renderSlide4() {
+            const links = collectAllWireflowLinks();
+            const linkRows = links.length > 0
+                ? links.map(function (lk, i) {
+                    return `
+                        <tr class="border-b border-slate-200 dark:border-slate-800">
+                            <td class="p-2.5 font-mono font-bold text-indigo-600">${i + 1}</td>
+                            <td class="p-2.5 font-bold">[${escapeHtml(lk.fromCode)}] ${escapeHtml(lk.fromName)}</td>
+                            <td class="p-2.5"><span class="px-2.5 py-1 rounded-lg bg-slate-900 text-white font-bold text-xs">${escapeHtml(lk.btnText)}</span></td>
+                            <td class="p-2.5 font-mono font-extrabold text-emerald-600">&rarr; [${escapeHtml(lk.toCode)}]</td>
+                        </tr>
+                    `;
+                }).join('')
+                : `<tr><td colspan="4" class="p-4 text-center text-slate-400 italic">Belum ada tombol yang diberi tautan Target Wireflow. Klik elemen Button di kanvas Slide 3 lalu pilih dropdown "Target Wireflow".</td></tr>`;
+
+            return `
+                <div class="slide-enter space-y-5 p-2">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Tahap 3 • Rekapitulasi Otomatis Interaksi Antar-Layar (${term('wireflow', 'Wireflow')})</span>
+                        <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Tabel Sambungan Tombol Wireflow & Evaluasi Konsistensi</h2>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead>
+                                <tr class="border-b-2 border-slate-300 dark:border-slate-700 text-slate-500 uppercase">
+                                    <th class="p-2.5 w-10">No</th>
+                                    <th class="p-2.5">Layar Asal</th>
+                                    <th class="p-2.5">Tombol yang Ditekan Pengguna</th>
+                                    <th class="p-2.5">Berpindah Menuju Layar</th>
+                                </tr>
+                            </thead>
+                            <tbody>${linkRows}</tbody>
+                        </table>
+                    </div>
+
+                    <div class="p-5 rounded-3xl bg-white dark:bg-slate-900 border-2 border-indigo-600 space-y-3 text-xs sm:text-sm">
+                        <label class="font-extrabold text-slate-900 dark:text-white block">
+                            Refleksi Konsistensi Antarmuka & Ergonomi Lintas Perangkat (Mengapa Susunan Komponen Anda Mudah Dipahami Pelanggan & Kasir UMKM?) *
+                        </label>
+                        <textarea id="inp_summary_note" rows="3" oninput="updateBasicField('summaryNote', this.value)" placeholder="Uraikan bagaimana Anda menjaga konsistensi letak navigasi/tombol antar-layar serta bagaimana desain layar kendala (SCR-ERR) membantu pengguna saat terjadi masalah..." class="w-full p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(formState.summaryNote)}</textarea>
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 5: PRATINJAU & UNDUH LAPORAN PDF A4 VEKTOR + MASTER .JSON
+        function renderSlide5() {
+            const incompleteScreens = formState.canvases.filter(function (c) { return !isScreenCanvasComplete(c); });
+            const links = collectAllWireflowLinks();
+            const allReady = incompleteScreens.length === 0 && links.length >= 2 && (formState.summaryNote || '').trim() !== '';
+
+            return `
+                <div class="slide-enter space-y-5">
+                    <div class="p-4 sm:p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border ${allReady ? 'border-emerald-300' : 'border-amber-300'} flex flex-col md:flex-row md:items-center justify-between gap-4 no-print">
+                        <div class="space-y-1.5">
+                            <span class="text-xs font-bold uppercase tracking-wider ${allReady ? 'text-emerald-600' : 'text-amber-600'}">
+                                ${allReady ? 'Seluruh Kanvas Layar Lengkap • Siap Cetak PDF A4' : 'Periksa Kelengkapan Kanvas Sebelum Cetak (' + incompleteScreens.length + ' layar belum lengkap)'}
+                            </span>
+                            <h2 class="text-lg sm:text-2xl font-extrabold text-slate-900 dark:text-white">Pratinjau Dokumen Wireframe & Wireflow (LKM 06)</h2>
+                            <p class="text-xs text-slate-500">Seluruh kanvas yang Anda rakit di Slide 3 dirender secara vektor presisi ke dalam halaman cetak A4 di bawah ini.</p>
+                        </div>
+
+                        <div class="flex flex-wrap gap-2.5 shrink-0">
+                            <button type="button" onclick="exportJsonData()" class="px-4 py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-extrabold flex items-center gap-1.5">
+                                <i class="fa-solid fa-box-archive"></i><span>Simpan Master .JSON</span>
+                            </button>
+                            <button type="button" id="btnDownloadPdf" onclick="downloadPdf()" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-extrabold shadow-md flex items-center gap-2">
+                                <i class="fa-solid fa-file-pdf"></i><span>Generate & Unduh PDF A4</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="pdfWrapper" class="max-w-4xl mx-auto bg-white rounded-2xl shadow-md border border-slate-300 overflow-hidden">
+                        <div id="pdfPrintArea" class="p-6 sm:p-10 space-y-5">${generatePdfHtmlString()}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function generatePdfHtmlString() {
+            const d = formState;
+            const dash = function (v) {
+                return (v && String(v).trim() !== '') ? escapeHtml(v) : '<span style="color:#94a3b8; font-style:italic;">(Belum diisi)</span>';
+            };
+
+            const links = collectAllWireflowLinks();
+            const wireflowRowsPdf = links.length > 0
+                ? links.map(function (lk, idx) {
+                    return `<tr>
+                        <td style="text-align:center; width:34px; font-weight:700;">${idx + 1}</td>
+                        <td style="width:32%; font-weight:700;">[${escapeHtml(lk.fromCode)}] ${escapeHtml(lk.fromName)}</td>
+                        <td style="width:34%;">Tombol: <strong>"${escapeHtml(lk.btnText)}"</strong></td>
+                        <td style="width:34%; font-family:monospace; font-weight:800; color:#4f46e5;">&rarr; Menuju [${escapeHtml(lk.toCode)}]</td>
+                    </tr>`;
+                }).join('')
+                : `<tr><td colspan="4" style="text-align:center; color:#94a3b8;">(Belum ada tautan Wireflow)</td></tr>`;
+
+            // Render Vektor Proporsional Setiap Kanvas Layar untuk PDF A4
+            const canvasesPdfHtml = d.canvases.map(function (c, idx) {
+                const dims = getDeviceDims(c.deviceType || 'mobile');
+                const devLabel = c.deviceType ? DEVICE_PRESETS[c.deviceType].label : 'Belum Dipilih';
+                const maxPdfWidth = c.deviceType === 'mobile' ? 230 : 420;
+                const scaleRatio = Math.min(1, maxPdfWidth / dims.w);
+                const scaledH = Math.round(dims.h * scaleRatio);
+                const scaledW = Math.round(dims.w * scaleRatio);
+
+                const elementsHtml = (c.elements || []).map(function (el) {
+                    return renderSingleElementHtml(el, false);
+                }).join('');
+
+                return `
+                    <div class="pdf-keep-together" style="border:1px solid #cbd5e1; border-radius:10px; padding:10px; margin-bottom:12px; background:#f8fafc;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #cbd5e1; padding-bottom:6px; margin-bottom:8px;">
+                            <div style="font-size:11px; font-weight:800; color:#0f172a;">[${escapeHtml(c.code)}] ${escapeHtml(c.name)} <span style="font-weight:500; color:#475569;">(${escapeHtml(c.role)})</span></div>
+                            <div style="font-size:9.5px; font-family:monospace; font-weight:700; color:#4f46e5;">${escapeHtml(devLabel)} (${dims.w}×${dims.h} px • ${c.elements.length} Elemen)</div>
+                        </div>
+
+                        <div style="display:flex; gap:14px; align-items:flex-start; flex-wrap:wrap;">
+                            <div style="width:${scaledW}px; height:${scaledH}px; position:relative; overflow:hidden; flex-shrink:0; border:2px solid #334155; border-radius:8px; background:#ffffff;">
+                                <div style="width:${dims.w}px; height:${dims.h}px; position:relative; transform:scale(${scaleRatio.toFixed(3)}); transform-origin:top left; background:#ffffff;">
+                                    ${elementsHtml}
+                                </div>
+                            </div>
+
+                            <div style="flex:1; min-width:200px; font-size:10px; line-height:1.5; color:#1e293b;">
+                                <div style="margin-bottom:6px;"><strong>Rencana Komponen (LKM 05):</strong><br>${dash(c.lkm05Plan)}</div>
+                                <div style="margin-bottom:6px;"><strong>Alasan Tata Letak & Ergonomi (Design Rationale):</strong><br>${dash(c.rationale)}</div>
+                                ${c.sketchImg ? `<div style="margin-top:6px;"><div style="font-weight:700; font-size:9.5px; margin-bottom:3px;">Lampiran Foto Sketsa Kertas:</div><img src="${c.sketchImg}" style="max-height:110px; border:1px solid #cbd5e1; border-radius:4px;"></div>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <div style="border-bottom: 2px solid #1e293b; padding-bottom: 10px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+                    <div>
+                        <div style="font-size: 10px; font-weight: 800; letter-spacing: 0.06em; color: #4f46e5; text-transform: uppercase;">UNIVERSITAS PERINTIS INDONESIA (UPERTIS)</div>
+                        <div style="font-size: 15px; font-weight: 800; color: #0f172a; margin-top: 2px;">LEMBAR KERJA MAHASISWA (LKM 06) • LOW-FIDELITY WIREFRAME & WIREFLOW</div>
+                        <div style="font-size: 11px; color: #475569; margin-top: 1px;">Program Studi S1 Bisnis Digital • Fakultas Ekonomi Bisnis dan Ilmu Sosial • Kode MK: BD7401</div>
+                    </div>
+                    <div style="text-align: right; font-size: 10px; color: #475569; background: #f8fafc; padding: 6px 10px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                        <div style="font-weight: 800; color: #0f172a;">PERTEMUAN 6</div>
+                        <div>Sub-CPMK 2.2 & 2.3</div>
+                        <div>Bobot: 5%</div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 12px;" class="pdf-keep-together">
+                    <div style="font-size: 11px; font-weight: 800; color: #0f172a; margin-bottom: 5px; text-transform: uppercase;">1. Identitas Mahasiswa & Spesifikasi Proyek UMKM Mitra</div>
+                    <table class="pdf-table">
+                        <tr>
+                            <th style="width: 20%;">Nama Mahasiswa</th>
+                            <td style="width: 30%; font-weight: 700;">${dash(d.nama)}</td>
+                            <th style="width: 18%;">NIM & Kelas</th>
+                            <td style="width: 32%; font-family: monospace; font-weight: 700;">${dash(d.nim)} (${dash(d.kelas)})</td>
+                        </tr>
+                        <tr>
+                            <th>UMKM Mitra</th>
+                            <td><strong>${dash(d.umkm)}</strong> (${dash(d.bidang)})</td>
+                            <th>Solusi Digital</th>
+                            <td><strong>${dash(d.productName)}</strong></td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div style="margin-bottom: 12px;">
+                    <div style="font-size: 11px; font-weight: 800; color: #0f172a; margin-bottom: 6px; text-transform: uppercase;">2. Kanvas Visual Low-Fidelity Wireframe & Rasionalitas Tata Letak (${d.canvases.length} Layar)</div>
+                    ${canvasesPdfHtml}
+                </div>
+
+                <div style="margin-bottom: 14px;" class="pdf-keep-together">
+                    <div style="font-size: 11px; font-weight: 800; color: #0f172a; margin-bottom: 5px; text-transform: uppercase;">3. Tabel Sambungan Interaksi Antar-Layar (Wireflow) & Evaluasi Konsistensi</div>
+                    <table class="pdf-table" style="margin-bottom:8px;">
+                        <thead>
+                            <tr>
+                                <th style="width:34px; text-align:center;">No</th>
+                                <th style="width:32%;">Layar Asal</th>
+                                <th style="width:34%;">Komponen Tombol Pemicu</th>
+                                <th style="width:34%;">Layar Tujuan (Target Screen)</th>
+                            </tr>
+                        </thead>
+                        <tbody>${wireflowRowsPdf}</tbody>
+                    </table>
+                    <table class="pdf-table">
+                        <tr>
+                            <th style="width:26%;">Refleksi Konsistensi & Ergonomi</th>
+                            <td style="width:74%;">${dash(d.summaryNote)}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; padding-top: 6px; font-size: 10px; color: #334155;" class="pdf-keep-together">
+                    <div style="max-width: 380px; color: #64748b;">
+                        <strong>Pernyataan Orisinalitas Perancangan:</strong> Seluruh kerangka layar (Low-Fidelity Wireframe) di atas dirakit secara mandiri berdasarkan Sitemap dan User Flow LKM 05.
+                    </div>
+                    <div style="text-align: center; min-width: 180px;">
+                        <div>Padang, ${d.tgl ? escapeHtml(d.tgl) : '........................'}</div>
+                        <div style="margin-bottom: 36px; font-weight: 600;">Mahasiswa Pelaksana,</div>
+                        <div style="font-weight: 800; text-decoration: underline; color: #0f172a;">${d.nama ? escapeHtml(d.nama) : '( ........................................ )'}</div>
+                        <div style="font-family: monospace;">NIM: ${d.nim ? escapeHtml(d.nim) : '........................'}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // =========================================================================
+        // VALIDASI SLIDE & NAVIGASI UTAMA
+        // =========================================================================
+        function validateSlideBeforeNext(slideIdx) {
+            if (slideIdx === 1) {
+                if (!formState.nama.trim()) { highlightEmptyInput('inp_nama', 'Nama Lengkap Mahasiswa wajib diisi.'); return false; }
+                if (!formState.nim.trim()) { highlightEmptyInput('inp_nim', 'NIM wajib diisi.'); return false; }
+                if (!formState.kelas.trim()) { highlightEmptyInput('inp_kelas', 'Kelas wajib diisi.'); return false; }
+                if (!formState.umkm.trim()) { highlightEmptyInput('inp_umkm', 'Nama UMKM Mitra wajib diisi.'); return false; }
+                if (!formState.productName.trim()) { highlightEmptyInput('inp_prod', 'Nama Produk Digital wajib diisi.'); return false; }
+                for (let i = 0; i < formState.canvases.length; i++) {
+                    if (!formState.canvases[i].name.trim()) {
+                        highlightEmptyInput('inp_scr_name_' + i, 'Nama Layar #' + (i + 1) + ' wajib diisi.');
+                        return false;
+                    }
+                }
+                return true;
+            }
+            if (slideIdx === 2) {
+                for (let i = 0; i < formState.canvases.length; i++) {
+                    const c = formState.canvases[i];
+                    if (!c.deviceType) {
+                        selectScreenTab(i);
+                        showToast('Layar [' + c.code + '] belum dipilih Ukuran Perangkatnya (Mobile / Tablet / Desktop)!', 'error');
+                        return false;
+                    }
+                    if (!Array.isArray(c.elements) || c.elements.length < MIN_ELEMENTS_PER_CANVAS) {
+                        selectScreenTab(i);
+                        showToast('Kanvas [' + c.code + '] baru memiliki ' + c.elements.length + ' komponen. Rakit minimal ' + MIN_ELEMENTS_PER_CANVAS + ' komponen dasar!', 'error');
+                        return false;
+                    }
+                    if (screenHasLoremIpsum(c)) {
+                        selectScreenTab(i);
+                        showToast('Kanvas [' + c.code + '] masih mengandung teks "Lorem Ipsum". Ganti dengan Microcopy nyata!', 'error');
+                        return false;
+                    }
+                    if (!(c.rationale || '').trim()) {
+                        selectScreenTab(i);
+                        highlightEmptyInput('inp_rationale_' + i, 'Alasan Tata Letak pada layar [' + c.code + '] (di bawah kanvas) wajib diisi.');
+                        return false;
+                    }
+                }
+                return true;
+            }
+            if (slideIdx === 3) {
+                if (!(formState.summaryNote || '').trim()) {
+                    highlightEmptyInput('inp_summary_note', 'Refleksi Konsistensi Antarmuka & Ergonomi wajib diisi.');
+                    return false;
+                }
+                return true;
+            }
+            return true;
+        }
+
+        const SLIDES = [
+            { id: 1, category: "Pengantar", title: "Pengantar Multi-Canvas Wireframe Studio LKM 06", render: renderSlide1 },
+            { id: 2, category: "Tahap 1 · Daftar Layar", title: "Sinkronisasi Identitas & Daftar Layar dari LKM 05", render: renderSlide2 },
+            { id: 3, category: "Tahap 2 · Studio Kanvas", title: "Multi-Canvas Low-Fidelity Wireframe Studio", render: renderSlide3 },
+            { id: 4, category: "Tahap 3 · Rekap Wireflow", title: "Tabel Sambungan Wireflow & Refleksi Konsistensi", render: renderSlide4 },
+            { id: 5, category: "Tahap 4 · Unduh PDF", title: "Pratinjau Laporan Wireframe (LKM 06) & Unduh PDF A4", render: renderSlide5 }
+        ];
+
+        function renderCurrentSlide() {
+            const slide = SLIDES[currentSlideIndex];
+            const viewport = document.getElementById('slideViewport');
+            if (!viewport || !slide) return;
+            viewport.innerHTML = slide.render();
+
+            const pct = Math.round(((currentSlideIndex + 1) / TOTAL_SLIDES) * 100);
+            document.getElementById('topProgressBar').style.width = pct + '%';
+            document.getElementById('slideCounterBadge').textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES;
+            document.getElementById('mobileFooterCounter').textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES;
+            document.getElementById('slideCategoryPill').textContent = slide.category;
+            document.getElementById('headerSlideTitle').textContent = slide.title;
+
+            document.getElementById('prevSlideBtn').disabled = currentSlideIndex === 0;
+            const nextBtn = document.getElementById('nextSlideBtn');
+            const nextBtnText = document.getElementById('nextBtnText');
+            if (currentSlideIndex === TOTAL_SLIDES - 1) {
+                nextBtnText.textContent = "Selesai";
+                nextBtn.disabled = true;
+            } else {
+                nextBtnText.textContent = "Selanjutnya";
+                nextBtn.disabled = false;
+            }
+
+            renderDotsAndDrawer();
+
+            if (currentSlideIndex === 2) {
+                bindPaletteDragEvents();
+                bindCanvasSurfaceEvents();
+                bindPropertiesInputs();
+            }
+        }
+
+        function bindPaletteDragEvents() {
+            document.querySelectorAll('#wfPaletteList .palette-item').forEach(function (item) {
+                item.addEventListener('dragstart', function (e) {
+                    e.dataTransfer.setData('text/plain', item.dataset.type);
+                    e.dataTransfer.effectAllowed = 'copy';
+                });
+            });
+        }
+
+        function renderDotsAndDrawer() {
+            const dotsContainer = document.getElementById('slideDotsContainer');
+            let dotsHtml = '';
+            let drawerHtml = '';
+            for (let idx = 0; idx < SLIDES.length; idx++) {
+                const s = SLIDES[idx];
+                const isActive = idx === currentSlideIndex;
+                const dotCls = isActive ? 'w-7 bg-indigo-600' : 'w-2.5 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400';
+                dotsHtml += `<button type="button" onclick="goToSlide(${idx})" class="h-2 rounded-full transition-all ${dotCls}" title="${escapeHtml(s.title)}"></button>`;
+
+                const itemCls = isActive ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 font-bold' : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300';
+                drawerHtml += `
+                    <button type="button" onclick="toggleSlideDrawer();goToSlide(${idx});" class="w-full text-left p-3 rounded-xl transition flex items-start gap-3 ${itemCls}">
+                        <span class="w-6 h-6 rounded-lg text-xs font-extrabold flex items-center justify-center shrink-0 ${isActive ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}">${s.id}</span>
+                        <div class="min-w-0 flex-1">
+                            <div class="text-[10px] uppercase tracking-wider opacity-75">${escapeHtml(s.category)}</div>
+                            <div class="text-xs sm:text-sm leading-snug">${escapeHtml(s.title)}</div>
+                        </div>
+                    </button>
+                `;
+            }
+            if (dotsContainer) dotsContainer.innerHTML = dotsHtml;
+            const drawerList = document.getElementById('drawerSlideList');
+            if (drawerList) drawerList.innerHTML = drawerHtml;
+        }
+
+        function changeSlide(dir) {
+            const nextIdx = currentSlideIndex + dir;
+            if (nextIdx >= 0 && nextIdx < TOTAL_SLIDES) {
+                goToSlide(nextIdx);
+            }
+        }
+
+        function goToSlide(targetIdx) {
+            if (targetIdx < 0 || targetIdx >= TOTAL_SLIDES) return;
+            if (targetIdx > currentSlideIndex) {
+                for (let chk = currentSlideIndex; chk < targetIdx; chk++) {
+                    if ([1, 2, 3].indexOf(chk) !== -1) {
+                        currentSlideIndex = chk;
+                        if (!validateSlideBeforeNext(chk)) return;
+                    }
+                }
+            }
+            currentSlideIndex = targetIdx;
+            renderCurrentSlide();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function toggleSlideDrawer() {
+            const drawer = document.getElementById('slideDrawer');
+            const backdrop = document.getElementById('slideDrawerBackdrop');
+            const isClosed = drawer.classList.contains('-translate-x-full');
+            if (isClosed) {
+                backdrop.classList.remove('hidden');
+                setTimeout(function () { backdrop.classList.remove('opacity-0'); }, 10);
+                drawer.classList.remove('-translate-x-full');
+            } else {
+                backdrop.classList.add('opacity-0');
+                drawer.classList.add('-translate-x-full');
+                setTimeout(function () { backdrop.classList.add('hidden'); }, 200);
+            }
+        }
+
+        // =========================================================================
+        // RESET, UNDO RESET, & DOWNLOAD PDF A4
+        // =========================================================================
+        let undoSnapshot = null;
+        let undoTick = null;
+
+        function showUndoBar(snap, msg) {
+            undoSnapshot = snap;
+            clearInterval(undoTick);
+            let left = 10;
+            const bar = document.getElementById('undoBar');
+            const cd = document.getElementById('undoCountdown');
+            const msgEl = document.getElementById('undoMessage');
+            if (!bar || !cd) return;
+            if (msgEl) msgEl.textContent = msg || 'Perubahan diterapkan.';
+            cd.textContent = left;
+            bar.classList.remove('hidden');
+            bar.classList.add('flex');
+            undoTick = setInterval(function () {
+                left--;
+                cd.textContent = Math.max(left, 0);
+                if (left <= 0) {
+                    clearInterval(undoTick);
+                    bar.classList.add('hidden');
+                    bar.classList.remove('flex');
+                    undoSnapshot = null;
+                }
+            }, 1000);
+        }
+
+        function undoLastReset() {
+            if (!undoSnapshot) return;
+            try {
+                const snap = JSON.parse(undoSnapshot);
+                formState = snap.form;
+                currentSlideIndex = snap.slide || 0;
+                triggerAutoSave();
+            } catch (e) {}
+            clearInterval(undoTick);
+            const bar = document.getElementById('undoBar');
+            if (bar) { bar.classList.add('hidden'); bar.classList.remove('flex'); }
+            undoSnapshot = null;
+            renderCurrentSlide();
+            showToast('Kanvas dan isian berhasil dipulihkan!', 'success');
+        }
+
+        function confirmResetAllData() {
+            const snap = JSON.stringify({ form: formState, slide: currentSlideIndex });
+            formState = {
+                nama: '', nim: '', kelas: '', tgl: new Date().toISOString().split('T')[0],
+                umkm: '', bidang: '', productName: '',
+                navPattern: 'Bottom Navigation Bar (3 - 4 Menu Utama)',
+                canvases: createDefaultCanvases(),
+                summaryNote: ''
+            };
+            activeScreenIdx = 0;
+            selectedElementId = null;
+            safeRemoveStorage(STORAGE_KEY);
+            closeResetModal();
+            currentSlideIndex = 0;
+            renderCurrentSlide();
+            hasUnexportedChanges = false;
+            showUndoBar(snap, 'Seluruh kanvas LKM 06 dikosongkan.');
+        }
+
+        function downloadPdf() {
+            for (let chk = 1; chk <= 3; chk++) {
+                if (!validateSlideBeforeNext(chk)) {
+                    currentSlideIndex = chk;
+                    renderCurrentSlide();
+                    return;
+                }
+            }
+            if (currentSlideIndex !== 4) {
+                currentSlideIndex = 4;
+                renderCurrentSlide();
+            }
+
+            const el = document.getElementById('pdfPrintArea');
+            const cleanNim = (formState.nim || 'NIM').replace(/[^a-zA-Z0-9_-]/g, '');
+            const cleanNama = (formState.nama || 'Mahasiswa').trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '');
+            const fn = 'LKM_06_Wireframe_Studio_UIUX_' + cleanNim + '_' + cleanNama + '.pdf';
+
+            const btn = document.getElementById('btnDownloadPdf');
+            const orig = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span>Menyiapkan PDF...</span>';
+                btn.disabled = true;
+            }
+
+            if (typeof html2pdf !== 'undefined') {
+                html2pdf().set({
+                    margin: [8, 8, 8, 8],
+                    filename: fn,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+                    pagebreak: { mode: ['css', 'legacy'] },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                }).from(el).save().then(function () {
+                    if (btn) { btn.innerHTML = orig; btn.disabled = false; }
+                }).catch(function () {
+                    if (btn) { btn.innerHTML = orig; btn.disabled = false; }
+                    window.print();
+                });
+            } else {
+                if (btn) { btn.innerHTML = orig; btn.disabled = false; }
+                window.print();
+            }
+        }
+
+        // =========================================================================
+        // MODAL KAMUS & KEYBOARD SHORTCUTS (DELETE, CTRL+Z, CTRL+D, ARROW NUDGE)
+        // =========================================================================
+        function showTerm(key) {
+            const item = GLOSSARY_DB[key];
+            if (!item) return;
+            document.getElementById('termCategoryBadge').textContent = item.category;
+            document.getElementById('termTitle').textContent = item.title;
+            document.getElementById('termMainDesc').textContent = item.main;
+            document.getElementById('termDetailDesc').textContent = item.detail;
+            const modal = document.getElementById('termModalBackdrop');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+        function closeTermModal() {
+            const modal = document.getElementById('termModalBackdrop');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+        function openGlossaryIndex() {
+            const keys = Object.keys(GLOSSARY_DB);
+            const grid = document.getElementById('glossaryListGrid');
+            if (grid) {
+                grid.innerHTML = keys.map(function (k) {
+                    const it = GLOSSARY_DB[k];
+                    return `<button type="button" onclick="closeGlossaryIndex();showTerm('${k}');" class="text-left p-4 rounded-2xl bg-slate-50 hover:bg-indigo-50/60 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+                        <span class="text-[10px] font-bold uppercase text-indigo-600">${escapeHtml(it.category)}</span>
+                        <div class="text-sm font-extrabold text-slate-900 dark:text-white">${escapeHtml(it.title)}</div>
+                        <p class="text-xs text-slate-500">${escapeHtml(it.main)}</p>
+                    </button>`;
+                }).join('');
+            }
+            const modal = document.getElementById('glossaryModalBackdrop');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+        function closeGlossaryIndex() {
+            const modal = document.getElementById('glossaryModalBackdrop');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const ico = document.getElementById('themeIcon');
+            html.classList.toggle('dark');
+            ico.className = html.classList.contains('dark') ? 'fa-solid fa-sun text-amber-400 text-xs' : 'fa-solid fa-moon text-xs';
+        }
+
+        document.addEventListener('keydown', function (e) {
+            const tag = (document.activeElement && document.activeElement.tagName || '').toLowerCase();
+            if (e.key === 'Escape') {
+                closeTermModal();
+                closeGlossaryIndex();
+                closeResetModal();
+                if (selectedElementId) {
+                    selectedElementId = null;
+                    refreshStudioDomOnly();
+                }
+                return;
+            }
+            if (tag === 'input' || tag === 'textarea' || tag === 'select' || (document.activeElement && document.activeElement.isContentEditable)) {
+                return;
+            }
+
+            // Shortcut khusus di dalam Studio Kanvas (Slide 3)
+            if (currentSlideIndex === 2 && !playModeActive) {
+                if ((e.key === 'Delete' || e.key === 'Backspace') && selectedElementId) {
+                    e.preventDefault();
+                    deleteCanvasElement(selectedElementId);
+                    return;
+                }
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+                    e.preventDefault();
+                    undoCanvasAction();
+                    return;
+                }
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd' && selectedElementId) {
+                    e.preventDefault();
+                    duplicateSelectedElement();
+                    return;
+                }
+                // Geser Presisi dengan Tombol Panah Keyboard (Arrow Nudge)
+                if (selectedElementId && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].indexOf(e.key) !== -1) {
+                    const scr = getCurrentScreen();
+                    const el = scr ? scr.elements.find(function (x) { return x.id === selectedElementId; }) : null;
+                    if (el) {
+                        e.preventDefault();
+                        const step = e.shiftKey ? 1 : 8;
+                        const dims = getDeviceDims(scr.deviceType);
+                        if (e.key === 'ArrowLeft') el.x = clampVal(el.x - step, 0, dims.w - el.w);
+                        if (e.key === 'ArrowRight') el.x = clampVal(el.x + step, 0, dims.w - el.w);
+                        if (e.key === 'ArrowUp') el.y = clampVal(el.y - step, 0, dims.h - el.h);
+                        if (e.key === 'ArrowDown') el.y = clampVal(el.y + step, 0, dims.h - el.h);
+                        triggerAutoSave();
+                        refreshStudioDomOnly();
+                        return;
+                    }
+                }
+            }
+
+            if (currentSlideIndex !== 2) {
+                if (e.key === 'ArrowRight') changeSlide(1);
+                if (e.key === 'ArrowLeft') changeSlide(-1);
+            }
+        });
+
+        window.addEventListener('beforeunload', function (e) {
+            if (hasUnexportedChanges) {
+                e.preventDefault();
+                e.returnValue = '';
+                return '';
+            }
+        });
+
+        loadSavedState();
+        renderCurrentSlide();
+    </script>
+</body>
+</html>
