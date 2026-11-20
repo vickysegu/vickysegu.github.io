@@ -1,0 +1,2120 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pertemuan 6: Siklus Operasional Toko, Kontrol Internal &amp; Pembukuan Utuh</title>
+    <!-- Tailwind CSS CDN untuk tata letak responsif & tema terang/gelap -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <script>
+        if (typeof tailwind !== 'undefined') {
+            tailwind.config = {
+                darkMode: 'class',
+                theme: {
+                    extend: {
+                        fontFamily: {
+                            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                            mono: ['"JetBrains Mono"', 'monospace']
+                        }
+                    }
+                }
+            };
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Kata sulit bersih tanpa kotak/box, selalu kontras di mode terang maupun gelap */
+        .tech-term {
+            color: #4f46e5;
+            font-weight: 700;
+            text-decoration: underline;
+            text-decoration-style: dotted;
+            text-underline-offset: 3px;
+            cursor: pointer;
+            transition: color 0.15s ease, opacity 0.15s ease;
+        }
+        .dark .tech-term { color: #818cf8; }
+        .tech-term:hover { color: #3730a3; opacity: 0.85; }
+        .dark .tech-term:hover { color: #a5b4fc; }
+
+        /* Pengaman anti-terpotong di layar kecil maupun besar */
+        #slideViewport, #slideViewport p, #slideViewport span, #slideViewport div,
+        #slideViewport h2, #slideViewport h3, #slideViewport h4, #slideViewport button {
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+        }
+
+        .slide-enter {
+            animation: fadeSlide 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes fadeSlide {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulseSoft {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+        .pulse-soft {
+            animation: pulseSoft 0.45s ease-in-out;
+        }
+
+        pre.code-clean {
+            background: #0b0b10;
+            color: #e4e4e7;
+            border-radius: 1rem;
+            padding: 1rem 1.15rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+            line-height: 1.65;
+            overflow-x: auto;
+            border: 1px solid #1f1f2e;
+            margin: 0;
+        }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+        .dark ::-webkit-scrollbar-thumb { background: #334155; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col justify-between transition-colors duration-200">
+
+    <!-- Header Navigasi Atas -->
+    <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800">
+        <div class="w-full h-1 bg-slate-100 dark:bg-slate-800">
+            <div id="topProgressBar" class="h-full bg-indigo-600 dark:bg-indigo-500 transition-all duration-300" style="width: 5%;"></div>
+        </div>
+
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+                <button type="button" onclick="toggleSlideDrawer()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition flex items-center gap-2 text-xs sm:text-sm font-bold shrink-0">
+                    <i class="fa-solid fa-bars-staggered text-indigo-600 dark:text-indigo-400"></i>
+                    <span class="hidden sm:inline">Daftar Slide</span>
+                    <span id="slideCounterBadge" class="px-2 py-0.5 text-xs rounded-lg bg-indigo-600 text-white font-bold">1 / 19</span>
+                </button>
+
+                <div class="hidden md:flex items-center gap-2.5 min-w-0">
+                    <span id="slideCategoryPill" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 shrink-0">
+                        Minggu 6 · Bisnis Digital
+                    </span>
+                    <h1 id="headerSlideTitle" class="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">
+                        Siklus Operasional Toko, Kontrol Internal &amp; Pembukuan Utuh
+                    </h1>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 shrink-0">
+                <button type="button" onclick="openGlossaryIndex()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 text-xs sm:text-sm font-bold flex items-center gap-2 transition">
+                    <i class="fa-solid fa-book-open text-indigo-600 dark:text-indigo-400"></i>
+                    <span>Kamus</span>
+                </button>
+
+                <button type="button" onclick="toggleTheme()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center transition" title="Ganti Tema Layar">
+                    <i id="themeIcon" class="fa-solid fa-moon text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Drawer Daftar Slide -->
+    <div id="slideDrawerBackdrop" onclick="toggleSlideDrawer()" class="fixed inset-0 bg-slate-950/50 backdrop-blur-xs z-40 hidden opacity-0 transition-opacity duration-200"></div>
+    <aside id="slideDrawer" class="fixed top-0 left-0 bottom-0 w-80 sm:w-96 bg-white dark:bg-slate-900 z-50 shadow-2xl border-r border-slate-200 dark:border-slate-800 transform -translate-x-full transition-transform duration-200 flex flex-col">
+        <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Sistem Terintegrasi (BD5231)</span>
+                <h2 class="text-base font-extrabold text-slate-900 dark:text-white mt-0.5">Materi Pertemuan 6 (19 Slide Fokus)</h2>
+            </div>
+            <button type="button" onclick="toggleSlideDrawer()" class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div id="drawerSlideList" class="p-3.5 overflow-y-auto space-y-1 flex-1"></div>
+        <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 flex items-center justify-between">
+            <span>Panah Kiri / Kanan untuk navigasi</span>
+            <span class="font-bold">19 Slide Ringkas</span>
+        </div>
+    </aside>
+
+    <!-- Area Konten Slide Utama -->
+    <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-5 flex flex-col justify-center">
+        <div id="slideViewport" class="bg-white dark:bg-slate-900 rounded-3xl shadow-xs border border-slate-200/80 dark:border-slate-800 p-6 sm:p-8 lg:p-10 min-h-[540px] flex flex-col justify-between relative overflow-hidden">
+            <div class="py-12 text-center text-sm text-slate-500">Memuat materi Pertemuan 6...</div>
+        </div>
+    </main>
+
+    <!-- Footer Navigasi Bawah -->
+    <footer class="sticky bottom-0 z-20 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 py-3 px-4 sm:px-6">
+        <div class="max-w-6xl mx-auto flex items-center justify-between gap-4">
+            <button type="button" id="prevSlideBtn" onclick="changeSlide(-1)" class="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                <i class="fa-solid fa-arrow-left text-xs"></i>
+                <span>Sebelumnya</span>
+            </button>
+
+            <div id="slideDotsContainer" class="hidden md:flex items-center gap-1.5 flex-wrap justify-center"></div>
+
+            <div class="md:hidden text-xs font-bold text-slate-500 dark:text-slate-400" id="mobileFooterCounter">
+                1 / 19
+            </div>
+
+            <button type="button" id="nextSlideBtn" onclick="changeSlide(1)" class="px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-indigo-600 hover:bg-indigo-700 text-white transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                <span id="nextBtnText">Selanjutnya</span>
+                <i class="fa-solid fa-arrow-right text-xs"></i>
+            </button>
+        </div>
+    </footer>
+
+    <!-- Modal Penjelasan Istilah -->
+    <div id="termModalBackdrop" onclick="closeTermModal()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl slide-enter">
+            <div class="flex items-start justify-between gap-4 mb-4">
+                <div>
+                    <span id="termCategoryBadge" class="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">Kategori</span>
+                    <h3 id="termTitle" class="text-xl font-extrabold text-slate-900 dark:text-white mt-1.5">Nama Istilah</h3>
+                </div>
+                <button type="button" onclick="closeTermModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <p id="termMainDesc" class="text-sm text-slate-700 dark:text-slate-200 leading-relaxed bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200/70 dark:border-slate-700/70"></p>
+                <div class="p-3.5 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-200/70 dark:border-indigo-800/70">
+                    <div class="text-[11px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-1">Contoh di Toko Sepatu Kita:</div>
+                    <p id="termDetailDesc" class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed"></p>
+                </div>
+                <div class="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800 text-xs px-1">
+                    <span id="termSourceName" class="font-semibold text-slate-400">Referensi</span>
+                    <button type="button" onclick="closeTermModal(); openGlossaryIndex();" class="font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1.5">
+                        <span>Buka Kamus Lengkap</span>
+                        <i class="fa-solid fa-book-open text-[10px]"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Kamus Lengkap -->
+    <div id="glossaryModalBackdrop" onclick="closeGlossaryIndex()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-4xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden slide-enter">
+            <div class="p-5 sm:p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white">Kamus Bisnis Digital &amp; Kode — Minggu 6</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Penjelasan singkat tanpa jargon rumit untuk seluruh istilah hari ini.</p>
+                </div>
+                <button type="button" onclick="closeGlossaryIndex()" class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-sm"></i>
+                    <input id="glossarySearchInput" oninput="renderGlossaryList(this.value)" type="text" placeholder="Cari istilah seperti Restock, Stok Hantu, SOP, Batas Promo, 409, rollBack..." class="w-full pl-10 pr-4 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+            <div id="glossaryListGrid" class="p-5 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+        </div>
+    </div>
+
+    <script>
+        /* =====================================================================
+           1. KAMUS ISTILAH BISNIS DIGITAL & TERJEMAHAN KODE
+           ===================================================================== */
+        const GLOSSARY_DB = {
+            procure_to_pay: {
+                title: "Siklus Restock / Barang Masuk (Procure-to-Pay)",
+                category: "Proses Bisnis Ritel",
+                main: "Proses saat toko menerima kiriman barang dari pemasok beserta Surat Jalan (PO), lalu menambah saldo stok dan mencatat bukti di Kartu Stok.",
+                detail: "Menyambung Minggu 5: setelah SP008 terdeteksi kritis (sisa 2 pasang), pagi ini datang 10 pasang dengan nomor PO-2026-01 lewat POST /api/stok-masuk.php.",
+                source: "Slide 4 & 5"
+            },
+            order_to_cash: {
+                title: "Siklus Penjualan Kasir (Order-to-Cash)",
+                category: "Proses Bisnis Ritel",
+                main: "Proses saat pelanggan membayar di kasir, menerima nomor struk (TRX), dan saldo stok di gudang otomatis berkurang.",
+                detail: "Dilayani lewat POST /api/stok-keluar.php yang memotong tabel barang sekaligus mencatat bukti ke log_stok.",
+                source: "Slide 4 & 6"
+            },
+            kontrol_internal: {
+                title: "Kontrol Internal Bisnis (Business Rules)",
+                category: "Tata Kelola Toko",
+                main: "Aturan pengaman otomatis di dalam sistem untuk mencegah stok fiktif, penimbunan promo, stok minus, dan akses cabang ilegal.",
+                detail: "Contoh: wajib kunci aktif (401), batas maksimal beli promo (400), stok cukup (400), dan 1 nomor bukti hanya berlaku 1 kali (409).",
+                source: "Slide 6 & 7"
+            },
+            batas_promo: {
+                title: "Batas Maksimal Beli Promo ($maksQtyPerNota)",
+                category: "Strategi Pemasaran",
+                main: "Pembatasan jumlah pasang sepatu per transaksi (misal maks. 3 pasang/nota) agar promo dinikmati banyak pembeli, bukan diborong tengkulak.",
+                detail: "Di LKM 06 nanti, Anda bebas mengubah angka variabel $maksQtyPerNota (2–5 pasang) sesuai strategi toko Anda.",
+                source: "Slide 3, 6 & 15"
+            },
+            anti_duplikat: {
+                title: "Anti-Faktur & Anti-Struk Ganda (409 Conflict)",
+                category: "Kontrol Audit",
+                main: "Pemeriksaan ke tabel log_stok agar satu nomor PO atau nomor struk tidak pernah diproses dua kali meski tombol terpencet berulang.",
+                detail: "Menutup celah Minggu 4 di stok-masuk.php sehingga surat jalan yang sama tidak menciptakan 'stok hantu'.",
+                source: "Slide 5 & 14"
+            },
+            pembukuan_utuh: {
+                title: "Pembukuan Satu Paket Utuh (Database Transaction)",
+                category: "Integritas Akuntansi",
+                main: "Aturan bahwa mengubah saldo rak (barang) dan menulis bukti di Kartu Stok (log_stok) wajib berhasil bersama (commit) atau batal bersama (rollBack).",
+                detail: "Ibarat transfer bank: jika gagal di tengah jalan, saldo pengirim otomatis utuh kembali tanpa selisih audit.",
+                source: "Slide 10, 11 & 16"
+            },
+            php_input: {
+                title: "Pembuka Amplop POST (php://input)",
+                category: "Terjemahan Kode PHP",
+                main: "Perintah file_get_contents('php://input') + json_decode() dipakai PHP untuk membaca paket data JSON yang dikirim di dalam body POST.",
+                detail: "Berbeda dengan Minggu 5 yang memakai $_GET untuk membaca filter di ujung alamat URL.",
+                source: "Slide 14"
+            },
+            stock_opname: {
+                title: "Audit Kartu Stok & Stock Opname",
+                category: "Pengendalian Persediaan",
+                main: "Pencocokan rutin sore hari antara jumlah fisik sepatu di rak, angka di komputer (barang), dan riwayat masuk-keluar (log_stok).",
+                detail: "Rumus: Saldo Awal + Total Masuk − Total Keluar wajib sama persis dengan jumlah fisik di rak.",
+                source: "Slide 8"
+            },
+            phantom_inventory: {
+                title: "Stok Hantu (Phantom Inventory)",
+                category: "Risiko Finansial & Audit",
+                main: "Kondisi ketika komputer mencatat stok barang tersedia (misal 22 pasang), padahal barang fisiknya jauh lebih sedikit akibat pencatatan faktur masuk ganda.",
+                detail: "Menyebabkan manajer lupa restock karena mengira stok aman, hingga akhirnya toko kehilangan omzet saat pembeli memesan.",
+                source: "Slide 3 & 5"
+            },
+            exception_sop: {
+                title: "SOP Penanganan Penolakan (Business Exception SOP)",
+                category: "Tata Kelola Operasional",
+                main: "Panduan kerja tertulis bagi staf toko (Gudang, Kasir, Manajer) mengenai langkah yang wajib dilakukan dan hal yang dilarang saat sistem API menolak transaksi (400, 401, 409, 500).",
+                detail: "Teknologi hanya memblokir kesalahan; manusia di lapangan tetap butuh SOP yang jelas agar pelayanan dan pembukuan tetap tertib.",
+                source: "Slide 9 (Jembatan Form 3 LKM 06)"
+            }
+        };
+
+        function escapeHtml(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function term(key, customLabel) {
+            const item = GLOSSARY_DB[key];
+            if (!item) return customLabel || key;
+            const label = customLabel || item.title.split(' (')[0];
+            return '<span class="tech-term" onclick="showTerm(\'' + key + '\')">' + escapeHtml(label) + '</span>';
+        }
+
+        function formatRupiah(angka) {
+            return 'Rp ' + Number(angka || 0).toLocaleString('id-ID');
+        }
+
+        /* Komponen Header Slide Ringkas & Transisi 1 Baris (Anti-Sesak) */
+        function slideHeader(eyebrow, titleHtml, subtitleHtml, eyebrowColor) {
+            const clr = eyebrowColor || 'text-indigo-600 dark:text-indigo-400';
+            return `
+                <div class="space-y-1">
+                    <span class="text-xs font-bold uppercase tracking-wider ${clr}">${eyebrow}</span>
+                    <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white leading-tight">${titleHtml}</h2>
+                    ${subtitleHtml ? `<p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-4xl">${subtitleHtml}</p>` : ''}
+                </div>
+            `;
+        }
+
+        function slideTransitionNote(nextHint) {
+            return `
+                <div class="pt-3 border-t border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400">
+                    <span><strong class="text-indigo-600 dark:text-indigo-400">Berikutnya &rarr;</strong> ${nextHint}</span>
+                    <button type="button" onclick="changeSlide(1)" class="text-indigo-600 dark:text-indigo-400 font-extrabold hover:underline shrink-0">Lanjut</button>
+                </div>
+            `;
+        }
+
+        /* =====================================================================
+           2. STATE GLOBAL & DATA SIMULASI DUNIA NYATA
+           ===================================================================== */
+        let currentSlideIndex = 0;
+        const TOTAL_SLIDES = 19;
+        let activeSopRoleTab = 'gudang';       // Slide 9
+        let activeJsonReplyTab = 'sukses';     // Slide 13
+
+        // State Simulasi Dunia Nyata 1 (Slide 7): Meja Operasional Toko Sepatu Nusantara
+        const HARGA_SP008 = 490000;
+        let storeApp = {
+            tab: 'gudang',         // 'gudang' | 'kasir'
+            viewMode: 'buku',      // 'buku' | 'json'
+            stokSP008: 2,
+            maksPromo: 3,
+            kunciAktif: true,
+            poNumber: 'PO-2026-01',
+            poQty: 10,
+            trxNumber: 'TRX-2026-01',
+            trxQty: 2,
+            logs: [
+                { jam: '08:00', jenis: 'masuk', qty: 2, sisa: 2, ref: 'SALDO-AWAL', ket: 'Saldo buka toko (Kritis)' }
+            ],
+            lastBanner: null,      // { ok: boolean, code: number, title: string, desc: string }
+            lastJson: '{\n  "info": "Silakan klik Terima Barang di Loket Gudang atau Bayar di Kasir POS."\n}'
+        };
+
+        // State Simulasi Dunia Nyata 2 (Slide 11): Animasi Checkout & Listrik Putus
+        let txSim = {
+            mode: 'paket',         // 'biasa' | 'paket'
+            powerCut: true,
+            stage: 'idle',         // 'idle' | 'stepA' | 'cut' | 'rollback' | 'done_ok' | 'done_mismatch'
+            rakStok: 12,
+            bukuStok: 12,
+            timers: []
+        };
+
+        // State Evaluasi Fokus (Slide 18): 1 Kasus Manajer per Layar + 5 Kuis Kilat
+        let evalMode = 'kasus';    // 'kasus' | 'kuis'
+        let activeCaseIdx = 0;
+        let bizChoicesM6 = {};
+        let tfChoicesM6 = {};
+
+        const BIZ_CASES_M6 = [
+            {
+                id: 1,
+                badge: "🎯 Kasus 1 · Mencegah Stok Hantu (Phantom Inventory)",
+                title: "Staf gudang shift siang tidak tahu bahwa Surat Jalan PO-2026-01 (+10 pasang) sudah diinput staf shift pagi, lalu ia menginput ulang. Jika sistem tidak memakai cek 409, kerugian bisnis apa yang langsung terjadi?",
+                opts: [
+                    { ltr: "A", text: "Tercipta +10 pasang 'stok hantu' (senilai Rp 4,9 juta palsu): manajer mengira rak masih penuh sehingga lupa restock, lalu toko kehabisan barang saat pembeli datang.", correct: true, explain: "Tepat! Stok hantu merusak keputusan pembelian ulang (restock) dan membuat laporan nilai aset persediaan toko menjadi tidak valid." },
+                    { ltr: "B", text: "Database akan otomatis membagi dua harga jual sepatu.", correct: false, explain: "Harga jual tidak berubah; masalah utamanya adalah angka stok fiktif yang menyesatkan operasional toko." }
+                ]
+            },
+            {
+                id: 2,
+                badge: "🎯 Kasus 2 · Menjaga Keadilan Promo (Fair Allocation)",
+                title: "Mengapa aturan batas maksimal beli promo ($maksQtyPerNota = 3 pasang) lebih aman dipasang di API Gudang dibanding hanya menempel kertas pengumuman di meja kasir?",
+                opts: [
+                    { ltr: "A", text: "Karena aturan di API Gudang mengikat seluruh cabang kasir secara serentak tanpa bisa dilewati jika kasir lupa atau dibujuk tengkulak.", correct: true, explain: "Sangat tepat! Menaruh aturan bisnis di pusat layanan (API Gudang) menjamin kepatuhan seragam di semua cabang." },
+                    { ltr: "B", text: "Karena poster kertas tidak bisa dibaca pembeli.", correct: false, explain: "Poster memang membantu informasi ke pembeli, namun tanpa validasi otomatis di API, kontrol internal tetap mudah dibobol." }
+                ]
+            },
+            {
+                id: 3,
+                badge: "🎯 Kasus 3 · SOP Saat Sistem Menolak 409",
+                title: "Layar staf gudang menampilkan penolakan '409 Conflict: PO-2026-01 sudah pernah masuk'. Agar barang bisa masuk, staf terpikir mengubah nomornya menjadi 'PO-2026-01-BARU'. Mengapa tindakan ini DILARANG keras oleh SOP?",
+                opts: [
+                    { ltr: "A", text: "Karena memalsukan nomor PO untuk mengakali 409 justru akan menggandakan stok secara ilegal dan merusak jejak audit faktur pemasok.", correct: true, explain: "Benar sekali! Staf wajib mengecek tabel log_stok terlebih dahulu untuk memastikan PO-2026-01 memang sudah tercatat, bukan mengakali sistem." },
+                    { ltr: "B", text: "Karena nomor PO tidak boleh memakai tanda hubung (-).", correct: false, explain: "Tanda hubung sah saja; yang berbahaya adalah memalsukan nomor bukti untuk meloloskan transaksi ganda." }
+                ]
+            },
+            {
+                id: 4,
+                badge: "🎯 Kasus 4 · Nilai Audit Pembukuan Satu Paket Utuh",
+                title: "Saat kasir memproses pembelian 2 pasang SP008, koneksi server terputus tepat setelah stok rak dikurangi namun sebelum bukti tercatat di log_stok. Apa fungsi utama $pdo->rollBack()?",
+                opts: [
+                    { ltr: "A", text: "Membatalkan pengurangan stok di tabel barang sehingga saldo rak otomatis kembali utuh (12 pasang) dan 100% cocok dengan Kartu Stok.", correct: true, explain: "Tepat! Dengan rollBack, toko terhindar dari selisih stock opname dan staf terlindungi dari tuduhan barang hilang." },
+                    { ltr: "B", text: "Menghapus seluruh tabel barang di database.", correct: false, explain: "rollBack hanya membatalkan perubahan sementara di dalam paket transaksi yang sedang gagal." }
+                ]
+            }
+        ];
+
+        const TF_QUIZ_M6 = [
+            { id: 1, text: "Penolakan 409 Conflict pada api/stok-masuk.php menutup celah Minggu 4 agar satu nomor Surat Jalan PO tidak bisa menambah stok dua kali.", answer: "true", explain: "Benar. Ini mencegah terciptanya stok hantu (phantom inventory)." },
+            { id: 2, text: "Jika kasir ditolak 400 Bad Request karena batas promo, kasir boleh memecah pembelian 1 tengkulak menjadi beberapa struk terpisah agar transaksi tetap jalan.", answer: "false", explain: "Salah. Memecah struk demi mengakali batas promo melanggar SOP dan menggagalkan strategi akuisisi pelanggan." },
+            { id: 3, text: "Perintah file_get_contents('php://input') digunakan pada pintu POST untuk membaca paket data JSON dari Kasir.", answer: "true", explain: "Benar. Data POST dikirim di dalam amplop body, bukan di ujung URL seperti $_GET." },
+            { id: 4, text: "Di dalam Pembukuan Satu Paket Utuh, perintah commit() dijalankan jika terjadi error di tengah transaksi.", answer: "false", explain: "Salah. commit() untuk mengesahkan jika semua langkah sukses; jika terjadi error, perintah yang dijalankan adalah rollBack()." },
+            { id: 5, text: "Rumus audit sore hari yang sehat adalah: Saldo Awal + Total Masuk − Total Keluar = Saldo Fisik di Rak (Selisih 0).", answer: "true", explain: "Benar. Pencocokan inilah yang dibuktikan langsung pada Form 4 LKM 06." }
+        ];
+
+        /* =====================================================================
+           3. RENDER 19 SLIDE FOKUS (1 SLIDE = 1 GAGASAN INTI, BEBAS SESAK)
+           ===================================================================== */
+
+        // SLIDE 1: Sampul Ringkas & Peta 4 Bagian Belajar
+        function renderSlide1() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center my-auto">
+                        <div class="lg:col-span-7 space-y-5">
+                            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 text-xs font-bold border border-indigo-200/60 dark:border-indigo-800/60">
+                                <span>Minggu 6 · Manajemen Bisnis Digital</span>
+                                <span>•</span>
+                                <span>Sub-CPMK 2.2 (Bobot 5%)</span>
+                            </div>
+
+                            <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 dark:text-white leading-tight tracking-tight">
+                                Siklus Transaksi Toko, ${term('kontrol_internal', 'Kontrol Internal')} &amp; Pembukuan Utuh
+                            </h2>
+
+                            <p class="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Melanjutkan katalog pintar di Minggu 5, hari ini kita menyempurnakan transaksi ${term('procure_to_pay', 'Barang Masuk')} &amp; ${term('order_to_cash', 'Penjualan Kasir')} agar aman dari ${term('phantom_inventory', 'stok hantu')}, penimbunan promo, selisih audit, lengkap dengan ${term('exception_sop', 'SOP Lapangan')}.
+                            </p>
+
+                            <div class="flex flex-wrap gap-2 pt-1">
+                                <span class="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs font-extrabold">🔄 Siklus Pagi–Siang–Sore</span>
+                                <span class="px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 text-xs font-extrabold">📋 SOP 3 Peran Lapangan</span>
+                                <span class="px-3 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 text-xs font-extrabold">📒 Pembukuan 1 Paket Utuh</span>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-5">
+                            <div class="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 space-y-3">
+                                <div class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">4 Bagian Belajar (19 Slide Lega)</div>
+                                <button type="button" onclick="goToSlide(1)" class="w-full text-left flex items-center gap-3 p-3 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 transition">
+                                    <span class="w-8 h-8 rounded-xl bg-indigo-600 text-white font-extrabold flex items-center justify-center shrink-0 text-xs">1</span>
+                                    <div class="text-xs"><strong class="text-slate-900 dark:text-white block">Jembatan M5 &amp; Dampak Finansial</strong><span class="text-slate-500">Slide 2–3 · Stok hantu, promo, &amp; risiko audit</span></div>
+                                </button>
+                                <button type="button" onclick="goToSlide(3)" class="w-full text-left flex items-center gap-3 p-3 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 transition">
+                                    <span class="w-8 h-8 rounded-xl bg-emerald-600 text-white font-extrabold flex items-center justify-center shrink-0 text-xs">2</span>
+                                    <div class="text-xs"><strong class="text-slate-900 dark:text-white block">Siklus Harian, Simulasi &amp; SOP Staf</strong><span class="text-slate-500">Slide 4–9 · Restock, Kasir POS, Audit &amp; SOP 3 Peran</span></div>
+                                </button>
+                                <button type="button" onclick="goToSlide(9)" class="w-full text-left flex items-center gap-3 p-3 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 transition">
+                                    <span class="w-8 h-8 rounded-xl bg-rose-600 text-white font-extrabold flex items-center justify-center shrink-0 text-xs">3</span>
+                                    <div class="text-xs"><strong class="text-slate-900 dark:text-white block">Pembukuan Utuh &amp; Simulasi Listrik Putus</strong><span class="text-slate-500">Slide 10–13 · Analogi Bank, RollBack &amp; Kop JSON</span></div>
+                                </button>
+                                <button type="button" onclick="goToSlide(13)" class="w-full text-left flex items-center gap-3 p-3 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 transition">
+                                    <span class="w-8 h-8 rounded-xl bg-amber-600 text-white font-extrabold flex items-center justify-center shrink-0 text-xs">4</span>
+                                    <div class="text-xs"><strong class="text-slate-900 dark:text-white block">Bedah 3 Blok Baru &amp; Evaluasi</strong><span class="text-slate-500">Slide 14–19 · Fokus kode baru M6 &amp; siap LKM 06</span></div>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 2: Jembatan Pertemuan 5 -> Pertemuan 6
+        function renderSlide2() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-6">
+                    ${slideHeader("Bagian 1 · Menyambung Pertemuan 5", "Pintu Baca (<code class='font-mono'>GET</code>) Sudah Pintar, Sekarang Giliran Pintu Transaksi (<code class='font-mono'>POST</code>)!", "Di Minggu 5 kita merapikan layanan katalog; hari ini kita menyempurnakan transaksi yang benar-benar mengubah angka stok di gudang.")}
+
+                    <div class="grid grid-cols-1 lg:grid-cols-11 gap-4 items-stretch my-auto">
+                        <div class="lg:col-span-5 p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-4">
+                            <div class="space-y-2.5">
+                                <span class="px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-xs font-extrabold">◀ SELESAI DI MINGGU 5 (LKM 05)</span>
+                                <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Layanan Katalog (<code class="font-mono">GET /api/barang.php</code>)</h3>
+                                <ul class="space-y-2 text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                                    <li>✓ Sudah memakai mesin kop surat <code class="font-mono font-bold">helpers/response.php</code>.</li>
+                                    <li>✓ Sudah punya Radar Reorder Point (<code class="font-mono">?stok_max=5</code>) yang menemukan <strong>SP008 sisa 2 pasang</strong>.</li>
+                                    <li>✓ Sudah aman dari sabotase input pencarian.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-1 flex items-center justify-center">
+                            <div class="w-11 h-11 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-extrabold shadow-md">
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-5 p-6 rounded-3xl bg-indigo-50/70 dark:bg-indigo-950/40 border-2 border-indigo-500 flex flex-col justify-between gap-4">
+                            <div class="space-y-2.5">
+                                <span class="px-3 py-1 rounded-full bg-indigo-600 text-white text-xs font-extrabold">▶ FOKUS MINGGU 6 HARI INI (LKM 06)</span>
+                                <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Transaksi <code class="font-mono">POST</code> (Stok Masuk &amp; Keluar)</h3>
+                                <ul class="space-y-2 text-xs sm:text-sm text-slate-700 dark:text-slate-200">
+                                    <li>• <strong>Menutup celah M4:</strong> pasang pagar Anti-PO Ganda (<code class="font-mono">409</code>) di <code class="font-mono">stok-masuk.php</code>.</li>
+                                    <li>• <strong>Strategi Bisnis:</strong> pasang batas maksimal beli promo (<code class="font-mono">$maksQtyPerNota</code>).</li>
+                                    <li>• <strong>Integritas Audit:</strong> bungkus mutasi ke dalam <strong>Pembukuan 1 Paket Utuh</strong>.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${slideTransitionNote("Mengapa 3 perbaikan POST ini krusial secara finansial? Kita lihat kerugian nyatanya di Slide 3.")}
+                </div>
+            `;
+        }
+
+        // SLIDE 3: Tiga Risiko Bisnis Nyata & Dampak Finansialnya (Business Stakes)
+        function renderSlide3() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-6">
+                    ${slideHeader("Bagian 1 · Dampak Finansial &amp; Risiko Audit", "Tiga Kerugian Nyata Jika Transaksi (<code class='font-mono'>POST</code>) Tanpa Kontrol Bisnis", "Bukan sekadar error komputer—celah pada transaksi POST langsung memengaruhi uang kas, omzet, dan tanggung jawab staf.", "text-rose-600 dark:text-rose-400")}
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 my-auto">
+                        <div class="p-6 rounded-3xl bg-purple-50/70 dark:bg-purple-950/30 border-t-4 border-purple-600 border-x border-b border-purple-200 dark:border-purple-800 flex flex-col justify-between gap-4">
+                            <div class="space-y-2">
+                                <span class="text-[11px] font-extrabold uppercase tracking-wider text-purple-700 dark:text-purple-300">👻 Aset Fiktif (Phantom Inventory)</span>
+                                <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">1. Faktur PO Masuk Dua Kali</h3>
+                                <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    Surat jalan <code class="font-mono font-bold">PO-2026-01</code> (+10 pasang) diinput dua kali. Komputer mengira stok aman (+20), manajer lupa restock, lalu toko <strong>kehilangan omzet (<em>stockout</em>)</strong>.
+                                </p>
+                            </div>
+                            <div class="text-xs font-extrabold text-purple-700 dark:text-purple-300 pt-2 border-t border-purple-200 dark:border-purple-800">
+                                Pagar: ${term('anti_duplikat', 'Tolak PO Ganda (409)')}
+                            </div>
+                        </div>
+
+                        <div class="p-6 rounded-3xl bg-amber-50/70 dark:bg-amber-950/30 border-t-4 border-amber-500 border-x border-b border-amber-200 dark:border-amber-800 flex flex-col justify-between gap-4">
+                            <div class="space-y-2">
+                                <span class="text-[11px] font-extrabold uppercase tracking-wider text-amber-800 dark:text-amber-300">🏷️ Subsidi Promo Salah Sasaran</span>
+                                <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">2. Diskon Disapu Tengkulak</h3>
+                                <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    Anggaran subsidi promo untuk <strong>mengakuisisi pelanggan baru</strong> malah habis diborong 1 tengkulak (<em>reseller</em>) dalam sekali transaksi.
+                                </p>
+                            </div>
+                            <div class="text-xs font-extrabold text-amber-800 dark:text-amber-300 pt-2 border-t border-amber-200 dark:border-amber-800">
+                                Pagar: ${term('batas_promo', 'Fair Allocation / Batas Nota (400)')}
+                            </div>
+                        </div>
+
+                        <div class="p-6 rounded-3xl bg-rose-50/70 dark:bg-rose-950/30 border-t-4 border-rose-600 border-x border-b border-rose-200 dark:border-rose-800 flex flex-col justify-between gap-4">
+                            <div class="space-y-2">
+                                <span class="text-[11px] font-extrabold uppercase tracking-wider text-rose-700 dark:text-rose-300">📉 Risiko Tuduhan Selisih (Shrinkage)</span>
+                                <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">3. Stok Terpotong Tanpa Nota</h3>
+                                <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    Koneksi putus sebelum bukti tertulis di <code class="font-mono">log_stok</code>. Saat <em>stock opname</em> bulanan, barang dianggap hilang dan <strong>staf berisiko kena sanksi potong gaji</strong>!
+                                </p>
+                            </div>
+                            <div class="text-xs font-extrabold text-rose-700 dark:text-rose-300 pt-2 border-t border-rose-200 dark:border-rose-800">
+                                Pagar: ${term('pembukuan_utuh', 'Pembukuan 1 Paket Utuh')}
+                            </div>
+                        </div>
+                    </div>
+
+                    ${slideTransitionNote("Mari kita lihat alur operasional harian toko dari pagi hingga sore di Slide 4.")}
+                </div>
+            `;
+        }
+
+        // SLIDE 4: Peta 1 Hari Operasional Toko (Pagi - Siang - Sore)
+        function renderSlide4() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-6">
+                    ${slideHeader("Bagian 2 · Proses Bisnis Digital Harian", "Satu Hari Operasional Toko Sepatu Nusantara", "Menyambung peringatan stok kritis kemarin sore (SP008 tinggal 2 pasang), begini 3 siklus kerja harian toko kita:", "text-emerald-600 dark:text-emerald-400")}
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 my-auto">
+                        <div class="p-6 rounded-3xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="px-3 py-1 rounded-full bg-emerald-600 text-white text-xs font-extrabold">🌅 PAGI · RESTOCK</span>
+                                <span class="font-mono text-xs font-bold text-emerald-700 dark:text-emerald-400">stok-masuk.php</span>
+                            </div>
+                            <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">${term('procure_to_pay', 'Terima Kiriman Pabrik')}</h3>
+                            <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Datang 10 pasang <strong>SP008</strong> dengan Surat Jalan <code class="font-mono font-bold">PO-2026-01</code>. Stok naik dari <strong>2 &rarr; 12 pasang</strong>.
+                            </p>
+                        </div>
+
+                        <div class="p-6 rounded-3xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="px-3 py-1 rounded-full bg-indigo-600 text-white text-xs font-extrabold">☀️ SIANG · PENJUALAN</span>
+                                <span class="font-mono text-xs font-bold text-indigo-700 dark:text-indigo-400">stok-keluar.php</span>
+                            </div>
+                            <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">${term('order_to_cash', 'Transaksi Kasir POS')}</h3>
+                            <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Pelanggan membeli 2 pasang <strong>SP008</strong> dengan Struk <code class="font-mono font-bold">TRX-2026-01</code>. Stok turun <strong>12 &rarr; 10 pasang</strong>.
+                            </p>
+                        </div>
+
+                        <div class="p-6 rounded-3xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="px-3 py-1 rounded-full bg-amber-600 text-white text-xs font-extrabold">🌇 SORE · AUDIT</span>
+                                <span class="font-mono text-xs font-bold text-amber-800 dark:text-amber-300">log_stok</span>
+                            </div>
+                            <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">${term('stock_opname', 'Rekonsiliasi Kartu Stok')}</h3>
+                            <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Manajer mencocokkan fisik rak: <strong>2 + 10 &minus; 2 = 10 pasang</strong>. Selisih <strong>0 pasang</strong>, pembukuan sah!
+                            </p>
+                        </div>
+                    </div>
+
+                    ${slideTransitionNote("Mari kita bedah aturan bisnis Fase Pagi (Barang Masuk) terlebih dahulu di Slide 5.")}
+                </div>
+            `;
+        }
+
+        // SLIDE 5: Fase Pagi — Siklus Barang Masuk & Anti-PO Ganda (409)
+        function renderSlide5() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-6">
+                    ${slideHeader("Fase Pagi · Siklus Restock (POST /api/stok-masuk.php)", "Tiga Syarat Wajib Saat Menerima Kiriman Barang dari Pemasok", "Menutup temuan Misi 4 Pertemuan 4: barang masuk kini memiliki perlindungan anti-duplikat yang sama ketatnya dengan barang keluar.", "text-emerald-600 dark:text-emerald-400")}
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 my-auto">
+                        <div class="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                            <span class="w-9 h-9 rounded-2xl bg-emerald-600 text-white font-extrabold flex items-center justify-center text-sm">1</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Wajib Ada Nomor Surat Jalan</h3>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Tidak ada penambahan stok tanpa bukti resmi (<code class="font-mono font-bold">no_referensi</code> seperti <code class="font-mono">PO-2026-01</code>). Jika kosong, ditolak <strong>400</strong>.
+                            </p>
+                        </div>
+
+                        <div class="p-6 rounded-3xl bg-purple-50/70 dark:bg-purple-950/30 border-2 border-purple-400 dark:border-purple-800 space-y-2.5">
+                            <span class="w-9 h-9 rounded-2xl bg-purple-600 text-white font-extrabold flex items-center justify-center text-sm">2</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Satu PO Hanya Boleh Masuk 1 Kali</h3>
+                            <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed">
+                                Sebelum menambah stok, sistem memeriksa <code class="font-mono font-bold">log_stok</code>. Jika <code class="font-mono">PO-2026-01</code> sudah ada, tolak <strong>409 Conflict</strong> agar bebas ${term('phantom_inventory', 'stok hantu')}!
+                            </p>
+                        </div>
+
+                        <div class="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                            <span class="w-9 h-9 rounded-2xl bg-indigo-600 text-white font-extrabold flex items-center justify-center text-sm">3</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Stok &amp; Kartu Stok Naik Bersama</h3>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Penambahan di tabel <code class="font-mono">barang</code> dan catatan <code class="font-mono">jenis='masuk'</code> di <code class="font-mono">log_stok</code> disahkan serentak dalam 1 paket utuh.
+                            </p>
+                        </div>
+                    </div>
+
+                    ${slideTransitionNote("Setelah rak terisi di pagi hari, aturan apa saja yang menjaga penjualan siang hari? Kita lihat di Slide 6.")}
+                </div>
+            `;
+        }
+
+        // SLIDE 6: Fase Siang — 4 Gerbang Pengaman Penjualan Kasir
+        function renderSlide6() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-6">
+                    ${slideHeader("Fase Siang · Siklus Penjualan (POST /api/stok-keluar.php)", "Empat Gerbang ${term('kontrol_internal', 'Kontrol Internal')} Sebelum Stok Dipotong Kasir", "Setiap kali tombol 'Bayar' ditekan di Kasir POS, pesanan wajib lolos dari 4 gerbang pemeriksaan berurutan ini:")}
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 my-auto">
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-t-4 border-rose-600 border-x border-b border-slate-200 dark:border-slate-800 space-y-2">
+                            <span class="px-2 py-0.5 rounded bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 font-mono text-[11px] font-extrabold">GERBANG 1 · 401</span>
+                            <h3 class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white">Izin Kunci Cabang</h3>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">Memastikan cabang memiliki stempel <code class="font-mono">X-API-KEY</code> aktif (saklar = 1).</p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-amber-50/70 dark:bg-amber-950/30 border-t-4 border-amber-500 border-x border-b border-amber-200 dark:border-amber-800 space-y-2">
+                            <span class="px-2 py-0.5 rounded bg-amber-500 text-white font-mono text-[11px] font-extrabold">GERBANG 2 · 400 ⭐</span>
+                            <h3 class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white">${term('batas_promo', 'Batas Beli Promo')}</h3>
+                            <p class="text-xs text-slate-700 dark:text-slate-200 leading-relaxed">Menolak tengkulak jika jumlah beli melebihi <code class="font-mono font-bold">$maksQtyPerNota</code> (misal &gt; 3 pasang).</p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-t-4 border-purple-600 border-x border-b border-slate-200 dark:border-slate-800 space-y-2">
+                            <span class="px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 font-mono text-[11px] font-extrabold">GERBANG 3 · 409</span>
+                            <h3 class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white">Anti-Struk Kembar</h3>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">Menolak nomor struk (<code class="font-mono">TRX-...</code>) yang sama jika kasir terpencet 2x.</p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-t-4 border-emerald-600 border-x border-b border-slate-200 dark:border-slate-800 space-y-2">
+                            <span class="px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-mono text-[11px] font-extrabold">GERBANG 4 · 404/400</span>
+                            <h3 class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white">Produk Ada &amp; Cukup</h3>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">Pastikan kode sepatu terdaftar (404) dan sisa stok fisik mencukupi (400).</p>
+                        </div>
+                    </div>
+
+                    ${slideTransitionNote("Mari langsung praktikkan kedua loket bisnis tersebut di Meja Operasional Toko pada Slide 7!")}
+                </div>
+            `;
+        }
+
+        // SLIDE 7: [SIMULASI DUNIA NYATA 1] Meja Operasional Toko Sepatu Nusantara (Loket Gudang + Layar Kasir POS)
+        function renderSlide7() {
+            const s = storeApp;
+            const totalBayar = s.trxQty * HARGA_SP008;
+
+            // Render panel kiri sesuai tab aplikasi aktif ('gudang' vs 'kasir')
+            let appPanelHtml = '';
+            if (s.tab === 'gudang') {
+                appPanelHtml = `
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-extrabold text-emerald-700 dark:text-emerald-400">📦 LOKET TERIMA BARANG (POST /api/stok-masuk.php)</span>
+                            <span class="text-[11px] font-mono text-slate-400">SP008 · Office Oxford</span>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-[11px] font-bold text-slate-500 block mb-1">Nomor Surat Jalan (PO)</label>
+                                <input type="text" value="${escapeHtml(s.poNumber)}" oninput="updateStorePo(this.value)" class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 font-mono text-xs font-bold">
+                            </div>
+                            <div>
+                                <label class="text-[11px] font-bold text-slate-500 block mb-1">Jumlah Kiriman Pabrik (Pasang)</label>
+                                <div class="flex items-center gap-1.5">
+                                    <button type="button" onclick="adjustStorePoQty(-2)" class="w-9 h-9 rounded-xl bg-slate-200 dark:bg-slate-800 font-extrabold text-sm">&minus;</button>
+                                    <div class="flex-1 text-center font-mono font-extrabold text-sm bg-white dark:bg-slate-900 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700">+${s.poQty} psg</div>
+                                    <button type="button" onclick="adjustStorePoQty(2)" class="w-9 h-9 rounded-xl bg-slate-200 dark:bg-slate-800 font-extrabold text-sm">+</button>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" onclick="submitRestockPagi()" class="w-full py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm transition shadow-xs">
+                            <i class="fa-solid fa-truck-ramp-box mr-1.5"></i>Terima &amp; Catat Barang Masuk (+${s.poQty} psg)
+                        </button>
+                    </div>
+                `;
+            } else {
+                appPanelHtml = `
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-extrabold text-indigo-700 dark:text-indigo-400">🛒 LAYAR KASIR POS (POST /api/stok-keluar.php)</span>
+                            <span class="text-[11px] font-mono text-slate-400">${formatRupiah(HARGA_SP008)} / psg</span>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-[11px] font-bold text-slate-500 block mb-1">Nomor Struk Pembeli (TRX)</label>
+                                <input type="text" value="${escapeHtml(s.trxNumber)}" oninput="updateStoreTrx(this.value)" class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 font-mono text-xs font-bold">
+                            </div>
+                            <div>
+                                <label class="text-[11px] font-bold text-slate-500 block mb-1">Jumlah Beli (Batas Promo: ${s.maksPromo})</label>
+                                <div class="flex items-center gap-1.5">
+                                    <button type="button" onclick="adjustStoreTrxQty(-1)" class="w-9 h-9 rounded-xl bg-slate-200 dark:bg-slate-800 font-extrabold text-sm">&minus;</button>
+                                    <div class="flex-1 text-center font-mono font-extrabold text-sm bg-white dark:bg-slate-900 py-1.5 rounded-xl border ${s.trxQty > s.maksPromo ? 'border-amber-500 text-amber-600' : 'border-slate-300 dark:border-slate-700'}">${s.trxQty} psg</div>
+                                    <button type="button" onclick="adjustStoreTrxQty(1)" class="w-9 h-9 rounded-xl bg-slate-200 dark:bg-slate-800 font-extrabold text-sm">+</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between px-3.5 py-2 rounded-xl bg-indigo-50/80 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800 text-xs">
+                            <span class="font-bold text-slate-600 dark:text-slate-300">Total Tagihan Kasir:</span>
+                            <strong class="font-mono text-sm text-indigo-700 dark:text-indigo-300">${formatRupiah(totalBayar)}</strong>
+                        </div>
+                        <button type="button" onclick="submitKasirSiang()" class="w-full py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs sm:text-sm transition shadow-xs">
+                            <i class="fa-solid fa-cash-register mr-1.5"></i>Proses Bayar &amp; Potong Stok (&minus;${s.trxQty} psg)
+                        </button>
+                    </div>
+                `;
+            }
+
+            // Render banner respon terakhir
+            let bannerHtml = '';
+            if (s.lastBanner) {
+                const b = s.lastBanner;
+                const bCls = b.ok
+                    ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 text-emerald-900 dark:text-emerald-200'
+                    : 'bg-rose-50 dark:bg-rose-950/40 border-rose-500 text-rose-900 dark:text-rose-200';
+                bannerHtml = `
+                    <div class="p-3 rounded-2xl border-l-4 ${bCls} text-xs pulse-soft space-y-0.5">
+                        <div class="font-extrabold flex items-center justify-between gap-2">
+                            <span>${escapeHtml(b.title)}</span>
+                            <span class="px-2 py-0.5 rounded font-mono text-[10px] ${b.ok ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'}">HTTP ${b.code}</span>
+                        </div>
+                        <p class="leading-snug">${escapeHtml(b.desc)}</p>
+                    </div>
+                `;
+            } else {
+                bannerHtml = `
+                    <div class="p-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-xs text-slate-600 dark:text-slate-300">
+                        💬 <strong>Coba Uji Sendiri:</strong> (1) Klik Terima Barang 2x untuk menguji <strong>409 PO Ganda</strong>; (2) Pindah ke tab <strong>Kasir POS</strong> lalu naikkan jumlah beli jadi <strong>5 psg</strong> untuk menguji <strong>400 Batas Promo</strong>!
+                    </div>
+                `;
+            }
+
+            // Render panel kanan: Kartu Stok Live atau Balasan JSON
+            let rightViewHtml = '';
+            if (s.viewMode === 'buku') {
+                let rows = '';
+                for (let i = s.logs.length - 1; i >= 0; i--) {
+                    const lg = s.logs[i];
+                    const isIn = lg.jenis === 'masuk';
+                    rows += `
+                        <tr class="border-t border-slate-200 dark:border-slate-700">
+                            <td class="p-1.5 font-mono text-[11px] text-slate-500">${escapeHtml(lg.jam)}</td>
+                            <td class="p-1.5"><span class="px-1.5 py-0.5 rounded text-[10px] font-extrabold ${isIn ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300'}">${isIn ? 'MASUK' : 'KELUAR'}</span></td>
+                            <td class="p-1.5 font-mono font-bold ${isIn ? 'text-emerald-600' : 'text-indigo-600'}">${isIn ? '+' : '&minus;'}${lg.qty}</td>
+                            <td class="p-1.5 font-mono font-extrabold">${lg.sisa}</td>
+                            <td class="p-1.5 font-mono text-[11px] font-bold">${escapeHtml(lg.ref)}</td>
+                        </tr>
+                    `;
+                }
+                rightViewHtml = `
+                    <div class="overflow-y-auto max-h-[195px] rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead class="bg-slate-100 dark:bg-slate-800 sticky top-0 text-slate-600 dark:text-slate-300">
+                                <tr><th class="p-1.5">Jam</th><th class="p-1.5">Jenis</th><th class="p-1.5">Qty</th><th class="p-1.5">Sisa</th><th class="p-1.5">No Bukti</th></tr>
+                            </thead>
+                            <tbody>${rows}</tbody>
+                        </table>
+                    </div>
+                `;
+            } else {
+                rightViewHtml = `<pre class="code-clean max-h-[195px] overflow-y-auto">${escapeHtml(s.lastJson)}</pre>`;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400">Simulasi Dunia Nyata 1 · Praktik Langsung Seperti Aplikasi Asli</span>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Meja Operasional Toko Sepatu Nusantara</h2>
+                        </div>
+
+                        <!-- Bar Pengaturan Manajer Real-Time -->
+                        <div class="flex flex-wrap items-center gap-2 text-xs">
+                            <button type="button" onclick="cyclePromoLimit()" class="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200 font-extrabold transition" title="Klik untuk mengubah batas promo">
+                                🏷️ Batas Promo: Maks ${s.maksPromo} psg
+                            </button>
+                            <button type="button" onclick="toggleStoreKey()" class="px-3 py-1.5 rounded-xl font-extrabold transition border ${s.kunciAktif ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 text-emerald-800 dark:text-emerald-300' : 'bg-rose-600 border-rose-600 text-white'}">
+                                🔑 Kunci Cabang: ${s.kunciAktif ? 'AKTIF (1)' : 'MATI (0)'}
+                            </button>
+                            <button type="button" onclick="resetStoreApp()" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold" title="Ulangi Simulasi">
+                                <i class="fa-solid fa-rotate-left"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Pertanyaan Tebakan Cepat (Predict-Observe-Explain) -->
+                    <div class="px-3.5 py-2 rounded-2xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-300/80 dark:border-amber-800 text-xs text-amber-950 dark:text-amber-200 flex items-center gap-2">
+                        <span class="font-extrabold shrink-0">💡 Tebak dulu sebelum klik:</span>
+                        <span>Jika Anda menekan <strong>"Terima &amp; Catat Barang Masuk" 2x</strong> untuk <code class="font-mono font-bold">PO-2026-01</code> tanpa pagar <code class="font-mono font-bold">409</code>, berapa rupiah nilai aset palsu (<em>stok hantu</em>) yang tercipta?</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch my-auto">
+                        <!-- KIRI: Aplikasi Loket Gudang & Kasir POS -->
+                        <div class="lg:col-span-6 p-4 sm:p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-3">
+                            <div class="grid grid-cols-2 gap-1.5 p-1 rounded-2xl bg-slate-200/70 dark:bg-slate-900">
+                                <button type="button" onclick="setStoreTab('gudang')" class="py-2 rounded-xl text-xs font-extrabold transition ${s.tab === 'gudang' ? 'bg-emerald-600 text-white shadow-2xs' : 'text-slate-600 dark:text-slate-300'}">📦 1. Loket Gudang (Pagi)</button>
+                                <button type="button" onclick="setStoreTab('kasir')" class="py-2 rounded-xl text-xs font-extrabold transition ${s.tab === 'kasir' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 dark:text-slate-300'}">🛒 2. Layar Kasir POS (Siang)</button>
+                            </div>
+
+                            ${appPanelHtml}
+                            ${bannerHtml}
+                        </div>
+
+                        <!-- KANAN: Saldo Rak Live + Kartu Stok / JSON -->
+                        <div class="lg:col-span-6 p-4 sm:p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-3">
+                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-11 h-11 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-2xl">👞</div>
+                                    <div>
+                                        <div class="text-xs font-mono font-bold text-slate-400">SP008 · Saldo Tabel barang</div>
+                                        <div class="text-sm font-extrabold text-slate-900 dark:text-white">Office Oxford (${formatRupiah(HARGA_SP008)})</div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <span class="px-3 py-1 rounded-xl font-mono text-sm font-extrabold ${s.stokSP008 <= 5 ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'}">
+                                        ${s.stokSP008} psg
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-extrabold text-slate-600 dark:text-slate-300">
+                                    ${s.viewMode === 'buku' ? '📋 Kartu Stok Live (log_stok)' : '{ } Surat Balasan JSON Gudang'}
+                                </span>
+                                <div class="inline-flex p-0.5 rounded-xl bg-slate-200/80 dark:bg-slate-900 text-[11px] font-bold">
+                                    <button type="button" onclick="setStoreView('buku')" class="px-2.5 py-1 rounded-lg transition ${s.viewMode === 'buku' ? 'bg-white dark:bg-slate-800 text-indigo-600 shadow-2xs' : 'text-slate-500'}">📋 Kartu Stok</button>
+                                    <button type="button" onclick="setStoreView('json')" class="px-2.5 py-1 rounded-lg transition ${s.viewMode === 'json' ? 'bg-white dark:bg-slate-800 text-indigo-600 shadow-2xs' : 'text-slate-500'}">{ } Lihat JSON</button>
+                                </div>
+                            </div>
+
+                            ${rightViewHtml}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 8: Fase Sore — Rumus Audit Stock Opname & Dampak Finansial
+        function renderSlide8() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-6">
+                    ${slideHeader("Fase Sore · Penutupan &amp; Pengendalian Persediaan", "Rumus ${term('stock_opname', 'Audit Kartu Stok')} &amp; Nilai Rupiah Setiap Selisih", "Pada jam tutup toko, manajer memastikan angka stok fisik di rak cocok 100% dengan riwayat Kartu Stok.", "text-amber-600 dark:text-amber-400")}
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 my-auto">
+                        <div class="p-6 rounded-3xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 space-y-4">
+                            <span class="px-3 py-1 rounded-full bg-emerald-600 text-white text-xs font-extrabold">1. RUMUS REKONSILIASI SORE HARI</span>
+                            <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Saldo Awal + Masuk &minus; Keluar = Fisik Rak</h3>
+                            <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800 font-mono text-xs sm:text-sm space-y-1.5">
+                                <div class="flex justify-between"><span>Saldo Pagi SP008</span><strong>2 psg</strong></div>
+                                <div class="flex justify-between text-emerald-600"><span>+ Masuk (PO-2026-01)</span><strong>+10 psg</strong></div>
+                                <div class="flex justify-between text-indigo-600"><span>&minus; Keluar (TRX-2026-01)</span><strong>&minus;2 psg</strong></div>
+                                <div class="border-t border-slate-200 dark:border-slate-700 pt-2 flex justify-between font-extrabold text-slate-900 dark:text-white"><span>Wajib Ada di Rak</span><span>10 psg ✓ (Selisih = 0)</span></div>
+                            </div>
+                        </div>
+
+                        <div class="p-6 rounded-3xl bg-rose-50/60 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 space-y-4 flex flex-col justify-between">
+                            <div class="space-y-3">
+                                <span class="px-3 py-1 rounded-full bg-rose-600 text-white text-xs font-extrabold">2. DAMPAK FINANSIAL JIKA ADA SELISIH</span>
+                                <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Mengapa 2 Pasang Selisih Bukan Hal Sepele?</h3>
+                                <ul class="space-y-2.5 text-sm text-slate-700 dark:text-slate-200 leading-relaxed">
+                                    <li>• <strong>Kerugian Langsung:</strong> 2 pasang SP008 &times; Rp 490.000 = <strong>Rp 980.000</strong> aset toko tidak jelas rimbanya.</li>
+                                    <li>• <strong>Beban Investigasi:</strong> Staf harus lembur membuka ulang rekaman CCTV &amp; tumpukan nota kertas.</li>
+                                    <li>• <strong>Dampak ke LKM 06:</strong> Rumus rekonsiliasi di kiri akan Anda buktikan langsung di <strong>Form 4 LKM 06</strong>!</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${slideTransitionNote("Sistem sudah pintar menolak kesalahan—lalu apa SOP tindakan manusia di lapangan saat error muncul? Lihat Slide 9!")}
+                </div>
+            `;
+        }
+
+        // SLIDE 9 (BARU): Peta Tindakan Manusia — SOP Penanganan Penolakan Sistem (Jembatan Langsung ke Form 3 LKM 06)
+        function renderSlide9() {
+            const sopRoles = {
+                gudang: {
+                    tabLabel: '📦 1. Staf Gudang (409)',
+                    badge: 'PERAN 1 · STAF GUDANG',
+                    code: '409 Conflict (POST /api/stok-masuk.php)',
+                    accent: 'border-purple-500 bg-purple-50/60 dark:bg-purple-950/30',
+                    badgeCls: 'bg-purple-600 text-white',
+                    situation: 'Staf shift siang menginput Surat Jalan PO-2026-01, lalu layar menolak 409 karena nomor PO tersebut ternyata sudah diinput oleh rekan shift pagi.',
+                    steps: [
+                        'Tenang & jangan menekan tombol kirim berulang kali.',
+                        'Buka Dashboard Gudang dan cek tabel Kartu Stok (log_stok) untuk memastikan PO-2026-01 benar sudah masuk.',
+                        'Beri paraf & cap "SUDAH DIINPUT" di berkas fisik surat jalan.'
+                    ],
+                    comm: 'Konfirmasi singkat ke rekan shift pagi agar proses serah terima berkas PO lebih tertib.',
+                    forbid: 'DILARANG mengubah nomor PO menjadi palsu (misal PO-2026-01B) agar lolos input, karena akan menciptakan stok hantu!'
+                },
+                kasir: {
+                    tabLabel: '🛒 2. Petugas Kasir (400)',
+                    badge: 'PERAN 2 · PETUGAS KASIR DEPAN',
+                    code: '400 Bad Request (POST /api/stok-keluar.php)',
+                    accent: 'border-amber-500 bg-amber-50/60 dark:bg-amber-950/30',
+                    badgeCls: 'bg-amber-600 text-white',
+                    situation: 'Di depan antrean pembeli, layar kasir menolak transaksi 400 karena jumlah beli melebihi kuota promo toko atau sisa stok gudang tidak cukup.',
+                    steps: [
+                        'Baca alasan spesifik pada pesan balasan JSON (apakah kuota promo atau stok kurang).',
+                        'Jika kuota promo, tawarkan maksimal sesuai batas promo toko (misal 3 pasang).',
+                        'Jika stok kurang, tawarkan sisa yang tersedia atau cari model sejenis lewat fitur ?cari=.'
+                    ],
+                    comm: 'Minta maaf dengan sopan dan jelaskan aturan promo secara transparan—jangan menyalahkan "sistem lagi error".',
+                    forbid: 'DILARANG memecah 1 pembeli borongan menjadi beberapa struk terpisah untuk mengakali promo, atau menerima uang tunai tanpa nota!'
+                },
+                manajer: {
+                    tabLabel: '👔 3. Manajer Cabang (401 / 500)',
+                    badge: 'PERAN 3 · MANAJER CABANG / OPERASIONAL',
+                    code: '401 Unauthorized & 500 RollBack',
+                    accent: 'border-rose-500 bg-rose-50/60 dark:bg-rose-950/30',
+                    badgeCls: 'bg-rose-600 text-white',
+                    situation: 'Mesin kasir cabang tiba-tiba ditolak 401 (Kunci Cabang dimatikan pusat) atau transaksi terhenti 500 (RollBack akibat gangguan server di tengah jalan).',
+                    steps: [
+                        'Untuk 500 (RollBack): cek Dashboard Gudang guna memastikan saldo rak utuh & tidak ada catatan log yang menggantung.',
+                        'Untuk 401 (Kunci Mati): hentikan transaksi cabang sementara hingga status audit/kunci cabang beres.',
+                        'Setelah jaringan/kunci normal, instruksikan kasir mengulang transaksi 1x dengan nomor struk baru.'
+                    ],
+                    comm: 'Segera eskalasi ke Admin Gudang Pusat / Tim IT dengan melampirkan kode error & jam kejadian.',
+                    forbid: 'DILARANG meminjam atau menempelkan X-API-KEY milik cabang lain karena akan merusak jejak audit transaksi antar-cabang!'
+                }
+            };
+
+            const r = sopRoles[activeSopRoleTab];
+            const tabsHtml = ['gudang', 'kasir', 'manajer'].map(function (k) {
+                const isAct = activeSopRoleTab === k;
+                return `<button type="button" onclick="activeSopRoleTab='${k}';renderCurrentSlide();" class="px-4 py-2 rounded-2xl text-xs font-extrabold border-2 transition ${isAct ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-indigo-400'}">${sopRoles[k].tabLabel}</button>`;
+            }).join('');
+
+            const stepsListHtml = r.steps.map(function (st, idx) {
+                return `<li class="flex items-start gap-2"><span class="w-5 h-5 rounded-md bg-emerald-600 text-white font-mono text-[10px] font-extrabold flex items-center justify-center shrink-0 mt-0.5">${idx + 1}</span><span>${escapeHtml(st)}</span></li>`;
+            }).join('');
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideHeader("Bagian 2 · Jembatan Langsung ke Form 3 LKM 06", "Peta Tindakan Manusia: ${term('exception_sop', 'SOP Lapangan')} Saat Sistem Menolak", "Teknologi hanya membunyikan alarm penolakan; staf toko wajib tahu tindakan cepat, cara komunikasi, dan larangan kerasnya. Klik 3 peran berikut:")}
+
+                    <div class="flex flex-wrap gap-2">${tabsHtml}</div>
+
+                    <div class="p-5 rounded-3xl border-2 ${r.accent} space-y-4 my-auto">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <span class="px-3 py-1 rounded-full text-xs font-extrabold ${r.badgeCls}">${r.badge}</span>
+                            <span class="font-mono text-xs font-bold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 px-3 py-1 rounded-xl border border-slate-200 dark:border-slate-700">${escapeHtml(r.code)}</span>
+                        </div>
+
+                        <p class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 leading-relaxed">
+                            📌 Situasi: ${escapeHtml(r.situation)}
+                        </p>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-3.5">
+                            <div class="lg:col-span-6 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 space-y-2">
+                                <div class="text-[11px] font-extrabold uppercase text-emerald-700 dark:text-emerald-400">✓ 3 Langkah Tindakan Cepat (SOP)</div>
+                                <ul class="space-y-2 text-xs text-slate-700 dark:text-slate-200 leading-relaxed">${stepsListHtml}</ul>
+                            </div>
+
+                            <div class="lg:col-span-6 flex flex-col justify-between gap-3">
+                                <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-800 space-y-1">
+                                    <div class="text-[11px] font-extrabold uppercase text-indigo-700 dark:text-indigo-400">💬 Cara Komunikasi / Eskalasi</div>
+                                    <p class="text-xs text-slate-700 dark:text-slate-200 leading-relaxed">${escapeHtml(r.comm)}</p>
+                                </div>
+                                <div class="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/60 border-l-4 border-rose-600 space-y-1">
+                                    <div class="text-[11px] font-extrabold uppercase text-rose-700 dark:text-rose-300">🚫 Larangan Keras SOP (Pagar Audit)</div>
+                                    <p class="text-xs font-semibold text-rose-900 dark:text-rose-200 leading-relaxed">${escapeHtml(r.forbid)}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${slideTransitionNote("Sekarang masuk ke Bagian 3: bagaimana sistem mencegah selisih audit saat listrik atau koneksi putus di tengah jalan?")}
+                </div>
+            `;
+        }
+
+        // SLIDE 10: Analogi Transfer Bank untuk Pembukuan Satu Paket Utuh
+        function renderSlide10() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-6">
+                    ${slideHeader("Bagian 3 · Integritas Pembukuan Akuntansi", "Analogi Transfer Bank: Prinsip ${term('pembukuan_utuh', 'Pembukuan Satu Paket Utuh')}", "Mengubah saldo rak dan menulis bukti Kartu Stok tidak boleh berjalan sendiri-sendiri.")}
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 my-auto">
+                        <div class="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-3">
+                            <span class="px-3 py-1 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-xs font-extrabold">🏦 DI MOBILE BANKING</span>
+                            <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Transfer Rp 500.000 Harus Tuntas Keduanya</h3>
+                            <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Jika saldo Anda sudah terpotong Rp 500.000 lalu jaringan bank terputus sebelum masuk ke rekening tujuan, bank wajib <strong>membatalkan pemotongan</strong> agar uang Anda utuh kembali.
+                            </p>
+                        </div>
+
+                        <div class="p-6 rounded-3xl bg-emerald-50/70 dark:bg-emerald-950/30 border-2 border-emerald-400 dark:border-emerald-800 space-y-4">
+                            <span class="px-3 py-1 rounded-full bg-emerald-600 text-white text-xs font-extrabold">📦 DI SISTEM GUDANG KITA</span>
+                            <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">3 Langkah Pembukuan Aman (<code class="font-mono">Transaction</code>)</h3>
+                            <div class="grid grid-cols-3 gap-2.5 text-center font-mono text-xs font-extrabold">
+                                <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-emerald-200">
+                                    <div class="text-indigo-600">1. BEGIN</div>
+                                    <div class="font-sans font-semibold text-[11px] text-slate-500 mt-1">Buka Paket</div>
+                                </div>
+                                <div class="p-3 rounded-2xl bg-emerald-600 text-white">
+                                    <div>2. COMMIT</div>
+                                    <div class="font-sans font-semibold text-[11px] text-emerald-100 mt-1">Sahkan Semua</div>
+                                </div>
+                                <div class="p-3 rounded-2xl bg-rose-600 text-white">
+                                    <div>3. ROLLBACK</div>
+                                    <div class="font-sans font-semibold text-[11px] text-rose-100 mt-1">Batal Semua</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${slideTransitionNote("Mari kita saksikan prosesnya langkah demi langkah pada Simulasi Gangguan Listrik di Slide 11!")}
+                </div>
+            `;
+        }
+
+        // SLIDE 11: [SIMULASI DUNIA NYATA 2] Animasi Proses Checkout & Gangguan Listrik (Step-by-Step)
+        function renderSlide11() {
+            const t = txSim;
+            const isRunning = t.stage === 'stepA' || t.stage === 'cut';
+            const isMismatch = t.rakStok !== t.bukuStok;
+
+            // Tampilan status Langkah A & B
+            let step1Cls = 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900';
+            let step1Badge = '<span class="text-[11px] text-slate-400">Menunggu tombol bayar...</span>';
+            let step2Cls = 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900';
+            let step2Badge = '<span class="text-[11px] text-slate-400">Menunggu Langkah A...</span>';
+
+            if (t.stage === 'stepA') {
+                step1Cls = 'border-indigo-500 bg-indigo-50/70 dark:bg-indigo-950/40 pulse-soft';
+                step1Badge = '<span class="text-[11px] font-extrabold text-indigo-700 dark:text-indigo-300">⚙️ Memotong stok rak: 12 &rarr; 10...</span>';
+            } else if (t.stage === 'cut') {
+                step1Cls = 'border-emerald-500 bg-emerald-50/60 dark:bg-emerald-950/30';
+                step1Badge = '<span class="text-[11px] font-extrabold text-emerald-700 dark:text-emerald-300">✓ Saldo sementara jadi 10 psg</span>';
+                step2Cls = 'border-rose-500 bg-rose-50/80 dark:bg-rose-950/50 pulse-soft';
+                step2Badge = '<span class="text-[11px] font-extrabold text-rose-700 dark:text-rose-300">⚡ KONEKSI PUTUS! Gagal menulis log_stok!</span>';
+            } else if (t.stage === 'rollback') {
+                step1Cls = 'border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/40';
+                step1Badge = '<span class="text-[11px] font-extrabold text-emerald-700 dark:text-emerald-300">↩️ ROLLBACK! Saldo dikembalikan 10 &rarr; 12</span>';
+                step2Cls = 'border-amber-400 bg-amber-50/70 dark:bg-amber-950/30';
+                step2Badge = '<span class="text-[11px] font-extrabold text-amber-800 dark:text-amber-300">✓ Batal bersih (tidak ada nota gantung)</span>';
+            } else if (t.stage === 'done_mismatch') {
+                step1Cls = 'border-rose-500 bg-rose-50/60 dark:bg-rose-950/30';
+                step1Badge = '<span class="text-[11px] font-extrabold text-rose-700 dark:text-rose-300">⚠️ Sudah terlanjur terpotong jadi 10!</span>';
+                step2Cls = 'border-rose-500 bg-rose-50/80 dark:bg-rose-950/50';
+                step2Badge = '<span class="text-[11px] font-extrabold text-rose-700 dark:text-rose-300">✕ Gagal tercatat di log_stok (tetap 12)</span>';
+            } else if (t.stage === 'done_ok') {
+                step1Cls = 'border-emerald-500 bg-emerald-50/60 dark:bg-emerald-950/30';
+                step1Badge = '<span class="text-[11px] font-extrabold text-emerald-700 dark:text-emerald-300">✓ Saldo rak sah jadi 10 psg</span>';
+                step2Cls = 'border-emerald-500 bg-emerald-50/60 dark:bg-emerald-950/30';
+                step2Badge = '<span class="text-[11px] font-extrabold text-emerald-700 dark:text-emerald-300">✓ Bukti TRX tercatat sah (COMMIT)</span>';
+            }
+
+            let verdictBox = '';
+            if (t.stage === 'done_mismatch') {
+                verdictBox = `<div class="p-3 rounded-2xl bg-rose-100 dark:bg-rose-950/70 border border-rose-500 text-xs text-rose-900 dark:text-rose-200 font-semibold leading-snug">🚨 <strong>AUDIT SELISIH 2 PASANG (Rp 980.000):</strong> Saldo rak sudah 10, tapi di Kartu Stok masih 12 tanpa jejak transaksi!</div>`;
+            } else if (t.stage === 'rollback') {
+                verdictBox = `<div class="p-3 rounded-2xl bg-emerald-100 dark:bg-emerald-950/70 border border-emerald-500 text-xs text-emerald-900 dark:text-emerald-200 font-semibold leading-snug">🛡️ <strong>AUDIT 100% AMAN (ROLLBACK):</strong> Saldo rak otomatis kembali ke 12, cocok dengan Kartu Stok (Selisih = 0)!</div>`;
+            } else if (t.stage === 'done_ok') {
+                verdictBox = `<div class="p-3 rounded-2xl bg-emerald-100 dark:bg-emerald-950/70 border border-emerald-500 text-xs text-emerald-900 dark:text-emerald-200 font-semibold leading-snug">✅ <strong>COMMIT SUKSES:</strong> Rak &amp; Kartu Stok sama-sama 10 pasang.</div>`;
+            } else {
+                verdictBox = `<div class="p-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-xs text-slate-600 dark:text-slate-300 leading-snug">Klik <strong>Proses Pembayaran Sekarang</strong> di kiri, lalu bandingkan hasilnya antara Mode Biasa vs 1 Paket Utuh!</div>`;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-3.5">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400">Simulasi Dunia Nyata 2 · Animasi Proses Pembukuan</span>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Saksikan Reaksi Sistem Saat Listrik Putus di Tengah Checkout</h2>
+                        </div>
+                        <div class="inline-flex p-1 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                            <button type="button" ${isRunning ? 'disabled' : ''} onclick="setTxSimMode('biasa')" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition ${t.mode === 'biasa' ? 'bg-rose-600 text-white' : 'text-slate-600 dark:text-slate-300'}">⚠️ Mode Biasa (M4)</button>
+                            <button type="button" ${isRunning ? 'disabled' : ''} onclick="setTxSimMode('paket')" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition ${t.mode === 'paket' ? 'bg-emerald-600 text-white' : 'text-slate-600 dark:text-slate-300'}">🛡️ 1 Paket Utuh (M6)</button>
+                        </div>
+                    </div>
+
+                    <!-- Pertanyaan Tebakan Cepat (Predict-Observe-Explain) -->
+                    <div class="px-3.5 py-2 rounded-2xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-300/80 dark:border-amber-800 text-xs text-amber-950 dark:text-amber-200 flex items-center gap-2">
+                        <span class="font-extrabold shrink-0">💡 Tebak dulu sebelum klik:</span>
+                        <span>Saat koneksi putus di antara Langkah A dan B, apakah <strong>Saldo Rak</strong> dan <strong>Saldo Buku</strong> akan tetap sama pada <strong>Mode Biasa (M4)</strong> vs <strong>1 Paket Utuh (M6)</strong>?</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch my-auto">
+                        <!-- Kolom 1: Terminal Kasir -->
+                        <div class="lg:col-span-4 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-4">
+                            <div class="space-y-3">
+                                <span class="text-xs font-extrabold uppercase text-indigo-600 dark:text-indigo-400">1. Layar Kasir POS</span>
+                                <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 space-y-1">
+                                    <div class="text-sm font-extrabold">👞 SP008 · Office Oxford</div>
+                                    <div class="text-xs text-slate-500">Pembelian: <strong>2 pasang</strong> (Rp 980.000)</div>
+                                </div>
+                                <label class="flex items-center justify-between p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 cursor-pointer">
+                                    <span class="text-xs font-bold text-slate-700 dark:text-slate-200">⚡ Putuskan Koneksi di Tengah Jalan</span>
+                                    <input type="checkbox" ${t.powerCut ? 'checked' : ''} ${isRunning ? 'disabled' : ''} onchange="txSim.powerCut=this.checked;resetTxSim();" class="w-4 h-4 accent-rose-600">
+                                </label>
+                            </div>
+
+                            <div class="space-y-2">
+                                <button type="button" ${isRunning ? 'disabled' : ''} onclick="startTxAnimation()" class="w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-extrabold text-sm transition shadow-sm">
+                                    ${isRunning ? '<i class="fa-solid fa-spinner fa-spin mr-1"></i>Memproses...' : '💳 Proses Pembayaran Sekarang'}
+                                </button>
+                                <button type="button" ${isRunning ? 'disabled' : ''} onclick="resetTxSim()" class="w-full py-2 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300">
+                                    Reset ke Saldo 12 Pasang
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Kolom 2: Proses 2 Langkah Live -->
+                        <div class="lg:col-span-4 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-3">
+                            <span class="text-xs font-extrabold uppercase text-slate-500">2. Jalannya Pembukuan Server</span>
+                            <div class="space-y-3 my-auto">
+                                <div class="p-3.5 rounded-2xl border-2 transition space-y-1.5 ${step1Cls}">
+                                    <div class="text-xs font-extrabold text-slate-900 dark:text-white">Langkah A: Potong Tabel <code class="font-mono">barang</code></div>
+                                    <div>${step1Badge}</div>
+                                </div>
+                                <div class="text-center text-slate-400 text-xs font-bold"><i class="fa-solid fa-arrow-down"></i></div>
+                                <div class="p-3.5 rounded-2xl border-2 transition space-y-1.5 ${step2Cls}">
+                                    <div class="text-xs font-extrabold text-slate-900 dark:text-white">Langkah B: Tulis Kartu Stok <code class="font-mono">log_stok</code></div>
+                                    <div>${step2Badge}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Kolom 3: Hasil Audit -->
+                        <div class="lg:col-span-4 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-3">
+                            <span class="text-xs font-extrabold uppercase text-emerald-600 dark:text-emerald-400">3. Hasil Audit Akhir</span>
+                            <div class="grid grid-cols-2 gap-2.5 my-auto">
+                                <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-center">
+                                    <div class="text-[11px] font-bold text-slate-400">Saldo Rak</div>
+                                    <div class="text-3xl font-mono font-extrabold mt-1 ${isMismatch ? 'text-rose-600' : 'text-emerald-600'}">${t.rakStok}</div>
+                                    <div class="text-[10px] text-slate-400">tabel barang</div>
+                                </div>
+                                <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-center">
+                                    <div class="text-[11px] font-bold text-slate-400">Saldo Buku</div>
+                                    <div class="text-3xl font-mono font-extrabold mt-1 text-indigo-600 dark:text-indigo-400">${t.bukuStok}</div>
+                                    <div class="text-[10px] text-slate-400">tabel log_stok</div>
+                                </div>
+                            </div>
+                            ${verdictBox}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 12: Perbandingan Ringkas Minggu 4 vs Minggu 6
+        function renderSlide12() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-6">
+                    ${slideHeader("Bagian 3 · Ringkasan Peningkatan Sistem", "Apa Bedanya Transaksi Minggu 4 vs Standar Bisnis Minggu 6?", "Empat peningkatan konkret yang membuat sistem Gudang jauh lebih layak diaudit.")}
+
+                    <div class="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 my-auto">
+                        <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                            <thead>
+                                <tr class="bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+                                    <th class="p-3.5 font-extrabold">Aspek Kontrol Bisnis</th>
+                                    <th class="p-3.5 font-extrabold text-slate-500">Versi Minggu 4</th>
+                                    <th class="p-3.5 font-extrabold text-emerald-700 dark:text-emerald-400">Upgrade Minggu 6 Hari Ini</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 dark:divide-slate-800 bg-white dark:bg-slate-900">
+                                <tr>
+                                    <td class="p-3.5 font-bold">1. Kop Surat &amp; Kunci Cabang</td>
+                                    <td class="p-3.5 text-slate-500">Masih diketik manual berulang.</td>
+                                    <td class="p-3.5 font-semibold">Memanggil <code class="font-mono">helpers/response.php</code> (100% seragam).</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3.5 font-bold">2. Surat Jalan PO Ganda</td>
+                                    <td class="p-3.5 text-rose-600">Belum dicegah di <code class="font-mono">stok-masuk.php</code>.</td>
+                                    <td class="p-3.5 font-semibold">Ditolak otomatis dengan <strong>409 Conflict</strong>.</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3.5 font-bold">3. Kebijakan Batas Promo</td>
+                                    <td class="p-3.5 text-slate-500">Belum ada pembatasan per nota.</td>
+                                    <td class="p-3.5 font-semibold">Variabel manajer <code class="font-mono font-bold">$maksQtyPerNota</code> (Tolak 400).</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3.5 font-bold">4. Jaminan Audit Kartu Stok</td>
+                                    <td class="p-3.5 text-rose-600">Berjalan terpisah (rawan selisih).</td>
+                                    <td class="p-3.5 font-semibold">Dibungkus <strong>1 Paket Utuh</strong> (<code class="font-mono">commit / rollBack</code>).</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    ${slideTransitionNote("Mari kita kenali bentuk kop surat balasan JSON resmi untuk transaksi POST di Slide 13.")}
+                </div>
+            `;
+        }
+
+        // SLIDE 13: Membaca Kop Surat Balasan Resmi POST (3 Tab Ringkas)
+        function renderSlide13() {
+            const jsonSamples = {
+                sukses: {
+                    label: "✅ 1. Transaksi Sah (200 OK)",
+                    note: "Aplikasi Kasir langsung menerima saldo terbaru (sisa_stok) dan bukti bahwa pembukuan sah dalam 1 paket utuh (Commit).",
+                    code: `{\n  "status": "sukses",\n  "kode_http": 200,\n  "pesan": "Stok SP008 berhasil dikurangi 2 pasang di Gudang Pusat Sepatu Nusantara",\n  "data": {\n    "kode": "SP008",\n    "stok_sebelum": 12,\n    "qty_keluar": 2,\n    "sisa_stok": 10,\n    "no_referensi": "TRX-2026-01"\n  },\n  "meta": {\n    "cabang_peminta": "Aplikasi Kasir Toko Pusat",\n    "batas_maks_nota": 3,\n    "pembukuan": "1 Paket Utuh (Commit)"\n  }\n}`
+                },
+                promo: {
+                    label: "🚫 2. Batas Promo (400)",
+                    note: "Kasir membaca key 'pesan' dan 'meta.batas_maks_nota' agar bisa menjelaskan batas kuota promo secara sopan ke pelanggan.",
+                    code: `{\n  "status": "error",\n  "kode_http": 400,\n  "pesan": "400 Ditolak Kebijakan Promo: Maksimal pembelian adalah 3 pasang per nota!",\n  "data": null,\n  "meta": {\n    "batas_maks_nota": 3,\n    "qty_diminta": 6\n  }\n}`
+                },
+                duplikat: {
+                    label: "🛑 3. PO / Struk Ganda (409)",
+                    note: "Staf gudang/kasir mendapat kepastian bahwa nomor bukti sudah pernah tercatat, sehingga tidak tercipta stok hantu.",
+                    code: `{\n  "status": "error",\n  "kode_http": 409,\n  "pesan": "409 Duplikat Ditolak: Surat jalan PO-2026-01 untuk SP008 sudah pernah masuk sebelumnya! Stok hantu dicegah.",\n  "data": null\n}`
+                }
+            };
+
+            const active = jsonSamples[activeJsonReplyTab];
+            const tabs = ['sukses', 'promo', 'duplikat'].map(function (k) {
+                const isAct = activeJsonReplyTab === k;
+                return `<button type="button" onclick="activeJsonReplyTab='${k}';renderCurrentSlide();" class="px-3.5 py-2 rounded-xl text-xs font-extrabold border transition ${isAct ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs' : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">${jsonSamples[k].label}</button>`;
+            }).join('');
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideHeader("Bagian 3 · Standar Balasan Transaksi POST", "Cara Membaca Kop Surat Balasan <code class='font-mono'>kirim_json()</code> pada Transaksi", "Satu struktur amplop yang sama agar aplikasi Kasir dan staf langsung paham hasil mutasi stok.")}
+
+                    <div class="flex flex-wrap gap-2">${tabs}</div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center my-auto">
+                        <div class="lg:col-span-7">
+                            <pre class="code-clean">${escapeHtml(active.code)}</pre>
+                        </div>
+                        <div class="lg:col-span-5 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-3">
+                            <span class="px-2.5 py-1 rounded-lg bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-xs font-extrabold">📖 Cara Membaca bagi Manajer</span>
+                            <p class="text-sm text-slate-700 dark:text-slate-200 leading-relaxed font-semibold">${escapeHtml(active.note)}</p>
+                            <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-500">
+                                <strong>Konsistensi Kontrak:</strong> Seluruh balasan POST tetap memakai 5 atribut baku Minggu 5 (<code class="font-mono">status, kode_http, pesan, data, meta</code>).
+                            </div>
+                        </div>
+                    </div>
+
+                    ${slideTransitionNote("Masuk ke Bagian 4 (Slide 14–16): kita fokus membedah 3 blok aturan bisnis BARU di Minggu 6 saja!")}
+                </div>
+            `;
+        }
+
+        // SLIDE 14: Bedah Kode 1/3 — Fokus Blok Baru: Buka Amplop POST & Cek PO Ganda (Kode M5 ditandai sudah dikuasai)
+        function renderSlide14() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    ${slideHeader("Bagian 4 · Fokus 3 Blok Kode Baru Minggu 6 (1 dari 3)", "Blok Baru #1: Buka Amplop <code class='font-mono'>POST</code> &amp; Pagar Anti-PO Ganda (<code class='font-mono'>409</code>)", "Baris koneksi &amp; kunci cabang sudah dikuasai di Minggu 5—hari ini fokus pada <strong>2 blok baru</strong> di <code class='font-mono'>api/stok-masuk.php</code>:", "text-amber-600 dark:text-amber-400")}
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center my-auto">
+                        <div class="lg:col-span-6">
+                            <pre class="code-clean"><span style="color:#71717a;">// ✓ Sudah dikuasai di Minggu 5 (tidak perlu dibahas ulang)
+// require_once koneksi &amp; response; $mitra = wajib_api_key($pdo);</span>
+
+// 🆕 BLOK BARU A: Buka amplop kiriman JSON dari POST
+$mentah = file_get_contents('php://input');
+$input  = json_decode($mentah, true);
+
+// 🆕 BLOK BARU B: Cek Surat Jalan PO Ganda di Kartu Stok
+$stDup = $pdo->prepare(
+  "SELECT id FROM log_stok
+   WHERE no_referensi = :ref AND jenis = 'masuk'"
+);
+if ($stDup->fetch()) {
+  kirim_json('error', '409 PO Ganda!', null, 409);
+}</pre>
+                        </div>
+
+                        <div class="lg:col-span-6 space-y-3.5">
+                            <div class="p-3 rounded-2xl bg-slate-100 dark:bg-slate-800/70 text-xs text-slate-500 dark:text-slate-400 font-semibold">
+                                ✓ <code class="font-mono">require_once</code>, <code class="font-mono">wajib_api_key()</code>, &amp; <code class="font-mono">kirim_json()</code> sama persis dengan Minggu 5.
+                            </div>
+                            <div class="p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 space-y-1">
+                                <div class="text-xs font-extrabold text-indigo-700 dark:text-indigo-300">🆕 Blok Baru A: ${term('php_input', "file_get_contents('php://input')")}</div>
+                                <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-200">Membuka paket JSON di dalam <em>body</em> POST (pengganti <code class="font-mono">$_GET</code> yang dipakai saat membaca katalog).</p>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-purple-50/70 dark:bg-purple-950/30 border-2 border-purple-300 dark:border-purple-800 space-y-1">
+                                <div class="text-xs font-extrabold text-purple-700 dark:text-purple-300">🆕 Blok Baru B: Cek Anti-PO Ganda (<code class="font-mono">409</code>)</div>
+                                <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-200">Menutup celah Minggu 4: jika nomor PO sudah tercatat di <code class="font-mono">log_stok</code>, langsung tolak agar tidak lahir stok hantu!</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${slideTransitionNote("Di Slide 15, kita lihat Blok Baru #2: pagar kebijakan batas promo yang akan Anda ubah sendiri di LKM 06.")}
+                </div>
+            `;
+        }
+
+        // SLIDE 15: Bedah Kode 2/3 — Fokus Blok Baru: Kebijakan Promo Manajer ($maksQtyPerNota)
+        function renderSlide15() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    ${slideHeader("Bagian 4 · Fokus 3 Blok Kode Baru Minggu 6 (2 dari 3)", "Blok Baru #2: Pagar Kebijakan Promo (<code class='font-mono'>$maksQtyPerNota</code>)", "Dua baris teratas di <code class='font-mono'>api/stok-keluar.php</code> inilah tempat Anda menerapkan strategi batas promo toko Anda sendiri:", "text-amber-600 dark:text-amber-400")}
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center my-auto">
+                        <div class="lg:col-span-6">
+                            <pre class="code-clean"><span style="color:#71717a;">// ✓ Sudah dikuasai di Minggu 5: koneksi, response, wajib_api_key()</span>
+
+// ⭐ 🆕 KEBIJAKAN MANAJER TOKO (Anda ubah sendiri di LKM 06)
+$maksQtyPerNota = 3;
+$labelTokoAnda  = 'Gudang Sepatu Nusantara';
+
+// 🆕 BLOK BARU: Pagar Anti-Tengkulak Promo (Fair Allocation)
+if ($qty > $maksQtyPerNota) {
+  kirim_json('error', '400 Melebihi batas promo!', null, 400);
+}
+
+// Pagar Anti-Stok Minus (Menjaga rak tidak pernah &lt; 0)
+if ((int)$brg['stok'] &lt; $qty) {
+  kirim_json('error', '400 Stok tidak cukup!', null, 400);
+}</pre>
+                        </div>
+
+                        <div class="lg:col-span-6 space-y-3">
+                            <div class="p-4 rounded-2xl bg-amber-50/80 dark:bg-amber-950/30 border-2 border-amber-400 dark:border-amber-800 space-y-1">
+                                <div class="text-xs font-extrabold text-amber-800 dark:text-amber-300">⭐ Variabel Otonomi Manajer</div>
+                                <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-200">Ubah angka <code class="font-mono font-bold">3</code> (pilih 2–5 pasang) dan ganti nama toko sesuai Form 1 LKM 06 Anda.</p>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-1">
+                                <div class="text-xs font-extrabold text-indigo-700 dark:text-indigo-400">🆕 Pemeriksaan Batas Promo (<code class="font-mono">400</code>)</div>
+                                <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">Mencegah tengkulak memborong barang diskon; berlaku otomatis di seluruh kasir cabang.</p>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-1">
+                                <div class="text-xs font-extrabold text-rose-700 dark:text-rose-400">Pemeriksaan Sisa Stok Fisik (<code class="font-mono">400</code>)</div>
+                                <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">Menolak penjualan jika permintaan melebihi sisa stok di rak gudang.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${slideTransitionNote("Terakhir di Slide 16, kita bedah Blok Baru #3: pembukuan satu paket utuh (commit & rollBack).")}
+                </div>
+            `;
+        }
+
+        // SLIDE 16: Bedah Kode 3/3 — Fokus Blok Baru: Pembukuan Satu Paket Utuh
+        function renderSlide16() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    ${slideHeader("Bagian 4 · Fokus 3 Blok Kode Baru Minggu 6 (3 dari 3)", "Blok Baru #3: Pembukuan Satu Paket (<code class='font-mono'>commit</code> &amp; <code class='font-mono'>rollBack</code>)", "Tiga perintah baru yang membungkus perubahan tabel <code class='font-mono'>barang</code> dan <code class='font-mono'>log_stok</code> agar bebas selisih audit:", "text-amber-600 dark:text-amber-400")}
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center my-auto">
+                        <div class="lg:col-span-6">
+                            <pre class="code-clean">try {
+  // 🆕 1. Buka amplop pembukuan sementara
+  $pdo->beginTransaction();
+
+  <span style="color:#71717a;">// Jalankan UPDATE barang &amp; INSERT log_stok (PDO M5)</span>
+
+  // 🆕 2. Sahkan keduanya secara serentak
+  $pdo->commit();
+} catch (Throwable $e) {
+  // 🆕 3. Jika gagal di tengah, batalkan semua!
+  $pdo->rollBack();
+  kirim_json('error', 'Dibatalkan (RollBack)', null, 500);
+}</pre>
+                        </div>
+
+                        <div class="lg:col-span-6 space-y-3">
+                            <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-1">
+                                <div class="text-xs font-extrabold text-indigo-700 dark:text-indigo-400">1. <code class="font-mono">$pdo-&gt;beginTransaction()</code></div>
+                                <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">Menahan dulu semua perubahan sementara sampai seluruh langkah tuntas tanpa masalah.</p>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 space-y-1">
+                                <div class="text-xs font-extrabold text-emerald-700 dark:text-emerald-300">2. <code class="font-mono">$pdo-&gt;commit()</code></div>
+                                <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-200">Meresmikan perubahan di tabel <code class="font-mono">barang</code> dan <code class="font-mono">log_stok</code> secara bersamaan.</p>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 space-y-1">
+                                <div class="text-xs font-extrabold text-rose-700 dark:text-rose-300">3. <code class="font-mono">$pdo-&gt;rollBack()</code></div>
+                                <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-200">Mengembalikan saldo rak ke angka awal apabila pencatatan Kartu Stok mengalami gangguan.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${slideTransitionNote("Mari kita satukan seluruh alur kerja POST ke dalam 1 Peta Visual SVG di Slide 17.")}
+                </div>
+            `;
+        }
+
+        // SLIDE 17: Diagram Visual SVG Utuh 4 Pos Transaksi POST
+        function renderSlide17() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    ${slideHeader("Bagian 4 · Gambaran Utuh (Big Picture)", "Empat Pos Kendali Transaksi <code class='font-mono'>POST</code> di Sistem Gudang", "Alur lengkap dari saat Kasir/Admin mengirim paket JSON sampai konfirmasi kembali ke layar.")}
+
+                    <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 my-auto overflow-x-auto">
+                        <svg class="w-full min-w-[760px] h-auto" viewBox="0 0 920 200">
+                            <rect x="15" y="20" width="195" height="160" rx="16" fill="#ffffff" stroke="#d97706" stroke-width="2.2"/>
+                            <rect x="15" y="20" width="195" height="34" rx="16" fill="#d97706"/>
+                            <text x="112" y="42" text-anchor="middle" font-size="11.5" font-weight="800" fill="#ffffff" font-family="monospace">POS 1 · IZIN CABANG</text>
+                            <text x="30" y="78" font-size="11.5" font-weight="800" fill="#0f172a">wajib_api_key()</text>
+                            <text x="30" y="102" font-size="10.5" fill="#475569">Cek Method POST &amp;</text>
+                            <text x="30" y="120" font-size="10.5" fill="#475569">Header X-API-KEY.</text>
+                            <text x="30" y="152" font-size="10.5" font-weight="700" fill="#dc2626">Mati &rarr; Tolak 401</text>
+
+                            <line x1="210" y1="100" x2="245" y2="100" stroke="#64748b" stroke-width="2.5"/>
+
+                            <rect x="245" y="20" width="195" height="160" rx="16" fill="#ffffff" stroke="#4f46e5" stroke-width="2.2"/>
+                            <rect x="245" y="20" width="195" height="34" rx="16" fill="#4f46e5"/>
+                            <text x="342" y="42" text-anchor="middle" font-size="11.5" font-weight="800" fill="#ffffff" font-family="monospace">POS 2 · ATURAN BISNIS</text>
+                            <text x="260" y="78" font-size="11.5" font-weight="800" fill="#0f172a">Cek 4 Pagar Kontrol</text>
+                            <text x="260" y="102" font-size="10.5" fill="#334155">• Batas Promo (400)</text>
+                            <text x="260" y="122" font-size="10.5" fill="#334155">• PO/Struk Ganda (409)</text>
+                            <text x="260" y="142" font-size="10.5" fill="#334155">• Ada (404) &amp; Cukup (400)</text>
+
+                            <line x1="440" y1="100" x2="475" y2="100" stroke="#64748b" stroke-width="2.5"/>
+
+                            <rect x="475" y="20" width="200" height="160" rx="16" fill="#ffffff" stroke="#0284c7" stroke-width="2.2"/>
+                            <rect x="475" y="20" width="200" height="34" rx="16" fill="#0284c7"/>
+                            <text x="575" y="42" text-anchor="middle" font-size="11.5" font-weight="800" fill="#ffffff" font-family="monospace">POS 3 · 1 PAKET UTUH</text>
+                            <text x="490" y="78" font-size="11.5" font-weight="800" fill="#0f172a">beginTransaction()</text>
+                            <text x="490" y="102" font-size="10.5" fill="#0369a1">A. Ubah saldo barang</text>
+                            <text x="490" y="122" font-size="10.5" fill="#0369a1">B. Catat ke log_stok</text>
+                            <text x="490" y="152" font-size="10.5" font-weight="700" fill="#059669">Commit / RollBack</text>
+
+                            <line x1="675" y1="100" x2="710" y2="100" stroke="#64748b" stroke-width="2.5"/>
+
+                            <rect x="710" y="20" width="195" height="160" rx="16" fill="#ffffff" stroke="#059669" stroke-width="2.2"/>
+                            <rect x="710" y="20" width="195" height="34" rx="16" fill="#059669"/>
+                            <text x="807" y="42" text-anchor="middle" font-size="11.5" font-weight="800" fill="#ffffff" font-family="monospace">POS 4 · KOP RESMI 200</text>
+                            <text x="725" y="78" font-size="11.5" font-weight="800" fill="#0f172a">kirim_json()</text>
+                            <text x="725" y="102" font-size="10.5" fill="#475569">Kirim saldo terbaru &amp;</text>
+                            <text x="725" y="120" font-size="10.5" fill="#475569">metadata audit ke Kasir.</text>
+                            <text x="725" y="152" font-size="10.5" font-weight="700" fill="#059669">✓ Struk Tercetak!</text>
+                        </svg>
+                    </div>
+
+                    ${slideTransitionNote("Sekarang uji ketajaman keputusan manajerial Anda satu per satu di Slide 18!")}
+                </div>
+            `;
+        }
+
+        // SLIDE 18: [EVALUASI FOKUS] 1 Kasus Manajer per Layar (Anti-Sesak) + Tab 5 Kuis Kilat
+        function renderSlide18() {
+            let mainContent = '';
+
+            if (evalMode === 'kasus') {
+                const sc = BIZ_CASES_M6[activeCaseIdx];
+                const chosenIdx = bizChoicesM6[sc.id];
+                const hasAnswered = chosenIdx !== undefined;
+
+                let casePills = '';
+                for (let i = 0; i < BIZ_CASES_M6.length; i++) {
+                    const isAct = i === activeCaseIdx;
+                    const isDone = bizChoicesM6[BIZ_CASES_M6[i].id] !== undefined;
+                    casePills += `
+                        <button type="button" onclick="activeCaseIdx=${i};renderCurrentSlide();" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold border transition flex items-center gap-1.5 ${isAct ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <span>Kasus ${i + 1}</span>
+                            ${isDone ? '<i class="fa-solid fa-check text-[10px]"></i>' : ''}
+                        </button>
+                    `;
+                }
+
+                let optsHtml = '';
+                for (let j = 0; j < sc.opts.length; j++) {
+                    const o = sc.opts[j];
+                    let btnCls = 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 hover:border-indigo-500';
+                    let ltrCls = 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300';
+                    if (hasAnswered) {
+                        if (o.correct) {
+                            btnCls = 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 text-emerald-900 dark:text-emerald-200';
+                            ltrCls = 'bg-emerald-600 text-white';
+                        } else if (chosenIdx === j) {
+                            btnCls = 'bg-rose-50 dark:bg-rose-950/60 border-rose-500 text-rose-900 dark:text-rose-200';
+                            ltrCls = 'bg-rose-600 text-white';
+                        } else {
+                            btnCls = 'opacity-55 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800';
+                        }
+                    }
+                    optsHtml += `
+                        <button type="button" ${hasAnswered ? 'disabled' : ''} onclick="chooseBizCaseM6(${sc.id}, ${j})" class="w-full text-left p-4 rounded-2xl border-2 font-semibold text-xs sm:text-sm flex items-start gap-3 transition ${btnCls}">
+                            <span class="w-7 h-7 rounded-xl font-mono text-xs font-extrabold flex items-center justify-center shrink-0 ${ltrCls}">${o.ltr}</span>
+                            <span class="leading-relaxed pt-0.5">${escapeHtml(o.text)}</span>
+                        </button>
+                    `;
+                }
+
+                let fbHtml = '';
+                if (hasAnswered) {
+                    const picked = sc.opts[chosenIdx];
+                    fbHtml = `
+                        <div class="p-4 rounded-2xl border-l-4 ${picked.correct ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-600 text-emerald-900 dark:text-emerald-200' : 'bg-rose-50 dark:bg-rose-950/50 border-rose-600 text-rose-900 dark:text-rose-200'} text-xs sm:text-sm leading-relaxed flex flex-wrap items-center justify-between gap-2">
+                            <span>${escapeHtml(picked.explain)}</span>
+                            ${activeCaseIdx < 3 ? `<button type="button" onclick="activeCaseIdx=${activeCaseIdx + 1};renderCurrentSlide();" class="px-3 py-1.5 rounded-xl bg-indigo-600 text-white font-extrabold text-xs shrink-0">Kasus Berikutnya &rarr;</button>` : ''}
+                        </div>
+                    `;
+                }
+
+                mainContent = `
+                    <div class="space-y-4 my-auto">
+                        <div class="flex flex-wrap gap-2">${casePills}</div>
+                        <div class="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-4">
+                            <div class="space-y-1.5">
+                                <span class="inline-block px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 text-xs font-extrabold">${escapeHtml(sc.badge)}</span>
+                                <h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white leading-snug">${escapeHtml(sc.title)}</h3>
+                            </div>
+                            <div class="space-y-2.5">${optsHtml}</div>
+                            ${fbHtml}
+                        </div>
+                    </div>
+                `;
+            } else {
+                let rows = '';
+                for (let i = 0; i < TF_QUIZ_M6.length; i++) {
+                    const q = TF_QUIZ_M6[i];
+                    const chosen = tfChoicesM6[q.id];
+                    const hasAns = chosen !== undefined;
+                    const isCorrect = chosen === q.answer;
+                    const rowCls = hasAns
+                        ? (isCorrect ? 'bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-500' : 'bg-rose-50/70 dark:bg-rose-950/30 border-rose-500')
+                        : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800';
+                    const btnCls = function (val) {
+                        if (!hasAns) return 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 hover:border-indigo-500';
+                        if (chosen === val) return isCorrect ? 'bg-emerald-600 border-emerald-600 text-white' : 'bg-rose-600 border-rose-600 text-white';
+                        if (q.answer === val) return 'bg-emerald-100 dark:bg-emerald-950 border-emerald-500 text-emerald-800 dark:text-emerald-300';
+                        return 'opacity-45 bg-white dark:bg-slate-900 border-slate-200';
+                    };
+                    rows += `
+                        <div class="p-3 rounded-2xl border ${rowCls} space-y-1.5">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                <div class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white"><span class="font-mono text-indigo-600 mr-1.5">${q.id}.</span>${escapeHtml(q.text)}</div>
+                                <div class="flex gap-1.5 shrink-0">
+                                    <button type="button" ${hasAns ? 'disabled' : ''} onclick="answerTfM6(${q.id}, 'true')" class="px-3.5 py-1 rounded-xl border text-xs font-extrabold transition ${btnCls('true')}">Benar</button>
+                                    <button type="button" ${hasAns ? 'disabled' : ''} onclick="answerTfM6(${q.id}, 'false')" class="px-3.5 py-1 rounded-xl border text-xs font-extrabold transition ${btnCls('false')}">Salah</button>
+                                </div>
+                            </div>
+                            ${hasAns ? `<div class="text-xs text-slate-600 dark:text-slate-300 pl-4 border-l-2 ${isCorrect ? 'border-emerald-600' : 'border-rose-600'}">${escapeHtml(q.explain)}</div>` : ''}
+                        </div>
+                    `;
+                }
+                mainContent = `<div class="space-y-2 my-auto">${rows}</div>`;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">Evaluasi Fokus · 1 Layar Tenang</span>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Latihan Keputusan Manajer &amp; Kuis Kilat</h2>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="inline-flex p-1 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                                <button type="button" onclick="evalMode='kasus';renderCurrentSlide();" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition ${evalMode === 'kasus' ? 'bg-indigo-600 text-white' : 'text-slate-600 dark:text-slate-300'}">🎯 4 Kasus Manajer</button>
+                                <button type="button" onclick="evalMode='kuis';renderCurrentSlide();" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition ${evalMode === 'kuis' ? 'bg-indigo-600 text-white' : 'text-slate-600 dark:text-slate-300'}">⚡ 5 Kuis Kilat</button>
+                            </div>
+                            <button type="button" onclick="resetEvalM6()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-xs font-bold text-slate-600 dark:text-slate-300">Ulangi</button>
+                        </div>
+                    </div>
+
+                    ${mainContent}
+
+                    ${slideTransitionNote("Terakhir di Slide 19: rangkuman bekal utama untuk memulai Praktikum LKM 06.")}
+                </div>
+            `;
+        }
+
+        // SLIDE 19: Rangkuman & Jembatan Masuk ke LKM 06
+        function renderSlide19() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-6">
+                    ${slideHeader("Penutup Materi · Pertemuan 6", "Tiga Bekal Utama Menuju Praktikum Mandiri (LKM 06)", "Semua 3 pintu layanan Gudang (GET &amp; POST) kini siap Anda praktikkan di XAMPP.", "text-emerald-600 dark:text-emerald-400")}
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 my-auto">
+                        <div class="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-l-4 border-emerald-600 border-y border-r border-slate-200 dark:border-slate-800 space-y-3">
+                            <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">📌 Intisari Hari Ini</h3>
+                            <ul class="space-y-2.5 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                <li>• <strong>Siklus Harian Utuh:</strong> Barang datang (<code class="font-mono">stok-masuk</code>) &amp; penjualan (<code class="font-mono">stok-keluar</code>) terhubung rapi ke <code class="font-mono">helpers/response.php</code>.</li>
+                                <li>• <strong>Kontrol Internal &amp; SOP Staf:</strong> Tolak PO/struk ganda (<code class="font-mono">409</code>), batasi beli promo (<code class="font-mono">$maksQtyPerNota</code>), &amp; siapkan SOP tindakan manusia di lapangan.</li>
+                                <li>• <strong>Pembukuan 1 Paket:</strong> <code class="font-mono">commit / rollBack</code> menjaga saldo rak dan Kartu Stok selalu 0 selisih.</li>
+                            </ul>
+                        </div>
+
+                        <div class="p-6 rounded-3xl bg-indigo-50/70 dark:bg-indigo-950/40 border-l-4 border-indigo-600 border-y border-r border-indigo-200 dark:border-indigo-800 space-y-3">
+                            <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">💻 Langkah Berikutnya di LKM 06</h3>
+                            <ol class="list-decimal pl-5 space-y-2 text-sm text-slate-700 dark:text-slate-200 font-semibold">
+                                <li>Upgrade <code class="font-mono">stok-masuk.php</code> &amp; <code class="font-mono">stok-keluar.php</code> lalu atur angka batas promo toko Anda (2–5 pasang).</li>
+                                <li>Uji 3 Misi di browser (PO Ganda 409, Batas Promo 400, &amp; Gangguan RollBack).</li>
+                                <li>Susun <strong>3 Buku Panduan SOP Lapangan</strong> staf toko lalu cetak <strong>PDF A4 LKM 06</strong>!</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <div class="p-3.5 rounded-2xl bg-slate-100 dark:bg-slate-800/80 text-xs text-slate-600 dark:text-slate-300 flex flex-wrap items-center justify-between gap-2">
+                        <span><strong>Minggu Depan (Pertemuan 7):</strong> Menyambungkan Aplikasi Kasir POS sungguhan ke seluruh API Gudang via <strong>PHP cURL</strong>!</span>
+                        <span class="font-mono font-bold text-indigo-600 dark:text-indigo-400">Sub-CPMK 2.2 · Selesai</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        /* =====================================================================
+           4. DAFTAR SLIDE & ENGINE NAVIGASI
+           ===================================================================== */
+        const SLIDES = [
+            { id: 1, category: "Sampul", title: "Siklus Transaksi Toko, Kontrol Internal & Pembukuan Utuh", render: renderSlide1 },
+            { id: 2, category: "Bagian 1 · Jembatan M5", title: "Upgrade Pintu Transaksi (POST) Setelah Katalog (GET) Beres", render: renderSlide2 },
+            { id: 3, category: "Bagian 1 · Dampak Bisnis", title: "Tiga Kerugian Nyata Jika Transaksi POST Tanpa Kontrol", render: renderSlide3 },
+            { id: 4, category: "Bagian 2 · Siklus Harian", title: "Satu Hari Operasional Toko Sepatu (Pagi–Siang–Sore)", render: renderSlide4 },
+            { id: 5, category: "Bagian 2 · Fase Pagi", title: "Aturan Wajib Menerima Kiriman Barang (Restock & Anti-PO 409)", render: renderSlide5 },
+            { id: 6, category: "Bagian 2 · Fase Siang", title: "Empat Gerbang Pengaman Sebelum Stok Dipotong Kasir", render: renderSlide6 },
+            { id: 7, category: "Simulasi Nyata 1", title: "Meja Operasional Toko Sepatu (Loket Gudang & Kasir POS)", render: renderSlide7 },
+            { id: 8, category: "Bagian 2 · Fase Sore", title: "Rumus Audit Kartu Stok & Dampak Finansial Selisih", render: renderSlide8 },
+            { id: 9, category: "Bagian 2 · SOP Lapangan", title: "Peta Tindakan Manusia: SOP 3 Peran Saat Sistem Menolak", render: renderSlide9 },
+            { id: 10, category: "Bagian 3 · Analogi Bank", title: "Analogi Transfer Bank: Prinsip Pembukuan Satu Paket Utuh", render: renderSlide10 },
+            { id: 11, category: "Simulasi Nyata 2", title: "Animasi Proses Pembayaran & Gangguan Listrik (RollBack)", render: renderSlide11 },
+            { id: 12, category: "Bagian 3 · Perbandingan", title: "Perbandingan Ringkas: Transaksi Minggu 4 vs Minggu 6", render: renderSlide12 },
+            { id: 13, category: "Bagian 3 · Kop JSON", title: "Cara Membaca Kop Surat Balasan kirim_json() pada POST", render: renderSlide13 },
+            { id: 14, category: "Bagian 4 · Blok Baru 1/3", title: "Fokus Kode Baru: Buka Amplop POST & Anti-PO Ganda (409)", render: renderSlide14 },
+            { id: 15, category: "Bagian 4 · Blok Baru 2/3", title: "Fokus Kode Baru: Kebijakan Promo ($maksQtyPerNota) & Stok", render: renderSlide15 },
+            { id: 16, category: "Bagian 4 · Blok Baru 3/3", title: "Fokus Kode Baru: Pembukuan Satu Paket (commit & rollBack)", render: renderSlide16 },
+            { id: 17, category: "Bagian 4 · Peta SVG", title: "Diagram 4 Pos Kendali Transaksi POST di Sistem Gudang", render: renderSlide17 },
+            { id: 18, category: "Evaluasi Fokus", title: "Latihan 4 Kasus Keputusan Manajer & 5 Kuis Kilat", render: renderSlide18 },
+            { id: 19, category: "Penutup & LKM 06", title: "Tiga Bekal Utama Menuju Praktikum Mandiri (LKM 06)", render: renderSlide19 }
+        ];
+
+        function renderCurrentSlide() {
+            try {
+                const slide = SLIDES[currentSlideIndex];
+                const viewport = document.getElementById('slideViewport');
+                if (!viewport || !slide) return;
+                viewport.innerHTML = slide.render();
+
+                const pct = Math.round(((currentSlideIndex + 1) / TOTAL_SLIDES) * 100);
+                document.getElementById('topProgressBar').style.width = pct + '%';
+                document.getElementById('slideCounterBadge').textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES;
+                document.getElementById('mobileFooterCounter').textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES;
+                document.getElementById('slideCategoryPill').textContent = slide.category;
+                document.getElementById('headerSlideTitle').textContent = slide.title;
+
+                const prevBtn = document.getElementById('prevSlideBtn');
+                const nextBtn = document.getElementById('nextSlideBtn');
+                const nextBtnText = document.getElementById('nextBtnText');
+
+                prevBtn.disabled = currentSlideIndex === 0;
+                if (currentSlideIndex === TOTAL_SLIDES - 1) {
+                    nextBtnText.textContent = "Selesai";
+                    nextBtn.disabled = true;
+                } else {
+                    nextBtnText.textContent = "Selanjutnya";
+                    nextBtn.disabled = false;
+                }
+
+                renderDotsAndDrawer();
+            } catch (err) {
+                console.error('Gagal merender slide:', err);
+            }
+        }
+
+        function renderDotsAndDrawer() {
+            const dotsContainer = document.getElementById('slideDotsContainer');
+            let dotsHtml = '';
+            let drawerHtml = '';
+
+            for (let idx = 0; idx < SLIDES.length; idx++) {
+                const s = SLIDES[idx];
+                const isActive = idx === currentSlideIndex;
+                const isSim = s.category.indexOf('Simulasi') !== -1 || s.category.indexOf('Evaluasi') !== -1;
+                const dotClass = isActive
+                    ? 'w-6 bg-indigo-600 dark:bg-indigo-400'
+                    : isSim
+                    ? 'w-2.5 bg-amber-400 dark:bg-amber-500 hover:bg-amber-600'
+                    : 'w-2 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400';
+
+                dotsHtml += `<button type="button" onclick="goToSlide(${idx})" title="${escapeHtml(s.title)}" class="h-2 rounded-full transition-all ${dotClass}"></button>`;
+
+                const itemClass = isActive
+                    ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 font-bold'
+                    : 'hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-300';
+                const badgeClass = isActive
+                    ? 'bg-indigo-600 text-white'
+                    : isSim
+                    ? 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500';
+
+                drawerHtml += `
+                    <button type="button" onclick="selectSlideFromDrawer(${idx})" class="w-full text-left p-3 rounded-xl transition flex items-start gap-3 ${itemClass}">
+                        <span class="w-6 h-6 rounded-lg text-xs font-extrabold flex items-center justify-center shrink-0 ${badgeClass}">${s.id}</span>
+                        <div class="min-w-0">
+                            <div class="text-[10px] uppercase tracking-wider opacity-75">${escapeHtml(s.category)}</div>
+                            <div class="text-xs sm:text-sm truncate">${escapeHtml(s.title)}</div>
+                        </div>
+                    </button>
+                `;
+            }
+
+            if (dotsContainer) dotsContainer.innerHTML = dotsHtml;
+            const drawerList = document.getElementById('drawerSlideList');
+            if (drawerList) drawerList.innerHTML = drawerHtml;
+        }
+
+        function selectSlideFromDrawer(index) {
+            goToSlide(index);
+            toggleSlideDrawer();
+        }
+
+        function changeSlide(direction) {
+            const nextIdx = currentSlideIndex + direction;
+            if (nextIdx >= 0 && nextIdx < TOTAL_SLIDES) {
+                currentSlideIndex = nextIdx;
+                renderCurrentSlide();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function goToSlide(index) {
+            if (index >= 0 && index < TOTAL_SLIDES) {
+                currentSlideIndex = index;
+                renderCurrentSlide();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function toggleSlideDrawer() {
+            const drawer = document.getElementById('slideDrawer');
+            const backdrop = document.getElementById('slideDrawerBackdrop');
+            const isClosed = drawer.classList.contains('-translate-x-full');
+
+            if (isClosed) {
+                backdrop.classList.remove('hidden');
+                setTimeout(function () { backdrop.classList.remove('opacity-0'); }, 10);
+                drawer.classList.remove('-translate-x-full');
+            } else {
+                backdrop.classList.add('opacity-0');
+                drawer.classList.add('-translate-x-full');
+                setTimeout(function () { backdrop.classList.add('hidden'); }, 200);
+            }
+        }
+
+        /* =====================================================================
+           5. HANDLER SIMULASI DUNIA NYATA 1 (MEJA OPERASIONAL TOKO - SLIDE 7)
+           ===================================================================== */
+        function setStoreTab(tabName) {
+            storeApp.tab = tabName;
+            renderCurrentSlide();
+        }
+
+        function setStoreView(viewName) {
+            storeApp.viewMode = viewName;
+            renderCurrentSlide();
+        }
+
+        function cyclePromoLimit() {
+            const opts = [2, 3, 4, 5];
+            const idx = opts.indexOf(storeApp.maksPromo);
+            storeApp.maksPromo = opts[(idx + 1) % opts.length];
+            renderCurrentSlide();
+        }
+
+        function toggleStoreKey() {
+            storeApp.kunciAktif = !storeApp.kunciAktif;
+            renderCurrentSlide();
+        }
+
+        function updateStorePo(val) {
+            storeApp.poNumber = val.toUpperCase();
+        }
+
+        function adjustStorePoQty(delta) {
+            storeApp.poQty = Math.max(2, Math.min(30, storeApp.poQty + delta));
+            renderCurrentSlide();
+        }
+
+        function updateStoreTrx(val) {
+            storeApp.trxNumber = val.toUpperCase();
+        }
+
+        function adjustStoreTrxQty(delta) {
+            storeApp.trxQty = Math.max(1, Math.min(15, storeApp.trxQty + delta));
+            renderCurrentSlide();
+        }
+
+        function getJamSekarang() {
+            const d = new Date();
+            const hh = String(d.getHours()).padStart(2, '0');
+            const mm = String(d.getMinutes()).padStart(2, '0');
+            return hh + ':' + mm;
+        }
+
+        function submitRestockPagi() {
+            const ref = (storeApp.poNumber || '').trim().toUpperCase();
+            if (!storeApp.kunciAktif) {
+                storeApp.lastBanner = { ok: false, code: 401, title: '401 Ditolak · Kunci Cabang Mati', desc: 'Nyalakan kembali saklar Kunci Cabang (AKTIF) di kanan atas untuk melanjutkan.' };
+                storeApp.lastJson = JSON.stringify({ status: 'error', kode_http: 401, pesan: '401 Ditolak: Kunci Akses Cabang sedang dimatikan (0)!', data: null }, null, 2);
+                renderCurrentSlide();
+                return;
+            }
+            if (!ref) {
+                storeApp.lastBanner = { ok: false, code: 400, title: '400 Ditolak · Nomor PO Kosong', desc: 'Setiap barang masuk wajib disertai nomor Surat Jalan (PO) resmi.' };
+                storeApp.lastJson = JSON.stringify({ status: 'error', kode_http: 400, pesan: '400 Input Tidak Lengkap: Nomor Surat Jalan (no_referensi) wajib diisi!', data: null }, null, 2);
+                renderCurrentSlide();
+                return;
+            }
+            const sudahAda = storeApp.logs.some(function (l) { return l.jenis === 'masuk' && l.ref === ref; });
+            if (sudahAda) {
+                const nilaiHantu = formatRupiah(storeApp.poQty * HARGA_SP008);
+                storeApp.lastBanner = { ok: false, code: 409, title: '409 Conflict · Surat Jalan PO Ganda Ditolak!', desc: ref + ' sudah tercatat di Kartu Stok. Pagar ini mencegah +' + storeApp.poQty + ' psg stok hantu (senilai ' + nilaiHantu + ')!' };
+                storeApp.lastJson = JSON.stringify({ status: 'error', kode_http: 409, pesan: '409 Duplikat Ditolak: Surat jalan ' + ref + ' untuk SP008 sudah pernah masuk sebelumnya! Stok hantu dicegah.', data: null }, null, 2);
+                renderCurrentSlide();
+                return;
+            }
+
+            const sebelum = storeApp.stokSP008;
+            storeApp.stokSP008 += storeApp.poQty;
+            storeApp.logs.push({ jam: getJamSekarang(), jenis: 'masuk', qty: storeApp.poQty, sisa: storeApp.stokSP008, ref: ref, ket: 'Kiriman restock pabrik' });
+            storeApp.lastBanner = { ok: true, code: 200, title: '200 OK · Restock Pagi Berhasil Disahkan!', desc: 'Stok SP008 bertambah ' + sebelum + ' → ' + storeApp.stokSP008 + ' pasang dan tercatat di Kartu Stok. Coba klik tombol hijau sekali lagi untuk mengetes pagar 409!' };
+            storeApp.lastJson = JSON.stringify({
+                status: 'sukses', kode_http: 200,
+                pesan: 'Stok SP008 berhasil ditambah ' + storeApp.poQty + ' pasang',
+                data: { kode: 'SP008', stok_sebelum: sebelum, qty_masuk: storeApp.poQty, sisa_stok: storeApp.stokSP008, no_referensi: ref },
+                meta: { pembukuan: '1 Paket Utuh (Commit)' }
+            }, null, 2);
+            renderCurrentSlide();
+        }
+
+        function submitKasirSiang() {
+            const ref = (storeApp.trxNumber || '').trim().toUpperCase();
+            if (!storeApp.kunciAktif) {
+                storeApp.lastBanner = { ok: false, code: 401, title: '401 Ditolak · Kunci Cabang Mati', desc: 'Akses mesin kasir cabang sedang diblokir sementara oleh Gudang Pusat.' };
+                storeApp.lastJson = JSON.stringify({ status: 'error', kode_http: 401, pesan: '401 Ditolak: Kunci Akses Cabang sedang dimatikan (0)!', data: null }, null, 2);
+                renderCurrentSlide();
+                return;
+            }
+            if (!ref) {
+                storeApp.lastBanner = { ok: false, code: 400, title: '400 Ditolak · Nomor Struk Kosong', desc: 'Setiap transaksi penjualan wajib memiliki nomor struk unik (TRX).' };
+                storeApp.lastJson = JSON.stringify({ status: 'error', kode_http: 400, pesan: '400 Input Tidak Lengkap: Nomor struk wajib diisi!', data: null }, null, 2);
+                renderCurrentSlide();
+                return;
+            }
+            if (storeApp.trxQty > storeApp.maksPromo) {
+                storeApp.lastBanner = { ok: false, code: 400, title: '400 Ditolak · Melebihi Kebijakan Batas Promo!', desc: 'Pembeli meminta ' + storeApp.trxQty + ' pasang, padahal batas promo toko Anda maks. ' + storeApp.maksPromo + ' pasang/nota (Fair Allocation).' };
+                storeApp.lastJson = JSON.stringify({ status: 'error', kode_http: 400, pesan: '400 Ditolak Kebijakan Promo: Maksimal pembelian adalah ' + storeApp.maksPromo + ' pasang per nota!', data: null, meta: { batas_maks_nota: storeApp.maksPromo, qty_diminta: storeApp.trxQty } }, null, 2);
+                renderCurrentSlide();
+                return;
+            }
+            const sudahAda = storeApp.logs.some(function (l) { return l.jenis === 'keluar' && l.ref === ref; });
+            if (sudahAda) {
+                storeApp.lastBanner = { ok: false, code: 409, title: '409 Conflict · Struk Kembar Ditolak!', desc: 'Nomor struk ' + ref + ' sudah pernah memotong stok. Saldo rak aman dari pemotongan ganda!' };
+                storeApp.lastJson = JSON.stringify({ status: 'error', kode_http: 409, pesan: '409 Struk Kembar Ditolak: Nomor struk ' + ref + ' sudah pernah memotong stok!', data: null }, null, 2);
+                renderCurrentSlide();
+                return;
+            }
+            if (storeApp.stokSP008 < storeApp.trxQty) {
+                storeApp.lastBanner = { ok: false, code: 400, title: '400 Ditolak · Stok Fisik Tidak Cukup!', desc: 'Sisa rak hanya ' + storeApp.stokSP008 + ' pasang, tidak cukup untuk melayani ' + storeApp.trxQty + ' pasang. Lakukan Restock Pagi di Tab 1 dulu!' };
+                storeApp.lastJson = JSON.stringify({ status: 'error', kode_http: 400, pesan: '400 Stok Kurang: Sisa SP008 tinggal ' + storeApp.stokSP008 + ' pasang!', data: null }, null, 2);
+                renderCurrentSlide();
+                return;
+            }
+
+            const sebelum = storeApp.stokSP008;
+            storeApp.stokSP008 -= storeApp.trxQty;
+            storeApp.logs.push({ jam: getJamSekarang(), jenis: 'keluar', qty: storeApp.trxQty, sisa: storeApp.stokSP008, ref: ref, ket: 'Penjualan Kasir POS' });
+            storeApp.lastBanner = { ok: true, code: 200, title: '200 OK · Struk Tercetak & Stok Terpotong!', desc: 'Stok SP008 turun ' + sebelum + ' → ' + storeApp.stokSP008 + ' pasang (' + formatRupiah(storeApp.trxQty * HARGA_SP008) + ') dan tercatat sah di Kartu Stok.' };
+            storeApp.lastJson = JSON.stringify({
+                status: 'sukses', kode_http: 200,
+                pesan: 'Stok SP008 berhasil dikurangi ' + storeApp.trxQty + ' pasang',
+                data: { kode: 'SP008', stok_sebelum: sebelum, qty_keluar: storeApp.trxQty, sisa_stok: storeApp.stokSP008, no_referensi: ref },
+                meta: { batas_maks_nota: storeApp.maksPromo, pembukuan: '1 Paket Utuh (Commit)' }
+            }, null, 2);
+            renderCurrentSlide();
+        }
+
+        function resetStoreApp() {
+            storeApp.stokSP008 = 2;
+            storeApp.maksPromo = 3;
+            storeApp.kunciAktif = true;
+            storeApp.poNumber = 'PO-2026-01';
+            storeApp.poQty = 10;
+            storeApp.trxNumber = 'TRX-2026-01';
+            storeApp.trxQty = 2;
+            storeApp.logs = [{ jam: '08:00', jenis: 'masuk', qty: 2, sisa: 2, ref: 'SALDO-AWAL', ket: 'Saldo buka toko (Kritis)' }];
+            storeApp.lastBanner = null;
+            storeApp.lastJson = '{\n  "info": "Simulasi direset ke kondisi pagi hari (SP008 = 2 pasang)."\n}';
+            renderCurrentSlide();
+        }
+
+        /* =====================================================================
+           6. HANDLER SIMULASI DUNIA NYATA 2 (ANIMASI LISTRIK PUTUS - SLIDE 11)
+           ===================================================================== */
+        function clearTxTimers() {
+            for (let i = 0; i < txSim.timers.length; i++) {
+                clearTimeout(txSim.timers[i]);
+            }
+            txSim.timers = [];
+        }
+
+        function setTxSimMode(mode) {
+            txSim.mode = mode;
+            resetTxSim();
+        }
+
+        function resetTxSim() {
+            clearTxTimers();
+            txSim.stage = 'idle';
+            txSim.rakStok = 12;
+            txSim.bukuStok = 12;
+            renderCurrentSlide();
+        }
+
+        function startTxAnimation() {
+            clearTxTimers();
+            txSim.rakStok = 12;
+            txSim.bukuStok = 12;
+            txSim.stage = 'stepA';
+            renderCurrentSlide();
+
+            const t1 = setTimeout(function () {
+                txSim.rakStok = 10;
+                if (txSim.powerCut) {
+                    txSim.stage = 'cut';
+                    renderCurrentSlide();
+
+                    const t2 = setTimeout(function () {
+                        if (txSim.mode === 'paket') {
+                            txSim.rakStok = 12; // RollBack mengembalikan saldo rak ke angka semula
+                            txSim.bukuStok = 12;
+                            txSim.stage = 'rollback';
+                        } else {
+                            txSim.rakStok = 10; // Terlanjur terpotong permanen
+                            txSim.bukuStok = 12; // Kartu stok gagal tertulis
+                            txSim.stage = 'done_mismatch';
+                        }
+                        renderCurrentSlide();
+                    }, 1150);
+                    txSim.timers.push(t2);
+                } else {
+                    txSim.bukuStok = 10;
+                    txSim.stage = 'done_ok';
+                    renderCurrentSlide();
+                }
+            }, 950);
+            txSim.timers.push(t1);
+        }
+
+        /* =====================================================================
+           7. HANDLER EVALUASI (SLIDE 18), KAMUS & TEMA
+           ===================================================================== */
+        function chooseBizCaseM6(id, idx) {
+            bizChoicesM6[id] = idx;
+            renderCurrentSlide();
+        }
+
+        function answerTfM6(id, val) {
+            tfChoicesM6[id] = val;
+            renderCurrentSlide();
+        }
+
+        function resetEvalM6() {
+            bizChoicesM6 = {};
+            tfChoicesM6 = {};
+            activeCaseIdx = 0;
+            renderCurrentSlide();
+        }
+
+        function showTerm(key) {
+            const item = GLOSSARY_DB[key];
+            if (!item) return;
+            document.getElementById('termCategoryBadge').textContent = item.category;
+            document.getElementById('termTitle').textContent = item.title;
+            document.getElementById('termMainDesc').textContent = item.main;
+            document.getElementById('termDetailDesc').textContent = item.detail;
+            document.getElementById('termSourceName').textContent = "Sumber: " + item.source;
+            const modal = document.getElementById('termModalBackdrop');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeTermModal() {
+            const modal = document.getElementById('termModalBackdrop');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function openGlossaryIndex() {
+            document.getElementById('glossarySearchInput').value = '';
+            renderGlossaryList('');
+            const modal = document.getElementById('glossaryModalBackdrop');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeGlossaryIndex() {
+            const modal = document.getElementById('glossaryModalBackdrop');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function selectGlossaryTerm(key) {
+            closeGlossaryIndex();
+            showTerm(key);
+        }
+
+        function renderGlossaryList(query) {
+            const q = String(query || '').trim().toLowerCase();
+            const allKeys = Object.keys(GLOSSARY_DB);
+            const matchedKeys = [];
+
+            for (let i = 0; i < allKeys.length; i++) {
+                const k = allKeys[i];
+                const item = GLOSSARY_DB[k];
+                if (
+                    item.title.toLowerCase().indexOf(q) !== -1 ||
+                    item.category.toLowerCase().indexOf(q) !== -1 ||
+                    item.main.toLowerCase().indexOf(q) !== -1
+                ) {
+                    matchedKeys.push(k);
+                }
+            }
+
+            const container = document.getElementById('glossaryListGrid');
+            if (!container) return;
+            if (matchedKeys.length === 0) {
+                container.innerHTML = '<div class="col-span-2 text-center py-8 text-xs text-slate-500">Istilah tidak ditemukan.</div>';
+                return;
+            }
+
+            let html = '';
+            for (let i = 0; i < matchedKeys.length; i++) {
+                const k = matchedKeys[i];
+                const item = GLOSSARY_DB[k];
+                html += `
+                    <button type="button" onclick="selectGlossaryTerm('${k}')" class="text-left p-4 rounded-2xl bg-slate-50 hover:bg-indigo-50/60 dark:bg-slate-800/50 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800 transition space-y-1">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">${escapeHtml(item.category)}</span>
+                            <span class="text-[10px] text-slate-400">${escapeHtml(item.source)}</span>
+                        </div>
+                        <div class="text-sm font-extrabold text-slate-900 dark:text-white">${escapeHtml(item.title)}</div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">${escapeHtml(item.main)}</p>
+                    </button>
+                `;
+            }
+            container.innerHTML = html;
+        }
+
+        function toggleTheme() {
+            const htmlEl = document.documentElement;
+            const icon = document.getElementById('themeIcon');
+            htmlEl.classList.toggle('dark');
+            const isDark = htmlEl.classList.contains('dark');
+            icon.className = isDark ? 'fa-solid fa-sun text-amber-400 text-sm' : 'fa-solid fa-moon text-sm';
+        }
+
+        document.addEventListener('keydown', function (e) {
+            const activeTag = document.activeElement && document.activeElement.tagName
+                ? document.activeElement.tagName.toLowerCase()
+                : '';
+            if (activeTag === 'input' || activeTag === 'textarea') return;
+
+            if (e.key === 'ArrowRight') changeSlide(1);
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+            if (e.key === 'Escape') {
+                closeTermModal();
+                closeGlossaryIndex();
+            }
+        });
+
+        window.onload = function () {
+            renderCurrentSlide();
+        };
+    </script>
+</body>
+</html>
