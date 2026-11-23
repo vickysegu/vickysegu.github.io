@@ -1,0 +1,2165 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pertemuan 6: Pengenalan Python, Variabel, Tipe Data & I/O (BD1205)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace']
+                    }
+                }
+            }
+        };
+    </script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .tech-term {
+            color: #4f46e5;
+            font-weight: 700;
+            cursor: pointer;
+            transition: color 0.15s ease, opacity 0.15s ease;
+        }
+        .dark .tech-term {
+            color: #818cf8;
+        }
+        .tech-term:hover {
+            color: #3730a3;
+            opacity: 0.85;
+        }
+        .dark .tech-term:hover {
+            color: #a5b4fc;
+        }
+
+        .slide-enter {
+            animation: fadeSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes fadeSlide {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fg-canvas {
+            background-color: #ffffff;
+            background-image: radial-gradient(#e2e8f0 1.2px, transparent 1.2px);
+            background-size: 18px 18px;
+        }
+        .dark .fg-canvas {
+            background-color: #0f172a;
+            background-image: radial-gradient(#1e293b 1.2px, transparent 1.2px);
+        }
+
+        .py-line-active {
+            background-color: rgba(239, 68, 68, 0.18);
+            border-left: 3px solid #ef4444;
+        }
+        .py-line-waiting {
+            background-color: rgba(79, 70, 229, 0.22);
+            border-left: 3px solid #6366f1;
+        }
+
+        .draggable-step {
+            cursor: grab;
+            user-select: none;
+            transition: all 0.15s ease;
+        }
+        .draggable-step:active {
+            cursor: grabbing;
+        }
+        .draggable-step.dragging {
+            opacity: 0.45;
+        }
+        .draggable-step.drag-over {
+            border-color: #4f46e5 !important;
+            transform: translateY(-2px);
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #334155;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col justify-between transition-colors duration-200">
+
+    <!-- Sticky Header -->
+    <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800">
+        <div class="w-full h-1 bg-slate-100 dark:bg-slate-800">
+            <div id="topProgressBar" class="h-full bg-indigo-600 dark:bg-indigo-500 transition-all duration-300" style="width: 6%;"></div>
+        </div>
+
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+                <button type="button" onclick="toggleSlideDrawer()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition flex items-center gap-2 text-xs sm:text-sm font-bold shrink-0">
+                    <i class="fa-solid fa-list-ul text-indigo-600 dark:text-indigo-400"></i>
+                    <span class="hidden sm:inline">Daftar Slide</span>
+                    <span id="slideCounterBadge" class="px-2 py-0.5 text-xs rounded-lg bg-indigo-600 text-white font-bold">1 / 18</span>
+                </button>
+
+                <div class="hidden md:flex items-center gap-2.5 min-w-0">
+                    <span id="slideCategoryPill" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 shrink-0">
+                        Modul 1
+                    </span>
+                    <h1 id="headerSlideTitle" class="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">
+                        Pengenalan Python, Variabel, Tipe Data &amp; I/O
+                    </h1>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 shrink-0">
+                <button type="button" onclick="openGlossaryIndex()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 text-xs sm:text-sm font-bold flex items-center gap-2 transition">
+                    <i class="fa-solid fa-book-open text-indigo-600 dark:text-indigo-400"></i>
+                    <span>Kamus Istilah</span>
+                </button>
+
+                <button type="button" onclick="toggleTheme()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center transition" title="Ganti Tema Layar">
+                    <i id="themeIcon" class="fa-solid fa-moon text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Slide Drawer -->
+    <div id="slideDrawerBackdrop" onclick="toggleSlideDrawer()" class="fixed inset-0 bg-slate-950/50 backdrop-blur-xs z-40 hidden opacity-0 transition-opacity duration-200"></div>
+    <aside id="slideDrawer" class="fixed top-0 left-0 bottom-0 w-80 sm:w-96 bg-white dark:bg-slate-900 z-50 shadow-2xl border-r border-slate-200 dark:border-slate-800 transform -translate-x-full transition-transform duration-200 flex flex-col">
+        <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Dasar Pemrograman 1 (BD1205)</span>
+                <h2 class="text-base font-extrabold text-slate-900 dark:text-white mt-0.5">Daftar Materi Pertemuan 6</h2>
+            </div>
+            <button type="button" onclick="toggleSlideDrawer()" class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div id="drawerSlideList" class="p-3.5 overflow-y-auto space-y-1 flex-1"></div>
+        <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 flex items-center justify-between">
+            <span>Gunakan tombol panah Kiri / Kanan</span>
+            <span class="font-bold">18 Slide</span>
+        </div>
+    </aside>
+
+    <!-- Main Slide Viewport -->
+    <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 flex flex-col justify-center">
+        <div id="slideViewport" class="bg-white dark:bg-slate-900 rounded-3xl shadow-xs border border-slate-200/80 dark:border-slate-800 p-6 sm:p-8 lg:p-10 min-h-[540px] flex flex-col justify-between relative overflow-hidden">
+            <!-- Konten slide dirender secara dinamis -->
+        </div>
+    </main>
+
+    <!-- Sticky Footer Navigation -->
+    <footer class="sticky bottom-0 z-20 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 py-3 px-4 sm:px-6">
+        <div class="max-w-6xl mx-auto flex items-center justify-between gap-4">
+            <button type="button" id="prevSlideBtn" onclick="changeSlide(-1)" class="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                <i class="fa-solid fa-arrow-left text-xs"></i>
+                <span>Sebelumnya</span>
+            </button>
+
+            <div id="slideDotsContainer" class="hidden md:flex items-center gap-1.5"></div>
+
+            <div class="md:hidden text-xs font-bold text-slate-500 dark:text-slate-400" id="mobileFooterCounter">
+                1 / 18
+            </div>
+
+            <button type="button" id="nextSlideBtn" onclick="changeSlide(1)" class="px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-indigo-600 hover:bg-indigo-700 text-white transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                <span id="nextBtnText">Selanjutnya</span>
+                <i class="fa-solid fa-arrow-right text-xs"></i>
+            </button>
+        </div>
+    </footer>
+
+    <!-- Modal Penjelasan Istilah -->
+    <div id="termModalBackdrop" onclick="closeTermModal()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl slide-enter">
+            <div class="flex items-start justify-between gap-4 mb-4">
+                <div>
+                    <span id="termCategoryBadge" class="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">Kategori</span>
+                    <h3 id="termTitle" class="text-xl font-extrabold text-slate-900 dark:text-white mt-1.5">Nama Istilah</h3>
+                </div>
+                <button type="button" onclick="closeTermModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <p id="termMainDesc" class="text-sm text-slate-700 dark:text-slate-200 leading-relaxed bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200/70 dark:border-slate-700/70"></p>
+
+                <div class="p-3.5 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-200/70 dark:border-indigo-800/70">
+                    <div class="text-[11px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-1">Contoh di UMKM Warung Digital:</div>
+                    <p id="termDetailDesc" class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed"></p>
+                </div>
+
+                <div class="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800 text-xs px-1">
+                    <span id="termSourceName" class="font-semibold text-slate-400">Referensi</span>
+                    <button type="button" onclick="closeTermModal(); openGlossaryIndex();" class="font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1.5">
+                        <span>Buka Kamus Lengkap</span>
+                        <i class="fa-solid fa-book-open text-[10px]"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Kamus Istilah Lengkap -->
+    <div id="glossaryModalBackdrop" onclick="closeGlossaryIndex()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-4xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden slide-enter">
+            <div class="p-5 sm:p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white">Kamus Istilah Pertemuan 6 (BD1205)</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Penjelasan ramah pemula untuk Bahasa Python, Dynamic Typing, snake_case, print(), f-string, dan Type Casting.</p>
+                </div>
+                <button type="button" onclick="closeGlossaryIndex()" class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-sm"></i>
+                    <input id="glossarySearchInput" oninput="renderGlossaryList(this.value)" type="text" placeholder="Cari istilah seperti Python, CLI, Dynamic Typing, snake_case, print(), input(), Type Casting, f-string..." class="w-full pl-10 pr-4 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+            <div id="glossaryListGrid" class="p-5 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+        </div>
+    </div>
+
+    <script>
+        const GLOSSARY_DB = {
+            python: {
+                title: "Python (Bahasa Pemrograman Tingkat Tinggi)",
+                category: "Bahasa Pemrograman",
+                main: "Bahasa pemrograman populer yang sintaksnya sangat bersih, ringkas, dan mudah dibaca menyerupai bahasa Inggris sehari-hari. Digunakan luas dalam Bisnis Digital untuk aplikasi kasir, otomatisasi, analisis data, dan AI.",
+                detail: "Mulai Pertemuan 6, seluruh flowchart Warung Digital yang dirancang di Flowgorithm (Minggu 1-5) diterjemahkan menjadi skrip Python (.py).",
+                source: "Python.org Documentation"
+            },
+            cli: {
+                title: "CLI (Command Line Interface / Terminal)",
+                category: "Lingkungan Eksekusi",
+                main: "Antarmuka berbasis teks (layar terminal) tempat programmer menjalankan skrip Python dengan perintah 'python nama_file.py' dan berinteraksi lewat papan ketik.",
+                detail: "Berfungsi persis seperti Console Window di Flowgorithm tempat kasir mengetik data produk Warung Digital dan melihat struk.",
+                source: "Sub-CPMK 2.1 BD1205"
+            },
+            dynamictyping: {
+                title: "Dynamic Typing (Penentuan Tipe Otomatis)",
+                category: "Karakteristik Python",
+                main: "Kemampuan Python mengenali tipe data variabel secara otomatis saat nilai diisi, sehingga kita TIDAK perlu menulis blok Declare tipe data terlebih dahulu seperti di Flowgorithm.",
+                detail: "Menulis 'harga_produk = 15000' membuat Python otomatis mengenali harga_produk sebagai integer (int).",
+                source: "Python Language Reference"
+            },
+            snakecase: {
+                title: "snake_case (Standar Penamaan Variabel Python)",
+                category: "Konvensi PEP 8",
+                main: "Aturan penulisan nama variabel resmi di Python dengan huruf kecil semua dan memisahkan antar-kata menggunakan garis bawah (underscore _).",
+                detail: "Di Flowgorithm kita menulis 'namaProduk' (camelCase), sedangkan di Python standar resminya adalah 'nama_produk', 'harga_satuan', dan 'stok_awal'.",
+                source: "Python PEP 8 Style Guide"
+            },
+            printfn: {
+                title: "Fungsi print() (Instruksi Output Python)",
+                category: "Instruksi Dasar",
+                main: "Fungsi bawaan Python untuk menampilkan teks sapaan, isi variabel, atau hasil perhitungan ke layar terminal (padanan dari blok Output hijau di Flowgorithm).",
+                detail: "Menulis print(\"=== Selamat Datang di Warung Digital ===\") untuk mencetak sapaan pembuka kasir.",
+                source: "Python Built-in Functions"
+            },
+            inputfn: {
+                title: "Fungsi input() (Instruksi Input Python)",
+                category: "Instruksi Dasar",
+                main: "Fungsi bawaan Python yang menampilkan pesan pemandu (prompt) sekaligus membaca ketikan pengguna dari keyboard. Hasil dari input() SELALU bertipe teks (str).",
+                detail: "nama_produk = input(\"Masukkan nama produk: \") menggabungkan Output Prompt dan Input dalam satu baris praktis!",
+                source: "Python Built-in Functions"
+            },
+            typecasting: {
+                title: "Type Casting / Konversi Tipe (int() & float())",
+                category: "Konsep Penting Python",
+                main: "Proses mengubah tipe data teks (str) hasil ketikan input() menjadi angka bulat (int) atau angka desimal (float) agar bisa dihitung secara matematika.",
+                detail: "harga = int(input(\"Masukkan harga: \")) wajib memakai int() agar 15000 dianggap angka, bukan teks \"15000\".",
+                source: "Python Type Conversion"
+            },
+            fstring: {
+                title: "f-string (Formatted String Literal)",
+                category: "Format Output Modern",
+                main: "Cara termudah dan paling rapi di Python untuk menyisipkan variabel langsung ke dalam teks dengan menambahkan huruf f sebelum tanda kutip dan kurung kurawal {nama_variabel}.",
+                detail: "print(f\"Produk {nama_produk} seharga Rp {harga_satuan:,}\") jauh lebih rapi daripada menyambung dengan tanda + atau &.",
+                source: "Python 3 Formatting"
+            },
+            typefn: {
+                title: "Fungsi type() (Pemeriksa Tipe Data)",
+                category: "Debugging Python",
+                main: "Fungsi bawaan Python untuk mengecek tipe data yang sedang tersimpan di dalam suatu variabel (<class 'str'>, <class 'int'>, <class 'float'>, atau <class 'bool'>).",
+                detail: "Memanggil print(type(harga_satuan)) membantu memastikan apakah variabel harga sudah berupa angka (int) atau masih teks (str).",
+                source: "Python Built-in Functions"
+            },
+            syntaxerror: {
+                title: "SyntaxError & NameError",
+                category: "Debugging Pemula",
+                main: "SyntaxError muncul jika penulisan kode melanggar aturan tanda baca Python (misal lupa menutup tanda kutip atau kurung). NameError muncul jika salah ketik nama variabel (karena Python peka huruf besar/kecil).",
+                detail: "Menulis print(Nama_Produk) padahal variabelnya bernama nama_produk akan memunculkan NameError.",
+                source: "Python Exceptions"
+            }
+        };
+
+        function term(key, customLabel) {
+            const item = GLOSSARY_DB[key];
+            if (!item) return customLabel || key;
+            const label = customLabel || item.title.split(' (')[0];
+            return '<span class="tech-term" onclick="showTerm(\'' + key + '\')">' + label + '</span>';
+        }
+
+        function escapeHtml(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        let currentSlideIndex = 0;
+        const TOTAL_SLIDES = 18;
+
+        // State Slide 2: Mengapa Python untuk Bisnis Digital
+        let s2Tab = 'compare'; // 'compare' | 'bisnis_usecase'
+
+        // State Slide 3: Lingkungan Kerja Python (CLI, VS Code, Colab)
+        let s3EnvTab = 'vscode'; // 'cli' | 'vscode' | 'colab'
+
+        // State Slide 5: Perubahan 1: Flowgorithm vs Python (Dynamic Typing & snake_case)
+        let s5DiffItem = 'declare'; // 'declare' | 'naming' | 'io'
+
+        // State Slide 6: Lab 4 Tipe Data Python (str, int, float, bool)
+        let s6PyType = 'str';
+
+        // State Slide 7: Jebakan Klasik input() = str (String Repetition Bug vs int())
+        let s7UseIntCast = false;
+        let s7HargaInput = '15000';
+        let s7QtyInput = '3';
+
+        // State Slide 8: Operator Aritmatika & Komentar (#) di Python
+        let s8OpKey = '//';
+
+        // State Slide 10: Anatomi print() & 3 Gaya Menggabungkan Teks
+        let s10PrintStyle = 'fstring'; // 'plus' | 'comma' | 'fstring'
+
+        // State Slide 11: Bengkel f-string & Format Ribuan Kasir Warung Digital
+        let s11Produk = 'Kopi Susu Gula Aren';
+        let s11Harga = 15000;
+        let s11Stok = 25;
+        let s11UseCommaFmt = true;
+
+        // State Slide 12: Translator Interaktif Flowgorithm -> Python
+        let s12SyncBlock = 1; // 1..5
+
+        // State Slide 13: Detektif Error Pemula Python
+        let s13ErrCase = 'name_error'; // 'syntax_error' | 'name_error' | 'type_error'
+        let s13Fixed = false;
+
+        // State Slide 15: Simulasi 1 - Live Python CLI Runner (7 Baris Kode)
+        let pyStepIndex = -1;
+        let pyAutoTimer = null;
+        let pyIsAuto = false;
+        let pyWaitingVar = null;
+        let pyMemory = {};
+        let pyTerminalLog = [];
+        let pyBannerText = 'Klik tombol Run Skrip atau Step (Per Baris) di kanan atas untuk menjalankan kasir_warung.py!';
+        let pyInputError = '';
+
+        // State Slide 16: Simulasi 2 - Lengkapi Kode Python Sapaan & Data Produk (4 Slot)
+        let activePySlot = 1;
+        let pyBuilderSlots = { 1: '', 2: '', 3: '', 4: '' };
+        let pyBuilderFeedback = { type: '', text: '' };
+
+        // State Slide 17: Simulasi 3 - Drag & Drop 8 Baris Skrip Python Kasir
+        const CORRECT_PY_STEPS = [
+            { id: 1, tag: "Komentar", code: "# Program Sapaan & Pencatatan Produk Warung Digital", desc: "Baris komentar dokumentasi awal program" },
+            { id: 2, tag: "Output Sapaan", code: "print(\"=== Selamat Datang di Warung Digital ===\")", desc: "Menampilkan sapaan pembuka toko ke layar" },
+            { id: 3, tag: "Input String", code: "nama_produk = input(\"Masukkan nama produk: \")", desc: "Membaca nama produk bertipe str dari kasir" },
+            { id: 4, tag: "Input Integer", code: "harga_satuan = int(input(\"Masukkan harga satuan: \"))", desc: "Membaca harga dan mengonversinya menjadi int" },
+            { id: 5, tag: "Input Integer", code: "stok_awal = int(input(\"Masukkan jumlah stok: \"))", desc: "Membaca jumlah stok dan mengonversinya menjadi int" },
+            { id: 6, tag: "Proses Hitung", code: "nilai_aset = harga_satuan * stok_awal", desc: "Menghitung total nilai aset stok produk tersebut" },
+            { id: 7, tag: "Output Struk", code: "print(f\"Produk {nama_produk} | Aset: Rp {nilai_aset:,}\")", desc: "Menampilkan ringkasan data produk menggunakan f-string" },
+            { id: 8, tag: "Output Penutup", code: "print(\"Data produk berhasil dicatat ke sistem!\")", desc: "Menampilkan konfirmasi akhir bahwa skrip selesai" }
+        ];
+        let pyStepsOrder = [...CORRECT_PY_STEPS].sort(function () { return Math.random() - 0.5; });
+        let pyShowValidation = false;
+        let pyFeedbackText = '';
+        let draggedPyIndex = null;
+
+        // State Slide 18: Cek Pemahaman Mandiri
+        let selfCheckFeedback = { 1: null, 2: null, 3: null };
+
+        function renderSlide1() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-8">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center my-auto">
+                        <div class="lg:col-span-7 space-y-5">
+                            <div class="inline-flex flex-wrap items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 text-xs font-bold border border-indigo-200/60 dark:border-indigo-800/60">
+                                <span>Pertemuan 6 • Sub-CPMK 2.1 (Bobot 3%)</span>
+                                <span>•</span>
+                                <span>Fase 2: Pemrograman Python</span>
+                            </div>
+
+                            <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 dark:text-white leading-tight tracking-tight">
+                                Pengenalan ${term('python', 'Python')}, Variabel, Tipe Data, &amp; Instruksi <span class="font-mono text-indigo-600 dark:text-indigo-400">print()</span>
+                            </h2>
+
+                            <p class="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Selamat memasuki <strong>Fase 2 Perkuliahan</strong>! Setelah 5 minggu melatih logika visual menggunakan Flowgorithm, hari ini kita mulai menulis <strong>baris kode Python perdana</strong> untuk menampilkan <strong>sapaan pembuka</strong> dan mencatat <strong>data produk UMKM "Warung Digital"</strong>!
+                            </p>
+
+                            <div class="p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200/70 dark:border-indigo-800/70 flex items-center gap-3 text-xs sm:text-sm text-slate-700 dark:text-slate-200">
+                                <i class="fa-brands fa-python text-indigo-600 dark:text-indigo-400 text-lg shrink-0"></i>
+                                <span><strong>Target Pengalaman Belajar Minggu 6:</strong> Menulis skrip Python perdana untuk menampilkan sapaan pembuka dan mencatat data produk Warung Digital menggunakan variabel, tipe data (<span class="font-mono">str, int, float, bool</span>), serta instruksi <span class="font-mono">print()</span> dan <span class="font-mono">input()</span>.</span>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-5">
+                            <div class="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 space-y-4">
+                                <div>
+                                    <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Peta 18 Slide Pertemuan 6</span>
+                                    <h3 class="text-lg font-extrabold text-slate-900 dark:text-white mt-1">4 Modul Pembelajaran Terstruktur</h3>
+                                </div>
+
+                                <div class="space-y-2.5">
+                                    <button type="button" onclick="goToSlide(1)" class="w-full text-left flex items-start gap-3 p-3.5 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 dark:hover:bg-slate-800/80 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-0.5 font-extrabold text-xs">M1</div>
+                                        <div>
+                                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">Modul 1: Mengapa Python untuk Bisnis Digital? (Slide 1-3)</h4>
+                                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Peran Python di industri digital &amp; alat kerja CLI / VS Code / Colab.</p>
+                                        </div>
+                                    </button>
+
+                                    <button type="button" onclick="goToSlide(4)" class="w-full text-left flex items-start gap-3 p-3.5 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 dark:hover:bg-slate-800/80 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-0.5 font-extrabold text-xs">M2</div>
+                                        <div>
+                                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">Modul 2: Variabel, Tipe Data &amp; Type Casting (Slide 5-8)</h4>
+                                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Dynamic Typing, snake_case, 4 tipe data, &amp; jebakan input() teks.</p>
+                                        </div>
+                                    </button>
+
+                                    <button type="button" onclick="goToSlide(9)" class="w-full text-left flex items-start gap-3 p-3.5 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 dark:hover:bg-slate-800/80 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-0.5 font-extrabold text-xs">M3</div>
+                                        <div>
+                                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">Modul 3: Instruksi print(), f-string &amp; Translasi (Slide 10-13)</h4>
+                                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Bengkel f-string struk, translasi Flowgorithm-&gt;Python, &amp; detektif error.</p>
+                                        </div>
+                                    </button>
+
+                                    <button type="button" onclick="goToSlide(14)" class="w-full text-left flex items-start gap-3 p-3.5 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 dark:hover:bg-slate-800/80 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-0.5 font-extrabold text-xs">M4</div>
+                                        <div>
+                                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">Modul 4: 3 Simulator Lab Kode Python (Slide 15-18)</h4>
+                                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Live Python CLI Runner, lengkapi kode katalog, &amp; Drag-Drop.</p>
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide2() {
+            const isCompare = s2Tab === 'compare';
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-6">
+                    <div class="space-y-2">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 1 • Transisi Strategis ke Bahasa Pemrograman</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Mengapa ${term('python', 'Python')} Sangat Ideal bagi Mahasiswa Bisnis Digital?</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Flowgorithm sangat baik untuk melatih alur pikir visual, namun aplikasi kasir nyata di toko dijalankan oleh kode program. Python dipilih karena sintaksnya paling bersih dan menjadi standar industri bisnis digital modern:
+                        </p>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" onclick="setS2Tab('compare')" class="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm border transition ${isCompare ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <i class="fa-solid fa-code-compare mr-1.5"></i>1. Perbandingan Flowgorithm vs Kode Python
+                        </button>
+                        <button type="button" onclick="setS2Tab('bisnis_usecase')" class="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm border transition ${!isCompare ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <i class="fa-solid fa-briefcase mr-1.5"></i>2. 4 Penerapan Python di Karier Bisnis Digital
+                        </button>
+                    </div>
+
+                    <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 my-auto">
+                        ${isCompare ? `
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                                    <span class="text-xs font-extrabold px-2.5 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">Minggu 1–5: Flowgorithm (.fprg)</span>
+                                    <ul class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 space-y-2 list-disc pl-4">
+                                        <li>Menyusun simbol gambar (Segi Enam, Jajar Genjang, Persegi Panjang).</li>
+                                        <li>Wajib mendeklarasikan tipe data di awal (<span class="font-mono">Declare String</span>).</li>
+                                        <li>Cocok untuk belajar alur dasar, tetapi tidak bisa dijalankan sebagai aplikasi toko mandiri.</li>
+                                    </ul>
+                                </div>
+
+                                <div class="p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border-2 border-indigo-500 space-y-2.5">
+                                    <span class="text-xs font-extrabold px-2.5 py-0.5 rounded bg-indigo-600 text-white">Minggu 6–15: Python (.py)</span>
+                                    <ul class="text-xs sm:text-sm text-slate-700 dark:text-slate-200 space-y-2 list-disc pl-4">
+                                        <li>Menulis instruksi teks ringkas yang terbaca seperti bahasa Inggris (<span class="font-mono">print</span>, <span class="font-mono">input</span>, <span class="font-mono">if</span>, <span class="font-mono">for</span>).</li>
+                                        <li><strong>Tanpa tanda titik koma (;)</strong> dan tanpa blok <span class="font-mono">Declare</span> yang rumit.</li>
+                                        <li>Siap dikembangkan menjadi Mini Project <strong>Sistem Kasir Warung Digital</strong> utuh di Minggu 15!</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        ` : `
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs sm:text-sm">
+                                <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                    <div class="font-extrabold text-indigo-600 dark:text-indigo-400 mb-1">1. Sistem Kasir &amp; Otomatisasi UMKM</div>
+                                    <p class="text-xs text-slate-600 dark:text-slate-300">Membangun aplikasi POS (Point of Sale), kalkulator HPP-laba, hingga otomatisasi pembuatan faktur PDF.</p>
+                                </div>
+                                <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                    <div class="font-extrabold text-emerald-600 dark:text-emerald-400 mb-1">2. Analisis Data Penjualan &amp; Pelanggan</div>
+                                    <p class="text-xs text-slate-600 dark:text-slate-300">Mengolah ribuan baris transaksi e-commerce untuk menemukan produk terlaris dan pola belanja konsumen.</p>
+                                </div>
+                                <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                    <div class="font-extrabold text-amber-600 dark:text-amber-400 mb-1">3. Otomatisasi Digital Marketing</div>
+                                    <p class="text-xs text-slate-600 dark:text-slate-300">Memantau harga kompetitor di marketplace secara otomatis dan mengirim notifikasi promo WhatsApp/Email.</p>
+                                </div>
+                                <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                    <div class="font-extrabold text-purple-600 dark:text-purple-400 mb-1">4. AI &amp; Prediksi Permintaan Stok</div>
+                                    <p class="text-xs text-slate-600 dark:text-slate-300">Memprediksi jumlah stok yang harus dibeli bulan depan menggunakan pustaka Machine Learning Python.</p>
+                                </div>
+                            </div>
+                        `}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide3() {
+            const envs = {
+                vscode: {
+                    btn: "1. VS Code + Python (Rekomendasi Utama)",
+                    badge: "Lingkungan Kerja Praktikum Komputer / Laptop",
+                    title: "Menulis File Skrip kasir_warung.py di Visual Studio Code",
+                    desc: "Kita membuat satu file berekstensi .py (misal warung_digital.py) di VS Code, menulis kode Python di bagian atas, lalu menekan tombol Play (▶) untuk menjalankannya di jendela Terminal CLI di bagian bawah.",
+                    cmd: "python warung_digital.py"
+                },
+                cli: {
+                    btn: "2. Python CLI / Terminal Interaktif",
+                    badge: "Command Line Interface (Terminal)",
+                    title: "Menjalankan Perintah Python Langsung di Layar Hitam Terminal",
+                    desc: "Melalui " + term('cli', 'CLI (Command Line Interface)') + ", Anda bisa mengetik 'python' untuk mencoba satu baris perintah secara instan, atau menjalankan file proyek kasir yang sudah disimpan.",
+                    cmd: "C:\\WarungDigital> python kasir.py\n=== Selamat Datang di Warung Digital ==="
+                },
+                colab: {
+                    btn: "3. Google Colab (Tanpa Instalasi via Browser)",
+                    badge: "Cloud Notebook • Bisa Diakses dari HP / Laptop",
+                    title: "Menjalankan Kode Python Langsung di Browser via Google Colab",
+                    desc: "Jika laptop belum terpasang Python atau sedang belajar lewat tablet/HP, mahasiswa dapat membuka colab.research.google.com dan langsung mengetik kode Python per sel tanpa instalasi apa pun!",
+                    cmd: "# Klik tombol Play [▶] di sebelah kiri sel kode Google Colab"
+                }
+            };
+
+            const cur = envs[s3EnvTab];
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 1 • Persiapan Ruang Kerja Koding</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Di Mana Kita Menulis &amp; Menjalankan Kode Python?</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Setiap program Python disimpan di dalam file teks berakhiran <strong><span class="font-mono text-indigo-600 dark:text-indigo-400">.py</span></strong> (menggantikan <span class="font-mono">.fprg</span> milik Flowgorithm). Klik ketiga opsi alat kerja berikut:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        <button type="button" onclick="setS3Env('vscode')" class="p-3.5 rounded-2xl border text-left transition ${s3EnvTab === 'vscode' ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-xs sm:text-sm font-extrabold">${envs.vscode.btn}</div>
+                        </button>
+                        <button type="button" onclick="setS3Env('cli')" class="p-3.5 rounded-2xl border text-left transition ${s3EnvTab === 'cli' ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-xs sm:text-sm font-extrabold">${envs.cli.btn}</div>
+                        </button>
+                        <button type="button" onclick="setS3Env('colab')" class="p-3.5 rounded-2xl border text-left transition ${s3EnvTab === 'colab' ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-xs sm:text-sm font-extrabold">${envs.colab.btn}</div>
+                        </button>
+                    </div>
+
+                    <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 grid grid-cols-1 lg:grid-cols-12 gap-5 items-center my-auto">
+                        <div class="lg:col-span-7 space-y-2.5">
+                            <span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">${cur.badge}</span>
+                            <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">${cur.title}</h3>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${cur.desc}</p>
+                        </div>
+
+                        <div class="lg:col-span-5 p-4 rounded-2xl bg-slate-900 text-emerald-300 font-mono text-xs space-y-1.5">
+                            <div class="text-slate-400 text-[11px]">// Perintah Eksekusi Terminal:</div>
+                            <pre class="whitespace-pre-wrap leading-relaxed">${escapeHtml(cur.cmd)}</pre>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide4() {
+            return `
+                <div class="slide-enter flex flex-col justify-center h-full my-auto">
+                    <div class="p-8 sm:p-12 rounded-3xl bg-gradient-to-br from-indigo-600 to-slate-900 text-white space-y-6 shadow-lg">
+                        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/15 text-indigo-100 text-xs font-extrabold uppercase tracking-wider">
+                            <i class="fa-solid fa-bridge"></i>
+                            <span>Jembatan Antar Topik • Modul 1 Menuju Modul 2</span>
+                        </div>
+
+                        <h2 class="text-2xl sm:text-4xl font-extrabold leading-tight">
+                            Kita sudah siap menulis skrip Python. Namun ada 3 kebiasaan di Flowgorithm yang berubah saat kita pindah ke Python! Apa saja perbedaannya?
+                        </h2>
+
+                        <p class="text-indigo-100 text-sm sm:text-base leading-relaxed max-w-3xl">
+                            Di <strong>Modul 2 (Slide 5 s/d 8)</strong>, kita akan membedah 3 perubahan penting tersebut: (1) Python <strong>tidak memakai simbol Segi Enam Declare</strong> (<em>Dynamic Typing</em>), (2) gaya nama variabel berganti ke <strong><span class="font-mono">snake_case</span></strong>, dan (3) perintah <strong><span class="font-mono">input()</span> selalu menghasilkan teks (<span class="font-mono">str</span>)</strong> sehingga wajib dikonversi dengan <span class="font-mono">int()</span> atau <span class="font-mono">float()</span>!
+                        </p>
+
+                        <div class="pt-2">
+                            <button type="button" onclick="changeSlide(1)" class="px-5 py-3 rounded-xl bg-white text-indigo-700 hover:bg-indigo-50 font-extrabold text-xs sm:text-sm transition inline-flex items-center gap-2 shadow-sm">
+                                <span>Masuk ke Modul 2: Variabel &amp; Tipe Data Python</span>
+                                <i class="fa-solid fa-arrow-right text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide5() {
+            const diffs = {
+                declare: {
+                    btn: "1. Tanpa Blok Declare (Dynamic Typing)",
+                    fgTitle: "Flowgorithm (Wajib Declare di Awal)",
+                    fgCode: "Declare String namaProduk\nDeclare Integer hargaSatuan\nAssign namaProduk = \"Kopi Susu\"\nAssign hargaSatuan = 15000",
+                    pyTitle: "Python (Langsung Isi Nilai / Dynamic Typing)",
+                    pyCode: "nama_produk = \"Kopi Susu\"\nharga_satuan = 15000",
+                    explain: "Berkat sifat " + term('dynamictyping', 'Dynamic Typing') + ", Python langsung tahu bahwa nama_produk bertipe teks (str) karena diapit tanda kutip, dan harga_satuan bertipe angka bulat (int) karena berisi angka murni!"
+                },
+                naming: {
+                    btn: "2. Gaya Nama: camelCase -> snake_case",
+                    fgTitle: "Flowgorithm (Wajib camelCase Tanpa _)",
+                    fgCode: "// Flowgorithm menolak garis bawah (_)\nDeclare String namaProduk\nDeclare Integer hargaSatuan\nDeclare Integer stokAwal",
+                    pyTitle: "Python (Standar PEP 8: snake_case)",
+                    pyCode: "# Python memakai huruf kecil & garis bawah (_)\nnama_produk = \"Roti Bakar\"\nharga_satuan = 12000\nstok_awal = 30",
+                    explain: "Jika di Flowgorithm tanda garis bawah (_) dilarang, di Python justru sangat dianjurkan (" + term('snakecase', 'snake_case') + ") agar nama variabel panjang mudah dibaca!"
+                },
+                io: {
+                    btn: "3. Instruksi Output & Input Ringkas",
+                    fgTitle: "Flowgorithm (Terpisah 2 Blok)",
+                    fgCode: "Output \"Masukkan nama produk:\"\nInput namaProduk",
+                    pyTitle: "Python (Bisa Digabung dalam 1 Baris!)",
+                    pyCode: "nama_produk = input(\"Masukkan nama produk: \")",
+                    explain: "Fungsi " + term('inputfn', 'input()') + " di Python dapat langsung menampilkan kalimat pertanyaan di dalam tanda kurung sekaligus menyimpan jawaban kasir ke variabel!"
+                }
+            };
+
+            const cur = diffs[s5DiffItem];
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 2 • Translasi Konsep Flowgorithm ke Python</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">3 Perbedaan Utama Variabel: Flowgorithm vs Python</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Klik ketiga poin perubahan di bawah ini untuk membandingkan penulisan lama (Flowgorithm) dengan penulisan baru (Python):
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        <button type="button" onclick="setS5Diff('declare')" class="p-3.5 rounded-2xl border text-left transition ${s5DiffItem === 'declare' ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-xs sm:text-sm font-extrabold">${diffs.declare.btn}</div>
+                        </button>
+                        <button type="button" onclick="setS5Diff('naming')" class="p-3.5 rounded-2xl border text-left transition ${s5DiffItem === 'naming' ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-xs sm:text-sm font-extrabold">${diffs.naming.btn}</div>
+                        </button>
+                        <button type="button" onclick="setS5Diff('io')" class="p-3.5 rounded-2xl border text-left transition ${s5DiffItem === 'io' ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-xs sm:text-sm font-extrabold">${diffs.io.btn}</div>
+                        </button>
+                    </div>
+
+                    <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-4 my-auto">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs">
+                            <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
+                                <span class="font-sans text-[11px] font-extrabold px-2 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">${cur.fgTitle}</span>
+                                <pre class="whitespace-pre-wrap text-slate-700 dark:text-slate-300 leading-relaxed pt-1">${escapeHtml(cur.fgCode)}</pre>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-slate-900 text-emerald-300 border-2 border-indigo-500 space-y-2">
+                                <span class="font-sans text-[11px] font-extrabold px-2 py-0.5 rounded bg-indigo-600 text-white">${cur.pyTitle}</span>
+                                <pre class="whitespace-pre-wrap leading-relaxed pt-1">${escapeHtml(cur.pyCode)}</pre>
+                            </div>
+                        </div>
+
+                        <div class="p-3.5 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-xs sm:text-sm text-slate-700 dark:text-slate-200">
+                            ${cur.explain}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide6() {
+            const pyTypes = {
+                str: {
+                    fgName: "String (Flowgorithm)",
+                    pyName: "str (Python)",
+                    typeOut: "<class 'str'>",
+                    code: "nama_produk = \"Kopi Susu Gula Aren\"\nkode_sku = \"WD-001\"\nprint(type(nama_produk))",
+                    desc: "Menyimpan teks nama produk, deskripsi menu, atau kode SKU barang. Wajib diapit tanda kutip dua (\"...\") atau kutip satu ('...')."
+                },
+                int: {
+                    fgName: "Integer (Flowgorithm)",
+                    pyName: "int (Python)",
+                    typeOut: "<class 'int'>",
+                    code: "harga_satuan = 15000\nstok_gudang = 40\nprint(type(harga_satuan))",
+                    desc: "Menyimpan bilangan bulat utuh tanpa desimal seperti harga rupiah (15000) dan jumlah stok barang (40). Ditulis tanpa titik pemisah ribuan."
+                },
+                float: {
+                    fgName: "Real (Flowgorithm)",
+                    pyName: "float (Python)",
+                    typeOut: "<class 'float'>",
+                    code: "berat_kemasan_kg = 0.25\npajak_ppn = 0.11\nprint(type(berat_kemasan_kg))",
+                    desc: "Menyimpan angka desimal / pecahan (di Flowgorithm disebut Real). Pemisah desimal menggunakan tanda titik (.), misalnya 0.25 kg atau 0.11."
+                },
+                bool: {
+                    fgName: "Boolean (Flowgorithm)",
+                    pyName: "bool (Python)",
+                    typeOut: "<class 'bool'>",
+                    code: "produk_aktif = True\nstok_habis = False\nprint(type(produk_aktif))",
+                    desc: "Menyimpan status logika benar/salah. Perhatian: di Python, huruf pertama True dan False WAJIB ditulis dengan huruf KAPITAL!"
+                }
+            };
+
+            const keys = ['str', 'int', 'float', 'bool'];
+            let tabsHtml = '';
+            for (let i = 0; i < keys.length; i++) {
+                const k = keys[i];
+                const active = s6PyType === k;
+                tabsHtml += `
+                    <button type="button" onclick="setS6PyType('${k}')" class="p-3.5 rounded-2xl border text-left transition ${active ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700'}">
+                        <div class="font-mono text-base font-extrabold ${active ? 'text-amber-300' : 'text-indigo-600 dark:text-indigo-400'}">${k}</div>
+                        <div class="text-[11px] opacity-85 mt-0.5">${pyTypes[k].fgName}</div>
+                    </button>
+                `;
+            }
+
+            const cur = pyTypes[s6PyType];
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 2 • Padanan Tipe Data Memori</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">4 Tipe Data Dasar Python &amp; Fungsi Pemeriksa ${term('typefn', 'type()')}</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Keempat tipe data di Flowgorithm memiliki padanan langsung di Python dengan nama yang lebih singkat: <span class="font-mono font-bold">str</span>, <span class="font-mono font-bold">int</span>, <span class="font-mono font-bold">float</span>, dan <span class="font-mono font-bold">bool</span>. Klik masing-masing tab:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+                        ${tabsHtml}
+                    </div>
+
+                    <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 grid grid-cols-1 lg:grid-cols-12 gap-5 items-center my-auto">
+                        <div class="lg:col-span-6 space-y-2.5">
+                            <span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">${cur.fgName} -&gt; ${cur.pyName}</span>
+                            <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Tipe Data <span class="font-mono text-indigo-600 dark:text-indigo-400">${s6PyType}</span> di Warung Digital</h3>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${cur.desc}</p>
+                        </div>
+
+                        <div class="lg:col-span-6 space-y-2.5 font-mono text-xs">
+                            <div class="p-4 rounded-2xl bg-slate-900 text-emerald-300">
+                                <div class="text-slate-400 text-[11px] mb-1"># Contoh Kode Python:</div>
+                                <pre class="whitespace-pre-wrap leading-relaxed">${escapeHtml(cur.code)}</pre>
+                            </div>
+                            <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                                <span class="text-slate-500">Output fungsi type():</span>
+                                <span class="font-extrabold text-indigo-600 dark:text-indigo-400">${escapeHtml(cur.typeOut)}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide7() {
+            const cleanHarga = String(s7HargaInput || '15000').trim();
+            const cleanQty = String(s7QtyInput || '3').trim();
+            const numHarga = parseInt(cleanHarga, 10) || 0;
+            const numQty = parseInt(cleanQty, 10) || 1;
+
+            const bugOutput = cleanHarga.repeat(Math.min(5, Math.max(1, numQty)));
+            const realTotal = numHarga * numQty;
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 2 • Jebakan Terbesar Pemula Python!</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Waspada! ${term('inputfn', 'input()')} Selalu Menghasilkan Teks (<span class="font-mono">str</span>) -> Wajib ${term('typecasting', 'int()')}</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                            Di Python, apa pun yang diketik pengguna lewat <span class="font-mono font-bold">input()</span> selalu dianggap sebagai <strong>teks (<span class="font-mono">str</span>)</strong>! Jika Anda lupa membungkusnya dengan <strong><span class="font-mono">int(...)</span></strong>, maka <span class="font-mono">"15000" * 3</span> bukan menjadi <span class="font-mono">45000</span>, melainkan teks yang digandakan 3 kali! Uji perbedaannya di bawah ini:
+                        </p>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" onclick="setS7Cast(false)" class="px-4 py-2 rounded-xl font-bold text-xs sm:text-sm border transition ${!s7UseIntCast ? 'bg-rose-600 text-white border-rose-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            1. Tanpa int() (Bug Penggandaan Teks!)
+                        </button>
+                        <button type="button" onclick="setS7Cast(true)" class="px-4 py-2 rounded-xl font-bold text-xs sm:text-sm border transition ${s7UseIntCast ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            2. Pakai int(input(...)) (Type Casting Benar)
+                        </button>
+                    </div>
+
+                    <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-4 my-auto">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <label class="text-[11px] font-bold text-slate-400 block mb-1">Ketikan Kasir untuk Harga:</label>
+                                <input type="text" value="${escapeHtml(cleanHarga)}" oninput="updateS7Inputs('harga', this.value)" class="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-sm font-extrabold">
+                            </div>
+                            <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <label class="text-[11px] font-bold text-slate-400 block mb-1">Ketikan Kasir untuk Jumlah (1 - 5):</label>
+                                <input type="number" min="1" max="5" value="${numQty}" oninput="updateS7Inputs('qty', this.value)" class="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-sm font-extrabold text-indigo-600">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+                            <div class="lg:col-span-6 p-4 rounded-2xl bg-slate-900 text-emerald-300 font-mono text-xs">
+                                ${!s7UseIntCast ? `
+                                    <div class="text-rose-400 mb-1"># SALAH: Lupa int()</div>
+                                    <pre>harga = input("Harga: ")   # bertipe str\nqty = int(input("Qty: "))\ntotal = harga * qty\nprint(total)</pre>
+                                ` : `
+                                    <div class="text-emerald-400 mb-1"># BENAR: Pakai Type Casting int()</div>
+                                    <pre>harga = int(input("Harga: ")) # bertipe int\nqty = int(input("Qty: "))\ntotal = harga * qty\nprint(total)</pre>
+                                `}
+                            </div>
+
+                            <div class="lg:col-span-6 p-4 rounded-2xl border-2 ${!s7UseIntCast ? 'bg-rose-50/70 dark:bg-rose-950/30 border-rose-400' : 'bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-500'} space-y-1.5">
+                                <div class="text-xs font-extrabold uppercase ${!s7UseIntCast ? 'text-rose-700 dark:text-rose-300' : 'text-emerald-700 dark:text-emerald-300'}">
+                                    Output di Layar Terminal:
+                                </div>
+                                <div class="font-mono text-lg font-extrabold text-slate-900 dark:text-white break-all">
+                                    ${!s7UseIntCast ? '"' + escapeHtml(bugOutput) + '"' : 'Rp ' + realTotal.toLocaleString('id-ID')}
+                                </div>
+                                <p class="text-xs text-slate-600 dark:text-slate-300">
+                                    ${!s7UseIntCast
+                                        ? 'Karena harga masih berupa teks "' + escapeHtml(cleanHarga) + '", operator * menggandakan teksnya sebanyak ' + numQty + ' kali!'
+                                        : 'Dengan int(input(...)), Python mengubah ketikan menjadi angka bulat murni sehingga perkalian matematika berjalan akurat!'}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide8() {
+            const ops = {
+                '+': { title: "Penjumlahan (+)", py: "total = 15000 + 5000  # Hasil: 20000", note: "Sama persis seperti di Flowgorithm." },
+                '-': { title: "Pengurangan (-)", py: "laba = 54000 - 40000  # Hasil: 14000", note: "Sama persis seperti di Flowgorithm." },
+                '*': { title: "Perkalian (*)", py: "subtotal = 15000 * 4  # Hasil: 60000", note: "Menggunakan tanda bintang (*)." },
+                '/': { title: "Pembagian Desimal (/)", py: "diskon_rasio = 15 / 100  # Hasil: 0.15 (float)", note: "Di Python 3, pembagian (/) otomatis menghasilkan tipe float (desimal)." },
+                '//': { title: "Pembagian Bulat (//) — Fitur Khas Python!", py: "jumlah_kardus = 14 // 6  # Hasil: 2 kardus utuh", note: "Tanda garis miring ganda (//) membagi bilangan dan membuang sisanya (floor division)." },
+                '%': { title: "Sisa Bagi / Modulo (%)", py: "sisa_botol = 14 % 6  # Hasil: 2 botol sisa", note: "Menghasilkan sisa bagi, sama dengan operator Mod / % di Flowgorithm." }
+            };
+
+            const keys = ['+', '-', '*', '/', '//', '%'];
+            const btns = keys.map(function (k) {
+                const active = s8OpKey === k;
+                return `
+                    <button type="button" onclick="setS8Op('${k}')" class="p-3 rounded-2xl border text-left transition ${active ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700'}">
+                        <div class="font-mono text-base font-extrabold ${active ? 'text-amber-300' : 'text-indigo-600 dark:text-indigo-400'}">${k}</div>
+                        <div class="text-[11px] font-bold mt-0.5 line-clamp-1">${ops[k].title.split(' (')[0]}</div>
+                    </button>
+                `;
+            }).join('');
+
+            const cur = ops[s8OpKey];
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 2 • Operator Hitung &amp; Komentar Kode</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Operator Aritmatika Python &amp; Tanda Komentar <span class="font-mono text-indigo-600">#</span></h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Seluruh operator aritmatika Flowgorithm berlaku di Python, ditambah pembagian bulat (<span class="font-mono font-bold">//</span>) serta tanda pagar (<span class="font-mono font-bold">#</span>) untuk menulis catatan komentar yang diabaikan komputer:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+                        ${btns}
+                    </div>
+
+                    <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-3 my-auto">
+                        <span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">${cur.title}</span>
+                        <div class="p-4 rounded-2xl bg-slate-900 text-emerald-300 font-mono text-xs sm:text-sm font-bold">
+                            ${escapeHtml(cur.py)}
+                        </div>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">${escapeHtml(cur.note)}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide9() {
+            return `
+                <div class="slide-enter flex flex-col justify-center h-full my-auto">
+                    <div class="p-8 sm:p-12 rounded-3xl bg-gradient-to-br from-indigo-600 to-slate-900 text-white space-y-6 shadow-lg">
+                        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/15 text-indigo-100 text-xs font-extrabold uppercase tracking-wider">
+                            <i class="fa-solid fa-bridge"></i>
+                            <span>Jembatan Antar Topik • Modul 2 Menuju Modul 3</span>
+                        </div>
+
+                        <h2 class="text-2xl sm:text-4xl font-extrabold leading-tight">
+                            Kita sudah menguasai variabel snake_case, 4 tipe data Python, dan type casting int(). Sekarang bagaimana cara mencetak sapaan &amp; katalog produk Warung Digital dengan rapi?
+                        </h2>
+
+                        <p class="text-indigo-100 text-sm sm:text-base leading-relaxed max-w-3xl">
+                            Di <strong>Modul 3 (Slide 10 s/d 13)</strong>, kita akan membedah instruksi <strong><span class="font-mono">print()</span></strong>, fitur modern <strong><span class="font-mono">f-string</span></strong> untuk merangkai struk kasir dengan format ribuan otomatis, peta translasi blok Flowgorithm ke Python, serta cara membaca pesan error pemula!
+                        </p>
+
+                        <div class="pt-2">
+                            <button type="button" onclick="changeSlide(1)" class="px-5 py-3 rounded-xl bg-white text-indigo-700 hover:bg-indigo-50 font-extrabold text-xs sm:text-sm transition inline-flex items-center gap-2 shadow-sm">
+                                <span>Masuk ke Modul 3: Instruksi print() &amp; f-string</span>
+                                <i class="fa-solid fa-arrow-right text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide10() {
+            const styles = {
+                plus: {
+                    btn: "1. Cara Lama: Operator + (Rawan TypeError)",
+                    code: "nama = \"Kopi Susu\"\nharga = 15000\nprint(\"Produk: \" + nama + \" | Rp \" + str(harga))",
+                    note: "Kurang praktis karena variabel angka (harga) wajib dibungkus str(harga) dulu agar tidak terjadi TypeError."
+                },
+                comma: {
+                    btn: "2. Pemisah Koma (,) di dalam print()",
+                    code: "nama = \"Kopi Susu\"\nharga = 15000\nprint(\"Produk:\", nama, \"| Rp\", harga)",
+                    note: "Lebih mudah karena koma otomatis memberi spasi dan menerima angka, namun sulit mengatur format tanda baca yang menempel."
+                },
+                fstring: {
+                    btn: "3. Cara Modern Terbaik: f-string (Rekomendasi!)",
+                    code: "nama = \"Kopi Susu\"\nharga = 15000\nprint(f\"Produk: {nama} | Rp {harga:,}\")",
+                    note: "Cukup awali tanda kutip dengan huruf f, lalu tulis nama variabel di dalam kurung kurawal {nama} dan {harga:,}! Sangat bersih dan profesional."
+                }
+            };
+
+            const cur = styles[s10PrintStyle];
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 3 • Menampilkan Output ke Layar</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Instruksi ${term('printfn', 'print()')} &amp; Keunggulan ${term('fstring', 'f-string')} di Python</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Jika di Flowgorithm kita menggabungkan teks dan variabel memakai simbol <span class="font-mono font-bold">&amp;</span>, di Python cara paling modern dan rapi adalah menggunakan <strong><span class="font-mono">f-string</span></strong>. Bandingkan 3 cara berikut:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        <button type="button" onclick="setS10Style('plus')" class="p-3.5 rounded-2xl border text-left transition ${s10PrintStyle === 'plus' ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-xs sm:text-sm font-extrabold">${styles.plus.btn}</div>
+                        </button>
+                        <button type="button" onclick="setS10Style('comma')" class="p-3.5 rounded-2xl border text-left transition ${s10PrintStyle === 'comma' ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-xs sm:text-sm font-extrabold">${styles.comma.btn}</div>
+                        </button>
+                        <button type="button" onclick="setS10Style('fstring')" class="p-3.5 rounded-2xl border text-left transition ${s10PrintStyle === 'fstring' ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-xs sm:text-sm font-extrabold">${styles.fstring.btn}</div>
+                        </button>
+                    </div>
+
+                    <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 grid grid-cols-1 lg:grid-cols-12 gap-5 items-center my-auto">
+                        <div class="lg:col-span-6 p-4 rounded-2xl bg-slate-900 text-emerald-300 font-mono text-xs sm:text-sm">
+                            <pre class="whitespace-pre-wrap leading-relaxed">${escapeHtml(cur.code)}</pre>
+                        </div>
+                        <div class="lg:col-span-6 space-y-3">
+                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 font-mono text-xs sm:text-sm font-extrabold text-indigo-600 dark:text-indigo-400">
+                                Output: Produk: Kopi Susu | Rp ${s10PrintStyle === 'fstring' ? '15,000' : '15000'}
+                            </div>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${escapeHtml(cur.note)}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide11() {
+            const totalNilai = s11Harga * s11Stok;
+            const hargaFmt = s11UseCommaFmt ? s11Harga.toLocaleString('en-US') : String(s11Harga);
+            const totalFmt = s11UseCommaFmt ? totalNilai.toLocaleString('en-US') : String(totalNilai);
+            const codeLine = s11UseCommaFmt
+                ? 'print(f"Menu: {nama_produk} | Harga: Rp {harga_satuan:,} | Stok: {stok_awal} | Nilai Aset: Rp {nilai_aset:,}")'
+                : 'print(f"Menu: {nama_produk} | Harga: Rp {harga_satuan} | Stok: {stok_awal} | Nilai Aset: Rp {nilai_aset}")';
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 3 • Bengkel Interaktif f-string Katalog Produk</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Merancang Sapaan &amp; Kartu Data Produk "Warung Digital"</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                            Ubah data produk di bawah ini untuk melihat bagaimana ${term('fstring', 'f-string')} Python menyusun tampilan data katalog produk secara instan:
+                        </p>
+                    </div>
+
+                    <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-4 my-auto">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                            <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <label class="text-[11px] font-bold text-slate-400 block mb-1">nama_produk (str):</label>
+                                <input type="text" value="${escapeHtml(s11Produk)}" oninput="updateS11Catalog('produk', this.value)" class="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-xs font-bold text-rose-600">
+                            </div>
+                            <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <label class="text-[11px] font-bold text-slate-400 block mb-1">harga_satuan (int):</label>
+                                <input type="number" step="1000" value="${s11Harga}" oninput="updateS11Catalog('harga', this.value)" class="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-xs font-bold text-indigo-600">
+                            </div>
+                            <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <label class="text-[11px] font-bold text-slate-400 block mb-1">stok_awal (int):</label>
+                                <input type="number" min="1" value="${s11Stok}" oninput="updateS11Catalog('stok', this.value)" class="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-xs font-bold text-sky-600">
+                            </div>
+                            <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col justify-between">
+                                <label class="text-[11px] font-bold text-slate-400 block">Format Pemisah Ribuan:</label>
+                                <button type="button" onclick="toggleS11Format()" class="w-full py-1.5 px-2.5 rounded-xl font-mono text-xs font-extrabold transition ${s11UseCommaFmt ? 'bg-indigo-600 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200'}">
+                                    {harga:,} : ${s11UseCommaFmt ? 'AKTIF' : 'MATI'}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="p-4 rounded-2xl bg-slate-900 text-emerald-300 font-mono text-xs space-y-1.5">
+                            <div class="text-slate-400"># Baris Kode f-string Python:</div>
+                            <div class="break-all">${escapeHtml(codeLine)}</div>
+                        </div>
+
+                        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border-2 border-emerald-500 font-mono text-xs sm:text-sm space-y-1">
+                            <div class="text-emerald-700 dark:text-emerald-400 font-extrabold">=== SELAMAT DATANG DI WARUNG DIGITAL ===</div>
+                            <div class="text-slate-800 dark:text-slate-200 font-bold">
+                                Menu: ${escapeHtml(s11Produk)} | Harga: Rp ${hargaFmt} | Stok: ${s11Stok} | Nilai Aset: Rp ${totalFmt}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide12() {
+            const blockNotes = {
+                1: "1. Sapaan Pembuka: Blok Output hijau di Flowgorithm diterjemahkan langsung menjadi fungsi print(\"...\") di Python.",
+                2: "2. Input Teks (String): Karena input() di Python sudah bertipe str secara bawaan, kita langsung menulis nama_produk = input(...).",
+                3: "3. Input Angka Bulat (Integer): Blok Input harga di Flowgorithm diterjemahkan menjadi harga_satuan = int(input(...)) agar bisa dikalikan.",
+                4: "4. Proses Perhitungan (Assign): Blok persegi panjang Assign diterjemahkan langsung menjadi tanda sama dengan (=) tanpa kata kunci Assign.",
+                5: "5. Output Ringkasan Data: Blok Output akhir diterjemahkan menjadi print(f\"...\") dengan menyisipkan nama variabel di dalam {kurung_kurawal}."
+            };
+
+            const pyHighlight = function (idx) {
+                return s12SyncBlock === idx
+                    ? 'bg-indigo-600 text-white px-2.5 py-1 rounded-lg font-bold'
+                    : 'px-2.5 py-1 text-emerald-300 hover:bg-slate-800 rounded-lg cursor-pointer';
+            };
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 3 • Jembatan Langsung Minggu 1–5 ke Minggu 6</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Peta Translasi: Flowchart Flowgorithm -&gt; Skrip Python</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                            Klik salah satu blok di Flowchart (kiri) atau baris kode Python (kanan) untuk melihat padanan langsungnya:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <!-- Kiri: Mini Flowchart -->
+                        <div class="lg:col-span-5 fg-canvas rounded-3xl border border-slate-200 dark:border-slate-800 p-3 flex flex-col items-center justify-center">
+                            <svg class="w-full max-w-[270px] h-auto" viewBox="0 0 300 280">
+                                <line x1="150" y1="22" x2="150" y2="254" stroke="#64748b" stroke-width="2"/>
+                                <rect x="95" y="2" width="110" height="20" rx="10" fill="#f3e8ff" stroke="#7e22ce" stroke-width="1.8"/>
+                                <text x="150" y="16" text-anchor="middle" fill="#581c87" font-size="10" font-weight="700">Main</text>
+
+                                <g class="cursor-pointer" onclick="setS12Sync(1)">
+                                    <polygon points="34,32 276,32 264,62 22,62" fill="${s12SyncBlock === 1 ? '#4f46e5' : '#dcfce7'}" stroke="#16a34a" stroke-width="2"/>
+                                    <text x="150" y="51" text-anchor="middle" fill="${s12SyncBlock === 1 ? '#ffffff' : '#14532d'}" font-size="9.5" font-weight="700">1. Output "Selamat Datang..."</text>
+                                </g>
+
+                                <g class="cursor-pointer" onclick="setS12Sync(2)">
+                                    <polygon points="48,74 264,74 252,104 36,104" fill="${s12SyncBlock === 2 ? '#4f46e5' : '#e0f2fe'}" stroke="#0284c7" stroke-width="2"/>
+                                    <text x="150" y="93" text-anchor="middle" fill="${s12SyncBlock === 2 ? '#ffffff' : '#0c4a6e'}" font-size="9.8" font-weight="700">2. Input namaProduk</text>
+                                </g>
+
+                                <g class="cursor-pointer" onclick="setS12Sync(3)">
+                                    <polygon points="48,116 264,116 252,146 36,146" fill="${s12SyncBlock === 3 ? '#4f46e5' : '#e0f2fe'}" stroke="#0284c7" stroke-width="2"/>
+                                    <text x="150" y="135" text-anchor="middle" fill="${s12SyncBlock === 3 ? '#ffffff' : '#0c4a6e'}" font-size="9.8" font-weight="700">3. Input hargaSatuan &amp; stok</text>
+                                </g>
+
+                                <g class="cursor-pointer" onclick="setS12Sync(4)">
+                                    <rect x="34" y="158" width="232" height="28" fill="${s12SyncBlock === 4 ? '#4f46e5' : '#fef08a'}" stroke="#a16207" stroke-width="2"/>
+                                    <text x="150" y="176" text-anchor="middle" fill="${s12SyncBlock === 4 ? '#ffffff' : '#713f12'}" font-size="9.8" font-weight="700">4. Assign nilaiAset = harga * stok</text>
+                                </g>
+
+                                <g class="cursor-pointer" onclick="setS12Sync(5)">
+                                    <polygon points="34,198 276,198 264,228 22,228" fill="${s12SyncBlock === 5 ? '#4f46e5' : '#dcfce7'}" stroke="#16a34a" stroke-width="2"/>
+                                    <text x="150" y="217" text-anchor="middle" fill="${s12SyncBlock === 5 ? '#ffffff' : '#14532d'}" font-size="9.5" font-weight="700">5. Output Ringkasan Produk</text>
+                                </g>
+
+                                <rect x="95" y="252" width="110" height="20" rx="10" fill="#f3e8ff" stroke="#7e22ce" stroke-width="1.8"/>
+                                <text x="150" y="266" text-anchor="middle" fill="#581c87" font-size="10" font-weight="700">End</text>
+                            </svg>
+                        </div>
+
+                        <!-- Kanan: Kode Python -->
+                        <div class="lg:col-span-7 flex flex-col justify-between gap-3">
+                            <div class="p-4 rounded-3xl bg-slate-900 font-mono text-xs sm:text-sm space-y-1.5">
+                                <div class="text-slate-400 text-xs mb-1"># File: warung_digital_p6.py</div>
+                                <div onclick="setS12Sync(1)" class="${pyHighlight(1)}">print("=== Selamat Datang di Warung Digital ===")</div>
+                                <div onclick="setS12Sync(2)" class="${pyHighlight(2)}">nama_produk = input("Nama produk: ")</div>
+                                <div onclick="setS12Sync(3)" class="${pyHighlight(3)}">harga_satuan = int(input("Harga satuan: "))<br>stok_awal = int(input("Stok awal: "))</div>
+                                <div onclick="setS12Sync(4)" class="${pyHighlight(4)}">nilai_aset = harga_satuan * stok_awal</div>
+                                <div onclick="setS12Sync(5)" class="${pyHighlight(5)}">print(f"Produk: {nama_produk} | Aset: Rp {nilai_aset:,}")</div>
+                            </div>
+
+                            <div class="p-3.5 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200">
+                                ${escapeHtml(blockNotes[s12SyncBlock])}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide13() {
+            const errDB = {
+                name_error: {
+                    btn: "1. NameError (Huruf Besar/Kecil Tidak Cocok)",
+                    badCode: "nama_produk = \"Kopi Susu Aren\"\nprint(Nama_Produk)",
+                    errMsg: "NameError: name 'Nama_Produk' is not defined",
+                    goodCode: "nama_produk = \"Kopi Susu Aren\"\nprint(nama_produk)",
+                    explain: "Python bersifat Case-Sensitive (membedakan huruf besar dan kecil). Variabel nama_produk dianggap berbeda dengan Nama_Produk!"
+                },
+                syntax_error: {
+                    btn: "2. SyntaxError (Lupa Tutup Kutip / Kurung)",
+                    badCode: "print(\"Selamat Datang di Warung Digital)\nharga = 15000",
+                    errMsg: "SyntaxError: unterminated string literal",
+                    goodCode: "print(\"Selamat Datang di Warung Digital\")\nharga = 15000",
+                    explain: "Setiap tanda kutip pembuka (\") wajib ditutup dengan tanda kutip penutup (\") sebelum tanda kurung tutup )."
+                },
+                type_error: {
+                    btn: "3. TypeError (Gabung Teks + Angka Tanpa f-string)",
+                    badCode: "harga = 15000\nprint(\"Harga: Rp \" + harga)",
+                    errMsg: "TypeError: can only concatenate str (not \"int\") to str",
+                    goodCode: "harga = 15000\nprint(f\"Harga: Rp {harga}\")",
+                    explain: "Operator + tidak bisa menyambungkan str dengan int secara langsung. Gunakan f-string (f\"Harga: Rp {harga}\") agar aman!"
+                }
+            };
+
+            const cur = errDB[s13ErrCase];
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 3 • Membaca Pesan Error Pemula</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Detektif 3 Error Paling Sering Saat Pertama Kali Ngoding Python</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Jangan panik jika muncul tulisan merah di terminal! Pesan error Python selalu memberi petunjuk baris mana yang keliru. Uji ke-3 kasus di bawah ini:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        <button type="button" onclick="setS13Err('name_error')" class="p-3 rounded-2xl border text-left transition ${s13ErrCase === 'name_error' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-xs font-extrabold">${errDB.name_error.btn}</div>
+                        </button>
+                        <button type="button" onclick="setS13Err('syntax_error')" class="p-3 rounded-2xl border text-left transition ${s13ErrCase === 'syntax_error' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-xs font-extrabold">${errDB.syntax_error.btn}</div>
+                        </button>
+                        <button type="button" onclick="setS13Err('type_error')" class="p-3 rounded-2xl border text-left transition ${s13ErrCase === 'type_error' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-xs font-extrabold">${errDB.type_error.btn}</div>
+                        </button>
+                    </div>
+
+                    <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-4 my-auto">
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+                            <div class="lg:col-span-6 p-4 rounded-2xl bg-slate-900 font-mono text-xs space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="${s13Fixed ? 'text-emerald-400' : 'text-rose-400'} font-bold">${s13Fixed ? '# KODE SUDAH DIPERBAIKI:' : '# KODE BERMASALAH:'}</span>
+                                    <button type="button" onclick="toggleS13Fix()" class="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-sans font-bold text-[11px]">
+                                        ${s13Fixed ? 'Lihat Kode Error' : 'Perbaiki Kode ⚡'}
+                                    </button>
+                                </div>
+                                <pre class="text-slate-100 whitespace-pre-wrap leading-relaxed">${escapeHtml(s13Fixed ? cur.goodCode : cur.badCode)}</pre>
+                            </div>
+
+                            <div class="lg:col-span-6 space-y-2.5">
+                                <div class="p-3 rounded-2xl font-mono text-xs font-bold border ${s13Fixed ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-400 text-emerald-800 dark:text-emerald-200' : 'bg-rose-50 dark:bg-rose-950/40 border-rose-400 text-rose-800 dark:text-rose-200'}">
+                                    ${s13Fixed ? 'Terminal: Berhasil dijalankan tanpa error!' : escapeHtml(cur.errMsg)}
+                                </div>
+                                <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${escapeHtml(cur.explain)}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide14() {
+            return `
+                <div class="slide-enter flex flex-col justify-center h-full my-auto">
+                    <div class="p-8 sm:p-12 rounded-3xl bg-gradient-to-br from-indigo-600 to-slate-900 text-white space-y-6 shadow-lg">
+                        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/15 text-indigo-100 text-xs font-extrabold uppercase tracking-wider">
+                            <i class="fa-solid fa-terminal"></i>
+                            <span>Jembatan Antar Topik • Modul 3 Menuju Modul 4 (Praktikum Python)</span>
+                        </div>
+
+                        <h2 class="text-2xl sm:text-4xl font-extrabold leading-tight">
+                            Saatnya Menjalankan Skrip Python Perdana untuk Sapaan &amp; Pencatatan Data Produk "Warung Digital"!
+                        </h2>
+
+                        <p class="text-indigo-100 text-sm sm:text-base leading-relaxed max-w-3xl">
+                            Di <strong>Modul 4 (Slide 15 s/d 18)</strong>, Anda akan langsung mencoba: (1) <strong>Live Python CLI Runner</strong> di mana setiap baris kode Python dieksekusi satu per satu sambil menampilkan isi variabel beserta <span class="font-mono">type()</span>-nya, (2) <strong>Melengkapi Kode Katalog Produk</strong>, serta (3) <strong>Drag &amp; Drop 8 Baris Skrip Python</strong>.
+                        </p>
+
+                        <div class="pt-2">
+                            <button type="button" onclick="changeSlide(1)" class="px-5 py-3 rounded-xl bg-white text-indigo-700 hover:bg-indigo-50 font-extrabold text-xs sm:text-sm transition inline-flex items-center gap-2 shadow-sm">
+                                <span>Mulai Simulasi 1: Live Python Terminal Runner</span>
+                                <i class="fa-solid fa-arrow-right text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide15() {
+            const codeLines = [
+                'print("=== Selamat Datang di Warung Digital ===")',
+                'nama_produk = input("Masukkan nama produk: ")',
+                'harga_satuan = int(input("Masukkan harga satuan: "))',
+                'stok_awal = int(input("Masukkan stok awal: "))',
+                'nilai_aset = harga_satuan * stok_awal',
+                'print(f"Tercatat: {nama_produk} ({stok_awal} pcs) | Total Aset: Rp {nilai_aset:,}")'
+            ];
+
+            const linesHtml = codeLines.map(function (line, idx) {
+                let cls = 'px-3 py-1.5 rounded-lg transition cursor-pointer ';
+                if (pyStepIndex === idx) {
+                    cls += pyWaitingVar ? 'py-line-waiting font-bold text-white' : 'py-line-active font-bold text-white';
+                } else {
+                    cls += 'text-emerald-300 hover:bg-slate-800';
+                }
+                return `<div onclick="stepPySim()" class="${cls}"><span class="text-slate-500 mr-2.5 select-none">${idx + 1}</span>${escapeHtml(line)}</div>`;
+            }).join('');
+
+            let termHtml = '';
+            if (pyTerminalLog.length === 0) {
+                termHtml = `<div class="text-slate-400 text-center my-auto font-sans text-xs py-6">Klik tombol <strong>Run Skrip</strong> atau <strong>Step (Per Baris)</strong> di atas untuk menjalankan file <span class="font-mono">kasir_warung.py</span>!</div>`;
+            } else {
+                termHtml = pyTerminalLog.map(function (entry) {
+                    if (entry.type === 'out') {
+                        return `<div class="text-emerald-300 font-semibold">${entry.html}</div>`;
+                    } else if (entry.type === 'in') {
+                        return `<div class="text-amber-300 font-semibold">&gt;&gt; ${escapeHtml(entry.text)}</div>`;
+                    } else {
+                        return `<div class="text-indigo-300 font-bold animate-pulse">${escapeHtml(entry.text)}</div>`;
+                    }
+                }).join('');
+            }
+
+            let chips = [];
+            let placeholder = 'Menunggu giliran fungsi input()...';
+            let promptLabel = 'Terminal Input (Aktif saat baris input() dieksekusi):';
+            if (pyWaitingVar === 'nama_produk') {
+                chips = ['Kopi Susu Gula Aren', 'Roti Bakar Cokelat', 'Paket Sembako'];
+                placeholder = 'Ketik nama produk...';
+                promptLabel = 'Masukkan nama produk (str):';
+            } else if (pyWaitingVar === 'harga_satuan') {
+                chips = ['15000', '12000', '65000'];
+                placeholder = 'Ketik harga satuan (angka bulat)...';
+                promptLabel = 'Masukkan harga satuan -> dikonversi oleh int():';
+            } else if (pyWaitingVar === 'stok_awal') {
+                chips = ['20', '35', '50'];
+                placeholder = 'Ketik jumlah stok awal...';
+                promptLabel = 'Masukkan stok awal -> dikonversi oleh int():';
+            }
+
+            const chipsHtml = chips.map(function (c) {
+                return `<button type="button" onclick="fillPyQuickChip('${c}')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-indigo-100 dark:bg-slate-800 dark:hover:bg-indigo-950 text-slate-700 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700 transition">${c}</button>`;
+            }).join('');
+
+            const memKeys = Object.keys(pyMemory);
+            const memTableHtml = memKeys.length === 0
+                ? `<div class="text-xs text-slate-400 p-3 text-center">Belum ada variabel di memori Python (belum ada baris yang dieksekusi).</div>`
+                : memKeys.map(function (k) {
+                    const item = pyMemory[k];
+                    return `
+                        <div class="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs font-mono">
+                            <span class="font-bold text-slate-800 dark:text-slate-200">${escapeHtml(k)}</span>
+                            <div class="flex items-center gap-2">
+                                <span class="px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 text-[10px] font-bold">${escapeHtml(item.type)}</span>
+                                <span class="font-extrabold text-emerald-600 dark:text-emerald-400">${escapeHtml(item.display)}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-3.5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 4 • Simulasi Praktik 1 dari 3 (Sub-CPMK 2.1)</span>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Live Python CLI Runner: Sapaan &amp; Data Produk Warung Digital</h2>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2 shrink-0">
+                            <button type="button" onclick="runFullPySim()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-xs">
+                                <i class="fa-solid fa-play"></i>
+                                <span>Run Skrip</span>
+                            </button>
+                            <button type="button" onclick="stepPySim()" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-xs">
+                                <i class="fa-solid fa-forward-step"></i>
+                                <span>Step (Per Baris)</span>
+                            </button>
+                            <button type="button" onclick="resetPySim()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs transition">
+                                <i class="fa-solid fa-rotate-left mr-1"></i>Reset
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200">
+                        ${pyBannerText}
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch my-auto">
+                        <!-- Kiri: Editor Kode Python -->
+                        <div class="lg:col-span-6 rounded-2xl bg-slate-900 border border-slate-800 p-3.5 flex flex-col justify-between font-mono text-xs">
+                            <div>
+                                <div class="flex items-center justify-between border-b border-slate-800 pb-2 mb-2 text-slate-400">
+                                    <span><i class="fa-brands fa-python text-amber-400 mr-1.5"></i>kasir_warung.py</span>
+                                    <span class="text-[11px]">Klik baris atau Step</span>
+                                </div>
+                                <div class="space-y-1">
+                                    ${linesHtml}
+                                </div>
+                            </div>
+
+                            <div class="pt-3 mt-3 border-t border-slate-800 text-[11px] font-sans text-slate-400">
+                                Perhatikan: Python tidak membutuhkan blok <span class="font-mono text-slate-200">Declare</span>; variabel langsung muncul di memori saat barisnya dijalankan!
+                            </div>
+                        </div>
+
+                        <!-- Kanan: Terminal CLI & Memory Inspector -->
+                        <div class="lg:col-span-6 flex flex-col justify-between gap-3">
+                            <div class="rounded-2xl border-2 ${pyWaitingVar ? 'border-indigo-600 shadow-sm' : 'border-slate-200 dark:border-slate-800'} overflow-hidden bg-slate-950">
+                                <div class="bg-slate-900 px-3.5 py-2 border-b border-slate-800 flex items-center justify-between">
+                                    <span class="text-xs font-extrabold text-slate-200">Terminal CLI Output</span>
+                                    ${pyWaitingVar ? '<span class="px-2 py-0.5 rounded bg-indigo-600 text-white text-[10px] font-extrabold animate-pulse">MENUNGGU KETIKAN</span>' : ''}
+                                </div>
+
+                                <div id="pyTerminalBox" class="p-3 min-h-[115px] max-h-[145px] overflow-y-auto flex flex-col gap-1.5 font-mono text-xs">
+                                    ${termHtml}
+                                </div>
+
+                                <form onsubmit="submitManualPyInput(event)" class="p-2.5 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
+                                    <div class="text-xs font-bold ${pyWaitingVar ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'} mb-1">
+                                        ${promptLabel}
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <input id="pyConsoleInputBox" type="text" ${pyWaitingVar ? '' : 'disabled'} placeholder="${placeholder}" class="flex-1 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50">
+                                        <button type="submit" ${pyWaitingVar ? '' : 'disabled'} class="px-4 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white font-bold text-xs transition shrink-0">
+                                            Enter ↵
+                                        </button>
+                                    </div>
+                                    ${chips.length > 0 ? `<div class="mt-1.5 flex flex-wrap items-center gap-1.5"><span class="text-[11px] font-semibold text-slate-400">Ketik cepat:</span>${chipsHtml}</div>` : ''}
+                                    ${pyInputError ? `<div class="mt-1.5 p-2 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs font-bold">${escapeHtml(pyInputError)}</div>` : ''}
+                                </form>
+                            </div>
+
+                            <div class="rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden bg-white dark:bg-slate-900">
+                                <div class="bg-slate-100 dark:bg-slate-800 px-3.5 py-1.5 border-b border-slate-200 dark:border-slate-700 text-xs font-extrabold text-slate-700 dark:text-slate-200">
+                                    Python Memory &amp; type() Inspector (Dynamic Typing)
+                                </div>
+                                <div class="p-2.5 space-y-1.5">
+                                    ${memTableHtml}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide16() {
+            const slotTasks = {
+                1: "Baris 1: Instruksi untuk mencetak sapaan pembuka Warung Digital ke layar",
+                2: "Baris 2: Penamaan variabel standar PEP 8 (snake_case) untuk membaca nama produk",
+                3: "Baris 3: Konversi tipe data agar harga satuan bisa dihitung secara matematika",
+                4: "Baris 4: Menampilkan ringkasan data produk dengan format f-string yang rapi"
+            };
+
+            const codeMap = {
+                'PRINT_SAPAAN': 'print("=== Selamat Datang di Warung Digital ===")',
+                'VAR_SNAKE': 'nama_produk = input("Masukkan nama produk: ")',
+                'CAST_INT': 'harga_satuan = int(input("Masukkan harga satuan: "))',
+                'FSTRING_OUT': 'print(f"Produk: {nama_produk} | Harga: Rp {harga_satuan:,}")'
+            };
+
+            let slotTabs = '';
+            for (let i = 1; i <= 4; i++) {
+                const active = activePySlot === i;
+                slotTabs += `
+                    <button type="button" onclick="selectPyBuilderSlot(${i})" class="px-3 py-1.5 rounded-xl font-bold text-xs transition ${active ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">
+                        Baris #${i}
+                    </button>
+                `;
+            }
+
+            let editorPreview = '';
+            for (let i = 1; i <= 4; i++) {
+                const filled = pyBuilderSlots[i];
+                const isSel = activePySlot === i;
+                editorPreview += `
+                    <div onclick="selectPyBuilderSlot(${i})" class="p-3 rounded-xl border-2 cursor-pointer transition font-mono text-xs ${isSel ? 'border-indigo-500 bg-slate-800 text-white' : 'border-slate-800 bg-slate-950/70 text-emerald-300'}">
+                        <span class="text-slate-500 mr-2">${i}</span>
+                        ${filled ? escapeHtml(codeMap[filled]) : '<span class="text-slate-400 italic">[ Klik untuk mengisi Baris #' + i + ' ]</span>'}
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 4 • Simulasi Praktik 2 dari 3</span>
+                            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Lengkapi Skrip Python Sapaan &amp; Data Produk</h2>
+                        </div>
+                        <button type="button" onclick="resetPyBuilder()" class="self-start sm:self-center px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-rose-600 dark:text-rose-400 font-bold text-xs transition">
+                            <i class="fa-solid fa-trash-can mr-1"></i>Kosongkan Editor
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <!-- Kiri: Editor Preview -->
+                        <div class="lg:col-span-6 rounded-3xl bg-slate-900 border border-slate-800 p-4 flex flex-col justify-between gap-3">
+                            <div class="text-xs font-mono text-slate-400 border-b border-slate-800 pb-2">
+                                <i class="fa-brands fa-python text-amber-400 mr-1.5"></i>produk_warung_digital.py
+                            </div>
+                            <div class="space-y-2 my-auto">
+                                ${editorPreview}
+                            </div>
+                        </div>
+
+                        <!-- Kanan: Pilihan Potongan Kode -->
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-4">
+                            <div class="space-y-3.5">
+                                <div class="flex flex-wrap gap-2">
+                                    ${slotTabs}
+                                </div>
+
+                                <div class="p-3.5 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800">
+                                    <div class="font-extrabold text-indigo-900 dark:text-indigo-200 text-sm">${escapeHtml(slotTasks[activePySlot])}</div>
+                                    <p class="text-xs text-indigo-700 dark:text-indigo-300 mt-0.5">Pilih sintaks Python yang tepat untuk Baris #${activePySlot}:</p>
+                                </div>
+
+                                <div class="space-y-2 font-mono text-xs">
+                                    <button type="button" onclick="assignPySlot('CAST_INT')" class="w-full text-left p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-indigo-500 font-bold transition">
+                                        harga_satuan = int(input("Masukkan harga satuan: "))
+                                    </button>
+                                    <button type="button" onclick="assignPySlot('PRINT_SAPAAN')" class="w-full text-left p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-indigo-500 font-bold transition">
+                                        print("=== Selamat Datang di Warung Digital ===")
+                                    </button>
+                                    <button type="button" onclick="assignPySlot('FSTRING_OUT')" class="w-full text-left p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-indigo-500 font-bold transition">
+                                        print(f"Produk: {nama_produk} | Harga: Rp {harga_satuan:,}")
+                                    </button>
+                                    <button type="button" onclick="assignPySlot('VAR_SNAKE')" class="w-full text-left p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-indigo-500 font-bold transition">
+                                        nama_produk = input("Masukkan nama produk: ")
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="space-y-2">
+                                <button type="button" onclick="checkPyBuilder()" class="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm transition shadow-xs">
+                                    Periksa Kode Python
+                                </button>
+                                ${pyBuilderFeedback.text ? `<div class="p-3 rounded-xl text-xs font-bold text-center ${pyBuilderFeedback.type === 'success' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'}">${escapeHtml(pyBuilderFeedback.text)}</div>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide17() {
+            let rowsHtml = '';
+            for (let index = 0; index < pyStepsOrder.length; index++) {
+                const item = pyStepsOrder[index];
+                const isPosCorrect = item.id === index + 1;
+                let borderClass = 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900';
+                let statusBadge = '';
+
+                if (pyShowValidation) {
+                    if (isPosCorrect) {
+                        borderClass = 'border-emerald-500 bg-emerald-50/40 dark:bg-emerald-950/30';
+                        statusBadge = '<span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 text-[11px] font-bold">✓ Tepat</span>';
+                    } else {
+                        borderClass = 'border-rose-400 bg-rose-50/40 dark:bg-rose-950/30';
+                        statusBadge = '<span class="px-2 py-0.5 rounded bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 text-[11px] font-bold">✗ Geser</span>';
+                    }
+                }
+
+                rowsHtml += `
+                    <div draggable="true" ondragstart="onPyDragStart(event, ${index})" ondragover="onPyDragOver(event, ${index})" ondragleave="onPyDragLeave(event)" ondrop="onPyDrop(event, ${index})" ondragend="onPyDragEnd()" class="draggable-step border-2 ${borderClass} rounded-2xl p-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                            <span class="text-slate-400 font-extrabold text-sm px-1 cursor-grab select-none">⋮⋮</span>
+                            <span class="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center shrink-0">${index + 1}</span>
+                            <span class="px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-[10px] font-extrabold shrink-0">${escapeHtml(item.tag)}</span>
+                            <span class="font-mono text-xs font-bold text-slate-800 dark:text-slate-200 truncate">${escapeHtml(item.code)}</span>
+                        </div>
+                        <div class="flex items-center justify-end gap-1.5 shrink-0">
+                            ${statusBadge}
+                            <button type="button" onclick="movePyStep(${index}, -1)" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-indigo-600 hover:text-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs transition" title="Geser Naik">▲</button>
+                            <button type="button" onclick="movePyStep(${index}, 1)" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-indigo-600 hover:text-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs transition" title="Geser Turun">▼</button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-3.5">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 4 • Simulasi Praktik 3 dari 3</span>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Susun 8 Baris Skrip Python Sapaan &amp; Data Produk</h2>
+                        </div>
+                        <span class="text-xs font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200 dark:border-indigo-800 px-3 py-1 rounded-xl">
+                            Tarik kartu (Drag &amp; Drop) atau klik ▲ / ▼
+                        </span>
+                    </div>
+
+                    <div class="space-y-1.5 my-auto">
+                        ${rowsHtml}
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-3">
+                        <button type="button" onclick="checkPyOrder()" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm transition shadow-xs">
+                            Periksa Urutan Skrip Python
+                        </button>
+                        <button type="button" onclick="shufflePySteps()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs sm:text-sm transition">
+                            Acak Ulang
+                        </button>
+                        ${pyFeedbackText ? `<span class="text-xs sm:text-sm font-bold text-indigo-600 dark:text-indigo-400">${escapeHtml(pyFeedbackText)}</span>` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide18() {
+            const renderFb = function (qNum) {
+                const fb = selfCheckFeedback[qNum];
+                if (!fb) return '';
+                const cls = fb.ok
+                    ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200'
+                    : 'bg-rose-50 dark:bg-rose-950/50 border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-200';
+                return `<div class="mt-2 p-2.5 rounded-xl border text-xs font-bold ${cls}">${escapeHtml(fb.msg)}</div>`;
+            };
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Penutup &amp; Evaluasi Sub-CPMK 2.1</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Uji Pemahaman Python Dasar &amp; Persiapan Pertemuan 7</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Uji penguasaan variabel, tipe data, type casting, dan print() Python Anda melalui 3 soal evaluasi di bawah ini:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <div class="lg:col-span-7 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-3.5">
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Cek Pengetahuan Mandiri (Klik Jawaban yang Tepat)</h3>
+
+                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <div class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white mb-2">1. Jika kita menulis <span class="font-mono">harga = input("Harga: ")</span> tanpa fungsi <span class="font-mono">int()</span> lalu pengguna mengetik <span class="font-mono">10000</span>, apakah hasil dari <span class="font-mono">print(harga * 2)</span>?</div>
+                                <div class="flex flex-wrap gap-2">
+                                    <button type="button" onclick="answerSelfCheck(1, true, 'Tepat! Karena input() menghasilkan tipe str, operator * akan menggandakan teks menjadi \"1000010000\". Wajib pakai int(input(...))!')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 font-mono font-semibold text-xs">"1000010000" (Teks digandakan 2x)</button>
+                                    <button type="button" onclick="answerSelfCheck(1, false, 'Hasil 20000 hanya muncul jika kita memakai int(input(...)).')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 font-mono font-semibold text-xs">20000</button>
+                                </div>
+                                ${renderFb(1)}
+                            </div>
+
+                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <div class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white mb-2">2. Manakah penulisan nama variabel yang sesuai dengan konvensi resmi Python (PEP 8 / <span class="font-mono">snake_case</span>)?</div>
+                                <div class="flex flex-wrap gap-2">
+                                    <button type="button" onclick="answerSelfCheck(2, true, 'Benar! Standar Python memakai huruf kecil semua dan dipisah dengan garis bawah (snake_case): harga_satuan.')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 font-mono font-semibold text-xs">harga_satuan</button>
+                                    <button type="button" onclick="answerSelfCheck(2, false, 'Spasi tidak diizinkan dalam penamaan variabel di bahasa pemrograman mana pun.')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 font-mono font-semibold text-xs">harga satuan</button>
+                                </div>
+                                ${renderFb(2)}
+                            </div>
+
+                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <div class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white mb-2">3. Bagaimana cara menyisipkan variabel <span class="font-mono">nama_produk</span> ke dalam instruksi <span class="font-mono">print()</span> menggunakan gaya modern <em>f-string</em>?</div>
+                                <div class="flex flex-wrap gap-2">
+                                    <button type="button" onclick="answerSelfCheck(3, true, 'Sempurna! Huruf f diletakkan sebelum tanda kutip pembuka dan variabel diapit kurung kurawal {nama_produk}.')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 font-mono font-semibold text-xs">print(f"Produk: {nama_produk}")</button>
+                                    <button type="button" onclick="answerSelfCheck(3, false, 'Tanpa huruf f di depan tanda kutip, Python akan mencetak tulisan {nama_produk} secara harfiah.')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 font-mono font-semibold text-xs">print("Produk: {nama_produk}")</button>
+                                </div>
+                                ${renderFb(3)}
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-5 flex flex-col justify-between gap-4">
+                            <div class="p-6 rounded-3xl bg-slate-900 text-white space-y-3">
+                                <span class="inline-block px-2.5 py-0.5 rounded-md bg-indigo-500/30 text-indigo-300 font-bold text-[11px] uppercase tracking-wider">
+                                    Tugas Praktikum Mandiri Minggu 6
+                                </span>
+                                <h3 class="text-base sm:text-lg font-extrabold leading-snug">
+                                    Buat File <span class="font-mono text-indigo-300">warung_digital_p6.py</span>
+                                </h3>
+                                <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                                    Tulis skrip Python perdana di VS Code atau Google Colab yang menampilkan banner sapaan <strong>Warung Digital</strong>, menerima input <span class="font-mono text-amber-300">nama_produk</span>, <span class="font-mono text-amber-300">harga_satuan</span> (<span class="font-mono">int</span>), dan <span class="font-mono text-amber-300">stok_awal</span> (<span class="font-mono">int</span>), lalu mencetak kartu ringkasan produk menggunakan <span class="font-mono text-emerald-300">f-string</span>!
+                                </p>
+                            </div>
+
+                            <div class="p-5 rounded-3xl bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 space-y-2">
+                                <span class="inline-block px-2.5 py-0.5 rounded-md bg-indigo-600 text-white font-bold text-[11px]">MINGGU DEPAN • PERTEMUAN 7 (Sub-CPMK 2.2 • 3%)</span>
+                                <h3 class="font-extrabold text-slate-900 dark:text-white text-sm sm:text-base">Translasi Percabangan ke Sintaks Python (<span class="font-mono">if-elif-else</span>)</h3>
+                                <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    Minggu depan kita menerjemahkan logika kalkulasi diskon &amp; pajak transaksi Warung Digital ke dalam struktur percabangan Python (<span class="font-mono font-bold">if</span>, <span class="font-mono font-bold">elif</span>, <span class="font-mono font-bold">else</span>, dan <span class="font-mono font-bold">match-case</span>)!
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        const SLIDES = [
+            { id: 1, category: "Modul 1 • Orientasi", title: "Pengenalan Python, Variabel, Tipe Data & I/O (Sub-CPMK 2.1)", render: renderSlide1 },
+            { id: 2, category: "Modul 1 • Konteks Bisnis", title: "Mengapa Python Sangat Ideal bagi Mahasiswa Bisnis Digital?", render: renderSlide2 },
+            { id: 3, category: "Modul 1 • Alat Kerja", title: "Lingkungan Kerja Python: VS Code, Terminal CLI, & Google Colab", render: renderSlide3 },
+            { id: 4, category: "Jembatan Topik 1 ke 2", title: "3 Perubahan Utama Variabel: Flowgorithm Menuju Python", render: renderSlide4 },
+            { id: 5, category: "Modul 2 • Variabel", title: "Dynamic Typing (Tanpa Declare) & Gaya Penamaan snake_case", render: renderSlide5 },
+            { id: 6, category: "Modul 2 • Tipe Data", title: "4 Tipe Data Dasar Python (str, int, float, bool) & type()", render: renderSlide6 },
+            { id: 7, category: "Modul 2 • Type Casting", title: "Jebakan input() Bertipe str & Solusi Konversi int()", render: renderSlide7 },
+            { id: 8, category: "Modul 2 • Operator", title: "Operator Aritmatika Python (/, //, %) & Komentar (#)", render: renderSlide8 },
+            { id: 9, category: "Jembatan Topik 2 ke 3", title: "Dari Variabel Menuju Sapaan & Kartu Produk dengan print()", render: renderSlide9 },
+            { id: 10, category: "Modul 3 • Output print()", title: "Instruksi print() & Keunggulan f-string Modern di Python", render: renderSlide10 },
+            { id: 11, category: "Modul 3 • Bengkel f-string", title: "Merancang Sapaan & Kartu Data Produk Warung Digital", render: renderSlide11 },
+            { id: 12, category: "Modul 3 • Peta Translasi", title: "Translasi Interaktif: Flowchart Flowgorithm -> Kode Python", render: renderSlide12 },
+            { id: 13, category: "Modul 3 • Debugging", title: "Detektif 3 Error Pemula: NameError, SyntaxError, TypeError", render: renderSlide13 },
+            { id: 14, category: "Jembatan Topik 3 ke 4", title: "Masuk ke 3 Simulator Lab Kode Python Warung Digital", render: renderSlide14 },
+            { id: 15, category: "Modul 4 • Simulasi 1", title: "Live Python CLI Runner: Sapaan & Data Produk Warung Digital", render: renderSlide15 },
+            { id: 16, category: "Modul 4 • Simulasi 2", title: "Lengkapi Skrip Python Sapaan & Katalog Produk", render: renderSlide16 },
+            { id: 17, category: "Modul 4 • Simulasi 3", title: "Drag & Drop 8 Baris Skrip Python Kasir Warung Digital", render: renderSlide17 },
+            { id: 18, category: "Evaluasi & Penutup", title: "Uji Pemahaman Sub-CPMK 2.1 & Persiapan Minggu 7", render: renderSlide18 }
+        ];
+
+        function renderCurrentSlide() {
+            const slide = SLIDES[currentSlideIndex];
+            const viewport = document.getElementById('slideViewport');
+            viewport.innerHTML = slide.render();
+
+            const pct = Math.round(((currentSlideIndex + 1) / TOTAL_SLIDES) * 100);
+            document.getElementById('topProgressBar').style.width = pct + '%';
+            document.getElementById('slideCounterBadge').textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES;
+            document.getElementById('mobileFooterCounter').textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES;
+            document.getElementById('slideCategoryPill').textContent = slide.category;
+            document.getElementById('headerSlideTitle').textContent = slide.title;
+
+            const prevBtn = document.getElementById('prevSlideBtn');
+            const nextBtn = document.getElementById('nextSlideBtn');
+            const nextBtnText = document.getElementById('nextBtnText');
+
+            prevBtn.disabled = currentSlideIndex === 0;
+            if (currentSlideIndex === TOTAL_SLIDES - 1) {
+                nextBtnText.textContent = "Selesai";
+                nextBtn.disabled = true;
+            } else {
+                nextBtnText.textContent = "Selanjutnya";
+                nextBtn.disabled = false;
+            }
+
+            renderDotsAndDrawer();
+
+            if (currentSlideIndex === 14 && pyWaitingVar) {
+                const inputEl = document.getElementById('pyConsoleInputBox');
+                if (inputEl) inputEl.focus();
+            }
+        }
+
+        function renderDotsAndDrawer() {
+            const dotsContainer = document.getElementById('slideDotsContainer');
+            let dotsHtml = '';
+            let drawerHtml = '';
+
+            for (let idx = 0; idx < SLIDES.length; idx++) {
+                const s = SLIDES[idx];
+                const isActive = idx === currentSlideIndex;
+                const dotClass = isActive
+                    ? 'w-6 bg-indigo-600 dark:bg-indigo-400'
+                    : 'w-2 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400';
+
+                dotsHtml += `<button type="button" onclick="goToSlide(${idx})" title="${escapeHtml(s.title)}" class="h-2 rounded-full transition-all ${dotClass}"></button>`;
+
+                const itemClass = isActive
+                    ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 font-bold'
+                    : 'hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-300';
+                const badgeClass = isActive
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500';
+
+                drawerHtml += `
+                    <button type="button" onclick="selectSlideFromDrawer(${idx})" class="w-full text-left p-3 rounded-xl transition flex items-start gap-3 ${itemClass}">
+                        <span class="w-6 h-6 rounded-lg text-xs font-extrabold flex items-center justify-center shrink-0 ${badgeClass}">${s.id}</span>
+                        <div class="min-w-0">
+                            <div class="text-[10px] uppercase tracking-wider opacity-75">${escapeHtml(s.category)}</div>
+                            <div class="text-xs sm:text-sm truncate">${escapeHtml(s.title)}</div>
+                        </div>
+                    </button>
+                `;
+            }
+
+            dotsContainer.innerHTML = dotsHtml;
+            document.getElementById('drawerSlideList').innerHTML = drawerHtml;
+        }
+
+        function selectSlideFromDrawer(index) {
+            goToSlide(index);
+            toggleSlideDrawer();
+        }
+
+        function changeSlide(direction) {
+            const nextIdx = currentSlideIndex + direction;
+            if (nextIdx >= 0 && nextIdx < TOTAL_SLIDES) {
+                if (pyAutoTimer) clearTimeout(pyAutoTimer);
+                currentSlideIndex = nextIdx;
+                renderCurrentSlide();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function goToSlide(index) {
+            if (index >= 0 && index < TOTAL_SLIDES) {
+                if (pyAutoTimer) clearTimeout(pyAutoTimer);
+                currentSlideIndex = index;
+                renderCurrentSlide();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function toggleSlideDrawer() {
+            const drawer = document.getElementById('slideDrawer');
+            const backdrop = document.getElementById('slideDrawerBackdrop');
+            const isClosed = drawer.classList.contains('-translate-x-full');
+
+            if (isClosed) {
+                backdrop.classList.remove('hidden');
+                setTimeout(function () {
+                    backdrop.classList.remove('opacity-0');
+                }, 10);
+                drawer.classList.remove('-translate-x-full');
+            } else {
+                backdrop.classList.add('opacity-0');
+                drawer.classList.add('-translate-x-full');
+                setTimeout(function () {
+                    backdrop.classList.add('hidden');
+                }, 200);
+            }
+        }
+
+        function setS2Tab(t) { s2Tab = t; renderCurrentSlide(); }
+        function setS3Env(e) { s3EnvTab = e; renderCurrentSlide(); }
+        function setS5Diff(d) { s5DiffItem = d; renderCurrentSlide(); }
+        function setS6PyType(t) { s6PyType = t; renderCurrentSlide(); }
+        function setS7Cast(val) { s7UseIntCast = val; renderCurrentSlide(); }
+        function updateS7Inputs(field, val) {
+            if (field === 'harga') s7HargaInput = val || '0';
+            if (field === 'qty') s7QtyInput = val || '1';
+            renderCurrentSlide();
+        }
+        function setS8Op(op) { s8OpKey = op; renderCurrentSlide(); }
+        function setS10Style(st) { s10PrintStyle = st; renderCurrentSlide(); }
+        function updateS11Catalog(field, val) {
+            if (field === 'produk') s11Produk = val || 'Kopi Susu';
+            if (field === 'harga') s11Harga = Math.max(0, parseInt(val, 10) || 0);
+            if (field === 'stok') s11Stok = Math.max(1, parseInt(val, 10) || 1);
+            renderCurrentSlide();
+        }
+        function toggleS11Format() { s11UseCommaFmt = !s11UseCommaFmt; renderCurrentSlide(); }
+        function setS12Sync(idx) { s12SyncBlock = idx; renderCurrentSlide(); }
+        function setS13Err(c) { s13ErrCase = c; s13Fixed = false; renderCurrentSlide(); }
+        function toggleS13Fix() { s13Fixed = !s13Fixed; renderCurrentSlide(); }
+
+        // Handlers Slide 15: Live Python CLI Runner
+        function resetPySim() {
+            if (pyAutoTimer) clearTimeout(pyAutoTimer);
+            pyIsAuto = false;
+            pyStepIndex = -1;
+            pyWaitingVar = null;
+            pyMemory = {};
+            pyTerminalLog = [];
+            pyInputError = '';
+            pyBannerText = 'Klik tombol Run Skrip atau Step (Per Baris) di kanan atas untuk menjalankan kasir_warung.py!';
+            renderCurrentSlide();
+        }
+
+        function fillPyQuickChip(val) {
+            const box = document.getElementById('pyConsoleInputBox');
+            if (box) {
+                box.value = val;
+                box.focus();
+            }
+        }
+
+        function stepPySim() {
+            if (pyWaitingVar) {
+                pyInputError = 'Ketik dulu nilai untuk "' + pyWaitingVar + '" pada kotak Terminal lalu tekan Enter!';
+                renderCurrentSlide();
+                return;
+            }
+            if (pyStepIndex >= 5) {
+                resetPySim();
+            }
+            pyStepIndex++;
+            executePyStep(pyStepIndex);
+        }
+
+        function executePyStep(step) {
+            pyInputError = '';
+            if (step === 0) {
+                pyTerminalLog = [];
+                pyTerminalLog.push({ type: 'out', html: '=== Selamat Datang di Warung Digital ===' });
+                pyBannerText = 'Baris 1 [print()]: Menampilkan sapaan pembuka Warung Digital ke layar terminal.';
+            } else if (step === 1) {
+                pyWaitingVar = 'nama_produk';
+                pyTerminalLog.push({ id: 'w_nama', type: 'wait', text: 'Masukkan nama produk: _' });
+                pyBannerText = 'Baris 2 [input()]: Menunggu kasir mengetik nama produk (otomatis disimpan sebagai str).';
+            } else if (step === 2) {
+                pyWaitingVar = 'harga_satuan';
+                pyTerminalLog.push({ id: 'w_harga', type: 'wait', text: 'Masukkan harga satuan: _' });
+                pyBannerText = 'Baris 3 [int(input())]: Menunggu angka harga satuan, lalu mengonversinya menjadi int.';
+            } else if (step === 3) {
+                pyWaitingVar = 'stok_awal';
+                pyTerminalLog.push({ id: 'w_stok', type: 'wait', text: 'Masukkan stok awal: _' });
+                pyBannerText = 'Baris 4 [int(input())]: Menunggu angka stok awal, lalu mengonversinya menjadi int.';
+            } else if (step === 4) {
+                const aset = pyMemory.harga_satuan.raw * pyMemory.stok_awal.raw;
+                pyMemory.nilai_aset = { type: 'int', raw: aset, display: aset.toLocaleString('id-ID') };
+                pyBannerText = 'Baris 5 [Aritmatika *]: Menghitung nilai_aset = ' + pyMemory.harga_satuan.raw + ' * ' + pyMemory.stok_awal.raw + ' = Rp ' + aset.toLocaleString('id-ID') + '.';
+            } else if (step === 5) {
+                pyTerminalLog.push({
+                    type: 'out',
+                    html: '<strong>Tercatat: ' + escapeHtml(pyMemory.nama_produk.raw) + ' (' + pyMemory.stok_awal.raw + ' pcs) | Total Aset: Rp ' + pyMemory.nilai_aset.display + '</strong>'
+                });
+                pyIsAuto = false;
+                pyBannerText = 'Baris 6 [print(f"...")]: Menampilkan ringkasan data produk ke terminal menggunakan f-string. Skrip selesai!';
+            }
+
+            renderCurrentSlide();
+            const termBox = document.getElementById('pyTerminalBox');
+            if (termBox) termBox.scrollTop = termBox.scrollHeight;
+
+            if (pyIsAuto && !pyWaitingVar && step < 5) {
+                pyAutoTimer = setTimeout(function () {
+                    stepPySim();
+                }, 650);
+            }
+        }
+
+        function submitManualPyInput(e) {
+            e.preventDefault();
+            if (!pyWaitingVar) return;
+            const box = document.getElementById('pyConsoleInputBox');
+            const rawVal = box ? box.value.trim() : '';
+
+            if (!rawVal) {
+                pyInputError = 'Input tidak boleh kosong!';
+                renderCurrentSlide();
+                return;
+            }
+
+            if (pyWaitingVar === 'nama_produk') {
+                pyMemory.nama_produk = { type: 'str', raw: rawVal, display: '"' + rawVal + '"' };
+                pyTerminalLog = pyTerminalLog.filter(function (m) { return m.id !== 'w_nama'; });
+                pyTerminalLog.push({ type: 'in', text: 'Masukkan nama produk: ' + rawVal });
+            } else if (pyWaitingVar === 'harga_satuan') {
+                if (!/^\d+$/.test(rawVal)) {
+                    pyInputError = 'ValueError: invalid literal for int()! Masukkan angka bulat murni tanpa titik atau huruf Rp.';
+                    renderCurrentSlide();
+                    return;
+                }
+                const num = parseInt(rawVal, 10);
+                pyMemory.harga_satuan = { type: 'int', raw: num, display: num.toLocaleString('id-ID') };
+                pyTerminalLog = pyTerminalLog.filter(function (m) { return m.id !== 'w_harga'; });
+                pyTerminalLog.push({ type: 'in', text: 'Masukkan harga satuan: ' + num });
+            } else if (pyWaitingVar === 'stok_awal') {
+                if (!/^\d+$/.test(rawVal)) {
+                    pyInputError = 'ValueError: invalid literal for int()! Masukkan angka bulat murni.';
+                    renderCurrentSlide();
+                    return;
+                }
+                const num = parseInt(rawVal, 10);
+                pyMemory.stok_awal = { type: 'int', raw: num, display: String(num) };
+                pyTerminalLog = pyTerminalLog.filter(function (m) { return m.id !== 'w_stok'; });
+                pyTerminalLog.push({ type: 'in', text: 'Masukkan stok awal: ' + num });
+            }
+
+            pyWaitingVar = null;
+            pyInputError = '';
+            renderCurrentSlide();
+
+            if (pyIsAuto) {
+                pyAutoTimer = setTimeout(function () {
+                    stepPySim();
+                }, 450);
+            }
+        }
+
+        function runFullPySim() {
+            if (pyAutoTimer) clearTimeout(pyAutoTimer);
+            pyStepIndex = -1;
+            pyWaitingVar = null;
+            pyMemory = {};
+            pyTerminalLog = [];
+            pyInputError = '';
+            pyIsAuto = true;
+            stepPySim();
+        }
+
+        // Handlers Slide 16: Lengkapi Kode Python
+        function selectPyBuilderSlot(slotNum) {
+            activePySlot = slotNum;
+            renderCurrentSlide();
+        }
+
+        function assignPySlot(codeKey) {
+            pyBuilderSlots[activePySlot] = codeKey;
+            pyBuilderFeedback = { type: '', text: '' };
+            if (activePySlot < 4) activePySlot++;
+            renderCurrentSlide();
+        }
+
+        function checkPyBuilder() {
+            if (
+                pyBuilderSlots[1] === 'PRINT_SAPAAN' &&
+                pyBuilderSlots[2] === 'VAR_SNAKE' &&
+                pyBuilderSlots[3] === 'CAST_INT' &&
+                pyBuilderSlots[4] === 'FSTRING_OUT'
+            ) {
+                pyBuilderFeedback = {
+                    type: 'success',
+                    text: 'Sempurna (4/4 Tepat)! Skrip Python Sapaan & Pencatatan Produk Warung Digital sudah 100% valid!'
+                };
+            } else {
+                pyBuilderFeedback = {
+                    type: 'error',
+                    text: 'Urutan baris belum tepat. Pastikan: Baris 1 (print Sapaan) -> Baris 2 (input nama_produk) -> Baris 3 (int(input harga_satuan)) -> Baris 4 (print f-string).'
+                };
+            }
+            renderCurrentSlide();
+        }
+
+        function resetPyBuilder() {
+            pyBuilderSlots = { 1: '', 2: '', 3: '', 4: '' };
+            activePySlot = 1;
+            pyBuilderFeedback = { type: '', text: '' };
+            renderCurrentSlide();
+        }
+
+        // Handlers Slide 17: Drag & Drop 8 Baris Skrip Python
+        function shufflePySteps() {
+            pyStepsOrder = [...CORRECT_PY_STEPS].sort(function () { return Math.random() - 0.5; });
+            pyShowValidation = false;
+            pyFeedbackText = '';
+            renderCurrentSlide();
+        }
+
+        function movePyStep(index, direction) {
+            const target = index + direction;
+            if (target < 0 || target >= pyStepsOrder.length) return;
+            const moved = pyStepsOrder.splice(index, 1)[0];
+            pyStepsOrder.splice(target, 0, moved);
+            pyShowValidation = false;
+            pyFeedbackText = '';
+            renderCurrentSlide();
+        }
+
+        function onPyDragStart(e, index) {
+            draggedPyIndex = index;
+            if (e.currentTarget) e.currentTarget.classList.add('dragging');
+            if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function onPyDragOver(e, index) {
+            e.preventDefault();
+            if (index !== draggedPyIndex && e.currentTarget) {
+                e.currentTarget.classList.add('drag-over');
+            }
+        }
+
+        function onPyDragLeave(e) {
+            if (e.currentTarget) e.currentTarget.classList.remove('drag-over');
+        }
+
+        function onPyDrop(e, targetIndex) {
+            e.preventDefault();
+            if (draggedPyIndex !== null && draggedPyIndex !== targetIndex) {
+                const moved = pyStepsOrder.splice(draggedPyIndex, 1)[0];
+                pyStepsOrder.splice(targetIndex, 0, moved);
+                pyShowValidation = false;
+                pyFeedbackText = '';
+                renderCurrentSlide();
+            }
+            draggedPyIndex = null;
+        }
+
+        function onPyDragEnd() {
+            draggedPyIndex = null;
+            document.querySelectorAll('.draggable-step').forEach(function (el) {
+                el.classList.remove('dragging', 'drag-over');
+            });
+        }
+
+        function checkPyOrder() {
+            pyShowValidation = true;
+            let correctCount = 0;
+            for (let i = 0; i < pyStepsOrder.length; i++) {
+                if (pyStepsOrder[i].id === i + 1) correctCount++;
+            }
+            if (correctCount === pyStepsOrder.length) {
+                pyFeedbackText = 'Luar Biasa (8/8 Tepat)! Urutan eksekusi skrip Python Warung Digital sudah 100% runtut!';
+            } else {
+                pyFeedbackText = 'Baru ' + correctCount + '/8 baris yang tepat. Geser baris bertanda "✗ Geser".';
+            }
+            renderCurrentSlide();
+        }
+
+        function answerSelfCheck(qNum, isOk, msg) {
+            selfCheckFeedback[qNum] = { ok: isOk, msg: msg };
+            renderCurrentSlide();
+        }
+
+        // Modal Istilah & Kamus Lengkap
+        function showTerm(key) {
+            const item = GLOSSARY_DB[key];
+            if (!item) return;
+
+            document.getElementById('termCategoryBadge').textContent = item.category;
+            document.getElementById('termTitle').textContent = item.title;
+            document.getElementById('termMainDesc').textContent = item.main;
+            document.getElementById('termDetailDesc').textContent = item.detail;
+            document.getElementById('termSourceName').textContent = "Sumber: " + item.source;
+
+            const modal = document.getElementById('termModalBackdrop');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeTermModal() {
+            const modal = document.getElementById('termModalBackdrop');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function openGlossaryIndex() {
+            document.getElementById('glossarySearchInput').value = '';
+            renderGlossaryList('');
+            const modal = document.getElementById('glossaryModalBackdrop');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeGlossaryIndex() {
+            const modal = document.getElementById('glossaryModalBackdrop');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function selectGlossaryTerm(key) {
+            closeGlossaryIndex();
+            showTerm(key);
+        }
+
+        function renderGlossaryList(query) {
+            const q = String(query || '').trim().toLowerCase();
+            const allKeys = Object.keys(GLOSSARY_DB);
+            const matchedKeys = [];
+
+            for (let i = 0; i < allKeys.length; i++) {
+                const k = allKeys[i];
+                const item = GLOSSARY_DB[k];
+                if (
+                    item.title.toLowerCase().indexOf(q) !== -1 ||
+                    item.category.toLowerCase().indexOf(q) !== -1 ||
+                    item.main.toLowerCase().indexOf(q) !== -1
+                ) {
+                    matchedKeys.push(k);
+                }
+            }
+
+            const container = document.getElementById('glossaryListGrid');
+            if (matchedKeys.length === 0) {
+                container.innerHTML = '<div class="col-span-2 text-center py-8 text-xs text-slate-500">Istilah tidak ditemukan.</div>';
+                return;
+            }
+
+            let html = '';
+            for (let i = 0; i < matchedKeys.length; i++) {
+                const k = matchedKeys[i];
+                const item = GLOSSARY_DB[k];
+                html += `
+                    <button type="button" onclick="selectGlossaryTerm('${k}')" class="text-left p-4 rounded-2xl bg-slate-50 hover:bg-indigo-50/60 dark:bg-slate-800/50 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800 transition space-y-1">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">${escapeHtml(item.category)}</span>
+                            <span class="text-[10px] text-slate-400">${escapeHtml(item.source)}</span>
+                        </div>
+                        <div class="text-sm font-extrabold text-slate-900 dark:text-white">${escapeHtml(item.title)}</div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">${escapeHtml(item.main)}</p>
+                    </button>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function toggleTheme() {
+            const htmlEl = document.documentElement;
+            const icon = document.getElementById('themeIcon');
+            htmlEl.classList.toggle('dark');
+            const isDark = htmlEl.classList.contains('dark');
+            icon.className = isDark ? 'fa-solid fa-sun text-amber-400 text-sm' : 'fa-solid fa-moon text-sm';
+        }
+
+        document.addEventListener('keydown', function (e) {
+            const activeTag = document.activeElement && document.activeElement.tagName
+                ? document.activeElement.tagName.toLowerCase()
+                : '';
+            if (activeTag === 'input' || activeTag === 'textarea') return;
+
+            if (e.key === 'ArrowRight') changeSlide(1);
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+            if (e.key === 'Escape') {
+                closeTermModal();
+                closeGlossaryIndex();
+            }
+        });
+
+        window.onload = function () {
+            renderCurrentSlide();
+        };
+    </script>
+</body>
+</html>
