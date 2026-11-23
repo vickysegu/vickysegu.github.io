@@ -1,0 +1,2283 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pertemuan 5: Logika Perulangan For, While & Do-While (BD1205)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace']
+                    }
+                }
+            }
+        };
+    </script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .tech-term {
+            color: #4f46e5;
+            font-weight: 700;
+            cursor: pointer;
+            transition: color 0.15s ease, opacity 0.15s ease;
+        }
+        .dark .tech-term {
+            color: #818cf8;
+        }
+        .tech-term:hover {
+            color: #3730a3;
+            opacity: 0.85;
+        }
+        .dark .tech-term:hover {
+            color: #a5b4fc;
+        }
+
+        .slide-enter {
+            animation: fadeSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes fadeSlide {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fg-canvas {
+            background-color: #ffffff;
+            background-image: radial-gradient(#e2e8f0 1.2px, transparent 1.2px);
+            background-size: 18px 18px;
+        }
+        .dark .fg-canvas {
+            background-color: #0f172a;
+            background-image: radial-gradient(#1e293b 1.2px, transparent 1.2px);
+        }
+
+        .fg-node {
+            transition: transform 0.15s ease, filter 0.15s ease;
+            cursor: pointer;
+        }
+        .fg-node:hover {
+            transform: scale(1.02);
+        }
+
+        .fg-node-active rect,
+        .fg-node-active polygon {
+            fill: #ef4444 !important;
+            stroke: #991b1b !important;
+            stroke-width: 2.6px !important;
+        }
+        .fg-node-active text {
+            fill: #ffffff !important;
+            font-weight: 800 !important;
+        }
+
+        @keyframes waitPulse {
+            0%, 100% { filter: drop-shadow(0 0 0px rgba(79, 70, 229, 0)); }
+            50% { filter: drop-shadow(0 0 9px rgba(79, 70, 229, 0.65)); }
+        }
+        .fg-node-waiting {
+            animation: waitPulse 1.3s infinite;
+        }
+        .fg-node-waiting polygon {
+            fill: #4f46e5 !important;
+            stroke: #312e81 !important;
+            stroke-width: 2.8px !important;
+        }
+        .fg-node-waiting text {
+            fill: #ffffff !important;
+            font-weight: 800 !important;
+        }
+
+        .draggable-step {
+            cursor: grab;
+            user-select: none;
+            transition: all 0.15s ease;
+        }
+        .draggable-step:active {
+            cursor: grabbing;
+        }
+        .draggable-step.dragging {
+            opacity: 0.45;
+        }
+        .draggable-step.drag-over {
+            border-color: #4f46e5 !important;
+            transform: translateY(-2px);
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #334155;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col justify-between transition-colors duration-200">
+
+    <!-- Sticky Header -->
+    <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800">
+        <div class="w-full h-1 bg-slate-100 dark:bg-slate-800">
+            <div id="topProgressBar" class="h-full bg-indigo-600 dark:bg-indigo-500 transition-all duration-300" style="width: 6%;"></div>
+        </div>
+
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+                <button type="button" onclick="toggleSlideDrawer()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition flex items-center gap-2 text-xs sm:text-sm font-bold shrink-0">
+                    <i class="fa-solid fa-list-ul text-indigo-600 dark:text-indigo-400"></i>
+                    <span class="hidden sm:inline">Daftar Slide</span>
+                    <span id="slideCounterBadge" class="px-2 py-0.5 text-xs rounded-lg bg-indigo-600 text-white font-bold">1 / 18</span>
+                </button>
+
+                <div class="hidden md:flex items-center gap-2.5 min-w-0">
+                    <span id="slideCategoryPill" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 shrink-0">
+                        Modul 1
+                    </span>
+                    <h1 id="headerSlideTitle" class="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">
+                        Logika Perulangan (For, While, Do-While)
+                    </h1>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 shrink-0">
+                <button type="button" onclick="openGlossaryIndex()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 text-xs sm:text-sm font-bold flex items-center gap-2 transition">
+                    <i class="fa-solid fa-book-open text-indigo-600 dark:text-indigo-400"></i>
+                    <span>Kamus Istilah</span>
+                </button>
+
+                <button type="button" onclick="toggleTheme()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center transition" title="Ganti Tema Layar">
+                    <i id="themeIcon" class="fa-solid fa-moon text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Slide Drawer -->
+    <div id="slideDrawerBackdrop" onclick="toggleSlideDrawer()" class="fixed inset-0 bg-slate-950/50 backdrop-blur-xs z-40 hidden opacity-0 transition-opacity duration-200"></div>
+    <aside id="slideDrawer" class="fixed top-0 left-0 bottom-0 w-80 sm:w-96 bg-white dark:bg-slate-900 z-50 shadow-2xl border-r border-slate-200 dark:border-slate-800 transform -translate-x-full transition-transform duration-200 flex flex-col">
+        <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Dasar Pemrograman 1 (BD1205)</span>
+                <h2 class="text-base font-extrabold text-slate-900 dark:text-white mt-0.5">Daftar Materi Pertemuan 5</h2>
+            </div>
+            <button type="button" onclick="toggleSlideDrawer()" class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div id="drawerSlideList" class="p-3.5 overflow-y-auto space-y-1 flex-1"></div>
+        <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 flex items-center justify-between">
+            <span>Gunakan tombol panah Kiri / Kanan</span>
+            <span class="font-bold">18 Slide</span>
+        </div>
+    </aside>
+
+    <!-- Main Slide Viewport -->
+    <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 flex flex-col justify-center">
+        <div id="slideViewport" class="bg-white dark:bg-slate-900 rounded-3xl shadow-xs border border-slate-200/80 dark:border-slate-800 p-6 sm:p-8 lg:p-10 min-h-[540px] flex flex-col justify-between relative overflow-hidden">
+            <!-- Konten slide dirender secara dinamis -->
+        </div>
+    </main>
+
+    <!-- Sticky Footer Navigation -->
+    <footer class="sticky bottom-0 z-20 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 py-3 px-4 sm:px-6">
+        <div class="max-w-6xl mx-auto flex items-center justify-between gap-4">
+            <button type="button" id="prevSlideBtn" onclick="changeSlide(-1)" class="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                <i class="fa-solid fa-arrow-left text-xs"></i>
+                <span>Sebelumnya</span>
+            </button>
+
+            <div id="slideDotsContainer" class="hidden md:flex items-center gap-1.5"></div>
+
+            <div class="md:hidden text-xs font-bold text-slate-500 dark:text-slate-400" id="mobileFooterCounter">
+                1 / 18
+            </div>
+
+            <button type="button" id="nextSlideBtn" onclick="changeSlide(1)" class="px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-indigo-600 hover:bg-indigo-700 text-white transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                <span id="nextBtnText">Selanjutnya</span>
+                <i class="fa-solid fa-arrow-right text-xs"></i>
+            </button>
+        </div>
+    </footer>
+
+    <!-- Modal Penjelasan Istilah -->
+    <div id="termModalBackdrop" onclick="closeTermModal()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl slide-enter">
+            <div class="flex items-start justify-between gap-4 mb-4">
+                <div>
+                    <span id="termCategoryBadge" class="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">Kategori</span>
+                    <h3 id="termTitle" class="text-xl font-extrabold text-slate-900 dark:text-white mt-1.5">Nama Istilah</h3>
+                </div>
+                <button type="button" onclick="closeTermModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <p id="termMainDesc" class="text-sm text-slate-700 dark:text-slate-200 leading-relaxed bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200/70 dark:border-slate-700/70"></p>
+
+                <div class="p-3.5 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-200/70 dark:border-indigo-800/70">
+                    <div class="text-[11px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-1">Contoh di UMKM Warung Digital:</div>
+                    <p id="termDetailDesc" class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed"></p>
+                </div>
+
+                <div class="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800 text-xs px-1">
+                    <span id="termSourceName" class="font-semibold text-slate-400">Referensi</span>
+                    <button type="button" onclick="closeTermModal(); openGlossaryIndex();" class="font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1.5">
+                        <span>Buka Kamus Lengkap</span>
+                        <i class="fa-solid fa-book-open text-[10px]"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Kamus Istilah Lengkap -->
+    <div id="glossaryModalBackdrop" onclick="closeGlossaryIndex()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-4xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden slide-enter">
+            <div class="p-5 sm:p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white">Kamus Istilah Pertemuan 5 (BD1205)</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Penjelasan ramah pemula untuk Logika Perulangan (For, While, Do-While), Counter, dan Generator Antrean.</p>
+                </div>
+                <button type="button" onclick="closeGlossaryIndex()" class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-sm"></i>
+                    <input id="glossarySearchInput" oninput="renderGlossaryList(this.value)" type="text" placeholder="Cari istilah seperti Perulangan, Iterasi, For, While, Do-While, Counter, Increment, Infinite Loop..." class="w-full pl-10 pr-4 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+            <div id="glossaryListGrid" class="p-5 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+        </div>
+    </div>
+
+    <script>
+        const GLOSSARY_DB = {
+            perulangan: {
+                title: "Perulangan (Looping / Iteration)",
+                category: "Struktur Kontrol",
+                main: "Struktur logika yang menyuruh komputer mengeksekusi satu atau beberapa blok instruksi secara berulang-ulang selama syarat tertentu masih terpenuhi, tanpa perlu menggambar blok yang sama berkali-kali.",
+                detail: "Mencetak nomor antrean pelanggan Warung Digital dari #1 sampai #20 cukup memakai 1 blok perulangan, bukan 20 blok Output terpisah.",
+                source: "Sub-CPMK 1.3 BD1205"
+            },
+            iterasi: {
+                title: "Iterasi (Iteration / Satu Putaran Loop)",
+                category: "Terminologi Loop",
+                main: "Satu kali siklus pelaksanaan seluruh instruksi di dalam badan perulangan. Jika mesin mencetak nomor antrean 1 sampai 5, artinya terjadi 5 kali iterasi.",
+                detail: "Pada iterasi ke-1 komputer mencetak tiket #1; pada iterasi ke-2 mencetak tiket #2; dan seterusnya.",
+                source: "Fundamental Pemrograman"
+            },
+            forloop: {
+                title: "Perulangan For (Counted Loop)",
+                category: "Jenis Perulangan",
+                main: "Struktur perulangan yang digunakan ketika jumlah putaran (batas awal dan batas akhir) sudah diketahui secara pasti sebelum perulangan dimulai.",
+                detail: "Mencetak batch kupon antrean pagi Warung Digital dari nomor 1 hingga jumlahKuota (misal 10 tiket).",
+                source: "Flowgorithm Loop Statements"
+            },
+            whileloop: {
+                title: "Perulangan While (Pre-Test Loop)",
+                category: "Jenis Perulangan",
+                main: "Struktur perulangan yang memeriksa syarat kondisi di AWAL sebelum masuk ke badan loop. Jika sejak awal syarat bernilai False, maka isi loop tidak dijalankan sama sekali (0 kali).",
+                detail: "Selama sisaKuota > 0, cetak nomor antrean dan kurangi sisaKuota. Jika kuota sejak awal 0, mesin tidak mencetak tiket apa pun.",
+                source: "Flowgorithm Loop Statements"
+            },
+            dowhile: {
+                title: "Perulangan Do-While (Post-Test Loop)",
+                category: "Jenis Perulangan",
+                main: "Struktur perulangan yang menjalankan isi blok MINIMAL 1 KALI terlebih dahulu, baru memeriksa syarat kondisi di bagian BAWAH untuk memutuskan apakah perlu mengulang lagi.",
+                detail: "Kasir mencetak tiket antrean pelanggan pertama dulu, baru bertanya 'Apakah ada pelanggan berikutnya? (Y/N)'.",
+                source: "Flowgorithm Loop Statements"
+            },
+            counter: {
+                title: "Variabel Counter (Pencacah Nomor)",
+                category: "Pola Variabel Loop",
+                main: "Variabel bertipe Integer yang berfungsi menghitung dan menyimpan urutan putaran saat ini di dalam perulangan.",
+                detail: "Variabel 'noAntrean' yang nilainya naik 1 -> 2 -> 3 setiap kali tiket antrean baru dicetak.",
+                source: "Pola Algoritma Dasar"
+            },
+            increment: {
+                title: "Increment (Penambahan Nilai Counter)",
+                category: "Mekanisme Loop",
+                main: "Instruksi untuk menaikkan nilai variabel pencacah (umumnya bertambah 1) pada setiap akhir putaran agar kondisi perulangan bergerak menuju titik berhenti.",
+                detail: "Perintah 'Assign noAntrean = noAntrean + 1' setelah tiket antrean tercetak ke layar.",
+                source: "Fundamental Pemrograman"
+            },
+            infiniteloop: {
+                title: "Infinite Loop (Perulangan Tanpa Henti)",
+                category: "Bug Perulangan",
+                main: "Kesalahan logika di mana syarat perulangan selalu bernilai True selamanya sehingga program terjebak berputar terus-menerus dan tidak pernah mencapai End (melanggar syarat Finiteness).",
+                detail: "Lupa menambahkan baris 'noAntrean = noAntrean + 1' di dalam While loop sehingga mesin terus mencetak tiket nomor #1 tanpa berhenti.",
+                source: "Software Debugging"
+            },
+            offbyone: {
+                title: "Off-by-One Error (Meleset 1 Hitungan)",
+                category: "Bug Perulangan",
+                main: "Kesalahan batas perulangan akibat tertukarnya operator < dengan <= (atau mulai dari 0 vs 1), sehingga jumlah tiket yang tercetak kurang 1 atau lebih 1 dari target.",
+                detail: "Jika batas = 5 dan syarat ditulis 'noAntrean < 5', tiket hanya tercetak 1 sampai 4 (kurang 1 tiket). Seharusnya 'noAntrean <= 5'.",
+                source: "Software Testing Dasar"
+            },
+            accumulator: {
+                title: "Accumulator (Variabel Penjumlah Total)",
+                category: "Pola Variabel Loop",
+                main: "Variabel yang diinisialisasi dengan nilai 0 sebelum loop, lalu terus ditambah nilainya di setiap putaran untuk mengumpulkan total keseluruhan.",
+                detail: "Menjumlahkan total omzet dari seluruh pelanggan yang masuk selama antrean berlangsung: 'totalOmzet = totalOmzet + bayarPelanggan'.",
+                source: "Pola Algoritma Dasar"
+            }
+        };
+
+        function term(key, customLabel) {
+            const item = GLOSSARY_DB[key];
+            if (!item) return customLabel || key;
+            const label = customLabel || item.title.split(' (')[0];
+            return '<span class="tech-term" onclick="showTerm(\'' + key + '\')">' + label + '</span>';
+        }
+
+        function escapeHtml(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        let currentSlideIndex = 0;
+        const TOTAL_SLIDES = 18;
+
+        // State Slide 2: Dampak Bisnis Generator Antrean Otomatis
+        let s2Mode = 'with_loop'; // 'no_loop' | 'with_loop'
+
+        // State Slide 3: 3 Pilar Wajib Setiap Loop
+        let s3Pillar = 1; // 1 | 2 | 3
+
+        // State Slide 5: Visualizer For Loop (Counted Loop)
+        let s5MaxQueue = 4;
+        let s5ActiveIter = 1;
+
+        // State Slide 6: Visualizer While Loop (Pre-Test Loop)
+        let s6StartQuota = 3; // bisa diubah ke 0 untuk uji 0 kali jalan!
+
+        // State Slide 7: Perbandingan While vs Do-While saat kondisi awal False
+        let s7CompareMode = 'dowhile'; // 'while' | 'dowhile'
+
+        // State Slide 8: Panduan Memilih For, While, atau Do-While
+        let s8CaseKey = 'batch_for'; // 'batch_for' | 'quota_while' | 'kasir_dowhile'
+
+        // State Slide 10: Detektif Bug Perulangan (Infinite Loop & Off-by-One)
+        let s10BugType = 'healthy'; // 'healthy' | 'infinite' | 'offbyone'
+
+        // State Slide 11: Pola Counter & Accumulator Rekap Antrean
+        let s11Step = 0; // 0..3
+
+        // State Slide 12: Pseudocode 3 Jenis Perulangan
+        let s12PseudoTab = 'for'; // 'for' | 'while' | 'dowhile'
+
+        // State Slide 13: Sandbox Generator Tiket Antrean Warung Digital
+        let s13Prefix = 'WD-';
+        let s13Start = 1;
+        let s13End = 5;
+        let s13StepVal = 1;
+
+        // State Slide 15: Live IDE Simulator Flowgorithm Generator Antrean (8 Tahap)
+        let simStepIndex = -1;
+        let simAutoTimer = null;
+        let simIsAuto = false;
+        let simWaitingVar = null;
+        let simMemory = {
+            batasAntrean: null,
+            noAntrean: null
+        };
+        let simChatLog = [];
+        let simBannerText = 'Klik tombol Run Otomatis atau Step di kanan atas untuk menjalankan Generator Nomor Antrean Warung Digital.';
+        let simInputError = '';
+
+        // State Slide 16: Rakit Komponen Loop di Kanvas (4 Slot)
+        let activeBuilderSlot = 1;
+        let builderSlots = { 1: '', 2: '', 3: '', 4: '' };
+        let builderFeedback = { type: '', text: '' };
+
+        // State Slide 17: Drag & Drop 8 Langkah Generator Antrean
+        const CORRECT_LOOP_STEPS = [
+            { id: 1, type: "Main", label: "Main", text: "Mulai program generator nomor antrean Warung Digital" },
+            { id: 2, type: "Declare", label: "Declare", text: "Declare Integer batasAntrean, noAntrean" },
+            { id: 3, type: "Output", label: "Output Prompt", text: "Output \"Masukkan jumlah kuota antrean pelanggan:\"" },
+            { id: 4, type: "Input", label: "Input", text: "Input batasAntrean (Misal kasir mengetik angka 5)" },
+            { id: 5, type: "Loop", label: "For Loop", text: "Mulai perulangan For: noAntrean = 1 to batasAntrean (Step 1)" },
+            { id: 6, type: "Output", label: "Badan Loop", text: "Di dalam badan Loop: Output \"Nomor Antrean Warung Digital: #\" & noAntrean" },
+            { id: 7, type: "Loop", label: "Loop Selesai", text: "Putaran berulang otomatis hingga noAntrean melewati batasAntrean (Done)" },
+            { id: 8, type: "Output", label: "Output & End", text: "Output \"Semua kuota antrean selesai dicetak\" lalu End" }
+        ];
+        let loopStepsOrder = [...CORRECT_LOOP_STEPS].sort(function () { return Math.random() - 0.5; });
+        let loopShowValidation = false;
+        let loopFeedbackText = '';
+        let draggedLoopIndex = null;
+
+        // State Slide 18: Cek Pemahaman Mandiri
+        let selfCheckFeedback = { 1: null, 2: null, 3: null };
+
+        function renderSlide1() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-8">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center my-auto">
+                        <div class="lg:col-span-7 space-y-5">
+                            <div class="inline-flex flex-wrap items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 text-xs font-bold border border-indigo-200/60 dark:border-indigo-800/60">
+                                <span>Pertemuan 5 • Sub-CPMK 1.3 (Bobot 3%)</span>
+                                <span>•</span>
+                                <span>Penutup Fase Flowgorithm (Minggu 1–5)</span>
+                            </div>
+
+                            <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 dark:text-white leading-tight tracking-tight">
+                                Logika ${term('perulangan', 'Perulangan')} (<span class="font-mono text-indigo-600 dark:text-indigo-400">For</span>, <span class="font-mono text-indigo-600 dark:text-indigo-400">While</span>, <span class="font-mono text-indigo-600 dark:text-indigo-400">Do-While</span>)
+                            </h2>
+
+                            <p class="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Di Minggu 1 sampai 4, program kasir kita hanya melayani satu kali jalan dari atas ke bawah. Hari ini di Minggu 5, kita melengkapi pondasi logika visual kita dengan kemampuan <strong>mengulang instruksi secara otomatis</strong> untuk membangun <strong>Generator Nomor Antrean Pelanggan UMKM "Warung Digital"</strong>!
+                            </p>
+
+                            <div class="p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200/70 dark:border-indigo-800/70 flex items-center gap-3 text-xs sm:text-sm text-slate-700 dark:text-slate-200">
+                                <i class="fa-solid fa-arrows-rotate text-indigo-600 dark:text-indigo-400 text-base shrink-0"></i>
+                                <span><strong>Target Pengalaman Belajar Minggu 5:</strong> Merancang flowchart generator nomor antrean pelanggan Warung Digital menggunakan struktur perulangan <strong>For</strong>, <strong>While</strong>, dan <strong>Do-While</strong> sebelum melangkah ke pemrograman PHP di Minggu 6.</span>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-5">
+                            <div class="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 space-y-4">
+                                <div>
+                                    <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Peta 18 Slide Pertemuan 5</span>
+                                    <h3 class="text-lg font-extrabold text-slate-900 dark:text-white mt-1">4 Modul Pembelajaran Terstruktur</h3>
+                                </div>
+
+                                <div class="space-y-2.5">
+                                    <button type="button" onclick="goToSlide(1)" class="w-full text-left flex items-start gap-3 p-3.5 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 dark:hover:bg-slate-800/80 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-0.5 font-extrabold text-xs">M1</div>
+                                        <div>
+                                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">Modul 1: Konteks Antrean UMKM &amp; Anatomi Loop (Slide 1-3)</h4>
+                                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Otomatisasi tiket antrean &amp; 3 komponen wajib perulangan.</p>
+                                        </div>
+                                    </button>
+
+                                    <button type="button" onclick="goToSlide(4)" class="w-full text-left flex items-start gap-3 p-3.5 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 dark:hover:bg-slate-800/80 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-0.5 font-extrabold text-xs">M2</div>
+                                        <div>
+                                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">Modul 2: Trio Loop: For, While, &amp; Do-While (Slide 5-8)</h4>
+                                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Counted Loop, Pre-Test Loop, Post-Test Loop, &amp; panduan pilih.</p>
+                                        </div>
+                                    </button>
+
+                                    <button type="button" onclick="goToSlide(9)" class="w-full text-left flex items-start gap-3 p-3.5 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 dark:hover:bg-slate-800/80 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-0.5 font-extrabold text-xs">M3</div>
+                                        <div>
+                                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">Modul 3: Detektif Bug, Akumulator, &amp; Sandbox (Slide 10-13)</h4>
+                                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Mencegah Infinite Loop, pola Counter-Accumulator, &amp; Sandbox Tiket.</p>
+                                        </div>
+                                    </button>
+
+                                    <button type="button" onclick="goToSlide(14)" class="w-full text-left flex items-start gap-3 p-3.5 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 dark:hover:bg-slate-800/80 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-0.5 font-extrabold text-xs">M4</div>
+                                        <div>
+                                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">Modul 4: 3 Simulator Lab Perulangan (Slide 15-18)</h4>
+                                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Live IDE Generator Antrean, rakit loop kanvas, &amp; Drag-Drop.</p>
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide2() {
+            const isLoop = s2Mode === 'with_loop';
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-6">
+                    <div class="space-y-2">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 1 • Konteks Operasional Bisnis Digital</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Mengapa Sistem Antrean Membutuhkan Logika ${term('perulangan', 'Perulangan')}?</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Saat jam makan siang, <strong>Warung Digital</strong> melayani 50 pelanggan yang mengantre. Jika kita membuat flowchart tanpa struktur perulangan, kita harus menggambar 50 blok <span class="font-mono">Output</span> secara manual! Bandingkan kedua cara berikut:
+                        </p>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" onclick="setS2Mode('no_loop')" class="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm border transition ${!isLoop ? 'bg-rose-600 text-white border-rose-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <i class="fa-solid fa-copy mr-1.5"></i>1. Tanpa Perulangan (Copy-Paste 50 Blok Manual)
+                        </button>
+                        <button type="button" onclick="setS2Mode('with_loop')" class="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm border transition ${isLoop ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <i class="fa-solid fa-arrows-rotate mr-1.5"></i>2. Dengan Perulangan (1 Blok Loop Dinamis)
+                        </button>
+                    </div>
+
+                    <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 my-auto">
+                        ${!isLoop ? `
+                            <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
+                                <div class="lg:col-span-6 p-4 rounded-2xl bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 font-mono text-xs space-y-1.5">
+                                    <div class="text-rose-700 dark:text-rose-300 font-sans font-extrabold uppercase mb-1">Kode / Flowchart Tanpa Loop (Tidak Efisien):</div>
+                                    <div class="p-2 rounded bg-white dark:bg-slate-900">Output "Antrean Warung Digital #1"</div>
+                                    <div class="p-2 rounded bg-white dark:bg-slate-900">Output "Antrean Warung Digital #2"</div>
+                                    <div class="p-2 rounded bg-white dark:bg-slate-900">Output "Antrean Warung Digital #3"</div>
+                                    <div class="p-2 rounded bg-white dark:bg-slate-900 text-slate-400">... diulang manual sampai baris ke-50!</div>
+                                </div>
+                                <div class="lg:col-span-6 space-y-2.5 text-xs sm:text-sm">
+                                    <div class="font-extrabold text-rose-700 dark:text-rose-400">2 Kelemahan Fatal Tanpa Perulangan:</div>
+                                    <div class="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                        <strong>1. Tidak Fleksibel (Kaku):</strong> Jika besok kuota pelanggan naik jadi 100 orang, programmer harus membongkar program dan menambah 50 blok baru.
+                                    </div>
+                                    <div class="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                        <strong>2. Rawan Salah Ketik:</strong> Mengulang penulisan puluhan baris membuat program panjang, berantakan, dan sulit diperbaiki.
+                                    </div>
+                                </div>
+                            </div>
+                        ` : `
+                            <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
+                                <div class="lg:col-span-6 p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 font-mono text-xs space-y-2">
+                                    <div class="text-indigo-700 dark:text-indigo-300 font-sans font-extrabold uppercase">Solusi Generator Antrean Otomatis:</div>
+                                    <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-800 space-y-1">
+                                        <div class="text-sky-600 font-bold">Input batasAntrean <span class="text-slate-400 font-normal">// Misal kasir ketik 50 atau 200</span></div>
+                                        <div class="text-indigo-600 font-bold">For noAntrean = 1 to batasAntrean</div>
+                                        <div class="pl-4 text-emerald-600 font-bold">Output "Antrean Warung Digital #" &amp; noAntrean</div>
+                                        <div class="text-indigo-600 font-bold">End For</div>
+                                    </div>
+                                </div>
+                                <div class="lg:col-span-6 space-y-2.5 text-xs sm:text-sm">
+                                    <div class="font-extrabold text-emerald-700 dark:text-emerald-400">Manfaat Langsung bagi Bisnis Digital:</div>
+                                    <div class="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                        <strong>1. Cukup 1 Blok untuk Ribuan Pelanggan:</strong> Mau melayani 10 maupun 1.000 pelanggan, struktur flowchart tetap ringkas dan rapi.
+                                    </div>
+                                    <div class="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                        <strong>2. Dinamis Sesuai Input Kasir:</strong> Jumlah tiket antrean otomatis menyesuaikan angka <span class="font-mono">batasAntrean</span> yang dimasukkan kasir hari itu.
+                                    </div>
+                                </div>
+                            </div>
+                        `}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide3() {
+            const pillars = {
+                1: {
+                    badge: "Komponen Wajib 1 dari 3 • Nilai Awal (Initialization)",
+                    title: "1. Menentukan Titik Awal Pencacah (Counter)",
+                    syntax: "Assign noAntrean = 1",
+                    desc: "Setiap mesin pencetak nomor antrean harus tahu mulai dari angka berapa tiket pertama dicetak. Di Warung Digital, antrean pagi dimulai dari nomor 1 (bukan dari nol).",
+                    analogy: "Ibarat mengatur angka awal pada stempel nomor otomatis di angka 001 sebelum toko buka."
+                },
+                2: {
+                    badge: "Komponen Wajib 2 dari 3 • Syarat Berhenti (Condition)",
+                    title: "2. Menentukan Batas Kapan Perulangan Harus Berhenti",
+                    syntax: "noAntrean <= batasAntrean",
+                    desc: "Ingat kriteria Finiteness dari Donald Knuth (Pertemuan 1): algoritma wajib berhenti! Syarat kondisi mengecek apakah nomor antrean saat ini masih berada di dalam kuota maksimal pelanggan hari ini.",
+                    analogy: "Mesin otomatis berhenti mencetak begitu nomor tiket mencapai batas kuota maksimal (misal 20 pelanggan)."
+                },
+                3: {
+                    badge: "Komponen Wajib 3 dari 3 • Perubahan Nilai (Increment)",
+                    title: "3. Menaikkan Nilai Pencacah di Setiap Putaran (Iterasi)",
+                    syntax: "Assign noAntrean = noAntrean + 1",
+                    desc: "Setelah tiket #1 selesai dicetak, variabel noAntrean wajib dinaikkan +1 menjadi 2 agar pada putaran berikutnya mesin mencetak tiket #2, lalu #3, dan akhirnya mencapai batas berhenti.",
+                    analogy: "Jika roda angka pada stempel macet (tidak bertambah +1), mesin akan mencetak nomor #1 terus-menerus tanpa henti (Infinite Loop)!"
+                }
+            };
+
+            const cur = pillars[s3Pillar];
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 1 • Anatomi Dasar Perulangan</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">3 Komponen Wajib di Setiap Struktur ${term('perulangan', 'Perulangan')}</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Apa pun jenis perulangannya (<span class="font-mono">For</span>, <span class="font-mono">While</span>, atau <span class="font-mono">Do-While</span>), semuanya wajib memiliki <strong>3 komponen pengendali</strong> (${term('counter', 'Counter')}, Syarat Berhenti, dan ${term('increment', 'Increment')}). Klik masing-masing komponen:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        <button type="button" onclick="setS3Pillar(1)" class="p-3.5 rounded-2xl border text-left transition ${s3Pillar === 1 ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-[11px] font-bold opacity-80">Komponen #1</div>
+                            <div class="text-xs sm:text-sm font-extrabold mt-0.5">1. Nilai Awal (Initialization)</div>
+                        </button>
+                        <button type="button" onclick="setS3Pillar(2)" class="p-3.5 rounded-2xl border text-left transition ${s3Pillar === 2 ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-[11px] font-bold opacity-80">Komponen #2</div>
+                            <div class="text-xs sm:text-sm font-extrabold mt-0.5">2. Syarat Kondisi (Condition)</div>
+                        </button>
+                        <button type="button" onclick="setS3Pillar(3)" class="p-3.5 rounded-2xl border text-left transition ${s3Pillar === 3 ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-[11px] font-bold opacity-80">Komponen #3</div>
+                            <div class="text-xs sm:text-sm font-extrabold mt-0.5">3. Perubahan Nilai (Increment)</div>
+                        </button>
+                    </div>
+
+                    <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 grid grid-cols-1 lg:grid-cols-12 gap-5 items-center my-auto">
+                        <div class="lg:col-span-7 space-y-2.5">
+                            <span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">${cur.badge}</span>
+                            <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">${cur.title}</h3>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${cur.desc}</p>
+                        </div>
+
+                        <div class="lg:col-span-5 space-y-3">
+                            <div class="p-4 rounded-2xl bg-slate-900 text-slate-100 font-mono text-xs space-y-1">
+                                <div class="text-slate-400">// Contoh Instruksi di Warung Digital:</div>
+                                <div class="text-amber-300 text-sm font-extrabold">${escapeHtml(cur.syntax)}</div>
+                            </div>
+                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-300">
+                                <i class="fa-solid fa-lightbulb text-amber-500 mr-1.5"></i>${escapeHtml(cur.analogy)}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide4() {
+            return `
+                <div class="slide-enter flex flex-col justify-center h-full my-auto">
+                    <div class="p-8 sm:p-12 rounded-3xl bg-gradient-to-br from-indigo-600 to-slate-900 text-white space-y-6 shadow-lg">
+                        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/15 text-indigo-100 text-xs font-extrabold uppercase tracking-wider">
+                            <i class="fa-solid fa-bridge"></i>
+                            <span>Jembatan Antar Topik • Modul 1 Menuju Modul 2</span>
+                        </div>
+
+                        <h2 class="text-2xl sm:text-4xl font-extrabold leading-tight">
+                            Kita sudah memahami 3 komponen wajib perulangan (Nilai Awal, Syarat Berhenti, dan Increment). Sekarang bagaimana bentuk simbol For, While, dan Do-While di Flowgorithm?
+                        </h2>
+
+                        <p class="text-indigo-100 text-sm sm:text-base leading-relaxed max-w-3xl">
+                            Di <strong>Modul 2 (Slide 5 s/d 8)</strong>, kita akan membedah cara kerja 3 struktur perulangan resmi di Flowgorithm: <strong>For Loop</strong> (untuk jumlah antrean yang sudah pasti), <strong>While Loop</strong> (cek syarat di awal sebelum mencetak), dan <strong>Do-While Loop</strong> (cetak minimal 1 tiket dulu baru bertanya lanjut atau berhenti).
+                        </p>
+
+                        <div class="pt-2">
+                            <button type="button" onclick="changeSlide(1)" class="px-5 py-3 rounded-xl bg-white text-indigo-700 hover:bg-indigo-50 font-extrabold text-xs sm:text-sm transition inline-flex items-center gap-2 shadow-sm">
+                                <span>Masuk ke Modul 2: Trio Loop (For, While, Do-While)</span>
+                                <i class="fa-solid fa-arrow-right text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide5() {
+            const safeMax = Math.min(8, Math.max(1, s5MaxQueue));
+            if (s5ActiveIter > safeMax) s5ActiveIter = safeMax;
+
+            let ticketsHtml = '';
+            for (let i = 1; i <= safeMax; i++) {
+                const isSelected = i === s5ActiveIter;
+                ticketsHtml += `
+                    <button type="button" onclick="setS5Iter(${i})" class="px-3 py-2 rounded-xl font-mono text-xs font-extrabold border-2 transition ${isSelected ? 'bg-indigo-600 text-white border-indigo-600 scale-105 shadow-xs' : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:border-indigo-400'}">
+                        Tiket #${i}
+                    </button>
+                `;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 2 • Jenis Perulangan 1: Counted Loop</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">1. Perulangan ${term('forloop', 'For')} (Jumlah Putaran Sudah Pasti)</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Di Flowgorithm, simbol <strong>For</strong> berbentuk <strong>Segi Enam Biru Muda</strong> yang sudah merangkum Nilai Awal (<span class="font-mono">Start = 1</span>), Batas Akhir (<span class="font-mono">End = batasAntrean</span>), dan Kenaikan (<span class="font-mono">Step = 1</span>) sekaligus! Ubah kuota antrean di bawah ini:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <!-- Kiri: Kontrol & Tiket Tercetak -->
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-4">
+                            <div class="space-y-3">
+                                <div class="flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                    <div>
+                                        <label class="text-xs font-bold text-slate-500 block">Masukkan Kuota Antrean (batasAntrean):</label>
+                                        <span class="text-[11px] text-slate-400">Rentang uji: 1 s/d 8 pelanggan</span>
+                                    </div>
+                                    <input type="number" min="1" max="8" value="${safeMax}" oninput="updateS5Max(this.value)" class="w-20 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-base font-extrabold text-indigo-600 dark:text-indigo-400">
+                                </div>
+
+                                <div class="space-y-1.5">
+                                    <div class="text-xs font-bold text-slate-500">Klik tiket untuk menginspeksi ${term('iterasi', 'iterasi')} ke-${s5ActiveIter}:</div>
+                                    <div class="flex flex-wrap gap-2">
+                                        ${ticketsHtml}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="p-4 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-xs space-y-1">
+                                <div class="font-extrabold text-indigo-800 dark:text-indigo-200">Status Iterasi ke-${s5ActiveIter} dari ${safeMax}:</div>
+                                <p class="text-slate-700 dark:text-slate-300 font-mono">
+                                    noAntrean = ${s5ActiveIter} (&lt;= ${safeMax} -> Next) -&gt; Output "Antrean Warung Digital #${s5ActiveIter}"
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Kanan: Visual SVG Simbol For Loop Flowgorithm Asli -->
+                        <div class="lg:col-span-6 fg-canvas rounded-3xl border border-slate-200 dark:border-slate-800 p-4 flex flex-col items-center justify-center">
+                            <svg class="w-full max-w-[380px] h-auto" viewBox="0 0 400 245">
+                                <line x1="150" y1="6" x2="150" y2="34" stroke="#64748b" stroke-width="2.2"/>
+                                <line x1="150" y1="82" x2="150" y2="235" stroke="#64748b" stroke-width="2.2"/>
+                                <text x="160" y="102" fill="#64748b" font-size="10.5" font-weight="800">Done (Selesai)</text>
+
+                                <!-- Jalur Putaran Next ke Kanan -->
+                                <polyline points="255,58 320,58 320,192 150,192 150,82" fill="none" stroke="#0284c7" stroke-width="2.4"/>
+                                <text x="262" y="50" fill="#0284c7" font-size="10.5" font-weight="800">Next (Ulangi)</text>
+
+                                <!-- Segi Enam For Loop -->
+                                <polygon points="62,34 238,34 255,58 238,82 62,82 45,58" fill="#e0f2fe" stroke="#0284c7" stroke-width="2.4"/>
+                                <text x="150" y="62" text-anchor="middle" fill="#0c4a6e" font-size="10.2" font-weight="800">For noAntrean = 1 to ${safeMax}</text>
+
+                                <!-- Blok Badan Loop di Kanan -->
+                                <polygon points="236,112 396,112 384,148 224,148" fill="#dcfce7" stroke="#16a34a" stroke-width="2.2"/>
+                                <text x="310" y="134" text-anchor="middle" fill="#14532d" font-size="9.5" font-weight="700">Output "Antrean #" &amp; noAntrean</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide6() {
+            const logs = [];
+            let q = s6StartQuota;
+            let num = 1;
+            while (q > 0) {
+                logs.push(`Putaran #${num}: Cek sisaKuota (${q} > 0) -> TRUE -> Cetak Antrean #${num} -> sisaKuota jadi ${q - 1}`);
+                q--;
+                num++;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 2 • Jenis Perulangan 2: Pre-Test Loop</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">2. Perulangan ${term('whileloop', 'While')} (Cek Syarat Dulu di Awal)</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Struktur <strong>While</strong> menguji syarat kondisi <strong>di bagian paling atas</strong> sebelum masuk ke dalam putaran. Jika sejak awal syarat bernilai <strong>False</strong> (misal <span class="font-mono">sisaKuota = 0</span> karena promo hari ini sudah habis), maka badan loop <strong>tidak dijalankan sama sekali (0 kali)</strong>! Uji di bawah ini:
+                        </p>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="text-xs font-bold text-slate-500">Pilih Nilai Awal <span class="font-mono">sisaKuota</span>:</span>
+                        <button type="button" onclick="setS6Quota(3)" class="px-3.5 py-1.5 rounded-xl font-mono text-xs font-bold border ${s6StartQuota === 3 ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700'}">sisaKuota = 3 (Jalan 3x)</button>
+                        <button type="button" onclick="setS6Quota(1)" class="px-3.5 py-1.5 rounded-xl font-mono text-xs font-bold border ${s6StartQuota === 1 ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700'}">sisaKuota = 1 (Jalan 1x)</button>
+                        <button type="button" onclick="setS6Quota(0)" class="px-3.5 py-1.5 rounded-xl font-mono text-xs font-bold border ${s6StartQuota === 0 ? 'bg-rose-600 text-white border-rose-600' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700'}">sisaKuota = 0 (Uji 0x Jalan!)</button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-3">
+                            <div class="text-xs font-extrabold text-indigo-600 dark:text-indigo-400 uppercase">Jejak Eksekusi While (sisaKuota &gt; 0):</div>
+                            <div class="space-y-2 font-mono text-xs my-auto">
+                                ${logs.length === 0 ? `
+                                    <div class="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-200 font-sans font-bold">
+                                        Cek Awal: Apakah 0 &gt; 0 ? -> FALSE! Karena syarat dicek di awal, While langsung belok ke False dan mencetak 0 tiket antrean!
+                                    </div>
+                                ` : logs.map(function (l) {
+                                    return `<div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">${escapeHtml(l)}</div>`;
+                                }).join('')}
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-6 fg-canvas rounded-3xl border border-slate-200 dark:border-slate-800 p-4 flex flex-col items-center justify-center">
+                            <svg class="w-full max-w-[380px] h-auto" viewBox="0 0 400 245">
+                                <line x1="145" y1="6" x2="145" y2="34" stroke="#64748b" stroke-width="2.2"/>
+                                <line x1="145" y1="82" x2="145" y2="235" stroke="#64748b" stroke-width="2.2"/>
+                                <text x="155" y="102" fill="#dc2626" font-size="10.5" font-weight="800">False (Keluar Loop)</text>
+
+                                <polyline points="245,58 315,58 315,198 145,198 145,82" fill="none" stroke="#16a34a" stroke-width="2.4"/>
+                                <text x="252" y="50" fill="#16a34a" font-size="10.5" font-weight="800">True (Masuk Loop)</text>
+
+                                <polygon points="60,34 230,34 245,58 230,82 60,82 45,58" fill="#fef3c7" stroke="#d97706" stroke-width="2.4"/>
+                                <text x="145" y="62" text-anchor="middle" fill="#78350f" font-size="10.5" font-weight="800">While sisaKuota &gt; 0</text>
+
+                                <rect x="235" y="104" width="155" height="28" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+                                <text x="312" y="122" text-anchor="middle" fill="#14532d" font-size="9.5" font-weight="700">Output Tiket Antrean</text>
+
+                                <rect x="235" y="144" width="155" height="28" fill="#fef08a" stroke="#a16207" stroke-width="2"/>
+                                <text x="312" y="162" text-anchor="middle" fill="#713f12" font-size="9.5" font-weight="700">sisaKuota = sisaKuota - 1</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide7() {
+            const isDoWhile = s7CompareMode === 'dowhile';
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 2 • Jenis Perulangan 3: Post-Test Loop</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">3. Perulangan ${term('dowhile', 'Do-While')} (Jalan Minimal 1 Kali Baru Cek Syarat)</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Berbeda dengan <strong>While</strong> yang mengecek syarat di atas, struktur <strong>Do-While</strong> meletakkan belah ketupat syarat <strong>di bagian paling bawah</strong>. Artinya, badan perulangan <strong>pasti dieksekusi minimal 1 kali</strong>! Cocok untuk konfirmasi kasir: <em>"Cetak tiket pelanggan dulu, baru tanya lanjut pelanggan berikutnya?"</em>.
+                        </p>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" onclick="setS7Compare('while')" class="px-4 py-2 rounded-xl font-bold text-xs sm:text-sm border transition ${!isDoWhile ? 'bg-amber-600 text-white border-amber-600' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            1. While Loop (Jika Syarat Awal False -> 0 Kali Jalan)
+                        </button>
+                        <button type="button" onclick="setS7Compare('dowhile')" class="px-4 py-2 rounded-xl font-bold text-xs sm:text-sm border transition ${isDoWhile ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            2. Do-While Loop (Walau Syarat Awal False -> Tetap 1 Kali Jalan!)
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-3">
+                            ${!isDoWhile ? `
+                                <div class="space-y-2">
+                                    <span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">Skenario Uji: Variabel lanjut = "N" sejak awal</span>
+                                    <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">While Mengecek di Pintu Masuk (Atas)</h3>
+                                    <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                        Karena <span class="font-mono">lanjut == "Y"</span> bernilai <strong>False</strong> di pintu masuk, program langsung keluar tanpa pernah mencetak tiket pertama.
+                                    </p>
+                                </div>
+                                <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 font-mono text-xs text-rose-600 font-bold">
+                                    Total Tiket Tercetak: 0 tiket (Dilewati sepenuhnya)
+                                </div>
+                            ` : `
+                                <div class="space-y-2">
+                                    <span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">Skenario Uji: Variabel lanjut = "N" sejak awal</span>
+                                    <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Do-While Mengecek di Pintu Keluar (Bawah)</h3>
+                                    <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                        Program langsung masuk dan mencetak <strong>Tiket Antrean #1</strong> terlebih dahulu! Setelah itu baru bertanya: <em>"Apakah ada pelanggan berikutnya? (Y/N)"</em>. Jika kasir ketik <strong>"N"</strong>, barulah loop berhenti.
+                                    </p>
+                                </div>
+                                <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 font-mono text-xs text-emerald-600 font-bold">
+                                    Total Tiket Tercetak: Minimal 1 tiket pasti tercetak!
+                                </div>
+                            `}
+                        </div>
+
+                        <div class="lg:col-span-6 fg-canvas rounded-3xl border border-slate-200 dark:border-slate-800 p-4 flex flex-col items-center justify-center">
+                            <svg class="w-full max-w-[360px] h-auto" viewBox="0 0 380 240">
+                                <line x1="150" y1="6" x2="150" y2="156" stroke="#64748b" stroke-width="2.2"/>
+                                <line x1="150" y1="204" x2="150" y2="232" stroke="#64748b" stroke-width="2.2"/>
+                                <text x="160" y="224" fill="#dc2626" font-size="10.5" font-weight="800">False (Selesai)</text>
+
+                                <!-- Putaran Balik ke Atas (True) -->
+                                <polyline points="245,180 315,180 315,24 150,24" fill="none" stroke="#16a34a" stroke-width="2.4"/>
+                                <text x="252" y="172" fill="#16a34a" font-size="10.5" font-weight="800">True (Ulangi)</text>
+
+                                <!-- Badan Loop di Atas -->
+                                <rect x="55" y="44" width="190" height="32" fill="#dcfce7" stroke="#16a34a" stroke-width="2.2"/>
+                                <text x="150" y="64" text-anchor="middle" fill="#14532d" font-size="10" font-weight="700">1. Cetak Tiket Antrean</text>
+
+                                <rect x="55" y="92" width="190" height="32" fill="#e0f2fe" stroke="#0284c7" stroke-width="2.2"/>
+                                <text x="150" y="112" text-anchor="middle" fill="#0c4a6e" font-size="10" font-weight="700">2. Input lanjut ("Y" / "N")</text>
+
+                                <!-- Syarat Do-While di Bawah -->
+                                <polygon points="65,156 235,156 245,180 235,204 65,204 55,180" fill="#fce7f3" stroke="#db2777" stroke-width="2.4"/>
+                                <text x="150" y="184" text-anchor="middle" fill="#831843" font-size="10" font-weight="800">Do-While lanjut == "Y"</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide8() {
+            const cases = {
+                batch_for: {
+                    btn: "Kasus 1: Cetak 30 Kupon Antrean Pagi Sekaligus",
+                    choice: "Gunakan FOR LOOP (Counted Loop)",
+                    badge: "Jumlah Putaran Sudah Diketahui Pasti (1 s/d 30)",
+                    reason: "Karena jumlah kupon sudah pasti (mulai dari 1 sampai 30), For Loop adalah pilihan paling ringkas dan aman karena kenaikan +1 sudah otomatis diatur oleh sistem."
+                },
+                quota_while: {
+                    btn: "Kasus 2: Cetak Antrean Selama Stok Bahan Baku Masih Ada",
+                    choice: "Gunakan WHILE LOOP (Pre-Test Loop)",
+                    badge: "Bisa Jadi 0 Kali Jalan Jika Stok Awal Habis",
+                    reason: "Kasir tidak tahu persis berapa pelanggan yang akan datang, hanya tahu syarat 'selama stokPorsi > 0'. Jika stok awal ternyata 0, While memastikan mesin tidak mencetak tiket sama sekali."
+                },
+                kasir_dowhile: {
+                    btn: "Kasus 3: Mesin Layar Sentuh Pelanggan Ambil Tiket Mandiri",
+                    choice: "Gunakan DO-WHILE LOOP (Post-Test Loop)",
+                    badge: "Minimal 1 Pelanggan Pasti Dilayani Sebelum Konfirmasi",
+                    reason: "Layar langsung melayani pelanggan pertama dulu, lalu di akhir memunculkan tombol 'Tekan Y untuk ambil tiket berikutnya, atau N untuk tutup shift'."
+                }
+            };
+
+            const cur = cases[s8CaseKey];
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 2 • Panduan Pemilihan Struktur Perulangan</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Kapan Harus Memilih <span class="font-mono">For</span>, <span class="font-mono">While</span>, atau <span class="font-mono">Do-While</span>?</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Klik ketiga skenario bisnis di Warung Digital berikut untuk menentukan struktur perulangan yang paling tepat:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        <button type="button" onclick="setS8Case('batch_for')" class="p-3.5 rounded-2xl border text-left transition ${s8CaseKey === 'batch_for' ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-xs sm:text-sm font-extrabold">${cases.batch_for.btn}</div>
+                        </button>
+                        <button type="button" onclick="setS8Case('quota_while')" class="p-3.5 rounded-2xl border text-left transition ${s8CaseKey === 'quota_while' ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-xs sm:text-sm font-extrabold">${cases.quota_while.btn}</div>
+                        </button>
+                        <button type="button" onclick="setS8Case('kasir_dowhile')" class="p-3.5 rounded-2xl border text-left transition ${s8CaseKey === 'kasir_dowhile' ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-xs sm:text-sm font-extrabold">${cases.kasir_dowhile.btn}</div>
+                        </button>
+                    </div>
+
+                    <div class="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-2 border-indigo-500/60 space-y-3 my-auto">
+                        <span class="text-xs font-bold px-3 py-1 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">${cur.badge}</span>
+                        <h3 class="text-xl font-extrabold text-indigo-600 dark:text-indigo-400">${cur.choice}</h3>
+                        <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed">${cur.reason}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide9() {
+            return `
+                <div class="slide-enter flex flex-col justify-center h-full my-auto">
+                    <div class="p-8 sm:p-12 rounded-3xl bg-gradient-to-br from-indigo-600 to-slate-900 text-white space-y-6 shadow-lg">
+                        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/15 text-indigo-100 text-xs font-extrabold uppercase tracking-wider">
+                            <i class="fa-solid fa-bridge"></i>
+                            <span>Jembatan Antar Topik • Modul 2 Menuju Modul 3</span>
+                        </div>
+
+                        <h2 class="text-2xl sm:text-4xl font-extrabold leading-tight">
+                            Kita sudah mengenal For, While, dan Do-While. Namun apa 2 kesalahan paling sering yang membuat program perulangan macet (hang) atau jumlah tiketnya meleset?
+                        </h2>
+
+                        <p class="text-indigo-100 text-sm sm:text-base leading-relaxed max-w-3xl">
+                            Di <strong>Modul 3 (Slide 10 s/d 13)</strong>, kita akan membedah cara mendeteksi bug <strong>Infinite Loop (Perulangan Abadi)</strong> dan <strong>Off-by-One Error</strong>, mempelajari pola <strong>Counter &amp; Accumulator</strong> untuk merekap omzet antrean, serta mencoba langsung <strong>Sandbox Generator Tiket Antrean Warung Digital</strong>.
+                        </p>
+
+                        <div class="pt-2">
+                            <button type="button" onclick="changeSlide(1)" class="px-5 py-3 rounded-xl bg-white text-indigo-700 hover:bg-indigo-50 font-extrabold text-xs sm:text-sm transition inline-flex items-center gap-2 shadow-sm">
+                                <span>Masuk ke Modul 3: Detektif Bug Loop &amp; Sandbox</span>
+                                <i class="fa-solid fa-arrow-right text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide10() {
+            const bugs = {
+                healthy: {
+                    btn: "1. Perulangan Sehat & Akurat (Target = 3 Tiket)",
+                    badge: "Status: Sehat (Berhenti Tepat di Tiket #3)",
+                    isOk: true,
+                    code: "noAntrean = 1\nWhile noAntrean <= 3\n    Output \"Tiket #\" & noAntrean\n    noAntrean = noAntrean + 1\nEnd While",
+                    output: "Tiket #1 -> Tiket #2 -> Tiket #3 -> Selesai (3 tiket pas!)",
+                    explain: "Nilai awal 1, syarat <= 3, dan ada Increment (+1) di setiap putaran sehingga berhenti tepat setelah tiket #3 tercetak."
+                },
+                infinite: {
+                    btn: "2. Bug Infinite Loop (Lupa Increment +1)",
+                    badge: "BUG FATAL: Infinite Loop (Aplikasi Hang!)",
+                    isOk: false,
+                    code: "noAntrean = 1\nWhile noAntrean <= 3\n    Output \"Tiket #\" & noAntrean\n    // LUPA baris noAntrean = noAntrean + 1 !\nEnd While",
+                    output: "Tiket #1 -> Tiket #1 -> Tiket #1 -> Tiket #1 -> (Berputar selamanya sampai kertas habis!)",
+                    explain: "Karena noAntrean selalu bernilai 1, syarat '1 <= 3' selalu True selamanya! Program melanggar syarat Finiteness dan tidak pernah mencapai End."
+                },
+                offbyone: {
+                    btn: "3. Bug Off-by-One (< vs <=)",
+                    badge: "BUG LOGIKA: Off-by-One Error (Kurang 1 Tiket)",
+                    isOk: false,
+                    code: "noAntrean = 1\nWhile noAntrean < 3   // Pakai < tanpa sama dengan (=)\n    Output \"Tiket #\" & noAntrean\n    noAntrean = noAntrean + 1\nEnd While",
+                    output: "Tiket #1 -> Tiket #2 -> Selesai (Hanya tercetak 2 tiket, pelanggan ke-3 tidak kebagian!)",
+                    explain: "Saat noAntrean naik menjadi 3, kondisi '3 < 3' bernilai False sehingga tiket ke-3 gagal dicetak. Gunakan '<=' jika mulai dari 1."
+                }
+            };
+
+            const cur = bugs[s10BugType];
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 3 • Pencegahan Kesalahan Umum Pemula</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Detektif Bug: ${term('infiniteloop', 'Infinite Loop')} &amp; ${term('offbyone', 'Off-by-One Error')}</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Klik ketiga skenario kode di bawah ini untuk membedakan perulangan yang sehat dengan dua bug klasik yang paling sering dialami pemula:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        <button type="button" onclick="setS10Bug('healthy')" class="p-3 rounded-2xl border text-left transition ${s10BugType === 'healthy' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-xs sm:text-sm font-extrabold">${bugs.healthy.btn}</div>
+                        </button>
+                        <button type="button" onclick="setS10Bug('infinite')" class="p-3 rounded-2xl border text-left transition ${s10BugType === 'infinite' ? 'bg-rose-600 text-white border-rose-600' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-xs sm:text-sm font-extrabold">${bugs.infinite.btn}</div>
+                        </button>
+                        <button type="button" onclick="setS10Bug('offbyone')" class="p-3 rounded-2xl border text-left transition ${s10BugType === 'offbyone' ? 'bg-amber-600 text-white border-amber-600' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-xs sm:text-sm font-extrabold">${bugs.offbyone.btn}</div>
+                        </button>
+                    </div>
+
+                    <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 grid grid-cols-1 lg:grid-cols-12 gap-5 items-center my-auto">
+                        <div class="lg:col-span-6 p-4 rounded-2xl bg-slate-900 text-slate-100 font-mono text-xs">
+                            <pre class="whitespace-pre-wrap leading-relaxed">${escapeHtml(cur.code)}</pre>
+                        </div>
+                        <div class="lg:col-span-6 space-y-3">
+                            <span class="text-xs font-extrabold px-2.5 py-1 rounded-lg ${cur.isOk ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'}">${cur.badge}</span>
+                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 font-mono text-xs font-bold">
+                                ${escapeHtml(cur.output)}
+                            </div>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${escapeHtml(cur.explain)}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide11() {
+            const timeline = [
+                { no: 0, pay: 0, total: 0, note: "Sebelum Loop Dimulai: totalOmzet diinisialisasi = 0." },
+                { no: 1, pay: 15000, total: 15000, note: "Antrean #1 membayar Rp 15.000 -> totalOmzet = 0 + 15000 = Rp 15.000." },
+                { no: 2, pay: 25000, total: 40000, note: "Antrean #2 membayar Rp 25.000 -> totalOmzet = 15000 + 25000 = Rp 40.000." },
+                { no: 3, pay: 20000, total: 60000, note: "Antrean #3 membayar Rp 20.000 -> totalOmzet = 40000 + 20000 = Rp 60.000." }
+            ];
+
+            const cur = timeline[s11Step];
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 3 • Pola Variabel Penting di Dalam Perulangan</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Pola ${term('counter', 'Counter')} (Pencacah) &amp; ${term('accumulator', 'Accumulator')} (Penjumlah Total)</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Selain mencetak nomor antrean (<span class="font-mono">noAntrean = noAntrean + 1</span>), perulangan juga sering dipakai untuk <strong>mengakumulasi total omzet</strong> seluruh pelanggan yang antre (<span class="font-mono">totalOmzet = totalOmzet + bayar</span>). Klik langkah 0 sampai 3:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                        <button type="button" onclick="setS11Step(0)" class="p-3 rounded-2xl border text-left transition ${s11Step === 0 ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-xs font-extrabold">0. Awal (Before Loop)</div>
+                        </button>
+                        <button type="button" onclick="setS11Step(1)" class="p-3 rounded-2xl border text-left transition ${s11Step === 1 ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-xs font-extrabold">1. Pelanggan Antrean #1</div>
+                        </button>
+                        <button type="button" onclick="setS11Step(2)" class="p-3 rounded-2xl border text-left transition ${s11Step === 2 ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-xs font-extrabold">2. Pelanggan Antrean #2</div>
+                        </button>
+                        <button type="button" onclick="setS11Step(3)" class="p-3 rounded-2xl border text-left transition ${s11Step === 3 ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-xs font-extrabold">3. Pelanggan Antrean #3</div>
+                        </button>
+                    </div>
+
+                    <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-4 my-auto">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 font-mono">
+                            <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <span class="text-xs font-sans font-bold text-slate-400 block">Counter (noAntrean):</span>
+                                <span class="text-2xl font-extrabold text-indigo-600 dark:text-indigo-400">#${cur.no}</span>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <span class="text-xs font-sans font-bold text-slate-400 block">Belanja Pelanggan Ini:</span>
+                                <span class="text-2xl font-extrabold text-sky-600 dark:text-sky-400">Rp ${cur.pay.toLocaleString('id-ID')}</span>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border-2 border-emerald-500">
+                                <span class="text-xs font-sans font-bold text-emerald-700 dark:text-emerald-300 block">Accumulator (totalOmzet):</span>
+                                <span class="text-2xl font-extrabold text-emerald-700 dark:text-emerald-300">Rp ${cur.total.toLocaleString('id-ID')}</span>
+                            </div>
+                        </div>
+
+                        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200">
+                            ${escapeHtml(cur.note)}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide12() {
+            const codes = {
+                for: {
+                    title: "Pseudocode Generator Antrean dengan FOR LOOP",
+                    syntax: "Function Main\n    Declare Integer batasAntrean, noAntrean\n    Output \"Masukkan kuota antrean:\"\n    Input batasAntrean\n    For noAntrean = 1 to batasAntrean\n        Output \"Antrean Warung Digital #\" & noAntrean\n    End For\nEnd",
+                    note: "Paling ringkas! Nilai awal (= 1), syarat berhenti (<= batasAntrean), dan kenaikan (+1) sudah menyatu dalam satu baris For."
+                },
+                while: {
+                    title: "Pseudocode Generator Antrean dengan WHILE LOOP",
+                    syntax: "Function Main\n    Declare Integer batasAntrean, noAntrean\n    Output \"Masukkan kuota antrean:\"\n    Input batasAntrean\n    Assign noAntrean = 1\n    While noAntrean <= batasAntrean\n        Output \"Antrean Warung Digital #\" & noAntrean\n        Assign noAntrean = noAntrean + 1\n    End While\nEnd",
+                    note: "Perhatikan bahwa pada While Loop, Anda wajib menuliskan sendiri baris Assign noAntrean = 1 di atas While dan Assign noAntrean = noAntrean + 1 di dalam While."
+                },
+                dowhile: {
+                    title: "Pseudocode Konfirmasi Antrean dengan DO-WHILE LOOP",
+                    syntax: "Function Main\n    Declare Integer noAntrean\n    Declare String lanjut\n    Assign noAntrean = 1\n    Do\n        Output \"Antrean Warung Digital #\" & noAntrean\n        Assign noAntrean = noAntrean + 1\n        Output \"Cetak antrean berikutnya? (Y/N)\"\n        Input lanjut\n    Loop While lanjut == \"Y\"\nEnd",
+                    note: "Do-While pasti mencetak minimal 1 tiket antrean dulu, baru mengecek apakah kasir mengetik \"Y\" untuk mengulang."
+                }
+            };
+
+            const cur = codes[s12PseudoTab];
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 3 • Perbandingan Sintaks &amp; Pseudocode</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Membandingkan Pseudocode <span class="font-mono">For</span>, <span class="font-mono">While</span>, &amp; <span class="font-mono">Do-While</span></h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Klik tab di bawah ini untuk membandingkan bagaimana kasus yang sama ditulis dalam ketiga struktur perulangan:
+                        </p>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" onclick="setS12Pseudo('for')" class="px-4 py-2 rounded-xl font-mono font-bold text-xs sm:text-sm border ${s12PseudoTab === 'for' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">1. For Loop</button>
+                        <button type="button" onclick="setS12Pseudo('while')" class="px-4 py-2 rounded-xl font-mono font-bold text-xs sm:text-sm border ${s12PseudoTab === 'while' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">2. While Loop</button>
+                        <button type="button" onclick="setS12Pseudo('dowhile')" class="px-4 py-2 rounded-xl font-mono font-bold text-xs sm:text-sm border ${s12PseudoTab === 'dowhile' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">3. Do-While Loop</button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center my-auto">
+                        <div class="lg:col-span-7 p-5 rounded-3xl bg-slate-900 text-emerald-300 font-mono text-xs sm:text-sm">
+                            <div class="text-slate-400 text-xs mb-2">// ${escapeHtml(cur.title)}</div>
+                            <pre class="whitespace-pre-wrap leading-relaxed">${escapeHtml(cur.syntax)}</pre>
+                        </div>
+                        <div class="lg:col-span-5 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-2 border-indigo-500/60 space-y-2.5">
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Catatan Penting:</h3>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${escapeHtml(cur.note)}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide13() {
+            const safeStart = Math.max(1, s13Start);
+            const safeEnd = Math.min(safeStart + 11, Math.max(safeStart, s13End));
+            const safeStep = Math.max(1, Math.min(5, s13StepVal));
+            const cleanPrefix = (s13Prefix || 'WD-').trim();
+
+            const tickets = [];
+            for (let n = safeStart; n <= safeEnd; n += safeStep) {
+                const padded = String(n).padStart(3, '0');
+                tickets.push(cleanPrefix + padded);
+            }
+
+            const ticketsGrid = tickets.map(function (code, idx) {
+                return `
+                    <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border-2 border-indigo-200 dark:border-indigo-800 text-center space-y-0.5 shadow-2xs">
+                        <div class="text-[10px] font-bold text-slate-400 uppercase">Iterasi #${idx + 1}</div>
+                        <div class="font-mono text-sm sm:text-base font-extrabold text-indigo-600 dark:text-indigo-400">${escapeHtml(code)}</div>
+                        <div class="text-[10px] text-slate-500">Warung Digital</div>
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 3 • Sandbox Kustomisasi Mesin Antrean</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Sandbox Generator Nomor Antrean "Warung Digital"</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                            Atur <strong>Kode Awalan</strong>, <strong>Nomor Mulai</strong>, <strong>Nomor Akhir</strong>, dan <strong>Loncatan (Step)</strong> di bawah ini untuk melihat bagaimana mesin perulangan mencetak deretan tiket antrean:
+                        </p>
+                    </div>
+
+                    <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-4 my-auto">
+                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                            <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <label class="text-[11px] font-bold text-slate-400 block mb-1">1. Awalan Kode (String):</label>
+                                <input type="text" maxlength="6" value="${escapeHtml(cleanPrefix)}" oninput="updateS13Sandbox('prefix', this.value)" class="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-sm font-extrabold">
+                            </div>
+                            <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <label class="text-[11px] font-bold text-slate-400 block mb-1">2. Nomor Mulai (Start):</label>
+                                <input type="number" min="1" max="50" value="${safeStart}" oninput="updateS13Sandbox('start', this.value)" class="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-sm font-extrabold text-indigo-600">
+                            </div>
+                            <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <label class="text-[11px] font-bold text-slate-400 block mb-1">3. Nomor Akhir (End):</label>
+                                <input type="number" min="1" max="60" value="${safeEnd}" oninput="updateS13Sandbox('end', this.value)" class="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-sm font-extrabold text-sky-600">
+                            </div>
+                            <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <label class="text-[11px] font-bold text-slate-400 block mb-1">4. Loncatan (Step):</label>
+                                <input type="number" min="1" max="5" value="${safeStep}" oninput="updateS13Sandbox('step', this.value)" class="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-sm font-extrabold text-amber-600">
+                            </div>
+                        </div>
+
+                        <div class="text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400">
+                            For noAntrean = ${safeStart} to ${safeEnd} Step ${safeStep} -&gt; Menghasilkan ${tickets.length} tiket antrean:
+                        </div>
+
+                        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2.5">
+                            ${ticketsGrid}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide14() {
+            return `
+                <div class="slide-enter flex flex-col justify-center h-full my-auto">
+                    <div class="p-8 sm:p-12 rounded-3xl bg-gradient-to-br from-indigo-600 to-slate-900 text-white space-y-6 shadow-lg">
+                        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/15 text-indigo-100 text-xs font-extrabold uppercase tracking-wider">
+                            <i class="fa-solid fa-flask"></i>
+                            <span>Jembatan Antar Topik • Modul 3 Menuju Modul 4 (Praktikum Simulator)</span>
+                        </div>
+
+                        <h2 class="text-2xl sm:text-4xl font-extrabold leading-tight">
+                            Saatnya Menjalankan Generator Nomor Antrean Pelanggan Warung Digital di Laboratorium Virtual Flowgorithm!
+                        </h2>
+
+                        <p class="text-indigo-100 text-sm sm:text-base leading-relaxed max-w-3xl">
+                            Di <strong>Modul 4 (Slide 15 s/d 18)</strong>, Anda akan mempraktikkan langsung: (1) <strong>Live Simulator Flowgorithm Perulangan</strong> di mana kursor eksekusi berputar otomatis mencetak tiket antrean #1 sampai batas kuota yang Anda ketik, (2) <strong>Merakit Struktur Loop di Kanvas</strong>, serta (3) <strong>Drag &amp; Drop 8 Langkah Generator Antrean</strong>.
+                        </p>
+
+                        <div class="pt-2">
+                            <button type="button" onclick="changeSlide(1)" class="px-5 py-3 rounded-xl bg-white text-indigo-700 hover:bg-indigo-50 font-extrabold text-xs sm:text-sm transition inline-flex items-center gap-2 shadow-sm">
+                                <span>Mulai Simulasi 1: Live IDE Generator Antrean</span>
+                                <i class="fa-solid fa-arrow-right text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide15() {
+            const getNodeClass = function (idx) {
+                if (simStepIndex !== idx) return 'fg-node';
+                if (simWaitingVar) return 'fg-node fg-node-waiting';
+                return 'fg-node fg-node-active';
+            };
+
+            let chatHtml = '';
+            if (simChatLog.length === 0) {
+                chatHtml = `<div class="text-slate-400 text-center my-auto font-sans text-xs py-6">Tekan tombol <strong>Run Otomatis</strong> atau <strong>Step</strong> di atas. Ketik jumlah kuota antrean (misal <strong>4</strong> atau <strong>6</strong>), lalu saksikan kursor eksekusi berputar mencetak nomor antrean satu per satu!</div>`;
+            } else {
+                chatHtml = simChatLog.map(function (msg) {
+                    if (msg.type === 'out') {
+                        return `<div class="self-start bg-emerald-100 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-800 text-emerald-950 dark:text-emerald-200 px-3 py-1.5 rounded-xl rounded-bl-xs font-semibold">${msg.html}</div>`;
+                    } else if (msg.type === 'in') {
+                        return `<div class="self-end bg-indigo-100 dark:bg-indigo-950/80 border border-indigo-300 dark:border-indigo-800 text-indigo-950 dark:text-indigo-200 px-3 py-1.5 rounded-xl rounded-br-xs font-semibold">${escapeHtml(msg.text)}</div>`;
+                    } else {
+                        return `<div class="text-xs text-indigo-600 dark:text-indigo-400 font-bold">${escapeHtml(msg.text)}</div>`;
+                    }
+                }).join('');
+            }
+
+            let chips = [];
+            let placeholder = 'Menunggu giliran blok Input...';
+            let promptLabel = 'Kotak Input Console (Aktif saat eksekusi tiba di blok Input):';
+            if (simWaitingVar === 'batasAntrean') {
+                chips = ['3', '5', '8'];
+                placeholder = 'Ketik jumlah kuota antrean (1 - 12)...';
+                promptLabel = 'Input batasAntrean (Integer - jumlah pelanggan antre):';
+            }
+
+            const chipsHtml = chips.map(function (c) {
+                return `<button type="button" onclick="fillSimQuickChip('${c}')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-indigo-100 dark:bg-slate-800 dark:hover:bg-indigo-950 text-slate-700 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700 transition">${c}</button>`;
+            }).join('');
+
+            const fmtMem = function (v) {
+                if (v === null) return '<em>uninitialized</em>';
+                return String(v);
+            };
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-3.5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 4 • Simulasi Praktik 1 dari 3 (Sub-CPMK 1.3)</span>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Live Simulator Flowgorithm: Generator Nomor Antrean Warung Digital</h2>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2 shrink-0">
+                            <button type="button" onclick="runFullFgSim()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-xs">
+                                <i class="fa-solid fa-play"></i>
+                                <span>Run Otomatis</span>
+                            </button>
+                            <button type="button" onclick="stepFgSim()" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-xs">
+                                <i class="fa-solid fa-forward-step"></i>
+                                <span>Step (Per Blok)</span>
+                            </button>
+                            <button type="button" onclick="resetFgSim()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs transition">
+                                <i class="fa-solid fa-rotate-left mr-1"></i>Reset
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200">
+                        ${simBannerText}
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch my-auto">
+                        <!-- Kiri: Flowchart Loop SVG -->
+                        <div class="lg:col-span-6 fg-canvas rounded-2xl border border-slate-200 dark:border-slate-800 p-3 flex flex-col items-center justify-center">
+                            <svg class="w-full max-w-[390px] h-auto" viewBox="0 0 410 340">
+                                <line x1="155" y1="22" x2="155" y2="306" stroke="#64748b" stroke-width="2"/>
+                                <text x="164" y="218" fill="#64748b" font-size="9.5" font-weight="800">Done</text>
+
+                                <!-- Garis Putaran Next Loop -->
+                                <polyline points="245,172 325,172 325,274 155,274 155,196" fill="none" stroke="${simStepIndex === 4 || simStepIndex === 5 ? '#0284c7' : '#94a3b8'}" stroke-width="${simStepIndex === 4 || simStepIndex === 5 ? '2.8' : '2'}"/>
+                                <text x="252" y="164" fill="#0284c7" font-size="9.5" font-weight="800">Next (Putaran)</text>
+
+                                <!-- Step 0: Main -->
+                                <g class="${getNodeClass(0)}" onclick="stepToOrFocusNode()">
+                                    <rect x="100" y="4" width="110" height="20" rx="10" fill="#f3e8ff" stroke="#7e22ce" stroke-width="1.8"/>
+                                    <text x="155" y="18" text-anchor="middle" fill="#581c87" font-size="10" font-weight="700">Main</text>
+                                </g>
+
+                                <!-- Step 1: Declare -->
+                                <g class="${getNodeClass(1)}" onclick="stepToOrFocusNode()">
+                                    <polygon points="36,34 274,34 286,48 274,62 36,62 24,48" fill="#fef9c3" stroke="#b45309" stroke-width="1.8"/>
+                                    <text x="155" y="52" text-anchor="middle" fill="#78350f" font-size="9.5" font-weight="700">Declare Integer batasAntrean, noAntrean</text>
+                                </g>
+
+                                <!-- Step 2: Output Prompt -->
+                                <g class="${getNodeClass(2)}" onclick="stepToOrFocusNode()">
+                                    <polygon points="44,72 276,72 264,98 32,98" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/>
+                                    <text x="155" y="89" text-anchor="middle" fill="#14532d" font-size="9.5" font-weight="700">Output "Masukkan kuota antrean:"</text>
+                                </g>
+
+                                <!-- Step 3: Input batasAntrean -->
+                                <g class="${getNodeClass(3)}" onclick="stepToOrFocusNode()">
+                                    <polygon points="58,108 262,108 250,134 46,134" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.8"/>
+                                    <text x="155" y="125" text-anchor="middle" fill="#0c4a6e" font-size="10" font-weight="700">Input batasAntrean</text>
+                                </g>
+
+                                <!-- Step 4: For Loop Header -->
+                                <g class="${getNodeClass(4)}" onclick="stepToOrFocusNode()">
+                                    <polygon points="75,148 235,148 245,172 235,196 75,196 65,172" fill="#e0f2fe" stroke="#0284c7" stroke-width="2.2"/>
+                                    <text x="155" y="176" text-anchor="middle" fill="#0c4a6e" font-size="9.5" font-weight="800">For noAntrean = 1 to batas</text>
+                                </g>
+
+                                <!-- Step 5: Badan Loop Output Tiket -->
+                                <g class="${getNodeClass(5)}" onclick="stepToOrFocusNode()">
+                                    <polygon points="248,208 404,208 392,240 236,240" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+                                    <text x="320" y="228" text-anchor="middle" fill="#14532d" font-size="9" font-weight="700">Output "Antrean #" &amp; noAntrean</text>
+                                </g>
+
+                                <!-- Step 6: Output Selesai -->
+                                <g class="${getNodeClass(6)}" onclick="stepToOrFocusNode()">
+                                    <polygon points="44,282 276,282 264,304 32,304" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/>
+                                    <text x="155" y="297" text-anchor="middle" fill="#14532d" font-size="9.5" font-weight="700">Output "Semua tiket selesai dicetak"</text>
+                                </g>
+
+                                <!-- Step 7: End -->
+                                <g class="${getNodeClass(7)}" onclick="stepToOrFocusNode()">
+                                    <rect x="100" y="314" width="110" height="20" rx="10" fill="#f3e8ff" stroke="#7e22ce" stroke-width="1.8"/>
+                                    <text x="155" y="328" text-anchor="middle" fill="#581c87" font-size="10" font-weight="700">End</text>
+                                </g>
+                            </svg>
+                        </div>
+
+                        <!-- Kanan: Console & Variable Watch -->
+                        <div class="lg:col-span-6 flex flex-col justify-between gap-3">
+                            <div class="rounded-2xl border-2 ${simWaitingVar ? 'border-indigo-600 shadow-sm' : 'border-slate-200 dark:border-slate-800'} overflow-hidden bg-white dark:bg-slate-900">
+                                <div class="bg-slate-100 dark:bg-slate-800 px-3.5 py-2 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                                    <span class="text-xs font-extrabold text-slate-700 dark:text-slate-200">Console Window (Tiket Antrean Tercetak)</span>
+                                    ${simWaitingVar ? '<span class="px-2 py-0.5 rounded bg-indigo-600 text-white text-[10px] font-extrabold animate-pulse">MENUNGGU INPUT</span>' : ''}
+                                </div>
+
+                                <div id="fgConsoleChat" class="p-3 bg-slate-50 dark:bg-slate-950/60 min-h-[120px] max-h-[155px] overflow-y-auto flex flex-col gap-2 font-mono text-xs">
+                                    ${chatHtml}
+                                </div>
+
+                                <form onsubmit="submitManualConsoleInput(event)" class="p-2.5 border-t border-slate-200 dark:border-slate-800">
+                                    <div class="text-xs font-bold ${simWaitingVar ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'} mb-1">
+                                        ${promptLabel}
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <input id="fgConsoleInputBox" type="text" ${simWaitingVar ? '' : 'disabled'} placeholder="${placeholder}" class="flex-1 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50">
+                                        <button type="submit" ${simWaitingVar ? '' : 'disabled'} class="px-4 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white font-bold text-xs transition shrink-0">
+                                            Enter ↵
+                                        </button>
+                                    </div>
+                                    ${chips.length > 0 ? `<div class="mt-1.5 flex flex-wrap items-center gap-1.5"><span class="text-[11px] font-semibold text-slate-400">Ketik cepat:</span>${chipsHtml}</div>` : ''}
+                                    ${simInputError ? `<div class="mt-1.5 p-2 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs font-bold">${escapeHtml(simInputError)}</div>` : ''}
+                                </form>
+                            </div>
+
+                            <div class="rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden bg-white dark:bg-slate-900">
+                                <div class="bg-slate-100 dark:bg-slate-800 px-3.5 py-1.5 border-b border-slate-200 dark:border-slate-700 text-xs font-extrabold text-slate-700 dark:text-slate-200">
+                                    Variable Watch Window (Pantau Counter Loop)
+                                </div>
+                                <div class="grid grid-cols-2 gap-2 p-2.5 font-mono text-xs">
+                                    <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800">
+                                        <span class="text-slate-400 block text-[11px]">batasAntrean (Target)</span>
+                                        <span class="font-extrabold text-indigo-600 dark:text-indigo-400 text-sm">${fmtMem(simMemory.batasAntrean)}</span>
+                                    </div>
+                                    <div class="p-2.5 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-800">
+                                        <span class="text-slate-400 block text-[11px]">noAntrean (Counter Aktif)</span>
+                                        <span class="font-extrabold text-emerald-700 dark:text-emerald-300 text-sm">${fmtMem(simMemory.noAntrean)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide16() {
+            const slotTasks = {
+                1: "Slot 1: Menyiapkan variabel batasAntrean dan noAntrean (Segi Enam Kuning)",
+                2: "Slot 2: Membaca batas kuota antrean dari kasir (Jajar Genjang Biru)",
+                3: "Slot 3: Blok Perulangan For noAntrean = 1 to batasAntrean (Segi Enam Biru)",
+                4: "Slot 4: Instruksi di dalam badan Loop untuk mencetak nomor antrean (Hijau)"
+            };
+
+            let slotTabs = '';
+            for (let i = 1; i <= 4; i++) {
+                const active = activeBuilderSlot === i;
+                slotTabs += `
+                    <button type="button" onclick="selectBuilderSlot(${i})" class="px-3 py-1.5 rounded-xl font-bold text-xs transition ${active ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">
+                        Slot #${i}
+                    </button>
+                `;
+            }
+
+            const slotLabels = {
+                'DECLARE': 'Declare Integer batasAntrean, noAntrean',
+                'INPUT': 'Input batasAntrean',
+                'FOR_LOOP': 'For noAntrean = 1 to batasAntrean',
+                'OUTPUT_TICKET': 'Output "Antrean #" & noAntrean'
+            };
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 4 • Simulasi Praktik 2 dari 3</span>
+                            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Rakit Struktur Perulangan <span class="font-mono">For</span> di Kanvas</h2>
+                        </div>
+                        <button type="button" onclick="resetBuilderCanvas()" class="self-start sm:self-center px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-rose-600 dark:text-rose-400 font-bold text-xs transition">
+                            <i class="fa-solid fa-trash-can mr-1"></i>Kosongkan Kanvas
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <!-- Kanvas Kiri -->
+                        <div class="lg:col-span-6 fg-canvas rounded-3xl border border-slate-200 dark:border-slate-800 p-4 flex flex-col items-center justify-center">
+                            <svg class="w-full max-w-[380px] h-auto" viewBox="0 0 400 280">
+                                <line x1="145" y1="6" x2="145" y2="265" stroke="#64748b" stroke-width="2"/>
+                                <polyline points="235,148 315,148 315,232 145,232" fill="none" stroke="#0284c7" stroke-width="2"/>
+                                <text x="242" y="140" fill="#0284c7" font-size="9.5" font-weight="800">Next</text>
+
+                                <!-- Slot 1: Declare -->
+                                <g class="cursor-pointer" onclick="selectBuilderSlot(1)">
+                                    <polygon points="26,24 264,24 276,40 264,56 26,56 14,40" fill="${builderSlots[1] ? '#fef9c3' : '#eef2ff'}" stroke="${activeBuilderSlot === 1 ? '#4f46e5' : '#b45309'}" stroke-width="2"/>
+                                    <text x="145" y="44" text-anchor="middle" fill="#78350f" font-size="9.2" font-weight="700">${builderSlots[1] ? slotLabels[builderSlots[1]] : '+ Slot 1: Siapkan Variabel'}</text>
+                                </g>
+
+                                <!-- Slot 2: Input -->
+                                <g class="cursor-pointer" onclick="selectBuilderSlot(2)">
+                                    <polygon points="48,72 252,72 240,104 36,104" fill="${builderSlots[2] ? '#e0f2fe' : '#eef2ff'}" stroke="${activeBuilderSlot === 2 ? '#4f46e5' : '#0284c7'}" stroke-width="2"/>
+                                    <text x="145" y="92" text-anchor="middle" fill="#0c4a6e" font-size="9.5" font-weight="700">${builderSlots[2] ? slotLabels[builderSlots[2]] : '+ Slot 2: Input Kuota'}</text>
+                                </g>
+
+                                <!-- Slot 3: For Loop Header -->
+                                <g class="cursor-pointer" onclick="selectBuilderSlot(3)">
+                                    <polygon points="64,126 226,126 236,148 226,170 64,170 54,148" fill="${builderSlots[3] ? '#e0f2fe' : '#eef2ff'}" stroke="${activeBuilderSlot === 3 ? '#4f46e5' : '#0284c7'}" stroke-width="2.2"/>
+                                    <text x="145" y="152" text-anchor="middle" fill="#0c4a6e" font-size="9.2" font-weight="800">${builderSlots[3] ? slotLabels[builderSlots[3]] : '+ Slot 3: Header For Loop'}</text>
+                                </g>
+
+                                <!-- Slot 4: Badan Loop -->
+                                <g class="cursor-pointer" onclick="selectBuilderSlot(4)">
+                                    <rect x="235" y="182" width="155" height="32" rx="6" fill="${builderSlots[4] ? '#dcfce7' : '#eef2ff'}" stroke="${activeBuilderSlot === 4 ? '#4f46e5' : '#16a34a'}" stroke-width="2"/>
+                                    <text x="312" y="202" text-anchor="middle" fill="#14532d" font-size="8.8" font-weight="700">${builderSlots[4] ? slotLabels[builderSlots[4]] : '+ Slot 4: Cetak Tiket'}</text>
+                                </g>
+                            </svg>
+                        </div>
+
+                        <!-- Pilihan Kanan -->
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-4">
+                            <div class="space-y-3.5">
+                                <div class="flex flex-wrap gap-2">
+                                    ${slotTabs}
+                                </div>
+
+                                <div class="p-3.5 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800">
+                                    <div class="font-extrabold text-indigo-900 dark:text-indigo-200 text-sm">${escapeHtml(slotTasks[activeBuilderSlot])}</div>
+                                    <p class="text-xs text-indigo-700 dark:text-indigo-300 mt-0.5">Klik simbol Flowgorithm yang tepat untuk dipasang ke Slot #${activeBuilderSlot}:</p>
+                                </div>
+
+                                <div class="space-y-2 font-mono text-xs">
+                                    <button type="button" onclick="assignBuilderCode('FOR_LOOP')" class="w-full text-left p-3 rounded-xl border-2 border-sky-300 bg-white dark:bg-slate-900 hover:bg-sky-50 font-bold transition">
+                                        [Segi Enam For] For noAntrean = 1 to batasAntrean
+                                    </button>
+                                    <button type="button" onclick="assignBuilderCode('DECLARE')" class="w-full text-left p-3 rounded-xl border-2 border-amber-300 bg-white dark:bg-slate-900 hover:bg-amber-50 font-bold transition">
+                                        [Segi Enam Declare] Declare Integer batasAntrean, noAntrean
+                                    </button>
+                                    <button type="button" onclick="assignBuilderCode('OUTPUT_TICKET')" class="w-full text-left p-3 rounded-xl border-2 border-emerald-300 bg-white dark:bg-slate-900 hover:bg-emerald-50 font-bold transition">
+                                        [Output] Output "Antrean #" &amp; noAntrean
+                                    </button>
+                                    <button type="button" onclick="assignBuilderCode('INPUT')" class="w-full text-left p-3 rounded-xl border-2 border-sky-300 bg-white dark:bg-slate-900 hover:bg-sky-50 font-bold transition">
+                                        [Input] Input batasAntrean
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="space-y-2">
+                                <button type="button" onclick="checkBuilderAnswer()" class="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm transition shadow-xs">
+                                    Periksa Rangkaian Generator Antrean
+                                </button>
+                                ${builderFeedback.text ? `<div class="p-3 rounded-xl text-xs font-bold text-center ${builderFeedback.type === 'success' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'}">${escapeHtml(builderFeedback.text)}</div>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function getMiniSymbolSvg(type, label) {
+            if (type === 'Main' || type === 'End') {
+                return `<svg width="110" height="26" viewBox="0 0 110 26" class="shrink-0"><rect x="4" y="2" width="102" height="22" rx="11" fill="#f3e8ff" stroke="#7e22ce" stroke-width="1.8"/><text x="55" y="17" text-anchor="middle" font-size="9.2" font-weight="700" fill="#581c87">${label}</text></svg>`;
+            }
+            if (type === 'Declare') {
+                return `<svg width="110" height="26" viewBox="0 0 110 26" class="shrink-0"><polygon points="12,2 98,2 107,13 98,24 12,24 3,13" fill="#fef9c3" stroke="#b45309" stroke-width="1.8"/><text x="55" y="17" text-anchor="middle" font-size="9.2" font-weight="700" fill="#78350f">${label}</text></svg>`;
+            }
+            if (type === 'Input') {
+                return `<svg width="110" height="26" viewBox="0 0 110 26" class="shrink-0"><polygon points="12,2 106,2 98,24 4,24" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.8"/><text x="55" y="17" text-anchor="middle" font-size="9.2" font-weight="700" fill="#0c4a6e">${label}</text></svg>`;
+            }
+            if (type === 'Loop') {
+                return `<svg width="110" height="26" viewBox="0 0 110 26" class="shrink-0"><polygon points="14,2 96,2 107,13 96,24 14,24 3,13" fill="#e0f2fe" stroke="#0284c7" stroke-width="2"/><text x="55" y="17" text-anchor="middle" font-size="9" font-weight="800" fill="#0c4a6e">${label}</text></svg>`;
+            }
+            if (type === 'Output') {
+                return `<svg width="110" height="26" viewBox="0 0 110 26" class="shrink-0"><polygon points="12,2 106,2 98,24 4,24" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/><text x="55" y="17" text-anchor="middle" font-size="9.2" font-weight="700" fill="#14532d">${label}</text></svg>`;
+            }
+            return '';
+        }
+
+        function renderSlide17() {
+            let rowsHtml = '';
+            for (let index = 0; index < loopStepsOrder.length; index++) {
+                const item = loopStepsOrder[index];
+                const isPosCorrect = item.id === index + 1;
+                let borderClass = 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900';
+                let statusBadge = '';
+
+                if (loopShowValidation) {
+                    if (isPosCorrect) {
+                        borderClass = 'border-emerald-500 bg-emerald-50/40 dark:bg-emerald-950/30';
+                        statusBadge = '<span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 text-[11px] font-bold">✓ Tepat</span>';
+                    } else {
+                        borderClass = 'border-rose-400 bg-rose-50/40 dark:bg-rose-950/30';
+                        statusBadge = '<span class="px-2 py-0.5 rounded bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 text-[11px] font-bold">✗ Geser</span>';
+                    }
+                }
+
+                rowsHtml += `
+                    <div draggable="true" ondragstart="onLoopDragStart(event, ${index})" ondragover="onLoopDragOver(event, ${index})" ondragleave="onLoopDragLeave(event)" ondrop="onLoopDrop(event, ${index})" ondragend="onLoopDragEnd()" class="draggable-step border-2 ${borderClass} rounded-2xl p-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                            <span class="text-slate-400 font-extrabold text-sm px-1 cursor-grab select-none">⋮⋮</span>
+                            <span class="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center shrink-0">${index + 1}</span>
+                            ${getMiniSymbolSvg(item.type, item.label)}
+                            <span class="text-xs font-semibold text-slate-800 dark:text-slate-200 leading-snug">${escapeHtml(item.text)}</span>
+                        </div>
+                        <div class="flex items-center justify-end gap-1.5 shrink-0">
+                            ${statusBadge}
+                            <button type="button" onclick="moveLoopStep(${index}, -1)" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-indigo-600 hover:text-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs transition" title="Geser Naik">▲</button>
+                            <button type="button" onclick="moveLoopStep(${index}, 1)" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-indigo-600 hover:text-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs transition" title="Geser Turun">▼</button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-3.5">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 4 • Simulasi Praktik 3 dari 3</span>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Susun 8 Langkah Algoritma Generator Nomor Antrean</h2>
+                        </div>
+                        <span class="text-xs font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200 dark:border-indigo-800 px-3 py-1 rounded-xl">
+                            Tarik kartu (Drag &amp; Drop) atau klik ▲ / ▼
+                        </span>
+                    </div>
+
+                    <div class="space-y-1.5 my-auto">
+                        ${rowsHtml}
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-3">
+                        <button type="button" onclick="checkLoopOrder()" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm transition shadow-xs">
+                            Periksa Urutan Generator Antrean
+                        </button>
+                        <button type="button" onclick="shuffleLoopSteps()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs sm:text-sm transition">
+                            Acak Ulang
+                        </button>
+                        ${loopFeedbackText ? `<span class="text-xs sm:text-sm font-bold text-indigo-600 dark:text-indigo-400">${escapeHtml(loopFeedbackText)}</span>` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide18() {
+            const renderFb = function (qNum) {
+                const fb = selfCheckFeedback[qNum];
+                if (!fb) return '';
+                const cls = fb.ok
+                    ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200'
+                    : 'bg-rose-50 dark:bg-rose-950/50 border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-200';
+                return `<div class="mt-2 p-2.5 rounded-xl border text-xs font-bold ${cls}">${escapeHtml(fb.msg)}</div>`;
+            };
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Penutup Fase 1 (Flowgorithm) &amp; Evaluasi Sub-CPMK 1.3</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Uji Pemahaman Perulangan &amp; Jembatan Menuju PHP (Minggu 6)</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Uji penguasaan konsep For, While, dan Do-While Anda melalui 3 soal evaluasi di bawah ini:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <div class="lg:col-span-7 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-3.5">
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Cek Pengetahuan Mandiri (Klik Jawaban yang Tepat)</h3>
+
+                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <div class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white mb-2">1. Struktur perulangan manakah yang menjamin badan perulangan <strong>pasti dijalankan minimal 1 kali</strong> meskipun kondisi awalnya langsung bernilai False?</div>
+                                <div class="flex flex-wrap gap-2">
+                                    <button type="button" onclick="answerSelfCheck(1, true, 'Tepat! Do-While mengecek syarat di akhir (Post-Test), sehingga putaran pertama pasti dijalankan minimal 1 kali.')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 font-mono font-semibold text-xs">Do-While Loop</button>
+                                    <button type="button" onclick="answerSelfCheck(1, false, 'While mengecek syarat di awal (Pre-Test), sehingga bisa 0 kali jalan jika syarat awal False.')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 font-mono font-semibold text-xs">While Loop</button>
+                                </div>
+                                ${renderFb(1)}
+                            </div>
+
+                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <div class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white mb-2">2. Apa akibat fatal jika di dalam <span class="font-mono">While noAntrean &lt;= 10</span> kita lupa menuliskan instruksi <span class="font-mono">Assign noAntrean = noAntrean + 1</span>?</div>
+                                <div class="flex flex-wrap gap-2">
+                                    <button type="button" onclick="answerSelfCheck(2, true, 'Benar! Karena noAntrean tetap 1 selamanya, syarat 1 <= 10 selalu True dan terjadi Infinite Loop (perulangan abadi).')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 font-semibold text-xs">Terjadi Infinite Loop (Mencetak #1 selamanya)</button>
+                                    <button type="button" onclick="answerSelfCheck(2, false, 'Flowgorithm tidak menaikkan variabel secara otomatis di dalam While; programmer wajib menulis Increment secara manual.')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 font-semibold text-xs">Komputer otomatis menaikkan angka +1</button>
+                                </div>
+                                ${renderFb(2)}
+                            </div>
+
+                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <div class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white mb-2">3. Jika <span class="font-mono">noAntrean</span> dimulai dari <span class="font-mono">1</span> dan kita ingin mencetak tepat <strong>10 tiket antrean</strong> (#1 s/d #10), syarat mana yang bebas dari <em>Off-by-One Error</em>?</div>
+                                <div class="flex flex-wrap gap-2">
+                                    <button type="button" onclick="answerSelfCheck(3, true, 'Sempurna! Menggunakan <= 10 membuat tiket #1 hingga #10 tercetak seluruhnya dengan pas.')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 font-mono font-semibold text-xs">noAntrean &lt;= 10</button>
+                                    <button type="button" onclick="answerSelfCheck(3, false, 'Jika memakai < 10, maka tiket hanya tercetak dari #1 sampai #9 (kurang 1 tiket).')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 font-mono font-semibold text-xs">noAntrean &lt; 10</button>
+                                </div>
+                                ${renderFb(3)}
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-5 flex flex-col justify-between gap-4">
+                            <div class="p-6 rounded-3xl bg-slate-900 text-white space-y-3">
+                                <span class="inline-block px-2.5 py-0.5 rounded-md bg-indigo-500/30 text-indigo-300 font-bold text-[11px] uppercase tracking-wider">
+                                    Tugas Praktikum Mandiri Minggu 5
+                                </span>
+                                <h3 class="text-base sm:text-lg font-extrabold leading-snug">
+                                    Bangun File <span class="font-mono text-indigo-300">GeneratorAntrean_WarungDigital.fprg</span>
+                                </h3>
+                                <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                                    Buat file Flowgorithm yang meminta kasir memasukkan <span class="font-mono text-amber-300">batasAntrean</span>, lalu gunakan struktur perulangan <strong>For</strong> (atau <strong>While</strong>) untuk mencetak seluruh nomor antrean pelanggan <span class="font-mono text-emerald-300">"Antrean Warung Digital #" &amp; noAntrean</span> hingga selesai!
+                                </p>
+                            </div>
+
+                            <div class="p-5 rounded-3xl bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 space-y-2">
+                                <span class="inline-block px-2.5 py-0.5 rounded-md bg-indigo-600 text-white font-bold text-[11px]">FASE BARU MINGGU DEPAN • PERTEMUAN 6 (Sub-CPMK 2.1 • 3%)</span>
+                                <h3 class="font-extrabold text-slate-900 dark:text-white text-sm sm:text-base">Selamat! Fase 1 (Flowgorithm Minggu 1–5) Tuntas!</h3>
+                                <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    Mulai <strong>Minggu 6</strong>, kita beralih ke <strong>Fase 2: Pemrograman Python</strong>! Anda akan menulis kode Python perdana untuk menampilkan sapaan pembuka dan mencatat data produk <strong>Warung Digital</strong> menggunakan variabel, tipe data, serta instruksi <span class="font-mono font-bold">print()</span> dan <span class="font-mono font-bold">input()</span>.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        const SLIDES = [
+            { id: 1, category: "Modul 1 • Orientasi", title: "Logika Perulangan (For, While, Do-While) - Sub-CPMK 1.3", render: renderSlide1 },
+            { id: 2, category: "Modul 1 • Konteks Bisnis", title: "Mengapa Sistem Antrean Warung Digital Butuh Perulangan?", render: renderSlide2 },
+            { id: 3, category: "Modul 1 • Anatomi Loop", title: "3 Komponen Wajib Perulangan (Nilai Awal, Syarat, Increment)", render: renderSlide3 },
+            { id: 4, category: "Jembatan Topik 1 ke 2", title: "Dari Anatomi Loop Menuju For, While, & Do-While di Flowgorithm", render: renderSlide4 },
+            { id: 5, category: "Modul 2 • For Loop", title: "1. Perulangan For (Counted Loop / Kuota Sudah Pasti)", render: renderSlide5 },
+            { id: 6, category: "Modul 2 • While Loop", title: "2. Perulangan While (Pre-Test Loop / Cek Syarat di Awal)", render: renderSlide6 },
+            { id: 7, category: "Modul 2 • Do-While Loop", title: "3. Perulangan Do-While (Post-Test Loop / Jalan Minimal 1x)", render: renderSlide7 },
+            { id: 8, category: "Modul 2 • Panduan Pilih", title: "Kapan Memilih For, While, atau Do-While di Warung Digital?", render: renderSlide8 },
+            { id: 9, category: "Jembatan Topik 2 ke 3", title: "Menuju Deteksi Bug Loop, Akumulator, & Sandbox Tiket", render: renderSlide9 },
+            { id: 10, category: "Modul 3 • Detektif Bug", title: "Mencegah Infinite Loop & Off-by-One Error (< vs <=)", render: renderSlide10 },
+            { id: 11, category: "Modul 3 • Counter & Total", title: "Pola Counter Pencacah Antrean & Accumulator Rekap Omzet", render: renderSlide11 },
+            { id: 12, category: "Modul 3 • Pseudocode", title: "Perbandingan Pseudocode For, While, & Do-While", render: renderSlide12 },
+            { id: 13, category: "Modul 3 • Sandbox", title: "Sandbox Generator Tiket Nomor Antrean Warung Digital", render: renderSlide13 },
+            { id: 14, category: "Jembatan Topik 3 ke 4", title: "Masuk ke 3 Simulator Praktik Perulangan Flowgorithm", render: renderSlide14 },
+            { id: 15, category: "Modul 4 • Simulasi 1", title: "Live Simulator Flowgorithm: Generator Nomor Antrean", render: renderSlide15 },
+            { id: 16, category: "Modul 4 • Simulasi 2", title: "Rakit Struktur Perulangan For di Kanvas Flowgorithm", render: renderSlide16 },
+            { id: 17, category: "Modul 4 • Simulasi 3", title: "Drag & Drop 8 Langkah Generator Nomor Antrean", render: renderSlide17 },
+            { id: 18, category: "Penutup Fase 1", title: "Uji Pemahaman Sub-CPMK 1.3 & Jembatan Menuju PHP (Minggu 6)", render: renderSlide18 }
+        ];
+
+        function renderCurrentSlide() {
+            const slide = SLIDES[currentSlideIndex];
+            const viewport = document.getElementById('slideViewport');
+            viewport.innerHTML = slide.render();
+
+            const pct = Math.round(((currentSlideIndex + 1) / TOTAL_SLIDES) * 100);
+            document.getElementById('topProgressBar').style.width = pct + '%';
+            document.getElementById('slideCounterBadge').textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES;
+            document.getElementById('mobileFooterCounter').textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES;
+            document.getElementById('slideCategoryPill').textContent = slide.category;
+            document.getElementById('headerSlideTitle').textContent = slide.title;
+
+            const prevBtn = document.getElementById('prevSlideBtn');
+            const nextBtn = document.getElementById('nextSlideBtn');
+            const nextBtnText = document.getElementById('nextBtnText');
+
+            prevBtn.disabled = currentSlideIndex === 0;
+            if (currentSlideIndex === TOTAL_SLIDES - 1) {
+                nextBtnText.textContent = "Selesai";
+                nextBtn.disabled = true;
+            } else {
+                nextBtnText.textContent = "Selanjutnya";
+                nextBtn.disabled = false;
+            }
+
+            renderDotsAndDrawer();
+
+            if (currentSlideIndex === 14 && simWaitingVar) {
+                const inputEl = document.getElementById('fgConsoleInputBox');
+                if (inputEl) inputEl.focus();
+            }
+        }
+
+        function renderDotsAndDrawer() {
+            const dotsContainer = document.getElementById('slideDotsContainer');
+            let dotsHtml = '';
+            let drawerHtml = '';
+
+            for (let idx = 0; idx < SLIDES.length; idx++) {
+                const s = SLIDES[idx];
+                const isActive = idx === currentSlideIndex;
+                const dotClass = isActive
+                    ? 'w-6 bg-indigo-600 dark:bg-indigo-400'
+                    : 'w-2 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400';
+
+                dotsHtml += `<button type="button" onclick="goToSlide(${idx})" title="${escapeHtml(s.title)}" class="h-2 rounded-full transition-all ${dotClass}"></button>`;
+
+                const itemClass = isActive
+                    ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 font-bold'
+                    : 'hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-300';
+                const badgeClass = isActive
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500';
+
+                drawerHtml += `
+                    <button type="button" onclick="selectSlideFromDrawer(${idx})" class="w-full text-left p-3 rounded-xl transition flex items-start gap-3 ${itemClass}">
+                        <span class="w-6 h-6 rounded-lg text-xs font-extrabold flex items-center justify-center shrink-0 ${badgeClass}">${s.id}</span>
+                        <div class="min-w-0">
+                            <div class="text-[10px] uppercase tracking-wider opacity-75">${escapeHtml(s.category)}</div>
+                            <div class="text-xs sm:text-sm truncate">${escapeHtml(s.title)}</div>
+                        </div>
+                    </button>
+                `;
+            }
+
+            dotsContainer.innerHTML = dotsHtml;
+            document.getElementById('drawerSlideList').innerHTML = drawerHtml;
+        }
+
+        function selectSlideFromDrawer(index) {
+            goToSlide(index);
+            toggleSlideDrawer();
+        }
+
+        function changeSlide(direction) {
+            const nextIdx = currentSlideIndex + direction;
+            if (nextIdx >= 0 && nextIdx < TOTAL_SLIDES) {
+                if (simAutoTimer) clearTimeout(simAutoTimer);
+                currentSlideIndex = nextIdx;
+                renderCurrentSlide();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function goToSlide(index) {
+            if (index >= 0 && index < TOTAL_SLIDES) {
+                if (simAutoTimer) clearTimeout(simAutoTimer);
+                currentSlideIndex = index;
+                renderCurrentSlide();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function toggleSlideDrawer() {
+            const drawer = document.getElementById('slideDrawer');
+            const backdrop = document.getElementById('slideDrawerBackdrop');
+            const isClosed = drawer.classList.contains('-translate-x-full');
+
+            if (isClosed) {
+                backdrop.classList.remove('hidden');
+                setTimeout(function () {
+                    backdrop.classList.remove('opacity-0');
+                }, 10);
+                drawer.classList.remove('-translate-x-full');
+            } else {
+                backdrop.classList.add('opacity-0');
+                drawer.classList.add('-translate-x-full');
+                setTimeout(function () {
+                    backdrop.classList.add('hidden');
+                }, 200);
+            }
+        }
+
+        function setS2Mode(mode) {
+            s2Mode = mode;
+            renderCurrentSlide();
+        }
+
+        function setS3Pillar(p) {
+            s3Pillar = p;
+            renderCurrentSlide();
+        }
+
+        function updateS5Max(val) {
+            const num = parseInt(val, 10) || 1;
+            s5MaxQueue = Math.min(8, Math.max(1, num));
+            if (s5ActiveIter > s5MaxQueue) s5ActiveIter = s5MaxQueue;
+            renderCurrentSlide();
+        }
+
+        function setS5Iter(iter) {
+            s5ActiveIter = iter;
+            renderCurrentSlide();
+        }
+
+        function setS6Quota(q) {
+            s6StartQuota = q;
+            renderCurrentSlide();
+        }
+
+        function setS7Compare(m) {
+            s7CompareMode = m;
+            renderCurrentSlide();
+        }
+
+        function setS8Case(key) {
+            s8CaseKey = key;
+            renderCurrentSlide();
+        }
+
+        function setS10Bug(type) {
+            s10BugType = type;
+            renderCurrentSlide();
+        }
+
+        function setS11Step(st) {
+            s11Step = st;
+            renderCurrentSlide();
+        }
+
+        function setS12Pseudo(tab) {
+            s12PseudoTab = tab;
+            renderCurrentSlide();
+        }
+
+        function updateS13Sandbox(field, val) {
+            if (field === 'prefix') s13Prefix = val;
+            if (field === 'start') s13Start = Math.max(1, parseInt(val, 10) || 1);
+            if (field === 'end') s13End = Math.max(1, parseInt(val, 10) || 1);
+            if (field === 'step') s13StepVal = Math.max(1, parseInt(val, 10) || 1);
+            renderCurrentSlide();
+        }
+
+        // Handlers Slide 15: Live Simulator Generator Antrean Flowgorithm
+        function resetFgSim() {
+            if (simAutoTimer) clearTimeout(simAutoTimer);
+            simIsAuto = false;
+            simStepIndex = -1;
+            simWaitingVar = null;
+            simMemory = {
+                batasAntrean: null,
+                noAntrean: null
+            };
+            simChatLog = [];
+            simInputError = '';
+            simBannerText = 'Klik tombol Run Otomatis atau Step di kanan atas untuk menjalankan Generator Nomor Antrean Warung Digital.';
+            renderCurrentSlide();
+        }
+
+        function stepToOrFocusNode() {
+            if (simWaitingVar) {
+                const inputBox = document.getElementById('fgConsoleInputBox');
+                if (inputBox) inputBox.focus();
+                return;
+            }
+            stepFgSim();
+        }
+
+        function fillSimQuickChip(val) {
+            const inputBox = document.getElementById('fgConsoleInputBox');
+            if (inputBox) {
+                inputBox.value = val;
+                inputBox.focus();
+            }
+        }
+
+        function stepFgSim() {
+            if (simWaitingVar) {
+                simInputError = 'Ketik dulu angka untuk "' + simWaitingVar + '" pada kotak Console lalu tekan Enter!';
+                renderCurrentSlide();
+                return;
+            }
+            if (simStepIndex >= 7) {
+                resetFgSim();
+            }
+
+            if (simStepIndex === -1) simStepIndex = 0;
+            else if (simStepIndex === 0) simStepIndex = 1;
+            else if (simStepIndex === 1) simStepIndex = 2;
+            else if (simStepIndex === 2) simStepIndex = 3;
+            else if (simStepIndex === 3) {
+                simMemory.noAntrean = 1;
+                simStepIndex = 4;
+            } else if (simStepIndex === 4) {
+                // Cek syarat For Loop: noAntrean <= batasAntrean
+                if (simMemory.noAntrean <= simMemory.batasAntrean) {
+                    simStepIndex = 5;
+                } else {
+                    simStepIndex = 6;
+                }
+            } else if (simStepIndex === 5) {
+                // Setelah mencetak 1 tiket di badan loop, naikkan counter +1 dan kembali ke header For Loop (4)
+                simMemory.noAntrean = simMemory.noAntrean + 1;
+                simStepIndex = 4;
+            } else if (simStepIndex === 6) {
+                simStepIndex = 7;
+            }
+
+            executeFgStep(simStepIndex);
+        }
+
+        function executeFgStep(step) {
+            simInputError = '';
+            if (step === 0) {
+                simChatLog = [];
+                simBannerText = 'Blok [Main]: Memulai program generator nomor antrean Warung Digital.';
+            } else if (step === 1) {
+                simMemory.batasAntrean = 0;
+                simMemory.noAntrean = 0;
+                simBannerText = 'Blok [Declare]: Menyiapkan 2 variabel Integer (batasAntrean dan noAntrean).';
+            } else if (step === 2) {
+                simChatLog.push({ type: 'out', html: 'Masukkan kuota antrean pelanggan hari ini:' });
+                simBannerText = 'Blok [Output Prompt]: Menampilkan pesan pemandu ke layar kasir.';
+            } else if (step === 3) {
+                simWaitingVar = 'batasAntrean';
+                simChatLog.push({ id: 'w_batas', type: 'wait', text: '⏳ Menunggu Input batasAntrean (1 s/d 12)...' });
+                simBannerText = 'Blok [Input batasAntrean]: Ketik jumlah tiket antrean yang ingin dicetak (misal 4) lalu tekan Enter ↵.';
+            } else if (step === 4) {
+                const isContinue = simMemory.noAntrean <= simMemory.batasAntrean;
+                if (isContinue) {
+                    simBannerText = 'Header [For Loop]: Cek apakah noAntrean (' + simMemory.noAntrean + ') <= batasAntrean (' + simMemory.batasAntrean + ') -> TRUE (Next)! Masuk ke badan loop.';
+                } else {
+                    simBannerText = 'Header [For Loop]: Cek apakah noAntrean (' + simMemory.noAntrean + ') <= batasAntrean (' + simMemory.batasAntrean + ') -> FALSE (Done)! Keluar dari perulangan.';
+                }
+            } else if (step === 5) {
+                const numStr = String(simMemory.noAntrean).padStart(3, '0');
+                simChatLog.push({
+                    type: 'out',
+                    html: '🎫 <strong>Antrean Warung Digital #WD-' + numStr + '</strong>'
+                });
+                simBannerText = 'Badan Loop [Output Tiket]: Mencetak tiket #' + numStr + ', lalu menaikkan noAntrean menjadi ' + (simMemory.noAntrean + 1) + ' dan berputar kembali ke atas!';
+            } else if (step === 6) {
+                simChatLog.push({
+                    type: 'out',
+                    html: '✅ <strong>Semua ' + simMemory.batasAntrean + ' tiket antrean selesai dicetak!</strong>'
+                });
+                simBannerText = 'Blok [Output Selesai]: Perulangan berakhir dengan rapi setelah seluruh kuota antrean tercetak.';
+            } else if (step === 7) {
+                simIsAuto = false;
+                simBannerText = 'Blok [End]: Eksekusi perulangan selesai dengan tuntas (Finiteness terpenuhi)!';
+            }
+
+            renderCurrentSlide();
+            const chatBox = document.getElementById('fgConsoleChat');
+            if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+
+            if (simIsAuto && !simWaitingVar && step < 7) {
+                simAutoTimer = setTimeout(function () {
+                    stepFgSim();
+                }, 600);
+            }
+        }
+
+        function submitManualConsoleInput(e) {
+            e.preventDefault();
+            if (!simWaitingVar) return;
+            const inputBox = document.getElementById('fgConsoleInputBox');
+            const rawVal = inputBox ? inputBox.value.trim() : '';
+
+            if (!/^\d+$/.test(rawVal) || parseInt(rawVal, 10) < 1 || parseInt(rawVal, 10) > 12) {
+                simInputError = 'Masukkan angka bulat antara 1 sampai 12 agar simulasi berjalan nyaman di layar!';
+                renderCurrentSlide();
+                return;
+            }
+
+            const numVal = parseInt(rawVal, 10);
+            simMemory.batasAntrean = numVal;
+            simChatLog = simChatLog.filter(function (m) { return m.id !== 'w_batas'; });
+            simChatLog.push({ type: 'in', text: 'batasAntrean = ' + numVal });
+
+            simWaitingVar = null;
+            simInputError = '';
+            renderCurrentSlide();
+
+            if (simIsAuto) {
+                simAutoTimer = setTimeout(function () {
+                    stepFgSim();
+                }, 450);
+            }
+        }
+
+        function runFullFgSim() {
+            if (simAutoTimer) clearTimeout(simAutoTimer);
+            simStepIndex = -1;
+            simWaitingVar = null;
+            simChatLog = [];
+            simInputError = '';
+            simIsAuto = true;
+            stepFgSim();
+        }
+
+        // Handlers Slide 16: Rakit Struktur Perulangan For di Kanvas
+        function selectBuilderSlot(slotNum) {
+            activeBuilderSlot = slotNum;
+            renderCurrentSlide();
+        }
+
+        function assignBuilderCode(code) {
+            builderSlots[activeBuilderSlot] = code;
+            builderFeedback = { type: '', text: '' };
+            if (activeBuilderSlot < 4) {
+                activeBuilderSlot++;
+            }
+            renderCurrentSlide();
+        }
+
+        function checkBuilderAnswer() {
+            if (
+                builderSlots[1] === 'DECLARE' &&
+                builderSlots[2] === 'INPUT' &&
+                builderSlots[3] === 'FOR_LOOP' &&
+                builderSlots[4] === 'OUTPUT_TICKET'
+            ) {
+                builderFeedback = {
+                    type: 'success',
+                    text: 'Sempurna (4/4 Tepat)! Struktur Generator Nomor Antrean menggunakan For Loop telah terpasang dengan presisi!'
+                };
+            } else {
+                builderFeedback = {
+                    type: 'error',
+                    text: 'Masih ada slot yang belum tepat. Pastikan: Slot 1 (Declare) -> Slot 2 (Input batasAntrean) -> Slot 3 (For noAntrean = 1 to batasAntrean) -> Slot 4 (Output Tiket).'
+                };
+            }
+            renderCurrentSlide();
+        }
+
+        function resetBuilderCanvas() {
+            builderSlots = { 1: '', 2: '', 3: '', 4: '' };
+            activeBuilderSlot = 1;
+            builderFeedback = { type: '', text: '' };
+            renderCurrentSlide();
+        }
+
+        // Handlers Slide 17: Drag & Drop 8 Langkah Generator Antrean
+        function shuffleLoopSteps() {
+            loopStepsOrder = [...CORRECT_LOOP_STEPS].sort(function () { return Math.random() - 0.5; });
+            loopShowValidation = false;
+            loopFeedbackText = '';
+            renderCurrentSlide();
+        }
+
+        function moveLoopStep(index, direction) {
+            const target = index + direction;
+            if (target < 0 || target >= loopStepsOrder.length) return;
+            const moved = loopStepsOrder.splice(index, 1)[0];
+            loopStepsOrder.splice(target, 0, moved);
+            loopShowValidation = false;
+            loopFeedbackText = '';
+            renderCurrentSlide();
+        }
+
+        function onLoopDragStart(e, index) {
+            draggedLoopIndex = index;
+            if (e.currentTarget) e.currentTarget.classList.add('dragging');
+            if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function onLoopDragOver(e, index) {
+            e.preventDefault();
+            if (index !== draggedLoopIndex && e.currentTarget) {
+                e.currentTarget.classList.add('drag-over');
+            }
+        }
+
+        function onLoopDragLeave(e) {
+            if (e.currentTarget) e.currentTarget.classList.remove('drag-over');
+        }
+
+        function onLoopDrop(e, targetIndex) {
+            e.preventDefault();
+            if (draggedLoopIndex !== null && draggedLoopIndex !== targetIndex) {
+                const moved = loopStepsOrder.splice(draggedLoopIndex, 1)[0];
+                loopStepsOrder.splice(targetIndex, 0, moved);
+                loopShowValidation = false;
+                loopFeedbackText = '';
+                renderCurrentSlide();
+            }
+            draggedLoopIndex = null;
+        }
+
+        function onLoopDragEnd() {
+            draggedLoopIndex = null;
+            document.querySelectorAll('.draggable-step').forEach(function (el) {
+                el.classList.remove('dragging', 'drag-over');
+            });
+        }
+
+        function checkLoopOrder() {
+            loopShowValidation = true;
+            let correctCount = 0;
+            for (let i = 0; i < loopStepsOrder.length; i++) {
+                if (loopStepsOrder[i].id === i + 1) correctCount++;
+            }
+            if (correctCount === loopStepsOrder.length) {
+                loopFeedbackText = 'Luar Biasa (8/8 Tepat)! Alur Generator Nomor Antrean Pelanggan Warung Digital sudah 100% runtut!';
+            } else {
+                loopFeedbackText = 'Baru ' + correctCount + '/8 langkah yang tepat. Geser baris bertanda "✗ Geser".';
+            }
+            renderCurrentSlide();
+        }
+
+        function answerSelfCheck(qNum, isOk, msg) {
+            selfCheckFeedback[qNum] = { ok: isOk, msg: msg };
+            renderCurrentSlide();
+        }
+
+        // Modal Istilah & Kamus Lengkap
+        function showTerm(key) {
+            const item = GLOSSARY_DB[key];
+            if (!item) return;
+
+            document.getElementById('termCategoryBadge').textContent = item.category;
+            document.getElementById('termTitle').textContent = item.title;
+            document.getElementById('termMainDesc').textContent = item.main;
+            document.getElementById('termDetailDesc').textContent = item.detail;
+            document.getElementById('termSourceName').textContent = "Sumber: " + item.source;
+
+            const modal = document.getElementById('termModalBackdrop');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeTermModal() {
+            const modal = document.getElementById('termModalBackdrop');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function openGlossaryIndex() {
+            document.getElementById('glossarySearchInput').value = '';
+            renderGlossaryList('');
+            const modal = document.getElementById('glossaryModalBackdrop');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeGlossaryIndex() {
+            const modal = document.getElementById('glossaryModalBackdrop');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function selectGlossaryTerm(key) {
+            closeGlossaryIndex();
+            showTerm(key);
+        }
+
+        function renderGlossaryList(query) {
+            const q = String(query || '').trim().toLowerCase();
+            const allKeys = Object.keys(GLOSSARY_DB);
+            const matchedKeys = [];
+
+            for (let i = 0; i < allKeys.length; i++) {
+                const k = allKeys[i];
+                const item = GLOSSARY_DB[k];
+                if (
+                    item.title.toLowerCase().indexOf(q) !== -1 ||
+                    item.category.toLowerCase().indexOf(q) !== -1 ||
+                    item.main.toLowerCase().indexOf(q) !== -1
+                ) {
+                    matchedKeys.push(k);
+                }
+            }
+
+            const container = document.getElementById('glossaryListGrid');
+            if (matchedKeys.length === 0) {
+                container.innerHTML = '<div class="col-span-2 text-center py-8 text-xs text-slate-500">Istilah tidak ditemukan.</div>';
+                return;
+            }
+
+            let html = '';
+            for (let i = 0; i < matchedKeys.length; i++) {
+                const k = matchedKeys[i];
+                const item = GLOSSARY_DB[k];
+                html += `
+                    <button type="button" onclick="selectGlossaryTerm('${k}')" class="text-left p-4 rounded-2xl bg-slate-50 hover:bg-indigo-50/60 dark:bg-slate-800/50 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800 transition space-y-1">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">${escapeHtml(item.category)}</span>
+                            <span class="text-[10px] text-slate-400">${escapeHtml(item.source)}</span>
+                        </div>
+                        <div class="text-sm font-extrabold text-slate-900 dark:text-white">${escapeHtml(item.title)}</div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">${escapeHtml(item.main)}</p>
+                    </button>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function toggleTheme() {
+            const htmlEl = document.documentElement;
+            const icon = document.getElementById('themeIcon');
+            htmlEl.classList.toggle('dark');
+            const isDark = htmlEl.classList.contains('dark');
+            icon.className = isDark ? 'fa-solid fa-sun text-amber-400 text-sm' : 'fa-solid fa-moon text-sm';
+        }
+
+        document.addEventListener('keydown', function (e) {
+            const activeTag = document.activeElement && document.activeElement.tagName
+                ? document.activeElement.tagName.toLowerCase()
+                : '';
+            if (activeTag === 'input' || activeTag === 'textarea') return;
+
+            if (e.key === 'ArrowRight') changeSlide(1);
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+            if (e.key === 'Escape') {
+                closeTermModal();
+                closeGlossaryIndex();
+            }
+        });
+
+        window.onload = function () {
+            renderCurrentSlide();
+        };
+    </script>
+</body>
+</html>
