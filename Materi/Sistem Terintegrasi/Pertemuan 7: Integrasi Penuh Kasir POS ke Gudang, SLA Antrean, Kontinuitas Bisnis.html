@@ -1,0 +1,2264 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pertemuan 7: Integrasi Penuh Kasir POS ke Gudang, SLA Antrean, Kontinuitas Bisnis &amp; UAT Pra-UTS (BD5231)</title>
+    <!-- Tailwind CSS CDN untuk tata letak responsif & tema terang/gelap -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <script>
+        if (typeof tailwind !== 'undefined') {
+            tailwind.config = {
+                darkMode: 'class',
+                theme: {
+                    extend: {
+                        fontFamily: {
+                            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                            mono: ['"JetBrains Mono"', 'monospace']
+                        }
+                    }
+                }
+            };
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Istilah penting dengan garis bawah putus-putus hijau/emerald yang dapat diklik */
+        .tech-term {
+            color: #059669;
+            font-weight: 700;
+            text-decoration: underline;
+            text-decoration-style: dotted;
+            text-underline-offset: 3px;
+            cursor: pointer;
+            transition: color 0.15s ease, opacity 0.15s ease;
+        }
+        .dark .tech-term { color: #34d399; }
+        .tech-term:hover { color: #047857; opacity: 0.85; }
+        .dark .tech-term:hover { color: #6ee7b7; }
+
+        /* Pengaman anti-terpotong pada layar laptop, proyektor, maupun HP */
+        #slideViewport, #slideViewport p, #slideViewport span, #slideViewport div,
+        #slideViewport h2, #slideViewport h3, #slideViewport h4, #slideViewport button {
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+        }
+
+        .slide-enter {
+            animation: fadeSlide 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes fadeSlide {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulseSoft {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.015); }
+        }
+        .pulse-soft {
+            animation: pulseSoft 0.45s ease-in-out;
+        }
+
+        pre.code-clean {
+            background: #0b0b10;
+            color: #e4e4e7;
+            border-radius: 1rem;
+            padding: 0.9rem 1.05rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            line-height: 1.6;
+            overflow-x: auto;
+            border: 1px solid #1f1f2e;
+            margin: 0;
+        }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+        .dark ::-webkit-scrollbar-thumb { background: #334155; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col justify-between transition-colors duration-200">
+
+    <!-- Header Navigasi Atas -->
+    <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800">
+        <!-- Progress Bar Tipis di Atas -->
+        <div class="w-full h-1 bg-slate-100 dark:bg-slate-800">
+            <div id="topProgressBar" class="h-full bg-emerald-600 dark:bg-emerald-500 transition-all duration-300" style="width: 6.25%;"></div>
+        </div>
+
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+                <button type="button" onclick="toggleSlideDrawer()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition flex items-center gap-2 text-xs sm:text-sm font-bold shrink-0">
+                    <i class="fa-solid fa-bars-staggered text-emerald-600 dark:text-emerald-400"></i>
+                    <span class="hidden sm:inline">Daftar Slide</span>
+                    <span id="slideCounterBadge" class="px-2 py-0.5 text-xs rounded-lg bg-emerald-600 text-white font-bold">1 / 16</span>
+                </button>
+
+                <div class="hidden md:flex items-center gap-2.5 min-w-0">
+                    <span id="slideCategoryPill" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 shrink-0">
+                        Minggu 7 · Pra-UTS
+                    </span>
+                    <h1 id="headerSlideTitle" class="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">
+                        Integrasi Penuh Kasir POS ke Gudang, SLA Antrean &amp; Kontinuitas Bisnis
+                    </h1>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 shrink-0">
+                <button type="button" onclick="openGlossaryIndex()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 text-xs sm:text-sm font-bold flex items-center gap-2 transition">
+                    <i class="fa-solid fa-book-open text-emerald-600 dark:text-emerald-400"></i>
+                    <span>Kamus</span>
+                </button>
+
+                <button type="button" onclick="toggleTheme()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center transition" title="Ganti Tema Layar">
+                    <i id="themeIcon" class="fa-solid fa-moon text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Drawer Daftar Slide -->
+    <div id="slideDrawerBackdrop" onclick="toggleSlideDrawer()" class="fixed inset-0 bg-slate-950/50 backdrop-blur-xs z-40 hidden opacity-0 transition-opacity duration-200"></div>
+    <aside id="slideDrawer" class="fixed top-0 left-0 bottom-0 w-80 sm:w-96 bg-white dark:bg-slate-900 z-50 shadow-2xl border-r border-slate-200 dark:border-slate-800 transform -translate-x-full transition-transform duration-200 flex flex-col">
+        <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Sistem Terintegrasi (BD5231) · UPERTIS</span>
+                <h2 class="text-base font-extrabold text-slate-900 dark:text-white mt-0.5">Materi Pertemuan 7 (16 Slide Lega)</h2>
+            </div>
+            <button type="button" onclick="toggleSlideDrawer()" class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div id="drawerSlideList" class="p-3.5 overflow-y-auto space-y-1 flex-1"></div>
+        <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 flex items-center justify-between">
+            <span>Panah Kiri / Kanan untuk navigasi</span>
+            <span class="font-bold">16 Slide Fokus</span>
+        </div>
+    </aside>
+
+    <!-- Area Konten Slide Utama -->
+    <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-5 flex flex-col justify-center">
+        <div id="slideViewport" class="bg-white dark:bg-slate-900 rounded-3xl shadow-xs border border-slate-200/80 dark:border-slate-800 p-6 sm:p-8 lg:p-10 min-h-[540px] flex flex-col justify-between relative overflow-hidden">
+            <div class="py-12 text-center text-sm text-slate-500">Memuat materi Pertemuan 7...</div>
+        </div>
+    </main>
+
+    <!-- Footer Navigasi Bawah -->
+    <footer class="sticky bottom-0 z-20 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 py-3 px-4 sm:px-6">
+        <div class="max-w-6xl mx-auto flex items-center justify-between gap-4">
+            <button type="button" id="prevSlideBtn" onclick="changeSlide(-1)" class="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                <i class="fa-solid fa-arrow-left text-xs"></i>
+                <span>Sebelumnya</span>
+            </button>
+
+            <div id="slideDotsContainer" class="hidden md:flex items-center gap-1.5 flex-wrap justify-center"></div>
+
+            <div class="md:hidden text-xs font-bold text-slate-500 dark:text-slate-400" id="mobileFooterCounter">
+                1 / 16
+            </div>
+
+            <button type="button" id="nextSlideBtn" onclick="changeSlide(1)" class="px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-emerald-600 hover:bg-emerald-700 text-white transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                <span id="nextBtnText">Selanjutnya</span>
+                <i class="fa-solid fa-arrow-right text-xs"></i>
+            </button>
+        </div>
+    </footer>
+
+    <!-- Modal Penjelasan Istilah -->
+    <div id="termModalBackdrop" onclick="closeTermModal()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl slide-enter">
+            <div class="flex items-start justify-between gap-4 mb-4">
+                <div>
+                    <span id="termCategoryBadge" class="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">Kategori</span>
+                    <h3 id="termTitle" class="text-xl font-extrabold text-slate-900 dark:text-white mt-1.5">Nama Istilah</h3>
+                </div>
+                <button type="button" onclick="closeTermModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <p id="termMainDesc" class="text-sm text-slate-700 dark:text-slate-200 leading-relaxed bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200/70 dark:border-slate-700/70"></p>
+                <div class="p-3.5 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/40 border border-emerald-200/70 dark:border-emerald-800/70">
+                    <div class="text-[11px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 mb-1">Contoh di Toko Sepatu Nusantara:</div>
+                    <p id="termDetailDesc" class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed"></p>
+                </div>
+                <div class="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800 text-xs px-1">
+                    <span id="termSourceName" class="font-semibold text-slate-400">Referensi</span>
+                    <button type="button" onclick="closeTermModal(); openGlossaryIndex();" class="font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1.5">
+                        <span>Buka Kamus Lengkap</span>
+                        <i class="fa-solid fa-book-open text-[10px]"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Kamus Lengkap -->
+    <div id="glossaryModalBackdrop" onclick="closeGlossaryIndex()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-4xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden slide-enter">
+            <div class="p-5 sm:p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white">Kamus Bisnis Digital — Pertemuan 7 (Pra-UTS)</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Penjelasan jernih dari sudut pandang manajer bisnis tanpa jargon pemrograman rumit.</p>
+                </div>
+                <button type="button" onclick="closeGlossaryIndex()" class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-sm"></i>
+                    <input id="glossarySearchInput" oninput="renderGlossaryList(this.value)" type="text" placeholder="Cari istilah: API Client, SLA Timeout, Strict Stop, Pending, Overselling, Rekonsiliasi, UAT..." class="w-full pl-10 pr-4 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+            </div>
+            <div id="glossaryListGrid" class="p-5 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+        </div>
+    </div>
+
+    <script>
+        /* =====================================================================
+           1. KAMUS ISTILAH BISNIS DIGITAL — PERTEMUAN 7
+           ===================================================================== */
+        const GLOSSARY_DB = {
+            api_client: {
+                title: "Kurir Digital (API Client / PHP cURL)",
+                category: "Arsitektur Integrasi",
+                main: "Komponen penghubung otomatis di dalam aplikasi Kasir POS yang mengantar pesanan ke Gudang dengan membawa X-API-KEY, mematuhi batas waktu tunggu (SLA), lalu menerjemahkan balasan Gudang ke layar kasir.",
+                detail: "Manajer bisnis tidak perlu menulis ulang kodenya—cukup mengatur cabang, batas detik SLA, dan mode darurat lewat Panel Pengaturan POS.",
+                source: "Slide 4"
+            },
+            front_office_ux: {
+                title: "Pengalaman Kasir Depan (Front-Office UX)",
+                category: "Operasional Ritel",
+                main: "Cara aplikasi Kasir menerjemahkan kode teknis HTTP/JSON (400, 401, 409, 500) menjadi pesan bahasa manusia yang sopan, jelas, dan langsung memberi arahan tindakan bagi petugas kasir.",
+                detail: "Kasir tidak melihat tulisan JSON mentah; layar langsung memberi tahu: 'Kuota promo maksimal 3 pasang per struk'.",
+                source: "Slide 2 & 3"
+            },
+            sla_timeout: {
+                title: "Batas Waktu Tunggu Antrean (SLA Timeout)",
+                category: "Manajemen Layanan",
+                main: "Batas maksimal waktu (misal 3–4 detik) bagi mesin Kasir untuk menunggu jawaban server Gudang sebelum memutus tunggu agar antrean pembeli tidak macet total.",
+                detail: "Sama seperti mesin EDC/QRIS di minimarket yang cepat memunculkan status gagal bila jaringan lambat, bukan berputar 30 detik sampai antrean bubar.",
+                source: "Slide 5 & 6"
+            },
+            business_continuity: {
+                title: "Kontinuitas Bisnis (Business Continuity)",
+                category: "Strategi Operasional",
+                main: "Rencana kerja dan mode darurat sistem agar toko tetap tahu harus berbuat apa saat jaringan atau server Gudang terputus di jam ramai.",
+                detail: "Manajer memilih antara strategi Strict Stop (utamakan akurasi stok) atau Pending & Retry (utamakan penyelamatan omzet).",
+                source: "Slide 7 & 8"
+            },
+            strict_stop: {
+                title: "Strict Stop (Mode Ketat / Fail-Closed)",
+                category: "Kebijakan Darurat",
+                main: "Kebijakan menghentikan sementara proses checkout kasir ketika koneksi ke Gudang terputus.",
+                detail: "Risiko overselling 0%, sangat cocok untuk barang stok terbatas/eksklusif, tetapi toko berisiko kehilangan omzet langsung saat internet mati.",
+                source: "Slide 7 & 16"
+            },
+            pending_retry: {
+                title: "Pending & Retry (Antrean Cadangan / Queue)",
+                category: "Kebijakan Darurat",
+                main: "Kebijakan tetap melayani pembeli saat koneksi Gudang putus dengan menyimpan nota berstatus PENDING di db_penjualan, lalu mengirimkannya ulang (Retry) saat jaringan pulih.",
+                detail: "Omzet terselamatkan, namun tetap memiliki risiko bentrokan stok (400 Stok Kurang) jika cabang lain yang online keburu menghabiskan stok terakhir.",
+                source: "Slide 7, 8 & 9"
+            },
+            overselling_offline: {
+                title: "Overselling Transaksi Offline",
+                category: "Risiko Bisnis Kritis",
+                main: "Kondisi ketika cabang yang sedang offline tetap menjual 1 barang terakhir (status PENDING), sementara cabang online menjual barang yang sama di menit bersamaan—sehingga saat Retry ditolak 400 Stok Kurang.",
+                detail: "Pagar 409 hanya mencegah 1 struk memotong stok 2 kali, BUKAN mencegah 2 cabang berebut 1 stok saat offline.",
+                source: "Slide 8"
+            },
+            retur_nota: {
+                title: "Retur / Pembatalan Nota Kasir",
+                category: "Siklus 4 Pintu API",
+                main: "Proses pengembalian barang atau pembatalan struk sah dari meja kasir yang otomatis memanggil POST /api/stok-masuk.php dengan referensi RETUR-TRX-...",
+                detail: "Stok fisik rak langsung kembali utuh dan pagar 409 mencegah satu struk diretur dua kali (mencegah stok hantu).",
+                source: "Slide 9 & 10"
+            },
+            rekonsiliasi_tutup_toko: {
+                title: "Rekonsiliasi Tutup Toko Lintas 2 Database",
+                category: "Audit Harian",
+                main: "Ritual penutupan shift untuk mencocokkan Total Unit Terjual Bersih di db_penjualan dengan Total Unit Keluar Bersih di db_gudang.log_stok.",
+                detail: "Wajib bernilai Selisih 0 sebelum shift kasir ditutup. Jika ada nota PENDING belum di-Retry, selisih akan langsung terdeteksi.",
+                source: "Slide 9 & 11"
+            },
+            uat_go_nogo: {
+                title: "UAT (User Acceptance Testing) & Keputusan Go / No-Go",
+                category: "Tata Kelola Rilis",
+                main: "Pengujian menyeluruh oleh pemilik proses bisnis (bukan programmer) sebelum aplikasi resmi dipakai karyawan toko, yang berujung pada keputusan GO, GO dengan Catatan, atau NO-GO.",
+                detail: "Menjadi fokus utama Praktikum & Laporan UTS Terpadu pada LKM 07.",
+                source: "Slide 12 & 16"
+            }
+        };
+
+        function escapeHtml(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function term(key, customLabel) {
+            const item = GLOSSARY_DB[key];
+            if (!item) return customLabel || key;
+            const label = customLabel || item.title.split(' (')[0];
+            return '<span class="tech-term" onclick="showTerm(\'' + key + '\')">' + escapeHtml(label) + '</span>';
+        }
+
+        function formatRupiah(angka) {
+            return 'Rp ' + Number(angka || 0).toLocaleString('id-ID');
+        }
+
+        /* Header Slide Lega & Transisi 1 Baris Tipis */
+        function slideHeader(eyebrow, titleHtml, subtitleHtml, eyebrowColor) {
+            const clr = eyebrowColor || 'text-emerald-600 dark:text-emerald-400';
+            return `
+                <div class="space-y-1">
+                    <span class="text-xs font-bold uppercase tracking-wider ${clr}">${eyebrow}</span>
+                    <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white leading-tight">${titleHtml}</h2>
+                    ${subtitleHtml ? `<p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-4xl">${subtitleHtml}</p>` : ''}
+                </div>
+            `;
+        }
+
+        function slideTransitionNote(nextHint) {
+            return `
+                <div class="pt-3 border-t border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400">
+                    <span><strong class="text-emerald-600 dark:text-emerald-400">Berikutnya &rarr;</strong> ${nextHint}</span>
+                    <button type="button" onclick="changeSlide(1)" class="text-emerald-600 dark:text-emerald-400 font-extrabold hover:underline shrink-0">Lanjut</button>
+                </div>
+            `;
+        }
+
+        /* =====================================================================
+           2. STATE GLOBAL & SIMULASI DUNIA NYATA
+           ===================================================================== */
+        let currentSlideIndex = 0;
+        const TOTAL_SLIDES = 16;
+
+        // --- STATE SIMULASI DUNIA NYATA 1 (SLIDE 6): Monitor Antrean Kasir & SLA Timeout ---
+        const QUEUE_CUSTOMERS_BASE = [
+            { id: 1, nama: 'Pembeli 1 · Budi', item: 'Sneakers Pro (1 psg)', harga: 450000 },
+            { id: 2, nama: 'Pembeli 2 · Sari', item: 'Office Oxford (1 psg)', harga: 490000 },
+            { id: 3, nama: 'Pembeli 3 · Raka', item: 'Casual Canvas (1 psg)', harga: 275000 },
+            { id: 4, nama: 'Pembeli 4 · Dina', item: 'Sneakers Pro (1 psg)', harga: 450000 }
+        ];
+
+        let qSim = {
+            network: 'lambat',     // 'normal' (0.4s) | 'lambat' (6s) | 'mati' (timeout)
+            posMode: 'tanpa_sla',  // 'tanpa_sla' (15s) | 'sla_3' (3s)
+            running: false,
+            finished: false,
+            elapsedSec: 0,
+            maxSec: 15,
+            timerId: null,
+            customers: QUEUE_CUSTOMERS_BASE.map(function (c) {
+                return Object.assign({}, c, { status: 'menunggu', note: 'Siap di antrean kasir' });
+            })
+        };
+
+        // --- STATE SIMULASI DUNIA NYATA 2 (SLIDE 9): Layar Kasir POS End-to-End & 2 Database Live ---
+        function createInitialPosState() {
+            return {
+                cabang: 'pusat',       // 'pusat' | 'padang'
+                slaSec: 3,             // 3 | 4
+                darurat: 'pending',    // 'strict' | 'pending'
+                gudangOnline: true,
+                selectedKode: 'SP008',
+                qty: 1,
+                showCourierLog: false,
+                trxSeq: 1,
+                products: [
+                    { kode: 'SP001', nama: 'Sneakers Pro', stok: 12, harga: 450000 },
+                    { kode: 'SP008', nama: 'Office Oxford', stok: 4, harga: 490000 },
+                    { kode: 'SP005', nama: 'Casual Canvas', stok: 3, harga: 275000 }
+                ],
+                salesDb: [],           // { no_struk, cabang, kode, nama, qty, total, status: 'SUKSES'|'PENDING'|'DIRETUR', jam }
+                warehouseLogs: [],     // { jam, kode, jenis: 'keluar'|'masuk', qty, sisa, ref }
+                posBanner: null,       // { type: 'ok'|'warn'|'err', title, desc }
+                lastCourier: {
+                    method: 'GET',
+                    url: '/api/barang.php',
+                    apiKey: 'GDG-KEY-UTAMA-001',
+                    sla: '3 dtk',
+                    httpCode: 200,
+                    note: 'Katalog produk dimuat otomatis saat kasir dibuka.',
+                    json: '{\n  "status": "sukses",\n  "kode_http": 200,\n  "pesan": "3 produk katalog berhasil disinkronkan ke layar POS."\n}'
+                }
+            };
+        }
+        let posSim = createInitialPosState();
+
+        // --- STATE STUDI KASUS MANAJER (SLIDE 14): 1 Kasus per Layar ---
+        let activeCaseTab = 0;
+        let managerCaseChoices = {};
+        const MANAGER_CASES_M7 = [
+            {
+                id: 1,
+                badge: "🎯 Kasus 1 · Dilema Flash Sale Akhir Pekan",
+                title: "Toko Anda menggelar Flash Sale akhir pekan untuk sepatu eksklusif yang sisa stoknya tinggal 2 pasang dan dijual serentak di 3 cabang. Tiba-tiba koneksi internet di Cabang Padang terputus selama 10 menit. Strategi darurat apa yang paling tepat ditetapkan Manajer?",
+                options: [
+                    {
+                        ltr: "A",
+                        text: "Aktifkan Strict Stop (Fail-Closed) khusus produk stok kritis, sementara produk stok melimpah tetap boleh dilayani atau dialihkan ke katalog alternatif.",
+                        best: true,
+                        feedback: "Keputusan Manajerial Sangat Tepat! Untuk stok tersisa 2 pasang di 3 cabang, mode Pending hampir pasti memicu overselling dan kekecewaan pelanggan. Strict Stop menjaga kredibilitas toko sambil mengarahkan kasir menawarkan model lain."
+                    },
+                    {
+                        ltr: "B",
+                        text: "Paksa pakai Pending & Retry untuk semua produk stok kritis dan biarkan kasir menerima uang dulu, urusan stok habis dipikirkan nanti malam.",
+                        best: false,
+                        feedback: "Berisiko Tinggi! Saat Retry dijalankan dan ditolak 400 Stok Kurang, toko harus melakukan refund massal dan menghadapi ulasan buruk pelanggan yang merasa dibohongi."
+                    },
+                    {
+                        ltr: "C",
+                        text: "Matikan pengecekan X-API-KEY dan batas promo agar transaksi berjalan lebih cepat.",
+                        best: false,
+                        feedback: "Keliru! Mematikan kontrol keamanan justru membuka celah penyalahgunaan akses dan membiarkan tengkulak memborong stok promo."
+                    }
+                ]
+            },
+            {
+                id: 2,
+                badge: "🎯 Kasus 2 · Selisih 2 Pasang saat Rekonsiliasi Tutup Toko",
+                title: "Saat tutup shift jam 21.00, bar Rekonsiliasi Tutup Toko menunjukkan SELISIH 2 pasang. Setelah diperiksa, ada 1 struk PENDING (TRX-007, 2 psg SP008) yang baru di-Retry tetapi ditolak Gudang dengan '400 Stok Kurang' karena stok sudah habis dibeli cabang lain. Apa langkah pemulihan yang benar?",
+                options: [
+                    {
+                        ltr: "A",
+                        text: "Hapus paksa baris TRX-007 dari db_penjualan tanpa melapor agar angka rekonsiliasi langsung berubah menjadi Selisih 0.",
+                        best: false,
+                        feedback: "Dilarang Keras! Menghapus jejak transaksi merusak audit keuangan (uang kas di laci tidak akan cocok dengan laporan penjualan)."
+                    },
+                    {
+                        ltr: "B",
+                        text: "Hubungi pelanggan untuk opsi tukar model/pengiriman dari cabang lain atau refund resmi, lalu perbarui status nota menjadi DIBATALKAN/REFUND dengan berita acara audit.",
+                        best: true,
+                        feedback: "Tepat Sekali! Pelanggan ditangani secara transparan, uang kas tetap tercatat jelas lewat prosedur refund resmi, dan angka penjualan bersih kembali cocok 100% dengan Gudang (Selisih 0)."
+                    },
+                    {
+                        ltr: "C",
+                        text: "Ubah stok SP008 di tabel barang secara manual menjadi -2 agar Retry bisa dipaksa lolos.",
+                        best: false,
+                        feedback: "Salah! Stok minus merusak integritas database dan menciptakan pembukuan fiktif yang menyesatkan jadwal restock."
+                    }
+                ]
+            },
+            {
+                id: 3,
+                badge: "🎯 Kasus 3 · Keputusan Go / No-Go saat Pengujian UAT",
+                title: "Besok pagi aplikasi POS baru dijadwalkan rilis (Go-Live) di seluruh cabang. Namun saat Anda menjalankan UAT sore ini, Anda menemukan bahwa tombol 'Retur Nota' bisa diklik 2 kali untuk struk yang sama sehingga stok bertambah dua kali lipat (stok hantu). Apa keputusan UAT Anda?",
+                options: [
+                    {
+                        ltr: "A",
+                        text: "GO (Rilis Besok Pagi) — cukup berpesan secara lisan kepada kasir agar berhati-hati dan tidak mengklik tombol Retur dua kali.",
+                        best: false,
+                        feedback: "Berbahaya! Kontrol internal tidak boleh hanya mengandalkan ingatan manusia. Saat toko ramai, klik ganda pasti terjadi dan melahirkan stok hantu."
+                    },
+                    {
+                        ltr: "B",
+                        text: "GO dengan Catatan — rilis dulu sistemnya, perbaikan anti-duplikat 409 dikerjakan bulan depan.",
+                        best: false,
+                        feedback: "Tidak Tepat! Celah yang langsung merusak akurasi stok & uang (stok hantu / retur ganda) termasuk temuan kritis (Blocker), bukan catatan minor."
+                    },
+                    {
+                        ltr: "C",
+                        text: "NO-GO (Tahan Rilis) — tunda Go-Live sampai tim IT mengaktifkan cek anti-duplikat 409 pada referensi RETUR-TRX dan lulus uji ulang UAT.",
+                        best: true,
+                        feedback: "Keputusan Profesional! Celah integritas data & keuangan wajib berstatus NO-GO hingga terbukti tertutup pada uji ulang (re-test UAT)."
+                    }
+                ]
+            }
+        ];
+
+        // --- STATE KUIS KILAT PRA-UTS (SLIDE 15): 5 Soal M1–M7 ---
+        let quizAnswersM7 = {};
+        const QUIZ_M7 = [
+            {
+                id: 1,
+                tag: "M1–M3",
+                q: "Mengapa pemisahan db_penjualan dan db_gudang yang dihubungkan lewat API lebih disarankan daripada membiarkan aplikasi Kasir menulis langsung ke tabel barang Gudang?",
+                opts: [
+                    { k: "A", t: "Agar Gudang tetap memegang kendali penuh atas aturan bisnis (izin kunci, batas promo, anti-duplikat, & audit log_stok)." },
+                    { k: "B", t: "Agar kasir tidak perlu menggunakan koneksi jaringan sama sekali." }
+                ],
+                ans: "A",
+                exp: "Dengan API, Gudang menjadi penjaga tunggal aturan kontrol internal sehingga cabang kasir tidak bisa memotong stok sembarangan."
+            },
+            {
+                id: 2,
+                tag: "M4–M5",
+                q: "Apa manfaat bisnis utama memberikan X-API-KEY yang berbeda untuk Toko Pusat dan Cabang Padang?",
+                opts: [
+                    { k: "A", t: "Hanya agar alamat URL terlihat lebih panjang." },
+                    { k: "B", t: "Agar akses satu cabang yang bermasalah/diaudit bisa dimatikan (401) tanpa mengganggu operasional cabang lain." }
+                ],
+                ans: "B",
+                exp: "Kunci cabang terpisah memastikan isolasi risiko dan kejelasan jejak audit cabang peminta pada setiap transaksi."
+            },
+            {
+                id: 3,
+                tag: "M6",
+                q: "Saat koneksi terputus tepat setelah stok rak dikurangi tetapi sebelum Kartu Stok (log_stok) tertulis, mekanisme apa yang mencegah selisih audit?",
+                opts: [
+                    { k: "A", t: "Pembukuan Satu Paket Utuh (RollBack) yang mengembalikan saldo rak ke angka semula." },
+                    { k: "B", t: "Filter katalog ?stok_max=5 pada endpoint GET." }
+                ],
+                ans: "A",
+                exp: "beginTransaction() + rollBack() menjamin perubahan rak dan Kartu Stok berhasil serentak atau batal serentak."
+            },
+            {
+                id: 4,
+                tag: "M7 · Kritis",
+                q: "Jika Cabang Padang menjual 1 pasang terakhir secara offline (PENDING) lalu Toko Pusat yang online menjual sepatu terakhir itu, kode penolakan apa yang diterima Padang saat klik Retry?",
+                opts: [
+                    { k: "A", t: "409 Conflict (Struk Ganda)" },
+                    { k: "B", t: "400 Bad Request (Stok Kurang — Overselling Offline)" }
+                ],
+                ans: "B",
+                exp: "Nomor struknya unik (bukan duplikat), tetapi sisa stok fisik sudah 0. Karena itu Gudang menolak dengan 400 Stok Kurang!"
+            },
+            {
+                id: 5,
+                tag: "M7 · Audit",
+                q: "Pada ritual Rekonsiliasi Tutup Toko, jika Total Unit Terjual Bersih di db_penjualan = 5 pasang sementara Total Unit Keluar Bersih di db_gudang.log_stok = 3 pasang, penyebab paling mungkin adalah...",
+                opts: [
+                    { k: "A", t: "Masih ada transaksi berstatus PENDING (2 pasang) di kasir yang belum disinkronkan ulang (Retry) ke Gudang." },
+                    { k: "B", t: "Harga jual sepatu di katalog mengalami kenaikan." }
+                ],
+                ans: "A",
+                exp: "Nota PENDING sudah menambah angka terjual di kasir tetapi belum mengurangi stok di Gudang, sehingga memunculkan selisih 2 pasang sampai di-Retry."
+            }
+        ];
+
+        /* =====================================================================
+           3. RENDER 16 SLIDE LENGKAP (LEGA, FOKUS BISNIS DIGITAL)
+           ===================================================================== */
+
+        // SLIDE 1: Sampul & 4 Babak Pembelajaran
+        function renderSlide1() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center my-auto">
+                        <div class="lg:col-span-7 space-y-5">
+                            <div class="inline-flex flex-wrap items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 text-xs font-bold border border-emerald-200/60 dark:border-emerald-800/60">
+                                <span>Minggu 7 · Sistem Terintegrasi (BD5231)</span>
+                                <span>•</span>
+                                <span>Sub-CPMK 2.3 &amp; Persiapan UTS</span>
+                            </div>
+
+                            <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 dark:text-white leading-tight tracking-tight">
+                                Integrasi Penuh Kasir POS ke Gudang, ${term('sla_timeout', 'SLA Antrean')}, &amp; ${term('business_continuity', 'Kontinuitas Bisnis')}
+                            </h2>
+
+                            <p class="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Puncak paruh pertama semester sebelum UTS: menghubungkan penuh aplikasi Kasir POS (<code class="font-mono font-bold">db_penjualan</code>) ke Gudang (<code class="font-mono font-bold">db_gudang</code>), menjaga kecepatan antrean, mengelola risiko gangguan jaringan, hingga uji kelayakan ${term('uat_go_nogo', 'UAT Go / No-Go')}.
+                            </p>
+
+                            <div class="flex flex-wrap gap-2 pt-1">
+                                <span class="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs font-extrabold">🛒 Front-Office UX Ramah Kasir</span>
+                                <span class="px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 text-xs font-extrabold">⏱️ SLA &amp; Mode Darurat Offline</span>
+                                <span class="px-3 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 text-xs font-extrabold">✅ Rekonsiliasi &amp; UAT Pra-UTS</span>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-5">
+                            <div class="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 space-y-3">
+                                <div class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">4 Babak Pembelajaran (16 Slide Lega)</div>
+                                <button type="button" onclick="goToSlide(1)" class="w-full text-left flex items-center gap-3 p-3 rounded-2xl bg-white hover:bg-emerald-50/50 dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 transition">
+                                    <span class="w-8 h-8 rounded-xl bg-emerald-600 text-white font-extrabold flex items-center justify-center shrink-0 text-xs">1</span>
+                                    <div class="text-xs"><strong class="text-slate-900 dark:text-white block">Dari Penguji JSON ke Kasir POS Asli</strong><span class="text-slate-500">Slide 2–4 · UX Kasir &amp; Konsep Kurir Digital</span></div>
+                                </button>
+                                <button type="button" onclick="goToSlide(4)" class="w-full text-left flex items-center gap-3 p-3 rounded-2xl bg-white hover:bg-emerald-50/50 dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 transition">
+                                    <span class="w-8 h-8 rounded-xl bg-amber-600 text-white font-extrabold flex items-center justify-center shrink-0 text-xs">2</span>
+                                    <div class="text-xs"><strong class="text-slate-900 dark:text-white block">SLA Antrean &amp; Kontinuitas Bisnis</strong><span class="text-slate-500">Slide 5–8 · Simulasi Antrean &amp; Risiko Overselling</span></div>
+                                </button>
+                                <button type="button" onclick="goToSlide(8)" class="w-full text-left flex items-center gap-3 p-3 rounded-2xl bg-white hover:bg-emerald-50/50 dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 transition">
+                                    <span class="w-8 h-8 rounded-xl bg-indigo-600 text-white font-extrabold flex items-center justify-center shrink-0 text-xs">3</span>
+                                    <div class="text-xs"><strong class="text-slate-900 dark:text-white block">POS 2 Database, Retur, &amp; Tutup Toko</strong><span class="text-slate-500">Slide 9–12 · Simulasi POS Live, Audit &amp; UAT</span></div>
+                                </button>
+                                <button type="button" onclick="goToSlide(12)" class="w-full text-left flex items-center gap-3 p-3 rounded-2xl bg-white hover:bg-emerald-50/50 dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 transition">
+                                    <span class="w-8 h-8 rounded-xl bg-rose-600 text-white font-extrabold flex items-center justify-center shrink-0 text-xs">4</span>
+                                    <div class="text-xs"><strong class="text-slate-900 dark:text-white block">Rangkuman M1–M7, Kuis &amp; Briefing UTS</strong><span class="text-slate-500">Slide 13–16 · Kasus Manajer &amp; Paket NIM LKM 07</span></div>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 2: Jembatan M6 ke M7
+        function renderSlide2() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-6">
+                    ${slideHeader("Babak 1 · Jembatan Pertemuan 6 ke 7", "Dari Alat Penguji JSON Menjadi Aplikasi Kasir POS Sungguhan", "Sampai Minggu 6 kita baru menguji API Gudang secara terpisah. Hari ini kedua sistem dan kedua database benar-benar bekerja bersama.")}
+
+                    <div class="grid grid-cols-1 lg:grid-cols-11 gap-4 items-stretch my-auto">
+                        <div class="lg:col-span-5 p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-4">
+                            <div class="space-y-3">
+                                <span class="px-3 py-1 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-extrabold">◀ MINGGU 6 · ALAT PENGUJI (TESTER)</span>
+                                <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Fokus Membangun Pagar di Gudang</h3>
+                                <ul class="space-y-2 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    <li>• Layar hanya menampilkan kotak hitam <strong>JSON mentah</strong>.</li>
+                                    <li>• Belum menyimpan struk transaksi ke <code class="font-mono font-bold">db_penjualan</code>.</li>
+                                    <li>• Belum mengatur batas waktu tunggu saat jaringan lambat.</li>
+                                    <li>• Tidak cocok dipakai langsung oleh kasir di depan antrean.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-1 flex items-center justify-center">
+                            <div class="w-11 h-11 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-extrabold shadow-md">
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-5 p-6 rounded-3xl bg-emerald-50/70 dark:bg-emerald-950/35 border-2 border-emerald-500 flex flex-col justify-between gap-4">
+                            <div class="space-y-3">
+                                <span class="px-3 py-1 rounded-full bg-emerald-600 text-white text-xs font-extrabold">▶ MINGGU 7 · KASIR POS END-TO-END</span>
+                                <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Dua Database Terhubung Penuh (<code class="font-mono">POS ↔ Gudang</code>)</h3>
+                                <ul class="space-y-2 text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed">
+                                    <li>• <strong>${term('front_office_ux', 'Layar Ramah Kasir')}:</strong> hitung Rupiah, cetak struk, pesan error bahasa manusia.</li>
+                                    <li>• Menyimpan riwayat transaksi nyata di <code class="font-mono font-bold">db_penjualan</code> &amp; potong stok <code class="font-mono font-bold">db_gudang</code>.</li>
+                                    <li>• Dilengkapi <strong>Panel Pengaturan Manajer</strong> (SLA, Cabang, Mode Darurat).</li>
+                                    <li>• Mendukung <strong>Retry</strong> saat pulih, <strong>Retur Nota</strong>, &amp; <strong>Rekonsiliasi Tutup Toko</strong>.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${slideTransitionNote("Bagaimana aplikasi POS menerjemahkan kode error Gudang agar kasir tidak bingung? Lihat Slide 3.")}
+                </div>
+            `;
+        }
+
+        // SLIDE 3: Front-Office UX — Terjemahan Pesan Error untuk Kasir
+        function renderSlide3() {
+            const rows = [
+                {
+                    code: "400",
+                    badgeCls: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
+                    tech: "Batas Promo / Stok Kurang",
+                    ux: "\"Pembelian promo dibatasi maks. 3 pasang per nota\" atau \"Sisa sepatu di gudang tinggal 2 pasang.\"",
+                    action: "Sampaikan kuota promo dengan sopan atau tawarkan sisa stok / model sejenis."
+                },
+                {
+                    code: "401",
+                    badgeCls: "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300",
+                    tech: "Kunci Cabang Mati",
+                    ux: "\"Akses kasir cabang sedang dinonaktifkan sementara oleh Gudang Pusat.\"",
+                    action: "Hentikan input sementara & segera eskalasi ke Manajer Cabang / Pusat."
+                },
+                {
+                    code: "409",
+                    badgeCls: "bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300",
+                    tech: "Struk / Retur Ganda",
+                    ux: "\"Nomor struk ini sudah tercatat sukses. Tidak perlu mengirim ulang.\"",
+                    action: "Cek riwayat nota di layar POS & cetak ulang salinan struk jika diperlukan."
+                },
+                {
+                    code: "500",
+                    badgeCls: "bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-200",
+                    tech: "Gangguan Server / RollBack",
+                    ux: "\"Terjadi gangguan sementara. Stok aman tidak terpotong—silakan coba 1 kali lagi.\"",
+                    action: "Tunggu beberapa detik, pastikan status nota, lalu ulangi sekali dengan struk baru."
+                }
+            ];
+
+            const rowsHtml = rows.map(function (r) {
+                return `
+                    <tr class="border-t border-slate-200 dark:border-slate-800">
+                        <td class="p-3.5"><span class="px-2.5 py-1 rounded-lg font-mono text-xs font-extrabold ${r.badgeCls}">${r.code}</span><div class="text-[11px] font-bold text-slate-500 mt-1">${r.tech}</div></td>
+                        <td class="p-3.5 text-xs sm:text-sm font-bold text-slate-900 dark:text-white">${r.ux}</td>
+                        <td class="p-3.5 text-xs sm:text-sm text-slate-600 dark:text-slate-300">${r.action}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    ${slideHeader("Babak 1 · Front-Office UX", "Kasir Tidak Membaca JSON: Terjemahan Otomatis di Layar POS", "Kualitas ${term('front_office_ux', 'Front-Office UX')} menentukan ketenangan kasir saat menghadapi penolakan sistem di depan antrean pelanggan.")}
+
+                    <div class="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 my-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-100 dark:bg-slate-800 text-xs font-extrabold text-slate-600 dark:text-slate-300">
+                                    <th class="p-3.5 w-44">Kode dari Gudang</th>
+                                    <th class="p-3.5">Pesan Bahasa Manusia di Layar Kasir</th>
+                                    <th class="p-3.5">Tindakan Cepat Kasir (SOP)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white dark:bg-slate-900">${rowsHtml}</tbody>
+                        </table>
+                    </div>
+
+                    ${slideTransitionNote("Siapa yang mengantar pesanan dan menerjemahkan balasan itu di balik tombol Bayar? Kita lihat di Slide 4.")}
+                </div>
+            `;
+        }
+
+        // SLIDE 4: Konsep Kurir Digital (API Client / PHP cURL) — Tanpa Sintaks Kode
+        function renderSlide4() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    ${slideHeader("Babak 1 · Gambaran Arsitektur (Tanpa Bedah Sintaks Kode)", "Cara Kerja ${term('api_client', 'Kurir Digital (API Client / PHP cURL)')} di Balik Tombol Bayar", "Sebagai lulusan Bisnis Digital, Anda tidak perlu merakit kode kurirnya—cukup pahami 4 tugasnya dan atur kebijakannya dari Panel Pengaturan POS.")}
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 my-auto">
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-t-4 border-emerald-600 border-x border-b border-slate-200 dark:border-slate-800 space-y-2.5">
+                            <div class="flex items-center justify-between">
+                                <span class="w-8 h-8 rounded-xl bg-emerald-600 text-white font-extrabold flex items-center justify-center text-xs">1</span>
+                                <i class="fa-solid fa-envelope-open-text text-emerald-600"></i>
+                            </div>
+                            <h3 class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white">Bawa Pesanan &amp; Kartu Izin</h3>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">Begitu kasir menekan <strong>Bayar</strong>, kurir digital membungkus kode sepatu, jumlah beli, nomor struk, dan stempel <code class="font-mono font-bold">X-API-KEY</code> cabang.</p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-t-4 border-amber-500 border-x border-b border-slate-200 dark:border-slate-800 space-y-2.5">
+                            <div class="flex items-center justify-between">
+                                <span class="w-8 h-8 rounded-xl bg-amber-500 text-white font-extrabold flex items-center justify-center text-xs">2</span>
+                                <i class="fa-solid fa-stopwatch text-amber-500"></i>
+                            </div>
+                            <h3 class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white">Patuhi Batas Waktu (SLA)</h3>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">Kurir hanya menunggu jawaban Gudang sesuai batas detik yang diatur manajer (misal <strong>3–4 detik</strong>) agar kasir tidak macet.</p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-t-4 border-indigo-600 border-x border-b border-slate-200 dark:border-slate-800 space-y-2.5">
+                            <div class="flex items-center justify-between">
+                                <span class="w-8 h-8 rounded-xl bg-indigo-600 text-white font-extrabold flex items-center justify-center text-xs">3</span>
+                                <i class="fa-solid fa-file-shield text-indigo-600"></i>
+                            </div>
+                            <h3 class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white">Terima Kode HTTP &amp; JSON</h3>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">Membaca keputusan resmi dari Gudang: apakah sah (<code class="font-mono font-bold">200</code>), ditolak aturan bisnis (<code class="font-mono font-bold">400/401/409</code>), atau jaringan putus.</p>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-t-4 border-purple-600 border-x border-b border-slate-200 dark:border-slate-800 space-y-2.5">
+                            <div class="flex items-center justify-between">
+                                <span class="w-8 h-8 rounded-xl bg-purple-600 text-white font-extrabold flex items-center justify-center text-xs">4</span>
+                                <i class="fa-solid fa-desktop text-purple-600"></i>
+                            </div>
+                            <h3 class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white">Tampilkan &amp; Catat Status</h3>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">Menampilkan pesan ramah di layar POS dan menyimpan status sinkron (<code class="font-mono font-bold">SUKSES</code> / <code class="font-mono font-bold">PENDING</code>) ke <code class="font-mono font-bold">db_penjualan</code>.</p>
+                        </div>
+                    </div>
+
+                    <div class="p-3.5 rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs sm:text-sm text-slate-700 dark:text-slate-200">
+                        💡 <strong>Standar Dunia Kerja:</strong> Sama seperti aplikasi Moka, Majoo, atau Olsera—manajer operasional mengatur cabang, batas SLA, dan mode darurat <strong>langsung di Panel Pengaturan UI POS</strong>, bukan membongkar kode PHP!
+                    </div>
+
+                    ${slideTransitionNote("Masuk ke Babak 2: mengapa batas waktu tunggu 3–4 detik sangat vital bagi omzet toko? Lihat Slide 5.")}
+                </div>
+            `;
+        }
+
+        // SLIDE 5: Manajemen Antrean & SLA Timeout
+        function renderSlide5() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-6">
+                    ${slideHeader("Babak 2 · Manajemen Antrean &amp; SLA", "Mengapa ${term('sla_timeout', 'Batas Waktu Tunggu (SLA Timeout)')} Menentukan Omzet Toko?", "Analogi sederhana dari keseharian: mesin EDC kartu atau QRIS di meja kasir minimarket saat jam pulang kerja.", "text-amber-600 dark:text-amber-400")}
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 my-auto">
+                        <div class="p-6 rounded-3xl bg-rose-50/70 dark:bg-rose-950/30 border-2 border-rose-300 dark:border-rose-800 space-y-3">
+                            <span class="px-3 py-1 rounded-full bg-rose-600 text-white text-xs font-extrabold">❌ TANPA BATAS SLA (FREEZE 15–30 DETIK)</span>
+                            <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Efek Domino Antrean Macet</h3>
+                            <ul class="space-y-2 text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed">
+                                <li>• Layar kasir berputar (<em>loading</em>) puluhan detik tanpa kepastian.</li>
+                                <li>• Kasir terhenti total dan tidak berani menekan apa pun takut dobel tagih.</li>
+                                <li>• Pembeli di urutan ke-3 dan ke-4 merasa terlalu lama lalu <strong>meletakkan barang &amp; batal belanja</strong> (<em>walk-out</em>).</li>
+                            </ul>
+                        </div>
+
+                        <div class="p-6 rounded-3xl bg-emerald-50/70 dark:bg-emerald-950/30 border-2 border-emerald-400 dark:border-emerald-800 space-y-3">
+                            <span class="px-3 py-1 rounded-full bg-emerald-600 text-white text-xs font-extrabold">✅ DENGAN SLA TIMEOUT (3–4 DETIK)</span>
+                            <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Cepat Memutus Tunggu, Cepat Ambil Keputusan</h3>
+                            <ul class="space-y-2 text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed">
+                                <li>• Jika Gudang tidak merespons dalam <strong>3–4 detik</strong>, kurir digital otomatis menghentikan tunggu.</li>
+                                <li>• Layar POS langsung mengaktifkan prosedur darurat yang sudah ditetapkan manajer.</li>
+                                <li>• Antrean tetap bergerak cepat, pengalaman belanja terjaga, dan omzet tidak hilang sia-sia.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    ${slideTransitionNote("Mari uji langsung dampaknya terhadap omzet 4 pembeli di Simulator Antrean Kasir pada Slide 6!")}
+                </div>
+            `;
+        }
+
+        // SLIDE 6: SIMULASI DUNIA NYATA 1 — Simulator Antrean Kasir & SLA Timeout
+        function renderSlide6() {
+            const q = qSim;
+            let savedRev = 0;
+            let lostRev = 0;
+            let walkoutCount = 0;
+            for (let i = 0; i < q.customers.length; i++) {
+                const c = q.customers[i];
+                if (c.status === 'dilayani' || c.status === 'cadangan') savedRev += c.harga;
+                if (c.status === 'bubar') { lostRev += c.harga; walkoutCount++; }
+            }
+
+            const statusBadge = function (st) {
+                if (st === 'dilayani') return { cls: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-400', label: '✓ Dilayani Online' };
+                if (st === 'cadangan') return { cls: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 border-indigo-400', label: '⚡ Mode Cadangan (Pending)' };
+                if (st === 'proses') return { cls: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-500 pulse-soft', label: '⏳ Sedang Diproses...' };
+                if (st === 'bubar') return { cls: 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border-rose-500', label: '✕ Bubar Kecewa' };
+                return { cls: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 border-slate-200 dark:border-slate-700', label: '• Menunggu Antrean' };
+            };
+
+            const custCards = q.customers.map(function (c) {
+                const b = statusBadge(c.status);
+                return `
+                    <div class="p-3.5 rounded-2xl border-2 transition flex flex-col justify-between gap-2 bg-white dark:bg-slate-900 ${b.cls.split(' ').filter(function (x) { return x.indexOf('border-') === 0 || x === 'pulse-soft'; }).join(' ')}">
+                        <div class="flex items-start justify-between gap-2">
+                            <div>
+                                <div class="text-xs font-extrabold text-slate-900 dark:text-white">${escapeHtml(c.nama)}</div>
+                                <div class="text-[11px] text-slate-500">${escapeHtml(c.item)}</div>
+                            </div>
+                            <span class="font-mono text-[11px] font-extrabold text-slate-700 dark:text-slate-300">${formatRupiah(c.harga)}</span>
+                        </div>
+                        <div class="flex items-center justify-between gap-2 pt-1.5 border-t border-slate-100 dark:border-slate-800">
+                            <span class="px-2 py-0.5 rounded-lg text-[10px] font-extrabold ${b.cls}">${b.label}</span>
+                            <span class="text-[10px] text-slate-500 dark:text-slate-400 text-right">${escapeHtml(c.note)}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            const pctBar = Math.min(100, Math.round((q.elapsedSec / q.maxSec) * 100));
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-3.5">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400">Simulasi Dunia Nyata 1 · Monitor Antrean Kasir</span>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Simulator Antrean Kasir &amp; Dampak SLA Timeout</h2>
+                        </div>
+                        <div class="flex items-center gap-2 font-mono text-xs font-extrabold">
+                            <span class="px-3 py-1.5 rounded-xl bg-slate-900 text-emerald-400">⏱️ Waktu: ${q.elapsedSec.toFixed(1)} dtk</span>
+                            <button type="button" onclick="resetQueueSim()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-sans font-bold" title="Reset Simulasi">
+                                <i class="fa-solid fa-rotate-left"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 1 Baris Pemicu Diskusi Wajib -->
+                    <div class="px-3.5 py-2 rounded-2xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-300/80 dark:border-amber-800 text-xs text-amber-950 dark:text-amber-200 flex items-center gap-2">
+                        <span class="font-extrabold shrink-0">💡 Tebak dulu sebelum klik:</span>
+                        <span>Jika jaringan Gudang <strong>melambat 6 detik</strong> dan ada 4 pembeli antre, berapa pembeli yang batal belanja pada mode <strong>Tanpa SLA</strong> dibanding mode <strong>SLA 3 Detik</strong>?</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch my-auto">
+                        <!-- Panel Kontrol Manajer -->
+                        <div class="lg:col-span-4 p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-3">
+                            <div class="space-y-3">
+                                <div>
+                                    <div class="text-[11px] font-extrabold uppercase text-slate-500 mb-1.5">1. Kondisi Jaringan Gudang</div>
+                                    <div class="grid grid-cols-1 gap-1.5">
+                                        <button type="button" ${q.running ? 'disabled' : ''} onclick="setQNetwork('normal')" class="text-left px-3 py-2 rounded-xl border text-xs font-bold transition ${q.network === 'normal' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700'}">🟢 Normal (Respon 0,4 detik)</button>
+                                        <button type="button" ${q.running ? 'disabled' : ''} onclick="setQNetwork('lambat')" class="text-left px-3 py-2 rounded-xl border text-xs font-bold transition ${q.network === 'lambat' ? 'bg-amber-500 text-white border-amber-500' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700'}">🟡 Lambat (Respon 6 detik)</button>
+                                        <button type="button" ${q.running ? 'disabled' : ''} onclick="setQNetwork('mati')" class="text-left px-3 py-2 rounded-xl border text-xs font-bold transition ${q.network === 'mati' ? 'bg-rose-600 text-white border-rose-600' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700'}">🔴 Mati Total (Tak Merespons)</button>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div class="text-[11px] font-extrabold uppercase text-slate-500 mb-1.5">2. Pengaturan POS (Batas Sabar Antre: 10 dtk)</div>
+                                    <div class="grid grid-cols-2 gap-1.5">
+                                        <button type="button" ${q.running ? 'disabled' : ''} onclick="setQPosMode('tanpa_sla')" class="px-2.5 py-2 rounded-xl border text-xs font-extrabold transition ${q.posMode === 'tanpa_sla' ? 'bg-rose-600 text-white border-rose-600' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700'}">Tanpa SLA<div class="text-[10px] font-normal opacity-90">Tunggu 15 dtk</div></button>
+                                        <button type="button" ${q.running ? 'disabled' : ''} onclick="setQPosMode('sla_3')" class="px-2.5 py-2 rounded-xl border text-xs font-extrabold transition ${q.posMode === 'sla_3' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700'}">SLA Aktif<div class="text-[10px] font-normal opacity-90">Batas 3 dtk</div></button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="button" ${q.running ? 'disabled' : ''} onclick="startQueueSimulation()" class="w-full py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-extrabold text-xs sm:text-sm transition shadow-sm">
+                                ${q.running ? '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i>Simulasi Berjalan...' : '▶️ Jalankan Simulasi Antrean (4 Pembeli)'}
+                            </button>
+                        </div>
+
+                        <!-- Monitor 4 Pembeli & Ringkasan Omzet -->
+                        <div class="lg:col-span-8 p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-3">
+                            <div class="space-y-1.5">
+                                <div class="flex items-center justify-between text-[11px] font-bold text-slate-500">
+                                    <span>Monitor Antrean 4 Pembeli (Total Potensi: Rp 1.665.000)</span>
+                                    <span>${q.finished ? 'Simulasi Selesai' : (q.running ? 'Memproses antrean...' : 'Siap dijalankan')}</span>
+                                </div>
+                                <div class="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+                                    <div class="h-full bg-emerald-600 transition-all duration-150" style="width: ${pctBar}%"></div>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 my-auto">
+                                ${custCards}
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                <div class="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 flex items-center justify-between">
+                                    <span class="text-xs font-bold text-emerald-800 dark:text-emerald-300">💰 Omzet Terselamatkan</span>
+                                    <strong class="font-mono text-sm font-extrabold text-emerald-700 dark:text-emerald-300">${formatRupiah(savedRev)}</strong>
+                                </div>
+                                <div class="p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-800 flex items-center justify-between">
+                                    <span class="text-xs font-bold text-rose-800 dark:text-rose-300">📉 Omzet Hilang (${walkoutCount} bubar)</span>
+                                    <strong class="font-mono text-sm font-extrabold text-rose-700 dark:text-rose-300">${formatRupiah(lostRev)}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 7: Kontinuitas Bisnis saat Gudang Terputus (Strict Stop vs Pending & Retry)
+        function renderSlide7() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-6">
+                    ${slideHeader("Babak 2 · Dilema Kontinuitas Bisnis", "Koneksi ke Gudang Putus di Jam Sibuk: Pilih Strategi yang Mana?", "Begitu batas SLA 3 detik mendeteksi Gudang tidak merespons, manajer toko harus menetapkan salah satu dari 2 strategi ini:")}
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 my-auto">
+                        <div class="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-t-4 border-rose-600 border-x border-b border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-4">
+                            <div class="space-y-2.5">
+                                <span class="px-3 py-1 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 text-xs font-extrabold">STRATEGI 1 · ${term('strict_stop', 'STRICT STOP (FAIL-CLOSED)')}</span>
+                                <h3 class="text-xl font-extrabold text-slate-900 dark:text-white">Tutup Transaksi Sementara</h3>
+                                <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    Mesin kasir langsung menolak transaksi baru sampai koneksi ke server Gudang benar-benar pulih.
+                                </p>
+                                <div class="space-y-1.5 text-xs sm:text-sm pt-2">
+                                    <div class="text-emerald-700 dark:text-emerald-400 font-bold">✓ Keunggulan: Risiko <em>overselling</em> 0% &amp; stok selalu akurat.</div>
+                                    <div class="text-rose-700 dark:text-rose-400 font-bold">✕ Kerugian: Langsung kehilangan omzet saat itu &amp; pembeli kecewa.</div>
+                                </div>
+                            </div>
+                            <div class="text-xs p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+                                <strong>Cocok untuk:</strong> Produk stok sangat tipis / barang mewah / promo rebutan lintas cabang.
+                            </div>
+                        </div>
+
+                        <div class="p-6 rounded-3xl bg-indigo-50/60 dark:bg-indigo-950/30 border-t-4 border-indigo-600 border-x border-b border-indigo-200 dark:border-indigo-800 flex flex-col justify-between gap-4">
+                            <div class="space-y-2.5">
+                                <span class="px-3 py-1 rounded-full bg-indigo-600 text-white text-xs font-extrabold">STRATEGI 2 · ${term('pending_retry', 'PENDING & RETRY (QUEUE)')}</span>
+                                <h3 class="text-xl font-extrabold text-slate-900 dark:text-white">Tetap Layani, Antrekan Sinkronisasi</h3>
+                                <p class="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">
+                                    Kasir tetap menerima bayaran &amp; menyimpan struk berstatus <code class="font-mono font-bold">PENDING</code> di <code class="font-mono">db_penjualan</code>, lalu menekan <strong>Retry</strong> saat koneksi pulih.
+                                </p>
+                                <div class="space-y-1.5 text-xs sm:text-sm pt-2">
+                                    <div class="text-emerald-700 dark:text-emerald-400 font-bold">✓ Keunggulan: Omzet tetap aman masuk kas &amp; antrean lancar.</div>
+                                    <div class="text-amber-800 dark:text-amber-300 font-bold">⚠️ Risiko Tersembunyi: Rawan bentrokan stok (<em>overselling offline</em>)!</div>
+                                </div>
+                            </div>
+                            <div class="text-xs p-3 rounded-2xl bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-800">
+                                <strong>Cocok untuk:</strong> Produk stok melimpah di toko ramai yang butuh kecepatan layanan tinggi.
+                            </div>
+                        </div>
+                    </div>
+
+                    ${slideTransitionNote("Hati-hati! Mengapa pagar 409 dari Minggu 6 TIDAK mampu mencegah overselling saat offline? Bedah di Slide 8!")}
+                </div>
+            `;
+        }
+
+        // SLIDE 8: Koreksi Kritis Bisnis — Mengapa 409 TIDAK Mencegah Overselling Offline
+        function renderSlide8() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    ${slideHeader("Babak 2 · Koreksi Kritis Bisnis", "Mengapa Pagar <code class='font-mono'>409</code> TIDAK Mencegah ${term('overselling_offline', 'Overselling Saat Offline')}?", "Pagar 409 hanya mencegah 1 struk memotong stok 2 kali—bukan mencegah 2 cabang berebut 1 stok terakhir!", "text-rose-600 dark:text-rose-400")}
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 my-auto">
+                        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <span class="px-2.5 py-0.5 rounded-lg bg-slate-200 dark:bg-slate-700 font-mono text-xs font-extrabold">LANGKAH 1</span>
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Sisa SP008 Tinggal 1 Pasang</h3>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">Di Gudang Pusat, sepatu <strong>SP008</strong> tinggal <strong>1 pasang terakhir</strong>. Cabang Padang sedang <strong>OFFLINE</strong> (mode Pending).</p>
+                        </div>
+
+                        <div class="p-4 rounded-3xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-800 space-y-2">
+                            <span class="px-2.5 py-0.5 rounded-lg bg-amber-500 text-white font-mono text-xs font-extrabold">LANGKAH 2</span>
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Padang Jual ke Pembeli A</h3>
+                            <p class="text-xs text-slate-700 dark:text-slate-200 leading-relaxed">Cabang Padang (offline) tetap melayani Pembeli A dengan struk <code class="font-mono font-bold">TRX-PDG-01</code> berstatus <strong>PENDING</strong>.</p>
+                        </div>
+
+                        <div class="p-4 rounded-3xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-300 dark:border-indigo-800 space-y-2">
+                            <span class="px-2.5 py-0.5 rounded-lg bg-indigo-600 text-white font-mono text-xs font-extrabold">LANGKAH 3</span>
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Pusat (Online) Jual ke Pembeli B</h3>
+                            <p class="text-xs text-slate-700 dark:text-slate-200 leading-relaxed">Di menit yang sama, Toko Pusat yang online menjual 1 pasang terakhir ke Pembeli B. <strong>Stok Gudang jadi 0!</strong></p>
+                        </div>
+
+                        <div class="p-4 rounded-3xl bg-rose-50/80 dark:bg-rose-950/40 border-2 border-rose-500 space-y-2">
+                            <span class="px-2.5 py-0.5 rounded-lg bg-rose-600 text-white font-mono text-xs font-extrabold">LANGKAH 4 · RETRY</span>
+                            <h3 class="text-sm font-extrabold text-rose-800 dark:text-rose-200">Ditolak <code class="font-mono">400 Stok Kurang</code>!</h3>
+                            <p class="text-xs text-rose-900 dark:text-rose-200 leading-relaxed">Saat internet Padang pulih &amp; klik Retry, Gudang menolak <strong>400 Stok Kurang (bukan 409!)</strong> karena struknya unik tetapi stok fisik sudah 0.</p>
+                        </div>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border-l-4 border-emerald-600 text-xs sm:text-sm text-slate-700 dark:text-slate-200">
+                        <strong>📋 SOP Pemulihan Manajer (Trade-Off Nyata):</strong> Tidak ada strategi tanpa risiko. Bila terjadi penolakan <code class="font-mono font-bold">400</code> saat Retry, staf wajib menjalankan SOP pemulihan: <strong>(1) tawarkan tukar model sejenis</strong>, <strong>(2) kirim dari stok cabang lain</strong>, atau <strong>(3) proses <em>refund</em> resmi</strong> + perbarui status nota agar audit tetap cocok!
+                    </div>
+
+                    ${slideTransitionNote("Sekarang rasakan langsung integrasi POS & 2 Database secara live di Simulasi Dunia Nyata 2 pada Slide 9!")}
+                </div>
+            `;
+        }
+
+        // SLIDE 9: SIMULASI DUNIA NYATA 2 — Layar Kasir POS End-to-End & 2 Database Live
+        function renderSlide9() {
+            const p = posSim;
+            const selectedProd = p.products.find(function (x) { return x.kode === p.selectedKode; }) || p.products[0];
+            const totalRp = selectedProd.harga * p.qty;
+
+            // Hitung Rekonsiliasi Tutup Toko Real-Time
+            let netSoldKasir = 0;
+            let pendingCount = 0;
+            for (let i = 0; i < p.salesDb.length; i++) {
+                const s = p.salesDb[i];
+                if (s.status === 'SUKSES' || s.status === 'PENDING') netSoldKasir += s.qty;
+                if (s.status === 'PENDING') pendingCount++;
+            }
+
+            let netOutGudang = 0;
+            for (let j = 0; j < p.warehouseLogs.length; j++) {
+                const lg = p.warehouseLogs[j];
+                if (lg.jenis === 'keluar') netOutGudang += lg.qty;
+                if (lg.jenis === 'masuk') netOutGudang -= lg.qty;
+            }
+            const selisih = netSoldKasir - netOutGudang;
+            const isMatch = selisih === 0;
+
+            // Pilihan Produk
+            const prodBtns = p.products.map(function (pr) {
+                const act = pr.kode === p.selectedKode;
+                return `
+                    <button type="button" onclick="posSelectProduct('${pr.kode}')" class="text-left p-2 rounded-xl border-2 transition ${act ? 'border-emerald-600 bg-emerald-50/70 dark:bg-emerald-950/50' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900'}">
+                        <div class="flex items-center justify-between text-[11px] font-mono font-bold">
+                            <span class="text-emerald-700 dark:text-emerald-400">${pr.kode}</span>
+                            <span class="${pr.stok <= 2 ? 'text-rose-600' : 'text-slate-500'}">Rak: ${pr.stok}</span>
+                        </div>
+                        <div class="text-xs font-extrabold text-slate-900 dark:text-white truncate">${pr.nama}</div>
+                        <div class="text-[10px] text-slate-500">${formatRupiah(pr.harga)}</div>
+                    </button>
+                `;
+            }).join('');
+
+            // Banner ramah kasir
+            let bannerHtml = '';
+            if (p.posBanner) {
+                const clsMap = {
+                    ok: 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-500 text-emerald-900 dark:text-emerald-200',
+                    warn: 'bg-amber-50 dark:bg-amber-950/50 border-amber-500 text-amber-900 dark:text-amber-200',
+                    err: 'bg-rose-50 dark:bg-rose-950/50 border-rose-500 text-rose-900 dark:text-rose-200'
+                };
+                bannerHtml = `
+                    <div class="p-2.5 rounded-xl border-l-4 text-xs pulse-soft ${clsMap[p.posBanner.type] || clsMap.ok}">
+                        <div class="font-extrabold">${escapeHtml(p.posBanner.title)}</div>
+                        <div class="leading-snug mt-0.5">${escapeHtml(p.posBanner.desc)}</div>
+                    </div>
+                `;
+            } else {
+                bannerHtml = `
+                    <div class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-[11px] text-slate-600 dark:text-slate-300">
+                        🛒 Layar POS siap melayani! Coba transaksi normal, coba qty <strong>4 psg</strong> (batas promo), atau matikan saklar <strong>Jaringan Gudang</strong>.
+                    </div>
+                `;
+            }
+
+            // Tabel db_penjualan (Kiri)
+            let salesRows = '';
+            if (p.salesDb.length === 0) {
+                salesRows = '<tr><td colspan="4" class="p-3 text-center text-[11px] text-slate-400 italic">Belum ada struk penjualan di db_penjualan.</td></tr>';
+            } else {
+                for (let i = p.salesDb.length - 1; i >= 0; i--) {
+                    const s = p.salesDb[i];
+                    let stBadge = '';
+                    let actionBtn = '';
+                    if (s.status === 'SUKSES') {
+                        stBadge = '<span class="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 text-[10px] font-extrabold">SUKSES</span>';
+                        actionBtn = `<button type="button" onclick="posReturReceipt('${s.no_struk}')" class="px-2 py-0.5 rounded-lg bg-amber-100 hover:bg-amber-200 dark:bg-amber-950 text-amber-800 dark:text-amber-300 text-[10px] font-extrabold">↩️ Retur</button>`;
+                    } else if (s.status === 'PENDING') {
+                        stBadge = '<span class="px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 text-[10px] font-extrabold">PENDING</span>';
+                        actionBtn = `<button type="button" onclick="posRetryReceipt('${s.no_struk}')" class="px-2 py-0.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-extrabold">🔄 Retry</button>`;
+                    } else {
+                        stBadge = '<span class="px-1.5 py-0.5 rounded bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300 text-[10px] font-extrabold">DIRETUR</span>';
+                        actionBtn = '<span class="text-[10px] text-slate-400">Selesai</span>';
+                    }
+                    salesRows += `
+                        <tr class="border-t border-slate-200 dark:border-slate-700">
+                            <td class="p-1.5 font-mono text-[10px] font-bold">${s.no_struk}<div class="font-sans font-normal text-slate-400">${s.cabang}</div></td>
+                            <td class="p-1.5 text-[11px] font-bold">${s.kode} &times; ${s.qty}</td>
+                            <td class="p-1.5">${stBadge}</td>
+                            <td class="p-1.5 text-right">${actionBtn}</td>
+                        </tr>
+                    `;
+                }
+            }
+
+            // Tabel db_gudang.log_stok (6 Terbaru)
+            let logRows = '';
+            const recentLogs = p.warehouseLogs.slice(-6).reverse();
+            if (recentLogs.length === 0) {
+                logRows = '<tr><td colspan="4" class="p-3 text-center text-[11px] text-slate-400 italic">Belum ada mutasi keluar/retur di log_stok.</td></tr>';
+            } else {
+                for (let j = 0; j < recentLogs.length; j++) {
+                    const lg = recentLogs[j];
+                    const isOut = lg.jenis === 'keluar';
+                    logRows += `
+                        <tr class="border-t border-slate-200 dark:border-slate-700">
+                            <td class="p-1.5 font-mono text-[10px] font-bold">${lg.kode}</td>
+                            <td class="p-1.5"><span class="px-1.5 py-0.5 rounded text-[10px] font-extrabold ${isOut ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'}">${isOut ? 'KELUAR' : 'RETUR +'}</span></td>
+                            <td class="p-1.5 font-mono text-[11px] font-extrabold ${isOut ? 'text-indigo-600' : 'text-emerald-600'}">${isOut ? '&minus;' : '+'}${lg.qty} <span class="text-slate-400 font-normal">(sisa ${lg.sisa})</span></td>
+                            <td class="p-1.5 font-mono text-[10px]">${lg.ref}</td>
+                        </tr>
+                    `;
+                }
+            }
+
+            // Panel Opsional Intip Kurir cURL
+            const courierDrawerHtml = p.showCourierLog ? `
+                <div class="p-3 rounded-2xl bg-slate-900 text-slate-200 border border-slate-700 space-y-1.5 text-[11px]">
+                    <div class="flex flex-wrap items-center justify-between gap-2 font-mono">
+                        <span class="text-emerald-400 font-bold">{ } Aktivitas Terakhir Kurir Digital (API Client)</span>
+                        <span class="text-amber-300">${escapeHtml(p.lastCourier.method)} ${escapeHtml(p.lastCourier.url)} · Key: ${escapeHtml(p.lastCourier.apiKey)} · SLA: ${escapeHtml(p.lastCourier.sla)} · HTTP ${p.lastCourier.httpCode}</span>
+                    </div>
+                    <pre class="code-clean max-h-24 overflow-y-auto">${escapeHtml(p.lastCourier.json)}</pre>
+                </div>
+            ` : '';
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-2.5">
+                    <!-- Judul & Panel Pengaturan Manajer Langsung di UI POS -->
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400">Simulasi Dunia Nyata 2 · Aplikasi Kasir POS &amp; 2 Database Live</span>
+                            <h2 class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white">Layar Kasir POS End-to-End (<code class="font-mono">db_penjualan ↔ db_gudang</code>)</h2>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-1.5 text-[11px]">
+                            <button type="button" onclick="posToggleCourier()" class="px-2.5 py-1.5 rounded-xl border font-extrabold transition ${p.showCourierLog ? 'bg-slate-900 text-emerald-400 border-slate-700' : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200'}">
+                                { } ${p.showCourierLog ? 'Tutup Kurir cURL' : 'Intip Aktivitas Kurir cURL'}
+                            </button>
+                            <button type="button" onclick="resetPosSim()" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold" title="Reset Simulasi POS">
+                                <i class="fa-solid fa-rotate-left mr-1"></i>Reset
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 1 Baris Pemicu Diskusi Wajib -->
+                    <div class="px-3 py-1.5 rounded-xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-300/80 dark:border-amber-800 text-[11.5px] text-amber-950 dark:text-amber-200">
+                        <strong class="mr-1">💡 Tebak dulu sebelum klik:</strong>Matikan saklar <strong>Jaringan Gudang</strong>, pilih mode <strong>Pending &amp; Retry</strong>, lalu layani 1 pembeli. Amati bar <strong>Rekonsiliasi Tutup Toko</strong> di bawah—mengapa langsung muncul <strong>SELISIH</strong> dan bagaimana cara menolkannya?
+                    </div>
+
+                    <!-- Panel Pengaturan Manajer di UI POS -->
+                    <div class="p-2.5 rounded-2xl bg-slate-100/90 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                        <div class="flex flex-wrap items-center gap-1.5">
+                            <span class="font-extrabold text-slate-500 uppercase">⚙️ Pengaturan POS:</span>
+                            <button type="button" onclick="posToggleCabang()" class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 font-bold">
+                                🏪 ${p.cabang === 'pusat' ? 'Toko Pusat (GDG-KEY-UTAMA-001)' : 'Cabang Padang (GDG-KEY-CABANG-002)'}
+                            </button>
+                            <button type="button" onclick="posToggleSla()" class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 font-bold">
+                                ⏱️ SLA: ${p.slaSec} dtk
+                            </button>
+                            <button type="button" onclick="posToggleDarurat()" class="px-2.5 py-1 rounded-lg font-extrabold border ${p.darurat === 'strict' ? 'bg-rose-50 dark:bg-rose-950 border-rose-300 text-rose-700 dark:text-rose-300' : 'bg-indigo-50 dark:bg-indigo-950 border-indigo-300 text-indigo-700 dark:text-indigo-300'}">
+                                🛡️ Darurat: ${p.darurat === 'strict' ? 'Strict Stop' : 'Pending & Retry'}
+                            </button>
+                        </div>
+                        <button type="button" onclick="posToggleNetwork()" class="px-3 py-1 rounded-lg font-extrabold transition border ${p.gudangOnline ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-rose-600 text-white border-rose-600 pulse-soft'}">
+                            📡 Jaringan Gudang: ${p.gudangOnline ? 'ONLINE ✓' : 'PUTUS ✕'}
+                        </button>
+                    </div>
+
+                    ${courierDrawerHtml}
+
+                    <!-- Area Utama: Layar Kasir + 2 Database Live -->
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 items-stretch my-auto">
+                        <!-- Kolom Kiri: Layar Kasir POS -->
+                        <div class="lg:col-span-5 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-2.5">
+                            <div class="grid grid-cols-3 gap-1.5">${prodBtns}</div>
+
+                            <div class="flex items-center justify-between gap-2 bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                                <div>
+                                    <div class="text-[10px] font-bold text-slate-400">Jumlah Beli (Batas Promo: 3)</div>
+                                    <div class="text-sm font-extrabold font-mono text-indigo-700 dark:text-indigo-300">${formatRupiah(totalRp)}</div>
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    <button type="button" onclick="posAdjustQty(-1)" class="w-8 h-8 rounded-lg bg-slate-200 dark:bg-slate-800 font-extrabold">&minus;</button>
+                                    <span class="w-10 text-center font-mono font-extrabold text-sm ${p.qty > 3 ? 'text-amber-600' : ''}">${p.qty}</span>
+                                    <button type="button" onclick="posAdjustQty(1)" class="w-8 h-8 rounded-lg bg-slate-200 dark:bg-slate-800 font-extrabold">+</button>
+                                </div>
+                            </div>
+
+                            <button type="button" onclick="posCheckout()" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm transition shadow-xs">
+                                <i class="fa-solid fa-receipt mr-1.5"></i>Bayar &amp; Cetak Struk (${selectedProd.kode} &times; ${p.qty})
+                            </button>
+
+                            ${bannerHtml}
+                        </div>
+
+                        <!-- Kolom Kanan: Pantauan 2 Database Berdampingan -->
+                        <div class="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <!-- DB 1: db_penjualan -->
+                            <div class="p-3 rounded-2xl bg-indigo-50/40 dark:bg-indigo-950/20 border border-indigo-200 dark:border-indigo-900 flex flex-col gap-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-[11px] font-extrabold text-indigo-700 dark:text-indigo-300">🧾 DB 1: db_penjualan (Struk)</span>
+                                    <span class="text-[10px] font-mono text-slate-400">${p.salesDb.length} nota</span>
+                                </div>
+                                <div class="overflow-y-auto max-h-[168px] rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex-1">
+                                    <table class="w-full text-left border-collapse">
+                                        <thead class="bg-slate-100 dark:bg-slate-800 text-[10px] text-slate-500 sticky top-0">
+                                            <tr><th class="p-1.5">Struk</th><th class="p-1.5">Item</th><th class="p-1.5">Status</th><th class="p-1.5 text-right">Aksi</th></tr>
+                                        </thead>
+                                        <tbody>${salesRows}</tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- DB 2: db_gudang -->
+                            <div class="p-3 rounded-2xl bg-emerald-50/40 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900 flex flex-col gap-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-[11px] font-extrabold text-emerald-700 dark:text-emerald-300">📦 DB 2: db_gudang (log_stok)</span>
+                                    <span class="text-[10px] font-mono text-slate-400">6 terbaru</span>
+                                </div>
+                                <div class="grid grid-cols-3 gap-1 text-center font-mono text-[10px]">
+                                    ${p.products.map(function (pr) {
+                                        return `<div class="p-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"><span class="text-slate-400 block">${pr.kode}</span><strong class="${pr.stok <= 2 ? 'text-rose-600' : 'text-emerald-700 dark:text-emerald-400'}">${pr.stok} psg</strong></div>`;
+                                    }).join('')}
+                                </div>
+                                <div class="overflow-y-auto max-h-[124px] rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex-1">
+                                    <table class="w-full text-left border-collapse">
+                                        <thead class="bg-slate-100 dark:bg-slate-800 text-[10px] text-slate-500 sticky top-0">
+                                            <tr><th class="p-1.5">Kode</th><th class="p-1.5">Jenis</th><th class="p-1.5">Mutasi</th><th class="p-1.5">Ref</th></tr>
+                                        </thead>
+                                        <tbody>${logRows}</tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bar Rekonsiliasi Tutup Toko Real-Time -->
+                    <div class="p-2.5 sm:px-4 rounded-2xl border-2 flex flex-wrap items-center justify-between gap-2 text-xs ${isMatch ? 'bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-500' : 'bg-rose-50/90 dark:bg-rose-950/50 border-rose-500 pulse-soft'}">
+                        <div class="flex flex-wrap items-center gap-3 font-semibold text-slate-800 dark:text-slate-100">
+                            <span>📊 <strong>Rekonsiliasi Tutup Toko:</strong></span>
+                            <span>Terjual Bersih (<code class="font-mono">db_penjualan</code>): <strong class="font-mono text-indigo-700 dark:text-indigo-300">${netSoldKasir} psg</strong></span>
+                            <span>vs</span>
+                            <span>Keluar Bersih (<code class="font-mono">log_stok</code>): <strong class="font-mono text-emerald-700 dark:text-emerald-300">${netOutGudang} psg</strong></span>
+                        </div>
+                        <span class="px-3 py-1 rounded-xl font-extrabold text-xs ${isMatch ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'}">
+                            ${isMatch ? '✓ COCOK (Selisih 0)' : '⚠️ SELISIH ' + Math.abs(selisih) + ' PSG (' + pendingCount + ' Nota Belum Sinkron)'}
+                        </span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // SLIDE 10: Siklus Retur / Pembatalan Nota dari Meja Kasir
+        function renderSlide10() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-6">
+                    ${slideHeader("Babak 3 · Menutup Siklus 4 Pintu API", "Satu Tombol ${term('retur_nota', 'Retur / Pembatalan Nota')} di Layar Kasir", "Penjualan di dunia nyata tidak selalu mulus—pelanggan bisa membatalkan atau menukar barang. Satu tombol Retur langsung melengkapi seluruh siklus 4 pintu API (Minggu 4–7).")}
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 my-auto">
+                        <div class="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                            <span class="w-9 h-9 rounded-2xl bg-amber-500 text-white font-extrabold flex items-center justify-center text-sm">1</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Kasir Klik "Retur Nota"</h3>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Pada struk berstatus <code class="font-mono font-bold">SUKSES</code> (misal <code class="font-mono">TRX-001</code>), kasir cukup menekan 1 tombol <strong>↩️ Retur Nota</strong> di layar POS.
+                            </p>
+                        </div>
+
+                        <div class="p-6 rounded-3xl bg-emerald-50/70 dark:bg-emerald-950/30 border-2 border-emerald-400 dark:border-emerald-800 space-y-2.5">
+                            <span class="w-9 h-9 rounded-2xl bg-emerald-600 text-white font-extrabold flex items-center justify-center text-sm">2</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Otomatis Panggil <code class="font-mono">stok-masuk.php</code></h3>
+                            <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed">
+                                Kurir digital mengirim <code class="font-mono font-bold">POST /api/stok-masuk.php</code> dengan bukti <code class="font-mono font-bold">RETUR-TRX-001</code>. Stok rak langsung kembali utuh!
+                            </p>
+                        </div>
+
+                        <div class="p-6 rounded-3xl bg-purple-50/70 dark:bg-purple-950/30 border border-purple-300 dark:border-purple-800 space-y-2.5">
+                            <span class="w-9 h-9 rounded-2xl bg-purple-600 text-white font-extrabold flex items-center justify-center text-sm">3</span>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Kebal Retur Ganda (<code class="font-mono">409</code>)</h3>
+                            <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed">
+                                Jika referensi <code class="font-mono font-bold">RETUR-TRX-001</code> coba dikirim ulang, pagar <strong>409 Conflict</strong> langsung menolak sehingga tidak tercipta stok hantu.
+                            </p>
+                        </div>
+                    </div>
+
+                    ${slideTransitionNote("Setelah transaksi dan retur selesai sepanjang hari, bagaimana ritual audit tutup toko lintas 2 database? Lihat Slide 11.")}
+                </div>
+            `;
+        }
+
+        // SLIDE 11: Rekonsiliasi Tutup Toko Lintas 2 Database
+        function renderSlide11() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    ${slideHeader("Babak 3 · Ritual Audit Harian", "${term('rekonsiliasi_tutup_toko', 'Rekonsiliasi Tutup Toko')} Lintas 2 Database", "Minggu 6 mengecek kecocokan internal Gudang; Minggu 7 mencocokkan pembukuan antara Kasir dan Gudang sebelum shift ditutup.")}
+
+                    <div class="p-5 rounded-3xl bg-emerald-50/70 dark:bg-emerald-950/30 border-2 border-emerald-500 text-center space-y-2">
+                        <div class="text-xs font-extrabold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">Rumus Wajib Tutup Shift (Target: Selisih = 0)</div>
+                        <div class="text-base sm:text-xl font-extrabold text-slate-900 dark:text-white">
+                            Total Unit Terjual Bersih (<code class="font-mono text-indigo-600 dark:text-indigo-400">db_penjualan</code>)
+                            <span class="mx-2 text-emerald-600">=</span>
+                            Total Unit Keluar Bersih (<code class="font-mono text-emerald-700 dark:text-emerald-400">db_gudang.log_stok</code>)
+                        </div>
+                        <div class="text-xs text-slate-600 dark:text-slate-300">*(Penjualan Bersih = Total Terjual &minus; Retur &nbsp;|&nbsp; Keluar Bersih = Total Log Keluar &minus; Log Masuk Retur)*</div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-auto">
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                            <span class="text-xs font-extrabold text-rose-600">1. Nota PENDING Belum Di-Retry</span>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">Kasir sempat melayani saat offline lalu lupa menekan tombol <strong>Retry</strong> setelah internet kembali menyala.</p>
+                            <div class="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 pt-1">→ Cek filter status PENDING &amp; klik Retry.</div>
+                        </div>
+
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                            <span class="text-xs font-extrabold text-amber-700 dark:text-amber-400">2. Retry Ditolak 400 (Stok Habis)</span>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">Terjadi bentrokan stok offline dengan cabang lain, sehingga nota tertahan dan belum di-refund resmi.</p>
+                            <div class="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 pt-1">→ Jalankan SOP tukar/refund &amp; ubah status nota.</div>
+                        </div>
+
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                            <span class="text-xs font-extrabold text-purple-700 dark:text-purple-400">3. Input Manual di Luar Sistem</span>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">Kasir menerima uang tunai tanpa cetak struk POS, atau staf gudang mengubah angka rak tanpa nota.</p>
+                            <div class="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 pt-1">→ Audit fisik rak + cek rekaman log_stok.</div>
+                        </div>
+                    </div>
+
+                    ${slideTransitionNote("Sebelum aplikasi POS–Gudang ini resmi diserahkan ke karyawan toko, apa tugas terakhir kita? UAT di Slide 12!")}
+                </div>
+            `;
+        }
+
+        // SLIDE 12: UAT & Keputusan Go / No-Go
+        function renderSlide12() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    ${slideHeader("Babak 3 · Gerbang Kelayakan Rilis (Go-Live)", "${term('uat_go_nogo', 'User Acceptance Testing (UAT)')} &amp; Keputusan Manajer", "Di dunia kerja, lulusan Bisnis Digital berperan sebagai penguji bisnis yang memutuskan apakah sistem integrasi layak dipakai karyawan atau ditahan.")}
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <div class="lg:col-span-7 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                            <div class="text-xs font-extrabold uppercase text-emerald-700 dark:text-emerald-400">6 Skenario Wajib Uji UAT (Sama dengan LKM 07)</div>
+                            <ol class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-700 dark:text-slate-200">
+                                <li class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"><strong>1. Katalog Live (M5):</strong> Produk &amp; pencarian tampil real-time dari Gudang.</li>
+                                <li class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"><strong>2. Checkout 2 DB (M3/M7):</strong> Struk tercatat &amp; stok rak langsung berkurang.</li>
+                                <li class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"><strong>3. Pagar 400 &amp; 401 (M4/M6):</strong> Promo &amp; kunci mati tampil bahasa ramah kasir.</li>
+                                <li class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"><strong>4. Retur &amp; Anti-409 (M6/M7):</strong> Batal nota pulihkan stok &amp; tolak retur ganda.</li>
+                                <li class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"><strong>5. Uji Jaringan Putus (M7):</strong> Cek Strict Stop / Pending &amp; Retry sesuai kebijakan.</li>
+                                <li class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"><strong>6. Rekonsiliasi (M7):</strong> Cek angka 2 database wajib Selisih 0.</li>
+                            </ol>
+                        </div>
+
+                        <div class="lg:col-span-5 flex flex-col justify-between gap-2.5">
+                            <div class="p-4 rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/40 border-l-4 border-emerald-600 space-y-1">
+                                <div class="text-xs font-extrabold text-emerald-800 dark:text-emerald-300">🟢 GO (Layak Rilis)</div>
+                                <p class="text-xs text-slate-700 dark:text-slate-200">Seluruh 6 uji kritis lulus, kontrol keamanan aktif, dan rekonsiliasi 0 selisih.</p>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-amber-50/80 dark:bg-amber-950/40 border-l-4 border-amber-500 space-y-1">
+                                <div class="text-xs font-extrabold text-amber-800 dark:text-amber-300">🟡 GO dengan Catatan</div>
+                                <p class="text-xs text-slate-700 dark:text-slate-200">Alur inti &amp; akurasi data aman; hanya ada perbaikan tampilan minor (misal ukuran huruf/warna tombol).</p>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-rose-50/80 dark:bg-rose-950/40 border-l-4 border-rose-600 space-y-1">
+                                <div class="text-xs font-extrabold text-rose-800 dark:text-rose-300">🔴 NO-GO (Tahan Rilis)</div>
+                                <p class="text-xs text-slate-700 dark:text-slate-200">Ditemukan celah kritis (stok hantu, selisih saldo, kunci mati lolos, atau sistem crash).</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${slideTransitionNote("Mari kita lihat benang merah utuh perjalanan kita dari Pertemuan 1 hingga Pertemuan 7 di Slide 13.")}
+                </div>
+            `;
+        }
+
+        // SLIDE 13: Peta Jalan Utuh Pertemuan 1 s.d. 7 (Rangkuman Pra-UTS)
+        function renderSlide13() {
+            const steps = [
+                { m: "M1", title: "Silo Data", desc: "Bahaya aplikasi terpisah & kapan perlu integrasi.", clr: "bg-slate-600" },
+                { m: "M2", title: "Pola & JSON", desc: "File vs Shared DB vs API; format pertukaran JSON.", clr: "bg-slate-700" },
+                { m: "M3", title: "2 Database", desc: "Pemetaan db_penjualan ↔ db_gudang & alur As-Is/To-Be.", clr: "bg-indigo-600" },
+                { m: "M4", title: "Kontrak & Key", desc: "Spesifikasi 4 pintu API, log_stok, & saklar X-API-KEY.", clr: "bg-purple-600" },
+                { m: "M5", title: "Katalog & ROP", desc: "GET barang modular, radar stok kritis, & aman input.", clr: "bg-teal-600" },
+                { m: "M6", title: "Kontrol POST", desc: "Anti-PO 409, batas promo, RollBack, & SOP staf.", clr: "bg-amber-600" },
+                { m: "M7", title: "POS & UAT", desc: "Integrasi penuh, SLA antrean, offline, retur, & Go/No-Go.", clr: "bg-emerald-600" }
+            ];
+
+            const cards = steps.map(function (s) {
+                return `
+                    <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                        <span class="inline-block px-2.5 py-0.5 rounded-lg text-white font-mono text-[11px] font-extrabold ${s.clr}">${s.m}</span>
+                        <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">${s.title}</h3>
+                        <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">${s.desc}</p>
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    ${slideHeader("Babak 4 · Rangkuman Pra-UTS (M1–M7)", "Peta Jalan Utuh Sistem Terintegrasi Paruh Pertama Semester", "Seluruh 7 pertemuan ini membentuk satu cerita bisnis yang utuh—dan seluruhnya menjadi bahan UTS Terpadu Anda di LKM 07.")}
+
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 my-auto">
+                        ${cards}
+                        <div class="p-4 rounded-2xl bg-emerald-600 text-white space-y-1.5 flex flex-col justify-center">
+                            <span class="font-mono text-[11px] font-extrabold uppercase tracking-wider text-emerald-100">M8 · UTS</span>
+                            <h3 class="text-sm font-extrabold">UTS Terpadu (LKM 07)</h3>
+                            <p class="text-xs text-emerald-50 leading-relaxed">Praktikum UAT End-to-End + 4 Essay Kasus M1–M7.</p>
+                        </div>
+                    </div>
+
+                    ${slideTransitionNote("Uji ketajaman keputusan manajerial Anda pada 3 Studi Kasus di Slide 14!")}
+                </div>
+            `;
+        }
+
+        // SLIDE 14: Studi Kasus Keputusan Manajer (1 Kasus per Layar)
+        function renderSlide14() {
+            const sc = MANAGER_CASES_M7[activeCaseTab];
+            const chosenIdx = managerCaseChoices[sc.id];
+            const hasAnswered = chosenIdx !== undefined;
+
+            const tabs = MANAGER_CASES_M7.map(function (c, idx) {
+                const isAct = idx === activeCaseTab;
+                const isDone = managerCaseChoices[c.id] !== undefined;
+                return `
+                    <button type="button" onclick="activeCaseTab=${idx};renderCurrentSlide();" class="px-3.5 py-2 rounded-xl text-xs font-extrabold border transition flex items-center gap-1.5 ${isAct ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                        <span>Kasus ${idx + 1}</span>
+                        ${isDone ? '<i class="fa-solid fa-check text-[10px]"></i>' : ''}
+                    </button>
+                `;
+            }).join('');
+
+            const optsHtml = sc.options.map(function (o, j) {
+                let btnCls = 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 hover:border-emerald-500';
+                let ltrCls = 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300';
+                if (hasAnswered) {
+                    if (o.best) {
+                        btnCls = 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 text-emerald-900 dark:text-emerald-200';
+                        ltrCls = 'bg-emerald-600 text-white';
+                    } else if (chosenIdx === j) {
+                        btnCls = 'bg-rose-50 dark:bg-rose-950/60 border-rose-500 text-rose-900 dark:text-rose-200';
+                        ltrCls = 'bg-rose-600 text-white';
+                    } else {
+                        btnCls = 'opacity-55 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800';
+                    }
+                }
+                return `
+                    <button type="button" ${hasAnswered ? 'disabled' : ''} onclick="chooseManagerCase(${sc.id}, ${j})" class="w-full text-left p-3.5 rounded-2xl border-2 font-semibold text-xs sm:text-sm flex items-start gap-3 transition ${btnCls}">
+                        <span class="w-7 h-7 rounded-xl font-mono text-xs font-extrabold flex items-center justify-center shrink-0 ${ltrCls}">${o.ltr}</span>
+                        <span class="leading-relaxed pt-0.5">${escapeHtml(o.text)}</span>
+                    </button>
+                `;
+            }).join('');
+
+            let fbHtml = '';
+            if (hasAnswered) {
+                const picked = sc.options[chosenIdx];
+                fbHtml = `
+                    <div class="p-3.5 rounded-2xl border-l-4 ${picked.best ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-600 text-emerald-900 dark:text-emerald-200' : 'bg-rose-50 dark:bg-rose-950/50 border-rose-600 text-rose-900 dark:text-rose-200'} text-xs sm:text-sm leading-relaxed flex flex-wrap items-center justify-between gap-2">
+                        <span>${escapeHtml(picked.feedback)}</span>
+                        ${activeCaseTab < 2 ? `<button type="button" onclick="activeCaseTab=${activeCaseTab + 1};renderCurrentSlide();" class="px-3 py-1.5 rounded-xl bg-emerald-600 text-white font-extrabold text-xs shrink-0">Kasus Berikutnya &rarr;</button>` : ''}
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">Babak 4 · Studi Kasus Keputusan Manajer (1 Kasus per Layar)</span>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Latihan Keputusan Bisnis Menghadapi Gangguan &amp; UAT</h2>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="flex gap-1.5">${tabs}</div>
+                            <button type="button" onclick="resetManagerCases()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-xs font-bold text-slate-600 dark:text-slate-300">Ulangi</button>
+                        </div>
+                    </div>
+
+                    <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-3.5 my-auto">
+                        <div class="space-y-1.5">
+                            <span class="inline-block px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 text-xs font-extrabold">${escapeHtml(sc.badge)}</span>
+                            <h3 class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white leading-snug">${escapeHtml(sc.title)}</h3>
+                        </div>
+                        <div class="space-y-2">${optsHtml}</div>
+                        ${fbHtml}
+                    </div>
+
+                    ${slideTransitionNote("Lanjutkan ke 5 Kuis Kilat Pra-UTS (M1–M7) pada Slide 15.")}
+                </div>
+            `;
+        }
+
+        // SLIDE 15: Kuis Kilat Pra-UTS (5 Soal Interaktif)
+        function renderSlide15() {
+            let answeredCount = 0;
+            let score = 0;
+            for (let i = 0; i < QUIZ_M7.length; i++) {
+                const q = QUIZ_M7[i];
+                if (quizAnswersM7[q.id]) {
+                    answeredCount++;
+                    if (quizAnswersM7[q.id] === q.ans) score++;
+                }
+            }
+
+            const rows = QUIZ_M7.map(function (q) {
+                const chosen = quizAnswersM7[q.id];
+                const hasAns = chosen !== undefined;
+                const isRight = chosen === q.ans;
+                const boxCls = hasAns
+                    ? (isRight ? 'bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-500' : 'bg-rose-50/70 dark:bg-rose-950/30 border-rose-500')
+                    : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800';
+
+                const optBtns = q.opts.map(function (o) {
+                    let cls = 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 hover:border-emerald-500';
+                    if (hasAns) {
+                        if (o.k === q.ans) cls = 'bg-emerald-600 text-white border-emerald-600';
+                        else if (chosen === o.k) cls = 'bg-rose-600 text-white border-rose-600';
+                        else cls = 'opacity-45 bg-white dark:bg-slate-900 border-slate-200';
+                    }
+                    return `<button type="button" ${hasAns ? 'disabled' : ''} onclick="answerQuizM7(${q.id}, '${o.k}')" class="text-left px-3 py-1.5 rounded-xl border text-[11.5px] font-semibold transition ${cls}"><strong class="font-mono mr-1">${o.k}.</strong>${escapeHtml(o.t)}</button>`;
+                }).join('');
+
+                return `
+                    <div class="p-3 rounded-2xl border ${boxCls} space-y-2">
+                        <div class="text-xs font-extrabold text-slate-900 dark:text-white flex items-start gap-2">
+                            <span class="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 font-mono text-[10px] shrink-0">${q.tag}</span>
+                            <span>${q.id}. ${escapeHtml(q.q)}</span>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">${optBtns}</div>
+                        ${hasAns ? `<div class="text-[11px] text-slate-700 dark:text-slate-300 pl-3 border-l-2 ${isRight ? 'border-emerald-600' : 'border-rose-600'}">${escapeHtml(q.exp)}</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Babak 4 · Kuis Kilat Pra-UTS (M1–M7)</span>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Uji Cepat Kesiapan Konsep Sebelum LKM 07</h2>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="px-3 py-1.5 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-mono text-xs font-extrabold">
+                                Skor: ${score} / ${QUIZ_M7.length} (${answeredCount} dijawab)
+                            </span>
+                            <button type="button" onclick="resetQuizM7()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-xs font-bold text-slate-600 dark:text-slate-300">Ulangi</button>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2 my-auto">${rows}</div>
+
+                    ${slideTransitionNote("Terakhir di Slide 16: Briefing resmi pelaksanaan UTS Terpadu di LKM 07 (Pembagian Paket NIM Ganjil vs Genap).")}
+                </div>
+            `;
+        }
+
+        // SLIDE 16: Briefing Pelaksanaan UTS Terpadu di LKM 07 (Opsi A)
+        function renderSlide16() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    ${slideHeader("Penutup &amp; Briefing UTS · LKM 07 (Opsi A)", "Panduan Pelaksanaan UTS Terpadu: Praktikum UAT + 4 Essay Kasus", "Seluruh rangkaian UTS dikerjakan dalam <strong>1 berkas PDF LKM 07</strong> dengan aplikasi POS <em>plug-and-play</em> (tanpa edit kode PHP).", "text-rose-600 dark:text-rose-400")}
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 my-auto">
+                        <div class="p-5 rounded-3xl bg-amber-50/70 dark:bg-amber-950/30 border-2 border-amber-400 dark:border-amber-800 space-y-2.5">
+                            <div class="flex items-center justify-between">
+                                <span class="px-3 py-1 rounded-full bg-amber-600 text-white text-xs font-extrabold">📦 PAKET A · DIGIT AKHIR NIM GANJIL</span>
+                                <span class="font-mono text-xs font-bold text-amber-800 dark:text-amber-300">1, 3, 5, 7, 9</span>
+                            </div>
+                            <ul class="space-y-1.5 text-xs sm:text-sm text-slate-700 dark:text-slate-200">
+                                <li>• <strong>Cabang POS:</strong> Cabang Padang (<code class="font-mono font-bold">GDG-KEY-CABANG-002</code>)</li>
+                                <li>• <strong>Batas SLA Timeout:</strong> <strong>3 detik</strong></li>
+                                <li>• <strong>Mode Darurat Wajib Uji:</strong> <strong>Strict Stop (Fail-Closed)</strong></li>
+                                <li>• <strong>Fokus Essay 4:</strong> Strategi meminimalkan hilangnya omzet saat jaringan putus di jam ramai.</li>
+                            </ul>
+                        </div>
+
+                        <div class="p-5 rounded-3xl bg-indigo-50/70 dark:bg-indigo-950/30 border-2 border-indigo-400 dark:border-indigo-800 space-y-2.5">
+                            <div class="flex items-center justify-between">
+                                <span class="px-3 py-1 rounded-full bg-indigo-600 text-white text-xs font-extrabold">📦 PAKET B · DIGIT AKHIR NIM GENAP</span>
+                                <span class="font-mono text-xs font-bold text-indigo-800 dark:text-indigo-300">0, 2, 4, 6, 8</span>
+                            </div>
+                            <ul class="space-y-1.5 text-xs sm:text-sm text-slate-700 dark:text-slate-200">
+                                <li>• <strong>Cabang POS:</strong> Toko Pusat (<code class="font-mono font-bold">GDG-KEY-UTAMA-001</code>)</li>
+                                <li>• <strong>Batas SLA Timeout:</strong> <strong>4 detik</strong></li>
+                                <li>• <strong>Mode Darurat Wajib Uji:</strong> <strong>Pending &amp; Retry (Queue)</strong></li>
+                                <li>• <strong>Fokus Essay 4:</strong> SOP penanganan saat Retry ditolak <code class="font-mono font-bold">400 Stok Kurang</code> akibat <em>overselling offline</em>.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-slate-700 dark:text-slate-200">
+                        <div>
+                            <strong class="text-emerald-700 dark:text-emerald-400 block mb-1">✅ Komponen Berkas PDF LKM 07:</strong>
+                            Form 1 (Identitas &amp; Kunci Paket NIM) &rarr; Form 2 (Laporan 6 Uji UAT, Bukti Screenshot, Rekonsiliasi &amp; Keputusan Go/No-Go) &rarr; Form 3 (4 Essay Studi Kasus M1–M7).
+                        </div>
+                        <div>
+                            <strong class="text-rose-700 dark:text-rose-400 block mb-1">🛡️ Aturan Orisinalitas &amp; Anti-AI Mentah:</strong>
+                            Aplikasi POS sudah <strong>plug-and-play</strong> (tidak perlu edit kode PHP). <strong>Essay 3 &amp; Essay 4 WAJIB merujuk nomor struk, angka stok, dan hasil rekonsiliasi dari tabel UAT pribadi Anda!</strong>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        /* =====================================================================
+           4. DAFTAR 16 SLIDE & ENGINE NAVIGASI
+           ===================================================================== */
+        const SLIDES = [
+            { id: 1, category: "Sampul", title: "Integrasi Penuh Kasir POS ke Gudang, SLA Antrean & Kontinuitas Bisnis", render: renderSlide1 },
+            { id: 2, category: "Babak 1 · Jembatan M6→M7", title: "Alat Penguji JSON (M6) vs Aplikasi Kasir POS Sungguhan (M7)", render: renderSlide2 },
+            { id: 3, category: "Babak 1 · Front-Office UX", title: "Terjemahan Otomatis Pesan Error Gudang ke Bahasa Ramah Kasir", render: renderSlide3 },
+            { id: 4, category: "Babak 1 · Kurir Digital", title: "Konsep Kurir Digital (API Client / PHP cURL) di Balik Tombol Bayar", render: renderSlide4 },
+            { id: 5, category: "Babak 2 · SLA Antrean", title: "Manajemen Antrean & Mengapa Batas Waktu Tunggu (SLA) Penting", render: renderSlide5 },
+            { id: 6, category: "Simulasi Nyata 1", title: "Simulator Antrean Kasir & Dampak SLA Timeout terhadap Omzet", render: renderSlide6 },
+            { id: 7, category: "Babak 2 · Kontinuitas", title: "Kontinuitas Bisnis saat Gudang Putus: Strict Stop vs Pending & Retry", render: renderSlide7 },
+            { id: 8, category: "Babak 2 · Koreksi Kritis", title: "Mengapa Pagar 409 TIDAK Mencegah Overselling Transaksi Offline", render: renderSlide8 },
+            { id: 9, category: "Simulasi Nyata 2", title: "Layar Kasir POS End-to-End & Pantauan 2 Database Live", render: renderSlide9 },
+            { id: 10, category: "Babak 3 · Retur Nota", title: "Siklus Retur / Pembatalan Nota dari Meja Kasir (4 Pintu API Utuh)", render: renderSlide10 },
+            { id: 11, category: "Babak 3 · Audit Harian", title: "Rekonsiliasi Tutup Toko Lintas 2 Database (db_penjualan vs log_stok)", render: renderSlide11 },
+            { id: 12, category: "Babak 3 · UAT Go/No-Go", title: "User Acceptance Testing (UAT) & 3 Level Keputusan Manajer", render: renderSlide12 },
+            { id: 13, category: "Babak 4 · Rangkuman", title: "Peta Jalan Utuh Pertemuan 1 s.d. 7 (Persiapan UTS)", render: renderSlide13 },
+            { id: 14, category: "Babak 4 · Studi Kasus", title: "3 Studi Kasus Keputusan Manajer (1 Kasus per Layar)", render: renderSlide14 },
+            { id: 15, category: "Babak 4 · Kuis Pra-UTS", title: "Kuis Kilat Pra-UTS (5 Soal Terpadu M1–M7)", render: renderSlide15 },
+            { id: 16, category: "Briefing UTS · LKM 07", title: "Briefing UTS Terpadu di LKM 07 (Paket NIM Ganjil vs Genap)", render: renderSlide16 }
+        ];
+
+        function stopQueueTimerIfRunning() {
+            if (qSim.timerId) {
+                clearInterval(qSim.timerId);
+                qSim.timerId = null;
+                qSim.running = false;
+            }
+        }
+
+        function renderCurrentSlide() {
+            try {
+                const slide = SLIDES[currentSlideIndex];
+                const viewport = document.getElementById('slideViewport');
+                if (!viewport || !slide) return;
+                viewport.innerHTML = slide.render();
+
+                const pct = Math.round(((currentSlideIndex + 1) / TOTAL_SLIDES) * 100);
+                document.getElementById('topProgressBar').style.width = pct + '%';
+                document.getElementById('slideCounterBadge').textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES;
+                document.getElementById('mobileFooterCounter').textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES;
+                document.getElementById('slideCategoryPill').textContent = slide.category;
+                document.getElementById('headerSlideTitle').textContent = slide.title;
+
+                const prevBtn = document.getElementById('prevSlideBtn');
+                const nextBtn = document.getElementById('nextSlideBtn');
+                const nextBtnText = document.getElementById('nextBtnText');
+
+                prevBtn.disabled = currentSlideIndex === 0;
+                if (currentSlideIndex === TOTAL_SLIDES - 1) {
+                    nextBtnText.textContent = "Selesai";
+                    nextBtn.disabled = true;
+                } else {
+                    nextBtnText.textContent = "Selanjutnya";
+                    nextBtn.disabled = false;
+                }
+
+                renderDotsAndDrawer();
+            } catch (err) {
+                console.error('Gagal merender slide:', err);
+            }
+        }
+
+        function renderDotsAndDrawer() {
+            const dotsContainer = document.getElementById('slideDotsContainer');
+            let dotsHtml = '';
+            let drawerHtml = '';
+
+            for (let idx = 0; idx < SLIDES.length; idx++) {
+                const s = SLIDES[idx];
+                const isActive = idx === currentSlideIndex;
+                const isSim = s.category.indexOf('Simulasi') !== -1 || s.category.indexOf('Kuis') !== -1 || s.category.indexOf('Kasus') !== -1;
+                const dotClass = isActive
+                    ? 'w-6 bg-emerald-600 dark:bg-emerald-400'
+                    : isSim
+                    ? 'w-2.5 bg-amber-400 dark:bg-amber-500 hover:bg-amber-600'
+                    : 'w-2 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400';
+
+                dotsHtml += `<button type="button" onclick="goToSlide(${idx})" title="${escapeHtml(s.title)}" class="h-2 rounded-full transition-all ${dotClass}"></button>`;
+
+                const itemClass = isActive
+                    ? 'bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 font-bold'
+                    : 'hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-300';
+                const badgeClass = isActive
+                    ? 'bg-emerald-600 text-white'
+                    : isSim
+                    ? 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500';
+
+                drawerHtml += `
+                    <button type="button" onclick="selectSlideFromDrawer(${idx})" class="w-full text-left p-3 rounded-xl transition flex items-start gap-3 ${itemClass}">
+                        <span class="w-6 h-6 rounded-lg text-xs font-extrabold flex items-center justify-center shrink-0 ${badgeClass}">${s.id}</span>
+                        <div class="min-w-0">
+                            <div class="text-[10px] uppercase tracking-wider opacity-75">${escapeHtml(s.category)}</div>
+                            <div class="text-xs sm:text-sm truncate">${escapeHtml(s.title)}</div>
+                        </div>
+                    </button>
+                `;
+            }
+
+            if (dotsContainer) dotsContainer.innerHTML = dotsHtml;
+            const drawerList = document.getElementById('drawerSlideList');
+            if (drawerList) drawerList.innerHTML = drawerHtml;
+        }
+
+        function selectSlideFromDrawer(index) {
+            goToSlide(index);
+            toggleSlideDrawer();
+        }
+
+        function changeSlide(direction) {
+            const nextIdx = currentSlideIndex + direction;
+            if (nextIdx >= 0 && nextIdx < TOTAL_SLIDES) {
+                goToSlide(nextIdx);
+            }
+        }
+
+        function goToSlide(index) {
+            if (index >= 0 && index < TOTAL_SLIDES) {
+                if (currentSlideIndex === 5 && index !== 5) {
+                    stopQueueTimerIfRunning();
+                }
+                currentSlideIndex = index;
+                renderCurrentSlide();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function toggleSlideDrawer() {
+            const drawer = document.getElementById('slideDrawer');
+            const backdrop = document.getElementById('slideDrawerBackdrop');
+            const isClosed = drawer.classList.contains('-translate-x-full');
+
+            if (isClosed) {
+                backdrop.classList.remove('hidden');
+                setTimeout(function () { backdrop.classList.remove('opacity-0'); }, 10);
+                drawer.classList.remove('-translate-x-full');
+            } else {
+                backdrop.classList.add('opacity-0');
+                drawer.classList.add('-translate-x-full');
+                setTimeout(function () { backdrop.classList.add('hidden'); }, 200);
+            }
+        }
+
+        /* =====================================================================
+           5. HANDLER SIMULASI DUNIA NYATA 1 (ANTREAN KASIR & SLA — SLIDE 6)
+           ===================================================================== */
+        function setQNetwork(net) {
+            qSim.network = net;
+            resetQueueSim();
+        }
+
+        function setQPosMode(mode) {
+            qSim.posMode = mode;
+            resetQueueSim();
+        }
+
+        function resetQueueSim() {
+            stopQueueTimerIfRunning();
+            qSim.finished = false;
+            qSim.elapsedSec = 0;
+            qSim.customers = QUEUE_CUSTOMERS_BASE.map(function (c) {
+                return Object.assign({}, c, { status: 'menunggu', note: 'Siap di antrean kasir' });
+            });
+            renderCurrentSlide();
+        }
+
+        function startQueueSimulation() {
+            resetQueueSim();
+            qSim.running = true;
+
+            // Tentukan durasi total simulasi (dalam detik simulasi; 1 dtk sim = 350ms real-time)
+            if (qSim.network === 'normal') qSim.maxSec = 2.0;
+            else if (qSim.network === 'lambat' && qSim.posMode === 'sla_3') qSim.maxSec = 12.0;
+            else if (qSim.network === 'lambat' && qSim.posMode === 'tanpa_sla') qSim.maxSec = 12.5;
+            else if (qSim.network === 'mati' && qSim.posMode === 'sla_3') qSim.maxSec = 12.0;
+            else qSim.maxSec = 15.0;
+
+            updateQueueAtTime(0);
+            renderCurrentSlide();
+
+            // Tick tiap 175ms = +0.5 detik simulasi (350ms = 1 detik simulasi)
+            qSim.timerId = setInterval(function () {
+                qSim.elapsedSec = Math.round((qSim.elapsedSec + 0.5) * 10) / 10;
+                updateQueueAtTime(qSim.elapsedSec);
+
+                if (qSim.elapsedSec >= qSim.maxSec) {
+                    qSim.elapsedSec = qSim.maxSec;
+                    updateQueueAtTime(qSim.elapsedSec);
+                    stopQueueTimerIfRunning();
+                    qSim.finished = true;
+                }
+                if (currentSlideIndex === 5) renderCurrentSlide();
+            }, 175);
+        }
+
+        function updateQueueAtTime(t) {
+            const c = qSim.customers;
+
+            if (qSim.network === 'normal') {
+                // Respon 0.4 dtk per pembeli -> semua 4 pembeli dilayani tuntas <= 2.0 dtk
+                for (let i = 0; i < 4; i++) {
+                    const start = i * 0.5;
+                    const end = (i + 1) * 0.5;
+                    if (t >= end) {
+                        c[i].status = 'dilayani';
+                        c[i].note = 'Selesai cepat (' + end.toFixed(1) + ' dtk)';
+                    } else if (t >= start) {
+                        c[i].status = 'proses';
+                        c[i].note = 'Memotong stok Gudang...';
+                    } else {
+                        c[i].status = 'menunggu';
+                        c[i].note = 'Antre sebentar';
+                    }
+                }
+                return;
+            }
+
+            if (qSim.posMode === 'sla_3') {
+                // SLA 3 detik aktif: setiap pembeli diputus di 3 dtk & langsung dialihkan ke Mode Cadangan (Pending)
+                // Urutan t=3, 6, 9, 12 dtk -> Pembeli 4 mulai dilayani di t=9 (< batas sabar 10 dtk), 0 bubar!
+                for (let i = 0; i < 4; i++) {
+                    const start = i * 3;
+                    const end = (i + 1) * 3;
+                    if (t >= end) {
+                        c[i].status = 'cadangan';
+                        c[i].note = 'Putus 3 dtk → Mode Cadangan (t=' + end + 's)';
+                    } else if (t >= start) {
+                        c[i].status = 'proses';
+                        c[i].note = 'Menunggu SLA maks. 3 dtk...';
+                    } else {
+                        c[i].status = 'menunggu';
+                        c[i].note = 'Menunggu (' + t.toFixed(0) + ' dtk)';
+                    }
+                }
+                return;
+            }
+
+            // Mode TANPA SLA (tunggu hingga 15 dtk)
+            if (qSim.network === 'lambat') {
+                // Tiap transaksi butuh 6 dtk:
+                // P1: 0..6s -> Dilayani (6 dtk)
+                // P2: 6..12s -> Dilayani tapi mengeluh lama (12 dtk)
+                // P3 & P4: antre melewati batas sabar 10 dtk sebelum sempat dilayani -> Bubar Kecewa!
+                if (t < 6) {
+                    c[0].status = 'proses'; c[0].note = 'Loading lama... (' + t.toFixed(0) + '/6 dtk)';
+                    c[1].status = 'menunggu'; c[1].note = 'Menunggu (' + t.toFixed(0) + ' dtk)';
+                    c[2].status = 'menunggu'; c[2].note = 'Menunggu (' + t.toFixed(0) + ' dtk)';
+                    c[3].status = 'menunggu'; c[3].note = 'Menunggu (' + t.toFixed(0) + ' dtk)';
+                } else {
+                    c[0].status = 'dilayani'; c[0].note = 'Selesai t=6 dtk';
+                    if (t < 12) {
+                        c[1].status = 'proses'; c[1].note = 'Loading lama... (' + (t - 6).toFixed(0) + '/6 dtk)';
+                    } else {
+                        c[1].status = 'dilayani'; c[1].note = 'Selesai t=12 dtk (mengeluh)';
+                    }
+                    if (t >= 10) {
+                        c[3].status = 'bubar'; c[3].note = 'Batal belanja di t=10 dtk!';
+                    } else {
+                        c[3].status = 'menunggu'; c[3].note = 'Mulai kesal (' + t.toFixed(0) + ' dtk)';
+                    }
+                    if (t >= 11) {
+                        c[2].status = 'bubar'; c[2].note = 'Batal belanja di t=11 dtk!';
+                    } else {
+                        c[2].status = 'menunggu'; c[2].note = 'Mulai kesal (' + t.toFixed(0) + ' dtk)';
+                    }
+                }
+                return;
+            }
+
+            // Tanpa SLA + Jaringan Mati Total -> P1 freeze sampai 15 dtk, P2-P4 bubar di t=10-12 dtk
+            if (t < 15) {
+                c[0].status = 'proses'; c[0].note = 'Layar FREEZE... (' + t.toFixed(0) + '/15 dtk)';
+            } else {
+                c[0].status = 'bubar'; c[0].note = 'Timeout 15 dtk → batal belanja!';
+            }
+            const walkTimes = [15, 11, 10, 9.5];
+            for (let i = 1; i < 4; i++) {
+                if (t >= walkTimes[i]) {
+                    c[i].status = 'bubar';
+                    c[i].note = 'Antrean macet → bubar di t=' + walkTimes[i] + 's';
+                } else {
+                    c[i].status = 'menunggu';
+                    c[i].note = 'Menunggu tanpa gerak (' + t.toFixed(0) + ' dtk)';
+                }
+            }
+        }
+
+        /* =====================================================================
+           6. HANDLER SIMULASI DUNIA NYATA 2 (POS END-TO-END & 2 DB — SLIDE 9)
+           ===================================================================== */
+        function getJamPos() {
+            const d = new Date();
+            return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+        }
+
+        function posGetActiveKey() {
+            return posSim.cabang === 'pusat' ? 'GDG-KEY-UTAMA-001' : 'GDG-KEY-CABANG-002';
+        }
+
+        function posGetCabangLabel() {
+            return posSim.cabang === 'pusat' ? 'Toko Pusat' : 'Cabang Padang';
+        }
+
+        function posToggleCabang() {
+            posSim.cabang = posSim.cabang === 'pusat' ? 'padang' : 'pusat';
+            renderCurrentSlide();
+        }
+
+        function posToggleSla() {
+            posSim.slaSec = posSim.slaSec === 3 ? 4 : 3;
+            renderCurrentSlide();
+        }
+
+        function posToggleDarurat() {
+            posSim.darurat = posSim.darurat === 'strict' ? 'pending' : 'strict';
+            renderCurrentSlide();
+        }
+
+        function posToggleNetwork() {
+            posSim.gudangOnline = !posSim.gudangOnline;
+            posSim.posBanner = posSim.gudangOnline
+                ? { type: 'ok', title: '📡 Jaringan ke Gudang Kembali ONLINE', desc: 'Jika ada nota PENDING di db_penjualan, klik tombol 🔄 Retry untuk menolkan selisih!' }
+                : { type: 'warn', title: '📡 Simulasi Jaringan Gudang DIPUTUS (OFFLINE)', desc: 'Mode Darurat aktif: ' + (posSim.darurat === 'strict' ? 'Strict Stop (transaksi akan ditolak).' : 'Pending & Retry (transaksi masuk antrean PENDING).') };
+            renderCurrentSlide();
+        }
+
+        function posToggleCourier() {
+            posSim.showCourierLog = !posSim.showCourierLog;
+            renderCurrentSlide();
+        }
+
+        function posSelectProduct(kode) {
+            posSim.selectedKode = kode;
+            renderCurrentSlide();
+        }
+
+        function posAdjustQty(delta) {
+            posSim.qty = Math.max(1, Math.min(6, posSim.qty + delta));
+            renderCurrentSlide();
+        }
+
+        function posCheckout() {
+            const prod = posSim.products.find(function (x) { return x.kode === posSim.selectedKode; });
+            if (!prod) return;
+            const noStruk = 'TRX-' + String(posSim.trxSeq).padStart(3, '0');
+            const apiKey = posGetActiveKey();
+            const cabangLbl = posGetCabangLabel();
+
+            // 1. Cek batas promo lokal / Gudang (maks 3 psg)
+            if (posSim.qty > 3) {
+                posSim.posBanner = {
+                    type: 'err',
+                    title: 'Pembelian Melebihi Batas Promo Toko',
+                    desc: 'Maksimal pembelian promo adalah 3 pasang per struk. Mohon informasikan kuota promo kepada pembeli dengan sopan.'
+                };
+                posSim.lastCourier = {
+                    method: 'POST', url: '/api/stok-keluar.php', apiKey: apiKey, sla: posSim.slaSec + ' dtk', httpCode: 400,
+                    json: JSON.stringify({ status: 'error', kode_http: 400, pesan: '400 Ditolak Kebijakan Promo: Maksimal pembelian 3 pasang per nota!', data: null }, null, 2)
+                };
+                renderCurrentSlide();
+                return;
+            }
+
+            // 2. Jika Jaringan Gudang PUTUS -> ikuti kebijakan Mode Darurat
+            if (!posSim.gudangOnline) {
+                if (posSim.darurat === 'strict') {
+                    posSim.posBanner = {
+                        type: 'err',
+                        title: 'Transaksi Dihentikan (Mode Strict Stop · SLA ' + posSim.slaSec + ' dtk)',
+                        desc: 'Koneksi ke Gudang terputus melewati batas ' + posSim.slaSec + ' detik. Struk tidak dicatat demi mencegah risiko overselling.'
+                    };
+                    posSim.lastCourier = {
+                        method: 'POST', url: '/api/stok-keluar.php', apiKey: apiKey, sla: posSim.slaSec + ' dtk', httpCode: 0,
+                        json: JSON.stringify({ status: 'timeout', kode_http: 0, pesan: 'Kurir cURL memutus tunggu di ' + posSim.slaSec + ' detik (Server Gudang tidak merespons). Mode Strict Stop aktif.' }, null, 2)
+                    };
+                    renderCurrentSlide();
+                    return;
+                } else {
+                    // Mode Pending & Retry -> simpan nota PENDING ke db_penjualan, db_gudang belum tersentuh
+                    posSim.trxSeq++;
+                    posSim.salesDb.push({
+                        no_struk: noStruk, cabang: cabangLbl, kode: prod.kode, nama: prod.nama,
+                        qty: posSim.qty, total: prod.harga * posSim.qty, status: 'PENDING', jam: getJamPos()
+                    });
+                    posSim.posBanner = {
+                        type: 'warn',
+                        title: 'Nota ' + noStruk + ' Disimpan ke Antrean PENDING (SLA ' + posSim.slaSec + ' dtk)',
+                        desc: 'Pembeli tetap terlayani! Perhatikan bar Rekonsiliasi di bawah langsung SELISIH. Nyalakan Jaringan lalu klik 🔄 Retry.'
+                    };
+                    posSim.lastCourier = {
+                        method: 'POST', url: '/api/stok-keluar.php', apiKey: apiKey, sla: posSim.slaSec + ' dtk', httpCode: 0,
+                        json: JSON.stringify({ status: 'pending_queue', no_struk: noStruk, pesan: 'Timeout ' + posSim.slaSec + ' dtk → Disimpan lokal di db_penjualan (status_sinkron = PENDING).' }, null, 2)
+                    };
+                    renderCurrentSlide();
+                    return;
+                }
+            }
+
+            // 3. Jika Jaringan Gudang ONLINE -> cek stok di db_gudang
+            if (prod.stok < posSim.qty) {
+                posSim.posBanner = {
+                    type: 'err',
+                    title: 'Stok Sepatu di Gudang Tidak Mencukupi',
+                    desc: 'Sisa ' + prod.nama + ' tinggal ' + prod.stok + ' pasang. Tawarkan sisa yang tersedia atau model lain kepada pembeli.'
+                };
+                posSim.lastCourier = {
+                    method: 'POST', url: '/api/stok-keluar.php', apiKey: apiKey, sla: posSim.slaSec + ' dtk', httpCode: 400,
+                    json: JSON.stringify({ status: 'error', kode_http: 400, pesan: '400 Stok Kurang: Sisa ' + prod.kode + ' tinggal ' + prod.stok + ' pasang!', data: null }, null, 2)
+                };
+                renderCurrentSlide();
+                return;
+            }
+
+            // 4. Sukses End-to-End di 2 Database
+            posSim.trxSeq++;
+            prod.stok -= posSim.qty;
+            posSim.salesDb.push({
+                no_struk: noStruk, cabang: cabangLbl, kode: prod.kode, nama: prod.nama,
+                qty: posSim.qty, total: prod.harga * posSim.qty, status: 'SUKSES', jam: getJamPos()
+            });
+            posSim.warehouseLogs.push({
+                jam: getJamPos(), kode: prod.kode, jenis: 'keluar', qty: posSim.qty, sisa: prod.stok, ref: noStruk
+            });
+            posSim.posBanner = {
+                type: 'ok',
+                title: '✓ Pembayaran Sukses! Struk ' + noStruk + ' Tercetak',
+                desc: 'Tersimpan di db_penjualan & stok ' + prod.kode + ' di db_gudang langsung terpotong menjadi ' + prod.stok + ' pasang.'
+            };
+            posSim.lastCourier = {
+                method: 'POST', url: '/api/stok-keluar.php', apiKey: apiKey, sla: posSim.slaSec + ' dtk', httpCode: 200,
+                json: JSON.stringify({ status: 'sukses', kode_http: 200, pesan: 'Stok ' + prod.kode + ' dikurangi ' + posSim.qty + ' psg', data: { no_referensi: noStruk, sisa_stok: prod.stok } }, null, 2)
+            };
+            renderCurrentSlide();
+        }
+
+        function posRetryReceipt(noStruk) {
+            const rec = posSim.salesDb.find(function (s) { return s.no_struk === noStruk; });
+            if (!rec || rec.status !== 'PENDING') return;
+            const apiKey = posGetActiveKey();
+
+            if (!posSim.gudangOnline) {
+                posSim.posBanner = {
+                    type: 'err',
+                    title: 'Gagal Retry · Jaringan Gudang Masih PUTUS',
+                    desc: 'Klik saklar merah "Jaringan Gudang: PUTUS" di kanan atas menjadi ONLINE terlebih dahulu.'
+                };
+                renderCurrentSlide();
+                return;
+            }
+
+            const prod = posSim.products.find(function (x) { return x.kode === rec.kode; });
+            if (!prod || prod.stok < rec.qty) {
+                posSim.posBanner = {
+                    type: 'err',
+                    title: 'Retry Ditolak Gudang (400 Stok Kurang · Overselling Offline!)',
+                    desc: 'Stok ' + rec.kode + ' tinggal ' + (prod ? prod.stok : 0) + ' psg (tidak cukup untuk ' + rec.no_struk + '). Ini bukti nyata risiko Slide 8—wajib jalankan SOP tukar/refund!'
+                };
+                posSim.lastCourier = {
+                    method: 'POST', url: '/api/stok-keluar.php', apiKey: apiKey, sla: posSim.slaSec + ' dtk', httpCode: 400,
+                    json: JSON.stringify({ status: 'error', kode_http: 400, pesan: '400 Stok Kurang saat Retry ' + rec.no_struk + ' (Overselling Offline)!', data: null }, null, 2)
+                };
+                renderCurrentSlide();
+                return;
+            }
+
+            prod.stok -= rec.qty;
+            rec.status = 'SUKSES';
+            posSim.warehouseLogs.push({
+                jam: getJamPos(), kode: prod.kode, jenis: 'keluar', qty: rec.qty, sisa: prod.stok, ref: rec.no_struk
+            });
+            posSim.posBanner = {
+                type: 'ok',
+                title: '🔄 Retry Berhasil! Nota ' + rec.no_struk + ' Kini SUKSES',
+                desc: 'Stok Gudang diperbarui menjadi ' + prod.stok + ' psg dan Rekonsiliasi Tutup Toko kembali COCOK (Selisih 0)!'
+            };
+            posSim.lastCourier = {
+                method: 'POST', url: '/api/stok-keluar.php', apiKey: apiKey, sla: posSim.slaSec + ' dtk', httpCode: 200,
+                json: JSON.stringify({ status: 'sukses', kode_http: 200, pesan: 'Sinkronisasi ulang (Retry) ' + rec.no_struk + ' berhasil disahkan.', data: { sisa_stok: prod.stok } }, null, 2)
+            };
+            renderCurrentSlide();
+        }
+
+        function posReturReceipt(noStruk) {
+            const rec = posSim.salesDb.find(function (s) { return s.no_struk === noStruk; });
+            if (!rec || rec.status !== 'SUKSES') return;
+            const apiKey = posGetActiveKey();
+
+            if (!posSim.gudangOnline) {
+                posSim.posBanner = {
+                    type: 'err',
+                    title: 'Retur Butuh Koneksi ONLINE ke Gudang',
+                    desc: 'Nyalakan Jaringan Gudang agar pembatalan nota bisa langsung mengembalikan stok rak via POST /api/stok-masuk.php.'
+                };
+                renderCurrentSlide();
+                return;
+            }
+
+            const prod = posSim.products.find(function (x) { return x.kode === rec.kode; });
+            const refRetur = 'RETUR-' + rec.no_struk;
+            const dup = posSim.warehouseLogs.some(function (l) { return l.jenis === 'masuk' && l.ref === refRetur; });
+            if (dup) {
+                posSim.posBanner = { type: 'err', title: '409 Ditolak · Retur Ganda Dicegah!', desc: refRetur + ' sudah pernah masuk ke Kartu Stok.' };
+                renderCurrentSlide();
+                return;
+            }
+
+            prod.stok += rec.qty;
+            rec.status = 'DIRETUR';
+            posSim.warehouseLogs.push({
+                jam: getJamPos(), kode: prod.kode, jenis: 'masuk', qty: rec.qty, sisa: prod.stok, ref: refRetur
+            });
+            posSim.posBanner = {
+                type: 'ok',
+                title: '↩️ Retur ' + rec.no_struk + ' Berhasil! Stok Kembali Utuh',
+                desc: 'Kurir memanggil POST /api/stok-masuk.php (' + refRetur + '). Saldo ' + prod.kode + ' pulih menjadi ' + prod.stok + ' psg & Selisih tetap 0.'
+            };
+            posSim.lastCourier = {
+                method: 'POST', url: '/api/stok-masuk.php', apiKey: apiKey, sla: posSim.slaSec + ' dtk', httpCode: 200,
+                json: JSON.stringify({ status: 'sukses', kode_http: 200, pesan: 'Retur ' + refRetur + ' berhasil mengembalikan ' + rec.qty + ' psg', data: { no_referensi: refRetur, sisa_stok: prod.stok } }, null, 2)
+            };
+            renderCurrentSlide();
+        }
+
+        function resetPosSim() {
+            posSim = createInitialPosState();
+            renderCurrentSlide();
+        }
+
+        /* =====================================================================
+           7. HANDLER STUDI KASUS (SLIDE 14), KUIS (SLIDE 15), KAMUS & TEMA
+           ===================================================================== */
+        function chooseManagerCase(caseId, optIdx) {
+            managerCaseChoices[caseId] = optIdx;
+            renderCurrentSlide();
+        }
+
+        function resetManagerCases() {
+            managerCaseChoices = {};
+            activeCaseTab = 0;
+            renderCurrentSlide();
+        }
+
+        function answerQuizM7(qId, key) {
+            quizAnswersM7[qId] = key;
+            renderCurrentSlide();
+        }
+
+        function resetQuizM7() {
+            quizAnswersM7 = {};
+            renderCurrentSlide();
+        }
+
+        function showTerm(key) {
+            const item = GLOSSARY_DB[key];
+            if (!item) return;
+            document.getElementById('termCategoryBadge').textContent = item.category;
+            document.getElementById('termTitle').textContent = item.title;
+            document.getElementById('termMainDesc').textContent = item.main;
+            document.getElementById('termDetailDesc').textContent = item.detail;
+            document.getElementById('termSourceName').textContent = "Sumber: " + item.source;
+            const modal = document.getElementById('termModalBackdrop');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeTermModal() {
+            const modal = document.getElementById('termModalBackdrop');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function openGlossaryIndex() {
+            document.getElementById('glossarySearchInput').value = '';
+            renderGlossaryList('');
+            const modal = document.getElementById('glossaryModalBackdrop');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeGlossaryIndex() {
+            const modal = document.getElementById('glossaryModalBackdrop');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function selectGlossaryTerm(key) {
+            closeGlossaryIndex();
+            showTerm(key);
+        }
+
+        function renderGlossaryList(query) {
+            const q = String(query || '').trim().toLowerCase();
+            const keys = Object.keys(GLOSSARY_DB);
+            const matched = [];
+            for (let i = 0; i < keys.length; i++) {
+                const k = keys[i];
+                const it = GLOSSARY_DB[k];
+                if (
+                    it.title.toLowerCase().indexOf(q) !== -1 ||
+                    it.category.toLowerCase().indexOf(q) !== -1 ||
+                    it.main.toLowerCase().indexOf(q) !== -1
+                ) {
+                    matched.push(k);
+                }
+            }
+
+            const container = document.getElementById('glossaryListGrid');
+            if (!container) return;
+            if (matched.length === 0) {
+                container.innerHTML = '<div class="col-span-2 text-center py-8 text-xs text-slate-500">Istilah tidak ditemukan.</div>';
+                return;
+            }
+
+            let html = '';
+            for (let i = 0; i < matched.length; i++) {
+                const k = matched[i];
+                const it = GLOSSARY_DB[k];
+                html += `
+                    <button type="button" onclick="selectGlossaryTerm('${k}')" class="text-left p-4 rounded-2xl bg-slate-50 hover:bg-emerald-50/60 dark:bg-slate-800/50 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800 transition space-y-1">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">${escapeHtml(it.category)}</span>
+                            <span class="text-[10px] text-slate-400">${escapeHtml(it.source)}</span>
+                        </div>
+                        <div class="text-sm font-extrabold text-slate-900 dark:text-white">${escapeHtml(it.title)}</div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">${escapeHtml(it.main)}</p>
+                    </button>
+                `;
+            }
+            container.innerHTML = html;
+        }
+
+        function toggleTheme() {
+            const htmlEl = document.documentElement;
+            const icon = document.getElementById('themeIcon');
+            htmlEl.classList.toggle('dark');
+            const isDark = htmlEl.classList.contains('dark');
+            icon.className = isDark ? 'fa-solid fa-sun text-amber-400 text-sm' : 'fa-solid fa-moon text-sm';
+        }
+
+        document.addEventListener('keydown', function (e) {
+            const activeTag = document.activeElement && document.activeElement.tagName
+                ? document.activeElement.tagName.toLowerCase()
+                : '';
+            if (activeTag === 'input' || activeTag === 'textarea') return;
+
+            if (e.key === 'ArrowRight') changeSlide(1);
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+            if (e.key === 'Escape') {
+                closeTermModal();
+                closeGlossaryIndex();
+            }
+        });
+
+        window.onload = function () {
+            renderCurrentSlide();
+        };
+    </script>
+</body>
+</html>
