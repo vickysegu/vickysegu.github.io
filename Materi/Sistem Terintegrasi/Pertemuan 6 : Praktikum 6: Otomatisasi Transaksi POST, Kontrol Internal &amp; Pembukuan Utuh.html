@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Praktikum 6: Otomatisasi Transaksi POST, Kontrol Internal &amp; Pembukuan Utuh (LKM 06)</title>
+    <!-- Tailwind CSS untuk tata letak responsif & tema terang/gelap -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- html2pdf.js untuk ekspor laporan LKM 06 ukuran A4 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" defer></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -95,20 +97,35 @@
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
         .dark ::-webkit-scrollbar-thumb { background: #334155; }
 
-        /* Area cetak PDF ukuran A4 */
+        /* Area cetak PDF ukuran A4 dengan perlindungan anti-terpotong antar halaman */
         #pdfPrintArea {
             background: #ffffff;
             color: #0f172a;
             font-family: 'Plus Jakarta Sans', sans-serif;
         }
-        .pdf-table { width: 100%; border-collapse: collapse; }
+        .pdf-section {
+            margin-bottom: 12px;
+            break-inside: avoid-page;
+            page-break-inside: avoid;
+        }
+        .pdf-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        .pdf-table tr {
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
         .pdf-table th, .pdf-table td {
             border: 1px solid #cbd5e1;
-            padding: 7px 9px;
+            padding: 6px 8px;
             vertical-align: top;
-            font-size: 10.5px;
+            font-size: 10px;
             line-height: 1.45;
             white-space: pre-line;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
         .pdf-table th {
             background-color: #f1f5f9;
@@ -133,7 +150,7 @@
     <!-- Input tersembunyi untuk memuat arsip JSON -->
     <input type="file" id="jsonFileInput" accept=".json,application/json" class="hidden" onchange="handleJsonFileImport(event)">
 
-    <!-- Toast Notification -->
+    <!-- Toast Notification (Pengganti alert() bawaan browser) -->
     <div id="toastBanner" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 hidden max-w-md w-[92%] sm:w-full px-4 py-3.5 rounded-2xl shadow-2xl border flex items-start gap-3 transition-all duration-200 no-print">
         <i id="toastIcon" class="fa-solid fa-circle-exclamation text-lg mt-0.5 shrink-0"></i>
         <div class="flex-1 text-xs sm:text-sm font-bold leading-snug" id="toastMessage">Pesan notifikasi</div>
@@ -171,7 +188,7 @@
                     <i class="fa-solid fa-book-open text-emerald-600 dark:text-emerald-400"></i>
                     <span class="hidden md:inline">Kamus</span>
                 </button>
-                <button type="button" onclick="goToSlide(20)" class="hidden sm:flex px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold items-center gap-1.5 transition shadow-xs">
+                <button type="button" onclick="openPdfSlidePreview()" class="hidden sm:flex px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold items-center gap-1.5 transition shadow-xs" title="Lihat Pratinjau & Unduh PDF LKM 06">
                     <i class="fa-solid fa-file-pdf"></i><span>PDF</span>
                 </button>
                 <button type="button" onclick="toggleTheme()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center transition" title="Ganti Tema Layar">
@@ -274,7 +291,7 @@
             <div class="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
                 <div class="relative">
                     <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-sm"></i>
-                    <input id="glossarySearchInput" oninput="renderGlossaryList(this.value)" type="text" placeholder="Cari bantuan tentang stok-masuk, stok-keluar, maksQtyPerNota, 409, rollBack..." class="w-full pl-10 pr-4 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <input id="glossarySearchInput" oninput="renderGlossaryList(this.value)" type="text" placeholder="Cari bantuan tentang stok-masuk, stok-keluar, maksQtyPerNota, 409, rollBack, SOP..." class="w-full pl-10 pr-4 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                 </div>
             </div>
             <div id="glossaryListGrid" class="p-5 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-3"></div>
@@ -282,7 +299,9 @@
     </div>
 
     <script>
-        /* ================= KUMPULAN KODE WEB MINGGU 6 (SINKRON & USE-MODIFY-ANALYZE) ================= */
+        /* =====================================================================
+           1. KUMPULAN KODE WEB MINGGU 6 (SINKRON & USE-MODIFY-ANALYZE)
+           ===================================================================== */
         const RAW_CODES = {
             sql_sync_m6: [
                 "-- ==========================================================",
@@ -487,9 +506,9 @@
                 "    $pdo->prepare(\"INSERT INTO log_stok (barang_id, kode_barang, jenis, qty, stok_akhir, no_referensi, keterangan) VALUES (:bid, :kd, 'masuk', :qt, :sa, :rf, :kt)\")",
                 "        ->execute([':bid' => $brg['id'], ':kd' => $kode, ':qt' => $qty, ':sa' => $stokAkhir, ':rf' => $noRef, ':kt' => $ket]);",
                 "",
-                "    $pdo->commit(); // ✅ Sahkan kedua langkah secara serentak",
+                "    $pdo->commit(); // Sahkan kedua langkah secara serentak",
                 "} catch (Throwable $e) {",
-                "    if ($pdo->inTransaction()) { $pdo->rollBack(); } // ↩️ Batal semua jika error",
+                "    if ($pdo->inTransaction()) { $pdo->rollBack(); } // Batal semua jika error",
                 "    kirim_json('error', '500 Transaksi Dibatalkan (RollBack) demi akurasi stok: ' . $e->getMessage(), null, 500);",
                 "}",
                 "",
@@ -518,8 +537,8 @@
                 "/** @var PDO $pdo */",
                 "",
                 "// ==========================================================",
-                "// ⚙️ KEBIJAKAN MANAJER TOKO (USE - MODIFY - ANALYZE):",
-                "// Ubah angka $maksQtyPerNota (misal: 2, 3, atau 4 pasang) dan",
+                "// KEBIJAKAN MANAJER TOKO (USE - MODIFY - ANALYZE):",
+                "// Ubah angka $maksQtyPerNota (pilih 2 s.d. 5 pasang) dan",
                 "// $labelTokoAnda sesuai strategi promo toko Anda di Form 1!",
                 "// ==========================================================",
                 "$maksQtyPerNota = 3;",
@@ -595,9 +614,9 @@
                 "    $pdo->prepare(\"INSERT INTO log_stok (barang_id, kode_barang, jenis, qty, stok_akhir, no_referensi, keterangan) VALUES (:bid, :kd, 'keluar', :qt, :sa, :rf, :kt)\")",
                 "        ->execute([':bid' => $brg['id'], ':kd' => $kode, ':qt' => $qty, ':sa' => $stokAkhir, ':rf' => $noRef, ':kt' => $ket]);",
                 "",
-                "    $pdo->commit(); // ✅ Sahkan kedua langkah secara serentak",
+                "    $pdo->commit(); // Sahkan kedua langkah secara serentak",
                 "} catch (Throwable $e) {",
-                "    if ($pdo->inTransaction()) { $pdo->rollBack(); } // ↩️ Kembalikan stok ke angka semula!",
+                "    if ($pdo->inTransaction()) { $pdo->rollBack(); } // Kembalikan stok ke angka semula!",
                 "    kirim_json('error', '500 Transaksi Dibatalkan Otomatis (RollBack Aktif): ' . $e->getMessage(), [",
                 "        'kode'               => $kode,",
                 "        'stok_dikembalikan'  => $stokSebelum",
@@ -634,7 +653,7 @@
                 "if (isset($_GET['toggle_key'])) {",
                 "    $idKey = (int)$_GET['toggle_key'];",
                 "    $pdo->prepare('UPDATE api_keys SET status_aktif = IF(status_aktif = 1, 0, 1) WHERE id = :id')->execute([':id' => $idKey]);",
-                "    $pesan = '🔄 Posisi saklar izin cabang berhasil diubah!';",
+                "    $pesan = 'Posisi saklar izin cabang berhasil diubah!';",
                 "}",
                 "",
                 "$daftarBarang = $pdo->query('SELECT * FROM barang ORDER BY id ASC')->fetchAll();",
@@ -656,18 +675,18 @@
                 "</style></head><body>",
                 "<div class=\"box\">",
                 "  <div style=\"display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;border-bottom:2px solid #e2e8f0;padding-bottom:12px\">",
-                "    <div><h2 style=\"margin:0;color:#065f46\">📦 WEB 1: DASHBOARD GUDANG &amp; AUDIT KARTU STOK (MINGGU 6)</h2><p style=\"margin:4px 0 0;color:#475569;font-size:13px\">Cocokkan Saldo Tabel barang dengan Riwayat Kartu Stok (log_stok)</p></div>",
-                "    <a href=\"../sistem_penjualan/index.php\" target=\"_blank\" class=\"btn\" style=\"background:#4f46e5\">🚀 Buka Web Penguji Siklus Harian Kasir &rarr;</a>",
+                "    <div><h2 style=\"margin:0;color:#065f46\">WEB 1: DASHBOARD GUDANG &amp; AUDIT KARTU STOK (MINGGU 6)</h2><p style=\"margin:4px 0 0;color:#475569;font-size:13px\">Cocokkan Saldo Tabel barang dengan Riwayat Kartu Stok (log_stok)</p></div>",
+                "    <a href=\"../sistem_penjualan/index.php\" target=\"_blank\" class=\"btn\" style=\"background:#4f46e5\">Buka Web Penguji Siklus Harian Kasir &rarr;</a>",
                 "  </div>",
                 "  <?php if ($pesan): ?><div style=\"padding:10px;background:#dcfce7;border-left:4px solid #059669;margin-top:12px;font-weight:bold;border-radius:6px\"><?= $pesan ?></div><?php endif; ?>",
                 "  <div class=\"grid-2\">",
                 "    <div class=\"card\">",
-                "      <h3 style=\"margin:0 0 8px;color:#065f46;font-size:15px\">📊 1. Saldo Fisik Barang (Tabel barang)</h3>",
+                "      <h3 style=\"margin:0 0 8px;color:#065f46;font-size:15px\">1. Saldo Fisik Barang (Tabel barang)</h3>",
                 "      <table><tr><th>Kode</th><th>Nama Sepatu</th><th>Stok</th></tr>",
                 "      <?php foreach ($daftarBarang as $b): ?>",
                 "      <tr><td><strong><?= htmlspecialchars($b['kode']) ?></strong></td><td><?= htmlspecialchars($b['nama']) ?></td><td><strong style=\"color:<?= $b['stok']<=5?'#dc2626':'#059669' ?>\"><?= (int)$b['stok'] ?> pasang</strong></td></tr>",
                 "      <?php endforeach; ?></table>",
-                "      <h3 style=\"margin:16px 0 6px;color:#3730a3;font-size:14.5px\">🔑 2. Saklar Izin Cabang (api_keys)</h3>",
+                "      <h3 style=\"margin:16px 0 6px;color:#3730a3;font-size:14.5px\">2. Saklar Izin Cabang (api_keys)</h3>",
                 "      <table><tr><th>Cabang</th><th>Kunci</th><th>Status</th><th>Aksi</th></tr>",
                 "      <?php foreach ($daftarKeys as $k): ?>",
                 "      <tr><td><?= htmlspecialchars($k['nama_aplikasi']) ?></td><td><code style=\"color:#c2410c;font-weight:bold\"><?= htmlspecialchars($k['api_key']) ?></code></td>",
@@ -676,7 +695,7 @@
                 "      <?php endforeach; ?></table>",
                 "    </div>",
                 "    <div class=\"card\">",
-                "      <h3 style=\"margin:0 0 8px;color:#b45309;font-size:15px\">📋 3. Riwayat Audit Kartu Stok (15 Catatan Terbaru di log_stok)</h3>",
+                "      <h3 style=\"margin:0 0 8px;color:#b45309;font-size:15px\">3. Riwayat Audit Kartu Stok (15 Catatan Terbaru di log_stok)</h3>",
                 "      <table><tr><th>Waktu</th><th>Kode</th><th>Jenis</th><th>Qty</th><th>Sisa</th><th>No Referensi</th></tr>",
                 "      <?php foreach ($daftarLogs as $l): ?>",
                 "      <tr><td style=\"font-size:11px\"><?= htmlspecialchars($l['tanggal']) ?></td><td><strong><?= htmlspecialchars($l['kode_barang']) ?></strong></td>",
@@ -747,23 +766,23 @@
                 "</style></head><body>",
                 "<div class=\"box\">",
                 "  <div style=\"display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;border-bottom:2px solid #e2e8f0;padding-bottom:12px;margin-bottom:14px\">",
-                "    <div><h2 style=\"margin:0;color:#3730a3\">🚀 WEB 2: PENGUJI SIKLUS HARIAN &amp; KONTROL INTERNAL (MINGGU 6)</h2><p style=\"margin:4px 0 0;color:#475569;font-size:13px\">Uji Restock Anti-PO Ganda (409), Batas Beli Promo (400), &amp; Pembukuan Utuh (RollBack)</p></div>",
-                "    <a href=\"../sistem_gudang/index.php\" target=\"_blank\" style=\"padding:8px 14px;background:#059669;color:#fff;text-decoration:none;border-radius:8px;font-weight:bold;font-size:12.5px\">📦 Buka Dashboard Audit Gudang &rarr;</a>",
+                "    <div><h2 style=\"margin:0;color:#3730a3\">WEB 2: PENGUJI SIKLUS HARIAN &amp; KONTROL INTERNAL (MINGGU 6)</h2><p style=\"margin:4px 0 0;color:#475569;font-size:13px\">Uji Restock Anti-PO Ganda (409), Batas Beli Promo (400), &amp; Pembukuan Utuh (RollBack)</p></div>",
+                "    <a href=\"../sistem_gudang/index.php\" target=\"_blank\" style=\"padding:8px 14px;background:#059669;color:#fff;text-decoration:none;border-radius:8px;font-weight:bold;font-size:12.5px\">Buka Dashboard Audit Gudang &rarr;</a>",
                 "  </div>",
                 "  <form method=\"post\" style=\"padding:10px 14px;background:#fff7ed;border:1px solid #fdba74;border-radius:10px;margin-bottom:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap\">",
-                "    <strong>🔑 Kunci Cabang (X-API-KEY):</strong>",
+                "    <strong>Kunci Cabang (X-API-KEY):</strong>",
                 "    <input type=\"text\" name=\"kode_api\" value=\"<?= htmlspecialchars($kodeApiKasir) ?>\" style=\"width:230px;font-family:monospace;font-weight:bold\">",
-                "    <button type=\"submit\" name=\"simpan_kunci\" value=\"1\" style=\"padding:7px 14px;background:#ea580c;color:#fff;border:none;border-radius:6px;font-weight:bold;cursor:pointer\">💾 Simpan Kunci</button>",
+                "    <button type=\"submit\" name=\"simpan_kunci\" value=\"1\" style=\"padding:7px 14px;background:#ea580c;color:#fff;border:none;border-radius:6px;font-weight:bold;cursor:pointer\">Simpan Kunci</button>",
                 "  </form>",
                 "  <div class=\"grid-2\">",
                 "    <div class=\"card\">",
-                "      <h3 style=\"margin:0 0 8px;font-size:14.5px\">⚡ Tombol Cepat 3 Misi Investigasi LKM 06:</h3>",
-                "      <form method=\"post\"><input type=\"hidden\" name=\"jalankan_uji\" value=\"1\"><input type=\"hidden\" name=\"pintu_api\" value=\"stok-masuk.php\"><input type=\"hidden\" name=\"kode\" value=\"SP008\"><input type=\"hidden\" name=\"qty\" value=\"10\"><input type=\"hidden\" name=\"no_referensi\" value=\"PO-2026-01\"><button class=\"btn-fast\" style=\"background:#059669\">🌅 Misi 1: Pagi Restock +10 SP008 (PO-2026-01) — Klik 2x untuk Tes 409!</button></form>",
-                "      <form method=\"post\"><input type=\"hidden\" name=\"jalankan_uji\" value=\"1\"><input type=\"hidden\" name=\"pintu_api\" value=\"stok-keluar.php\"><input type=\"hidden\" name=\"kode\" value=\"SP008\"><input type=\"hidden\" name=\"qty\" value=\"2\"><input type=\"hidden\" name=\"no_referensi\" value=\"TRX-2026-01\"><button class=\"btn-fast\" style=\"background:#4f46e5\">☀️ Misi 2A: Siang Jual Normal 2 Pasang SP008 (TRX-2026-01)</button></form>",
-                "      <form method=\"post\"><input type=\"hidden\" name=\"jalankan_uji\" value=\"1\"><input type=\"hidden\" name=\"pintu_api\" value=\"stok-keluar.php\"><input type=\"hidden\" name=\"kode\" value=\"SP008\"><input type=\"hidden\" name=\"qty\" value=\"6\"><input type=\"hidden\" name=\"no_referensi\" value=\"TRX-PROMO-99\"><button class=\"btn-fast\" style=\"background:#d97706\">🚫 Misi 2B: Uji Tengkulak Borong 6 Pasang Promo (Harus Ditolak 400!)</button></form>",
-                "      <form method=\"post\"><input type=\"hidden\" name=\"jalankan_uji\" value=\"1\"><input type=\"hidden\" name=\"pintu_api\" value=\"stok-keluar.php\"><input type=\"hidden\" name=\"kode\" value=\"SP008\"><input type=\"hidden\" name=\"qty\" value=\"2\"><input type=\"hidden\" name=\"no_referensi\" value=\"TRX-PUTUS-01\"><input type=\"hidden\" name=\"simulasi_putus\" value=\"1\"><button class=\"btn-fast\" style=\"background:#dc2626\">⚡ Misi 3: Uji Gangguan Tengah Jalan (Buktikan RollBack Stok Utuh!)</button></form>",
+                "      <h3 style=\"margin:0 0 8px;font-size:14.5px\">Tombol Cepat 3 Misi Investigasi LKM 06:</h3>",
+                "      <form method=\"post\"><input type=\"hidden\" name=\"jalankan_uji\" value=\"1\"><input type=\"hidden\" name=\"pintu_api\" value=\"stok-masuk.php\"><input type=\"hidden\" name=\"kode\" value=\"SP008\"><input type=\"hidden\" name=\"qty\" value=\"10\"><input type=\"hidden\" name=\"no_referensi\" value=\"PO-2026-01\"><button class=\"btn-fast\" style=\"background:#059669\">Misi 1: Pagi Restock +10 SP008 (PO-2026-01) — Klik 2x untuk Tes 409!</button></form>",
+                "      <form method=\"post\"><input type=\"hidden\" name=\"jalankan_uji\" value=\"1\"><input type=\"hidden\" name=\"pintu_api\" value=\"stok-keluar.php\"><input type=\"hidden\" name=\"kode\" value=\"SP008\"><input type=\"hidden\" name=\"qty\" value=\"2\"><input type=\"hidden\" name=\"no_referensi\" value=\"TRX-2026-01\"><button class=\"btn-fast\" style=\"background:#4f46e5\">Misi 2A: Siang Jual Normal 2 Pasang SP008 (TRX-2026-01)</button></form>",
+                "      <form method=\"post\"><input type=\"hidden\" name=\"jalankan_uji\" value=\"1\"><input type=\"hidden\" name=\"pintu_api\" value=\"stok-keluar.php\"><input type=\"hidden\" name=\"kode\" value=\"SP008\"><input type=\"hidden\" name=\"qty\" value=\"6\"><input type=\"hidden\" name=\"no_referensi\" value=\"TRX-PROMO-99\"><button class=\"btn-fast\" style=\"background:#d97706\">Misi 2B: Uji Tengkulak Borong 6 Pasang Promo (Harus Ditolak 400!)</button></form>",
+                "      <form method=\"post\"><input type=\"hidden\" name=\"jalankan_uji\" value=\"1\"><input type=\"hidden\" name=\"pintu_api\" value=\"stok-keluar.php\"><input type=\"hidden\" name=\"kode\" value=\"SP008\"><input type=\"hidden\" name=\"qty\" value=\"2\"><input type=\"hidden\" name=\"no_referensi\" value=\"TRX-PUTUS-01\"><input type=\"hidden\" name=\"simulasi_putus\" value=\"1\"><button class=\"btn-fast\" style=\"background:#dc2626\">Misi 3: Uji Gangguan Tengah Jalan (Buktikan RollBack Stok Utuh!)</button></form>",
                 "      <hr style=\"margin:12px 0;border:none;border-top:1px dashed #cbd5e1\">",
-                "      <h3 style=\"margin:0 0 6px;font-size:13.5px\">🛠️ Formulir Uji Manual (Bebas Coba Kode &amp; Qty Lain):</h3>",
+                "      <h3 style=\"margin:0 0 6px;font-size:13.5px\">Formulir Uji Manual (Bebas Coba Kode &amp; Qty Lain):</h3>",
                 "      <form method=\"post\"><input type=\"hidden\" name=\"jalankan_uji\" value=\"1\">",
                 "        <label>Pilih Pintu Transaksi POST</label><select name=\"pintu_api\"><option value=\"stok-keluar.php\">POST /api/stok-keluar.php (Penjualan)</option><option value=\"stok-masuk.php\">POST /api/stok-masuk.php (Barang Masuk)</option></select>",
                 "        <div style=\"display:grid;grid-template-columns:1fr 1fr;gap:8px\">",
@@ -771,11 +790,11 @@
                 "          <div><label>Qty (Pasang)</label><input type=\"number\" name=\"qty\" value=\"1\" required></div>",
                 "        </div>",
                 "        <label>Nomor Referensi (No Struk / Surat Jalan PO)</label><input type=\"text\" name=\"no_referensi\" value=\"TRX-MANUAL-01\" required>",
-                "        <button type=\"submit\" style=\"width:100%;margin-top:10px;padding:9px;background:#334155;color:#fff;border:none;border-radius:8px;font-weight:bold;cursor:pointer\">📤 Kirim Paket POST Manual</button>",
+                "        <button type=\"submit\" style=\"width:100%;margin-top:10px;padding:9px;background:#334155;color:#fff;border:none;border-radius:8px;font-weight:bold;cursor:pointer\">Kirim Paket POST Manual</button>",
                 "      </form>",
                 "    </div>",
                 "    <div class=\"card\">",
-                "      <h3 style=\"margin:0 0 6px;font-size:14.5px\">📥 Hasil Balasan Resmi dari Gudang (kirim_json):</h3>",
+                "      <h3 style=\"margin:0 0 6px;font-size:14.5px\">Hasil Balasan Resmi dari Gudang (kirim_json):</h3>",
                 "      <?php if ($urlPanggil): ?>",
                 "        <div style=\"font-size:11.5px;margin-bottom:8px;font-family:monospace;background:#e0e7ff;padding:6px 10px;border-radius:6px;color:#1e1b4b\"><strong>POST</strong> <?= htmlspecialchars($urlPanggil) ?></div>",
                 "        <div style=\"font-size:11px;font-weight:bold;color:#475569;margin-bottom:4px\">Paket JSON yang Dikirim:</div>",
@@ -791,11 +810,45 @@
             ].join("\n")
         };
 
+        /* =====================================================================
+           2. KAMUS BANTUAN PRAKTIKUM 6
+           ===================================================================== */
         const GLOSSARY_DB = {
-            procure_to_pay: { title: "Siklus Restock / Barang Masuk (POST stok-masuk.php)", category: "Proses Bisnis Harian", main: "Aktivitas menerima kiriman barang dari pabrik berdasarkan Surat Jalan (PO) lalu menambah saldo stok gudang sekaligus mencatat bukti masuk di Kartu Stok.", detail: "Pada Minggu 6, stok-masuk.php dilengkapi aturan tolak 409 jika nomor PO yang sama tidak sengaja diinput dua kali.", source: "Slide 7 & 13" },
-            batas_promo: { title: "Batas Maksimal Beli Promo ($maksQtyPerNota)", category: "Kebijakan Strategi Bisnis", main: "Variabel kebijakan manajer di dalam api/stok-keluar.php yang membatasi jumlah maksimal pasang sepatu per struk agar barang promo tidak diborong tengkulak.", detail: "Anda menetapkan angkanya di Form 1 lalu memodifikasinya di baris ke-15 api/stok-keluar.php.", source: "Slide 2, 8 & 11" },
-            anti_duplikat: { title: "Anti-Faktur & Anti-Struk Ganda (409 Conflict)", category: "Kontrol Internal", main: "Mekanisme pemeriksaan ke tabel log_stok agar satu nomor PO atau nomor struk tidak pernah memproses mutasi stok lebih dari satu kali.", detail: "Mencegah terciptanya stok hantu di stok-masuk dan mencegah pemotongan stok ganda di stok-keluar.", source: "Slide 7, 8 & 13" },
-            pembukuan_utuh: { title: "Pembukuan Satu Paket Utuh (beginTransaction - commit - rollBack)", category: "Integritas Audit", main: "Menjamin perubahan angka stok di tabel barang dan pencatatan riwayat di log_stok terjadi dalam 1 paket utuh: berhasil keduanya atau batal keduanya.", detail: "Diuji langsung pada Misi Investigasi 3 (tombol merah Uji Gangguan Tengah Jalan).", source: "Slide 8 & 13" }
+            procure_to_pay: {
+                title: "Siklus Restock / Barang Masuk (POST stok-masuk.php)",
+                category: "Proses Bisnis Harian",
+                main: "Aktivitas menerima kiriman barang dari pabrik berdasarkan Surat Jalan (PO) lalu menambah saldo stok gudang sekaligus mencatat bukti masuk di Kartu Stok.",
+                detail: "Pada Minggu 6, stok-masuk.php dilengkapi aturan tolak 409 jika nomor PO yang sama tidak sengaja diinput dua kali.",
+                source: "Slide 7 & 13"
+            },
+            batas_promo: {
+                title: "Batas Maksimal Beli Promo ($maksQtyPerNota)",
+                category: "Kebijakan Strategi Bisnis",
+                main: "Variabel kebijakan manajer di dalam api/stok-keluar.php yang membatasi jumlah maksimal pasang sepatu per struk agar barang promo tidak diborong tengkulak.",
+                detail: "Pilih rentang 2 s.d. 5 pasang di Form 1 lalu ubah nilainya di baris ke-15 api/stok-keluar.php.",
+                source: "Slide 2, 8 & 11"
+            },
+            anti_duplikat: {
+                title: "Anti-Faktur & Anti-Struk Ganda (409 Conflict)",
+                category: "Kontrol Internal",
+                main: "Mekanisme pemeriksaan ke tabel log_stok agar satu nomor PO atau nomor struk tidak pernah memproses mutasi stok lebih dari satu kali.",
+                detail: "Mencegah terciptanya stok hantu (phantom inventory) di stok-masuk dan mencegah pemotongan stok ganda di stok-keluar.",
+                source: "Slide 7, 8 & 13"
+            },
+            pembukuan_utuh: {
+                title: "Pembukuan Satu Paket Utuh (beginTransaction - commit - rollBack)",
+                category: "Integritas Audit",
+                main: "Menjamin perubahan angka stok di tabel barang dan pencatatan riwayat di log_stok terjadi dalam 1 paket utuh: berhasil keduanya atau batal keduanya.",
+                detail: "Diuji langsung pada Misi Investigasi 3 (tombol merah Uji Gangguan Tengah Jalan).",
+                source: "Slide 8 & 13"
+            },
+            sop_lapangan: {
+                title: "SOP Penanganan Penolakan Sistem (Business Exception SOP)",
+                category: "Tata Kelola Operasional",
+                main: "Prosedur kerja tertulis bagi Staf Gudang, Kasir, dan Manajer saat sistem API memblokir transaksi (400, 401, 409, 500) agar layanan tetap tertib tanpa celah audit.",
+                detail: "Dirancang secara mandiri pada Form 3 (Slide 15–16).",
+                source: "Slide 15 & 16"
+            }
         };
 
         function escapeHtml(str) {
@@ -857,26 +910,19 @@
             }, 60);
         }
 
+        /* =====================================================================
+           3. STATE FORMULIR LKM 06 & MIGRASI AMAN
+           ===================================================================== */
         const STORAGE_KEY = 'upertis_lkm06_mandiri_v2';
         let currentSlideIndex = 0;
         const TOTAL_SLIDES = 21;
-        let activeBaseFileTab = 'koneksi'; // Slide 6 tab switcher
+        let activeBaseFileTab = 'koneksi';
         let activeMissionTab = 0;
         let activeDesignColTab = 0;
         let epHintShown = { 0: false, 1: false, 2: false };
 
-        let formState = {
-            nama: '', nim: '', kelas: '', tgl: new Date().toISOString().split('T')[0],
-            maks_qty_promo: '3', nama_toko_custom: '', rekan_opsional: '',
-
-            // Form 2 (Slide 14): Investigasi Sebelum -> Sesudah -> Mengapa
-            exp_1_sebelum: '', exp_1_sesudah: '', exp_1_mengapa: '',
-            exp_2_sebelum: '', exp_2_sesudah: '', exp_2_mengapa: '',
-            exp_3_sebelum: '', exp_3_sesudah: '', exp_3_mengapa: '',
-            img_bukti_1: '', img_bukti_2: '',
-
-            // Form 3 (Slide 16): 3 Buku Panduan SOP Lapangan saat Sistem Menolak Transaksi (Business Exception SOP)
-            sop_lapangan: [
+        function getDefaultSopList() {
+            return [
                 {
                     peran: '1. SOP Staf Gudang — Penolakan 409 (Surat Jalan PO Ganda)',
                     kode_error: '409 Conflict (POST /api/stok-masuk.php)',
@@ -898,9 +944,23 @@
                     komunikasi_pihak: '',
                     larangan_sop: ''
                 }
-            ],
+            ];
+        }
 
-            // Form 4 (Slide 18): Self-Audit & Keputusan Manajerial SOP Audit / Komplain
+        let formState = {
+            nama: '', nim: '', kelas: '', tgl: new Date().toISOString().split('T')[0],
+            maks_qty_promo: '3', nama_toko_custom: '', rekan_opsional: '',
+
+            // Form 2 (Slide 14): Investigasi Sebelum -> Sesudah -> Mengapa
+            exp_1_sebelum: '', exp_1_sesudah: '', exp_1_mengapa: '',
+            exp_2_sebelum: '', exp_2_sesudah: '', exp_2_mengapa: '',
+            exp_3_sebelum: '', exp_3_sesudah: '', exp_3_mengapa: '',
+            img_bukti_1: '', img_bukti_2: '',
+
+            // Form 3 (Slide 16): 3 Buku Panduan SOP Lapangan (Business Exception SOP)
+            sop_lapangan: getDefaultSopList(),
+
+            // Form 4 (Slide 18): Self-Audit, Rekonsiliasi & Keputusan Manajerial SOP
             audit_1_status: '', audit_1_catatan: '',
             audit_2_status: '', audit_2_catatan: '',
             audit_3_status: '', audit_3_catatan: '',
@@ -918,14 +978,33 @@
             umkmEditing: true, umkmMinimized: false
         };
 
-        /* ================= FUNGSI VALIDASI & AUTO-SAVE ================= */
+        /* Pengaman struktur sop_lapangan saat memuat localStorage / impor JSON lama */
+        function ensureSopStructure() {
+            const defaults = getDefaultSopList();
+            if (!Array.isArray(formState.sop_lapangan) || formState.sop_lapangan.length !== 3) {
+                formState.sop_lapangan = defaults;
+            } else {
+                for (let i = 0; i < 3; i++) {
+                    formState.sop_lapangan[i] = Object.assign({}, defaults[i], formState.sop_lapangan[i] || {});
+                }
+            }
+        }
+
+        /* =====================================================================
+           4. FUNGSI VALIDASI & AUTO-SAVE
+           ===================================================================== */
+        function isPromoLimitValid(val) {
+            const num = parseInt(String(val || '').trim(), 10);
+            return !isNaN(num) && num >= 2 && num <= 5;
+        }
+
         function isIdentitasComplete() {
             return !!(
                 formState.nama.trim() &&
                 formState.nim.trim() &&
                 formState.kelas.trim() &&
                 formState.tgl.trim() &&
-                formState.maks_qty_promo.toString().trim() &&
+                isPromoLimitValid(formState.maks_qty_promo) &&
                 formState.nama_toko_custom.trim()
             );
         }
@@ -939,14 +1018,15 @@
         }
 
         function isSopItemComplete(idx) {
+            ensureSopStructure();
             const it = formState.sop_lapangan[idx];
             if (!it) return false;
             return !!(
-                it.peran.trim() &&
-                it.kode_error.trim() &&
-                it.langkah_staf.trim() &&
-                it.komunikasi_pihak.trim() &&
-                it.larangan_sop.trim()
+                String(it.peran || '').trim() &&
+                String(it.kode_error || '').trim() &&
+                String(it.langkah_staf || '').trim() &&
+                String(it.komunikasi_pihak || '').trim() &&
+                String(it.larangan_sop || '').trim()
             );
         }
 
@@ -959,14 +1039,23 @@
         }
 
         function isAuditComplete() {
-            const st = [formState.audit_1_status, formState.audit_2_status, formState.audit_3_status];
-            const allStatusChosen = st.every(function (s) { return s === 'Sesuai' || s === 'Perlu Perbaikan'; });
-            return allStatusChosen && formState.keputusan_sop_manajer.trim() !== '';
+            const checks = [
+                { s: formState.audit_1_status, c: formState.audit_1_catatan },
+                { s: formState.audit_2_status, c: formState.audit_2_catatan },
+                { s: formState.audit_3_status, c: formState.audit_3_catatan }
+            ];
+            const allValid = checks.every(function (item) {
+                if (item.s === 'Sesuai') return true;
+                if (item.s === 'Perlu Perbaikan') return String(item.c || '').trim() !== '';
+                return false;
+            });
+            return allValid && String(formState.keputusan_sop_manajer || '').trim() !== '';
         }
 
         function isUmkmComplete() { return true; }
 
         function syncSavedStatesFromData() {
+            ensureSopStructure();
             uiWizard.identitasEditing = !isIdentitasComplete();
             uiWizard.expEditing = !isExpComplete();
             for (let i = 0; i < 3; i++) {
@@ -981,7 +1070,12 @@
                 if (!formState.nama.trim()) { uiWizard.identitasEditing = true; renderCurrentSlide(); highlightEmptyInput('inp_nama', 'Nama Lengkap wajib diisi.'); return false; }
                 if (!formState.nim.trim()) { uiWizard.identitasEditing = true; renderCurrentSlide(); highlightEmptyInput('inp_nim', 'NIM wajib diisi.'); return false; }
                 if (!formState.kelas.trim()) { uiWizard.identitasEditing = true; renderCurrentSlide(); highlightEmptyInput('inp_kelas', 'Kelas wajib diisi.'); return false; }
-                if (!formState.maks_qty_promo.toString().trim()) { uiWizard.identitasEditing = true; renderCurrentSlide(); highlightEmptyInput('inp_maks_promo', 'Angka Batas Maksimal Beli Promo wajib diisi.'); return false; }
+                if (!isPromoLimitValid(formState.maks_qty_promo)) {
+                    uiWizard.identitasEditing = true;
+                    renderCurrentSlide();
+                    highlightEmptyInput('inp_maks_promo', 'Batas Maksimal Beli Promo harus diisi angka 2 s.d. 5 pasang agar uji Misi 2A (2 psg) dan Misi 2B (6 psg) berjalan sesuai skenario.');
+                    return false;
+                }
                 if (!formState.nama_toko_custom.trim()) { uiWizard.identitasEditing = true; renderCurrentSlide(); highlightEmptyInput('inp_nama_toko', 'Nama Gudang / Toko versi Anda wajib diisi.'); return false; }
                 uiWizard.identitasEditing = false;
                 return true;
@@ -994,7 +1088,7 @@
                     { key: 'exp_3_sebelum', label: 'Misi 3 "Sebelum"' }, { key: 'exp_3_sesudah', label: 'Misi 3 "Sesudah"' }, { key: 'exp_3_mengapa', label: 'Misi 3 "Mengapa"' }
                 ];
                 for (let i = 0; i < fields.length; i++) {
-                    if (!formState[fields[i].key].trim()) {
+                    if (!String(formState[fields[i].key] || '').trim()) {
                         uiWizard.expEditing = true;
                         renderCurrentSlide();
                         highlightEmptyInput('inp_' + fields[i].key, fields[i].label + ' wajib diisi (minimal 1 kalimat).');
@@ -1006,13 +1100,14 @@
             }
 
             if (slideIdx === 15) {
+                ensureSopStructure();
                 for (let i = 0; i < 3; i++) {
                     const it = formState.sop_lapangan[i];
-                    if (!it.peran.trim()) { uiWizard.epActive = i; renderCurrentSlide(); highlightEmptyInput('inp_sop_peran_' + i, 'Peran & Judul SOP #' + (i + 1) + ' wajib diisi.'); return false; }
-                    if (!it.kode_error.trim()) { uiWizard.epActive = i; renderCurrentSlide(); highlightEmptyInput('inp_sop_kode_' + i, 'Kode HTTP & Pintu API pada SOP #' + (i + 1) + ' wajib diisi.'); return false; }
-                    if (!it.langkah_staf.trim()) { uiWizard.epActive = i; renderCurrentSlide(); highlightEmptyInput('inp_sop_langkah_' + i, 'Langkah Tindakan Staf pada SOP #' + (i + 1) + ' wajib diisi.'); return false; }
-                    if (!it.komunikasi_pihak.trim()) { uiWizard.epActive = i; renderCurrentSlide(); highlightEmptyInput('inp_sop_kom_' + i, 'Cara Komunikasi / Eskalasi pada SOP #' + (i + 1) + ' wajib diisi.'); return false; }
-                    if (!it.larangan_sop.trim()) { uiWizard.epActive = i; renderCurrentSlide(); highlightEmptyInput('inp_sop_larangan_' + i, 'Hal yang Dilarang Staf pada SOP #' + (i + 1) + ' wajib diisi.'); return false; }
+                    if (!String(it.peran || '').trim()) { uiWizard.epActive = i; renderCurrentSlide(); highlightEmptyInput('inp_sop_peran_' + i, 'Peran & Judul SOP #' + (i + 1) + ' wajib diisi.'); return false; }
+                    if (!String(it.kode_error || '').trim()) { uiWizard.epActive = i; renderCurrentSlide(); highlightEmptyInput('inp_sop_kode_' + i, 'Kode HTTP & Pintu API pada SOP #' + (i + 1) + ' wajib diisi.'); return false; }
+                    if (!String(it.langkah_staf || '').trim()) { uiWizard.epActive = i; renderCurrentSlide(); highlightEmptyInput('inp_sop_langkah_' + i, 'Langkah Tindakan Staf pada SOP #' + (i + 1) + ' wajib diisi.'); return false; }
+                    if (!String(it.komunikasi_pihak || '').trim()) { uiWizard.epActive = i; renderCurrentSlide(); highlightEmptyInput('inp_sop_kom_' + i, 'Cara Komunikasi / Eskalasi pada SOP #' + (i + 1) + ' wajib diisi.'); return false; }
+                    if (!String(it.larangan_sop || '').trim()) { uiWizard.epActive = i; renderCurrentSlide(); highlightEmptyInput('inp_sop_larangan_' + i, 'Hal yang Dilarang Staf pada SOP #' + (i + 1) + ' wajib diisi.'); return false; }
                     uiWizard.epSaved[i] = true;
                 }
                 uiWizard.epActive = -1;
@@ -1033,14 +1128,14 @@
                         showToast('Audit poin ' + items[i].no + ': pilih status "Sesuai" atau "Perlu Perbaikan".', 'error');
                         return false;
                     }
-                    if (st === 'Perlu Perbaikan' && !formState[items[i].cKey].trim()) {
+                    if (st === 'Perlu Perbaikan' && !String(formState[items[i].cKey] || '').trim()) {
                         uiWizard.peerEditing = true;
                         renderCurrentSlide();
                         highlightEmptyInput('inp_' + items[i].cKey, 'Audit poin ' + items[i].no + ': catatan perbaikan wajib diisi.');
                         return false;
                     }
                 }
-                if (!formState.keputusan_sop_manajer.trim()) {
+                if (!String(formState.keputusan_sop_manajer || '').trim()) {
                     uiWizard.peerEditing = true;
                     renderCurrentSlide();
                     highlightEmptyInput('inp_keputusan_sop', 'Keputusan SOP Manajer wajib diisi.');
@@ -1058,6 +1153,7 @@
         }
 
         function updateSopField(idx, subKey, val) {
+            ensureSopStructure();
             if (!formState.sop_lapangan[idx]) return;
             formState.sop_lapangan[idx][subKey] = val;
             triggerAutoSave();
@@ -1109,9 +1205,10 @@
                     const parsed = JSON.parse(raw);
                     if (parsed.form) formState = Object.assign(formState, parsed.form);
                     if (parsed.ui) uiWizard = Object.assign(uiWizard, parsed.ui);
-                    syncSavedStatesFromData();
                 }
             } catch (e) {}
+            ensureSopStructure();
+            syncSavedStatesFromData();
         }
 
         function exportJsonData() {
@@ -1119,7 +1216,7 @@
             const cleanNim = (formState.nim || 'NIM').replace(/[^a-zA-Z0-9_-]/g, '');
             const cleanNama = (formState.nama || 'Mahasiswa').trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '');
             const filename = 'Data_LKM06_Mandiri_' + cleanNim + '_' + cleanNama + '.json';
-            const payload = { app: 'UPERTIS_INTEGRATED_SYSTEMS_LKM06', version: '1.0', exportedAt: new Date().toISOString(), lkm06: { form: formState, ui: uiWizard } };
+            const payload = { app: 'UPERTIS_INTEGRATED_SYSTEMS_LKM06', version: '2.0', exportedAt: new Date().toISOString(), lkm06: { form: formState, ui: uiWizard } };
             const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -1148,6 +1245,7 @@
                     if (!target || !target.form) { showToast('Format file .json tidak dikenali sebagai data LKM 06.', 'error'); return; }
                     formState = Object.assign(formState, target.form);
                     if (target.ui) uiWizard = Object.assign(uiWizard, target.ui);
+                    ensureSopStructure();
                     syncSavedStatesFromData();
                     localStorage.setItem(STORAGE_KEY, JSON.stringify({ form: formState, ui: uiWizard }));
                     renderCurrentSlide();
@@ -1181,7 +1279,9 @@
                 </div>`;
         }
 
-        /* ================= RENDER SLIDES 1 S.D. 21 ================= */
+        /* =====================================================================
+           5. RENDER SLIDES 1 S.D. 21
+           ===================================================================== */
 
         // SLIDE 1: Sampul Praktikum 6 Mandiri
         function renderSlide1() {
@@ -1195,7 +1295,7 @@
                             </div>
                             <h2 class="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white leading-tight">Otomatisasi Siklus Transaksi <code class="font-mono">POST</code>, Kontrol Internal &amp; Pembukuan Utuh (LKM 06)</h2>
                             <p class="text-xs sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
-                                Pada praktikum mandiri ini, Anda akan menyempurnakan siklus ${term('procure_to_pay', 'Restock Pagi (stok-masuk)')} agar kebal ${term('anti_duplikat', 'PO Ganda (409)')}, menetapkan kebijakan ${term('batas_promo', 'Batas Maksimal Beli Promo')} toko Anda sendiri, serta menguji ${term('pembukuan_utuh', 'Pembukuan Satu Paket Utuh')} saat terjadi gangguan di tengah transaksi!
+                                Pada praktikum mandiri ini, Anda akan menyempurnakan siklus ${term('procure_to_pay', 'Restock Pagi (stok-masuk)')} agar kebal ${term('anti_duplikat', 'PO Ganda (409)')}, menetapkan kebijakan ${term('batas_promo', 'Batas Maksimal Beli Promo')} toko Anda sendiri, menguji ${term('pembukuan_utuh', 'Pembukuan Satu Paket Utuh')}, dan merancang ${term('sop_lapangan', 'SOP Lapangan')} bagi staf toko!
                             </p>
                             <div class="flex flex-wrap items-center gap-2.5 pt-2">
                                 <button type="button" onclick="changeSlide(1)" class="px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-extrabold transition flex items-center gap-2 shadow-sm"><span>Mulai Praktikum Mandiri</span><i class="fa-solid fa-arrow-right"></i></button>
@@ -1207,9 +1307,9 @@
                             <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 space-y-3.5">
                                 <div><span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Alur Kerja Mandiri (Use–Modify–Analyze)</span><h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white mt-0.5">4 Tahap Praktikum Hari Ini</h3></div>
                                 <div class="space-y-2.5 text-xs">
-                                    <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 flex items-center gap-3"><span class="w-7 h-7 rounded-lg bg-emerald-600 text-white font-extrabold flex items-center justify-center shrink-0">1</span><div><strong class="text-slate-900 dark:text-white block">Identitas &amp; Kebijakan Promo Toko (Slide 2–3)</strong><span class="text-slate-500">Tetapkan batas maks. beli promo/nota &amp; nama toko (Form 1).</span></div></div>
+                                    <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 flex items-center gap-3"><span class="w-7 h-7 rounded-lg bg-emerald-600 text-white font-extrabold flex items-center justify-center shrink-0">1</span><div><strong class="text-slate-900 dark:text-white block">Identitas &amp; Kebijakan Promo Toko (Slide 2–3)</strong><span class="text-slate-500">Tetapkan batas maks. beli promo (2–5 psg) &amp; nama toko (Form 1).</span></div></div>
                                     <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 flex items-center gap-3"><span class="w-7 h-7 rounded-lg bg-emerald-600 text-white font-extrabold flex items-center justify-center shrink-0">2</span><div><strong class="text-slate-900 dark:text-white block">Upgrade Pintu POST &amp; Modifikasi Kode (Slide 4–12)</strong><span class="text-slate-500">Sinkronkan SQL, upgrade stok-masuk &amp; stok-keluar, &amp; ubah aturan.</span></div></div>
-                                    <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 flex items-center gap-3"><span class="w-7 h-7 rounded-lg bg-emerald-600 text-white font-extrabold flex items-center justify-center shrink-0">3</span><div><strong class="text-slate-900 dark:text-white block">Investigasi 3 Misi &amp; SOP Lapangan (Slide 13–18)</strong><span class="text-slate-500">Uji sistem (Form 2), susun SOP staf (Form 3), &amp; audit (Form 4).</span></div></div>
+                                    <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 flex items-center gap-3"><span class="w-7 h-7 rounded-lg bg-emerald-600 text-white font-extrabold flex items-center justify-center shrink-0">3</span><div><strong class="text-slate-900 dark:text-white block">Investigasi 3 Misi, SOP &amp; Audit (Slide 13–18)</strong><span class="text-slate-500">Uji sistem (Form 2), susun SOP staf (Form 3), &amp; audit (Form 4).</span></div></div>
                                     <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 flex items-center gap-3"><span class="w-7 h-7 rounded-lg bg-indigo-600 text-white font-extrabold flex items-center justify-center shrink-0">4</span><div><strong class="text-slate-900 dark:text-white block">Bonus UMKM &amp; Cetak PDF A4 (Slide 19–21)</strong><span class="text-slate-500">Form 5 (opsional) &amp; unduh PDF LKM 06 siap kumpul.</span></div></div>
                                 </div>
                             </div>
@@ -1218,7 +1318,7 @@
                 </div>`;
         }
 
-        // SLIDE 2: Penjelasan Sebelum Form 1 — Kebijakan Batas Beli Promo Manajer
+        // SLIDE 2: Penjelasan Sebelum Form 1 — Kebijakan Batas Beli Promo Manajer (Rentang 2-5 Pasang)
         function renderSlide2() {
             return `
                 <div class="slide-enter flex flex-col justify-between h-full gap-6">
@@ -1232,9 +1332,9 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-auto">
                         <div class="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-t-4 border-amber-500 border-x border-b border-slate-200 dark:border-slate-800 space-y-2.5">
                             <span class="px-2.5 py-1 rounded-lg bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 text-xs font-extrabold">KEBIJAKAN 1 · BATAS PROMO ($maksQtyPerNota)</span>
-                            <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Maksimal Berapa Pasang per Struk?</h3>
+                            <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Maksimal Berapa Pasang per Struk? (Pilih 2–5)</h3>
                             <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                                Tentukan sendiri batas aman pembelian promo toko Anda (misalnya <strong>2</strong>, <strong>3</strong>, atau <strong>4 pasang per nota</strong>). Jika ada tengkulak mencoba memborong <strong>6 pasang</strong> pada Misi 2 nanti, API Gudang Anda akan langsung menolaknya dengan kode <strong>400 Bad Request</strong>!
+                                Pilih angka batas promo antara <strong>2 s.d. 5 pasang per nota</strong>. Rentang ini sengaja dirancang agar uji pembelian normal <strong>2 pasang</strong> (Misi 2A) pasti lolos (<strong>200 OK</strong>), sedangkan uji tengkulak memborong <strong>6 pasang</strong> (Misi 2B) pasti tertangkap dan ditolak dengan <strong>400 Bad Request</strong>!
                             </p>
                         </div>
                         <div class="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-t-4 border-emerald-600 border-x border-b border-slate-200 dark:border-slate-800 space-y-2.5">
@@ -1262,7 +1362,7 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100 dark:border-slate-800">
                             <div><label class="text-xs font-bold block mb-1">Nama Lengkap Anda *</label><input type="text" id="inp_nama" value="${escapeHtml(formState.nama)}" oninput="updateField('nama', this.value)" placeholder="Ketik nama lengkap..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm font-semibold"></div>
                             <div><label class="text-xs font-bold block mb-1">NIM *</label><input type="text" id="inp_nim" value="${escapeHtml(formState.nim)}" oninput="updateField('nim', this.value)" placeholder="Ketik NIM..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm font-mono font-semibold"></div>
-                            <div><label class="text-xs font-bold block mb-1">Kelas / Semester *</label><input type="text" id="inp_kelas" value="${escapeHtml(formState.kelas)}" oninput="updateField('kelas', this.value)" placeholder="Contoh: Bisnis Digital 4A" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm"></div>
+                            <div><label class="text-xs font-bold block mb-1">Kelas / Semester *</label><input type="text" id="inp_kelas" value="${escapeHtml(formState.kelas)}" oninput="updateField('kelas', this.value)" placeholder="Contoh: Bisnis Digital 5A" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm"></div>
                             <div><label class="text-xs font-bold block mb-1">Tanggal Praktikum *</label><input type="date" id="inp_tgl" value="${escapeHtml(formState.tgl)}" oninput="updateField('tgl', this.value)" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm font-mono"></div>
                             <div><label class="text-xs font-bold text-amber-700 dark:text-amber-400 block mb-1">Batas Maksimal Beli Promo per Nota ($maksQtyPerNota: pilih 2–5) *</label><input type="number" id="inp_maks_promo" min="2" max="5" value="${escapeHtml(formState.maks_qty_promo)}" oninput="updateField('maks_qty_promo', this.value)" placeholder="Misal: 3" class="w-full px-3.5 py-2.5 rounded-xl bg-amber-50/60 dark:bg-slate-800 border border-amber-300 dark:border-amber-700 text-sm font-mono font-bold"></div>
                             <div><label class="text-xs font-bold text-emerald-700 dark:text-emerald-400 block mb-1">Nama Gudang / Toko Versi Anda ($labelTokoAnda) *</label><input type="text" id="inp_nama_toko" value="${escapeHtml(formState.nama_toko_custom)}" oninput="updateField('nama_toko_custom', this.value)" placeholder="Contoh: Gudang Sepatu Nusantara - Nama Anda" class="w-full px-3.5 py-2.5 rounded-xl bg-emerald-50/60 dark:bg-slate-800 border border-emerald-300 dark:border-emerald-700 text-sm font-semibold"></div>
@@ -1331,25 +1431,25 @@
             </div>`;
         }
 
-        // SLIDE 7: Langkah Web 4 — Upgrade api/stok-masuk.php (Anti-PO Ganda 409 + Pembukuan Utuh)
+        // SLIDE 7: Langkah Web 4 — Upgrade api/stok-masuk.php + 3 Titik Intip Aturan Bisnis
         function renderSlide7() {
             return `<div class="slide-enter flex flex-col justify-between h-full gap-4">
                 <div class="space-y-1"><span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Langkah Web 4 · File 3 dari 6 (UPGRADE MINGGU 6!)</span><h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Perbarui Pintu Barang Masuk (<code class="font-mono">sistem_gudang/api/stok-masuk.php</code>)</h2><p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">Buat atau timpa file <strong><code class="font-mono">C:\\xampp\\htdocs\\sistem_gudang\\api\\stok-masuk.php</code></strong> dengan kode standar Minggu 6 berikut:</p></div>
                 <div class="my-auto">${renderCodeBox('php_3_stok_masuk_m6', '📋 Salin api/stok-masuk.php (Minggu 6)')}</div>
-                <div class="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border-l-4 border-emerald-600 text-xs sm:text-sm text-slate-700 dark:text-slate-200"><strong>Peningkatan Utama:</strong> Kini sudah menutup lubang Minggu 4 dengan ${term('anti_duplikat', 'Cek PO Ganda (409 Conflict)')}, memakai <code class="font-mono">helpers/response.php</code>, serta dibungkus ${term('pembukuan_utuh', 'Pembukuan Satu Paket Utuh')}!</div>
+                <div class="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border-l-4 border-emerald-600 text-xs sm:text-sm text-slate-700 dark:text-slate-200"><strong>🔍 3 Titik Intip Aturan Bisnis (Jangan Copy-Paste Buta):</strong> (1) <strong>Langkah 5</strong> — ${term('anti_duplikat', 'Cek PO Ganda 409')} ke <code class="font-mono">log_stok</code>; (2) <strong>Langkah 7</strong> — ${term('pembukuan_utuh', 'beginTransaction() → commit()')}; (3) <strong>Bagian Akhir</strong> — cetakan kop surat resmi <code class="font-mono">kirim_json()</code>.</div>
             </div>`;
         }
 
-        // SLIDE 8: Langkah Web 5 — Upgrade api/stok-keluar.php (Batas Promo + Pembukuan Utuh)
+        // SLIDE 8: Langkah Web 5 — Upgrade api/stok-keluar.php + 3 Titik Intip Aturan Bisnis
         function renderSlide8() {
             return `<div class="slide-enter flex flex-col justify-between h-full gap-4">
                 <div class="space-y-1"><span class="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">Langkah Web 5 · File 4 dari 6 (INTI PRAKTIKUM MINGGU 6)</span><h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Perbarui Pintu Penjualan Kasir (<code class="font-mono">sistem_gudang/api/stok-keluar.php</code>)</h2><p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">Buat atau timpa file <strong><code class="font-mono">C:\\xampp\\htdocs\\sistem_gudang\\api\\stok-keluar.php</code></strong> dengan kode berikut:</p></div>
                 <div class="my-auto">${renderCodeBox('php_4_stok_keluar_m6', '📋 Salin api/stok-keluar.php (Minggu 6)')}</div>
-                <div class="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border-l-4 border-amber-500 text-xs sm:text-sm text-slate-700 dark:text-slate-200"><strong>Lihat Baris 15–16 di Atas!</strong> Di sana terdapat variabel <code class="font-mono font-bold">$maksQtyPerNota = 3;</code> dan <code class="font-mono font-bold">$labelTokoAnda</code> yang akan Anda sesuaikan dengan kebijakan Form 1 Anda di Slide 11 nanti!</div>
+                <div class="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border-l-4 border-amber-500 text-xs sm:text-sm text-slate-700 dark:text-slate-200"><strong>🔍 3 Titik Intip Aturan Bisnis:</strong> (1) <strong>Baris 15–16</strong> — variabel <code class="font-mono font-bold">$maksQtyPerNota</code> &amp; <code class="font-mono font-bold">$labelTokoAnda</code> (diubah di Slide 11); (2) <strong>Langkah 5</strong> — pagar tolak <code class="font-mono">400</code> anti-tengkulak; (3) <strong>Langkah 8</strong> — <code class="font-mono">$pdo-&gt;rollBack()</code> saat gangguan di tengah jalan.</div>
             </div>`;
         }
 
-        // SLIDE 9: Langkah Web 6 — Dashboard Audit Gudang (sistem_gudang/index.php)
+        // SLIDE 9: Langkah Web 6 — Dashboard Audit Gudang
         function renderSlide9() {
             return `<div class="slide-enter flex flex-col justify-between h-full gap-4">
                 <div class="space-y-1"><span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Langkah Web 6 · File 5 dari 6</span><h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Perbarui Dashboard Audit Gudang (<code class="font-mono">sistem_gudang/index.php</code>)</h2><p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">Simpan kode berikut ke dalam <code class="font-mono font-bold">C:\\xampp\\htdocs\\sistem_gudang\\index.php</code>:</p></div>
@@ -1358,7 +1458,7 @@
             </div>`;
         }
 
-        // SLIDE 10: Langkah Web 7 — Web Penguji Siklus Harian (sistem_penjualan/index.php)
+        // SLIDE 10: Langkah Web 7 — Web Penguji Siklus Harian
         function renderSlide10() {
             return `<div class="slide-enter flex flex-col justify-between h-full gap-4">
                 <div class="space-y-1"><span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Langkah Web 7 · File 6 dari 6</span><h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Perbarui Web Penguji Siklus Harian (<code class="font-mono">sistem_penjualan/index.php</code>)</h2><p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">Terakhir, simpan kode berikut ke dalam <code class="font-mono font-bold">C:\\xampp\\htdocs\\sistem_penjualan\\index.php</code>:</p></div>
@@ -1367,7 +1467,7 @@
             </div>`;
         }
 
-        // SLIDE 11: Tahap Use-Modify-Analyze (Ubah $maksQtyPerNota & $labelTokoAnda)
+        // SLIDE 11: Tahap Use-Modify-Analyze
         function renderSlide11() {
             const maks = formState.maks_qty_promo || '3';
             const nmt  = formState.nama_toko_custom || 'Gudang Sepatu Anda';
@@ -1429,19 +1529,19 @@
                 {
                     badge: "MISI INVESTIGASI 1 (PAGI)",
                     title: "Uji Restock Barang Masuk & Anti-PO Ganda (409)",
-                    steps: "1. Di Web Penguji Kasir (Tab 2), klik tombol HIJAU: '🌅 Misi 1: Pagi Restock +10 SP008 (PO-2026-01)'. Amati balasan 200 OK (stok naik 2 → 12) dan cek Dashboard Gudang (refresh).\n2. Sekarang klik tombol HIJAU itu SEKALI LAGI (seolah admin lupa dan menginput ulang PO-2026-01)!\n3. Amati kode HTTP dan pesan balasan JSON yang muncul!",
+                    steps: "1. Di Web Penguji Kasir (Tab 2), klik tombol HIJAU: 'Misi 1: Pagi Restock +10 SP008 (PO-2026-01)'. Amati balasan 200 OK (stok naik 2 → 12) dan cek Dashboard Gudang (refresh).\n2. Sekarang klik tombol HIJAU itu SEKALI LAGI (seolah admin lupa dan menginput ulang PO-2026-01)!\n3. Amati kode HTTP dan pesan balasan JSON yang muncul!",
                     questionToThink: "Panduan Form 2 Misi 1:\nSebelum klik ke-2 (pada klik pertama), apa yang terjadi pada stok SP008 & log_stok? Sesudah klik ke-2 dengan nomor PO yang sama, mengapa sistem menolak (409) dan kerugian bisnis apa yang berhasil dicegah?"
                 },
                 {
                     badge: "MISI INVESTIGASI 2 (SIANG)",
                     title: "Uji Penjualan Normal vs Pagar Batas Beli Promo (400)",
-                    steps: "1. Di Web Penguji Kasir, klik tombol BIRU: '☀️ Misi 2A: Siang Jual Normal 2 Pasang SP008 (TRX-2026-01)'. Amati balasan 200 OK (stok turun 12 → 10) dan nama toko Anda di pesan JSON.\n2. Sekarang klik tombol KUNING: '🚫 Misi 2B: Uji Tengkulak Borong 6 Pasang Promo'.\n3. Amati kode HTTP (400) dan batas maksimal promo versi Anda di balasan JSON!",
+                    steps: "1. Di Web Penguji Kasir, klik tombol BIRU: 'Misi 2A: Siang Jual Normal 2 Pasang SP008 (TRX-2026-01)'. Amati balasan 200 OK (stok turun 12 → 10) dan nama toko Anda di pesan JSON.\n2. Sekarang klik tombol KUNING: 'Misi 2B: Uji Tengkulak Borong 6 Pasang Promo'.\n3. Amati kode HTTP (400) dan batas maksimal promo versi Anda di balasan JSON!",
                     questionToThink: "Panduan Form 2 Misi 2:\nApa perbedaan hasil saat pelanggan membeli 2 pasang dibanding tengkulak yang mencoba memborong 6 pasang? Mengapa menaruh aturan batas promo di API Gudang lebih efektif dibanding sekadar poster di meja kasir?"
                 },
                 {
                     badge: "MISI INVESTIGASI 3 (AUDIT)",
                     title: "Uji Gangguan di Tengah Jalan (Bukti Pembukuan Utuh / RollBack)",
-                    steps: "1. Cek dulu sisa stok SP008 saat ini di Dashboard Gudang (Tab 1, seharusnya 10 pasang).\n2. Di Web Penguji Kasir (Tab 2), klik tombol MERAH: '⚡ Misi 3: Uji Gangguan Tengah Jalan (simulasi_putus)'.\n3. Refresh Dashboard Gudang (Tab 1)! Periksa apakah stok SP008 tetap utuh 10 pasang dan apakah TRX-PUTUS-01 tercatat di log_stok?",
+                    steps: "1. Cek dulu sisa stok SP008 saat ini di Dashboard Gudang (Tab 1, seharusnya 10 pasang).\n2. Di Web Penguji Kasir (Tab 2), klik tombol MERAH: 'Misi 3: Uji Gangguan Tengah Jalan (simulasi_putus)'.\n3. Refresh Dashboard Gudang (Tab 1)! Periksa apakah stok SP008 tetap utuh 10 pasang dan apakah TRX-PUTUS-01 tercatat di log_stok?",
                     questionToThink: "Panduan Form 2 Misi 3:\nSebelum ada Pembukuan Satu Paket Utuh (Minggu 4), apa bahayanya jika error terjadi setelah stok dipotong? Sesudah memakai beginTransaction & rollBack, bagaimana kondisi stok SP008 dan log_stok setelah tombol merah ditekan, dan mengapa ini krusial bagi audit toko?"
                 }
             ];
@@ -1558,8 +1658,9 @@
                 </div>`;
         }
 
-        // SLIDE 16: FORM ISIAN 3 — Perancangan 3 SOP Penanganan Penolakan Sistem di Lapangan (Business Exception SOP)
+        // SLIDE 16: FORM ISIAN 3 — Perancangan 3 SOP Penanganan Penolakan Sistem di Lapangan
         function renderSlide16() {
+            ensureSopStructure();
             const maks = formState.maks_qty_promo || '3';
             const hintsData = [
                 {
@@ -1586,7 +1687,7 @@
                 const isSaved = isSopItemComplete(i);
                 const isMin = !!uiWizard.epMinimized[i];
                 const showHint = !!epHintShown[i];
-                const headerTitle = item.peran.trim() ? item.peran : hintsData[i].roleBadge;
+                const headerTitle = String(item.peran || '').trim() ? item.peran : hintsData[i].roleBadge;
 
                 if (isEditing) {
                     cardsHtml += `
@@ -1664,20 +1765,20 @@
                 <div class="space-y-1.5"><span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Penjelasan Sebelum Form 4 · Audit Mandiri &amp; Keputusan Manajerial</span><h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Verifikasi Audit Kartu Stok &amp; Kasus Keputusan Manajer Toko</h2><p class="text-sm text-slate-600 dark:text-slate-300">Pada Form 4 di slide berikutnya, Anda akan menuntaskan <strong>2 evaluasi mandiri</strong> berikut:</p></div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5 my-auto">
                     <div class="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-t-4 border-emerald-600 border space-y-2.5">
-                        <span class="px-2.5 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-xs font-extrabold">BAGIAN A · AUDIT KECOCOKAN SISTEM</span>
-                        <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Cocokkan Saldo Fisik &amp; Kartu Stok</h3>
-                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">Anda memverifikasi apakah (1) Anti-PO Ganda 409 di <code class="font-mono">stok-masuk.php</code> berjalan, (2) Batas Beli Promo toko Anda aktif di <code class="font-mono">stok-keluar.php</code>, dan (3) Uji gangguan <code class="font-mono">rollBack</code> menjaga saldo SP008 tetap cocok 100% dengan <code class="font-mono">log_stok</code>.</p>
+                        <span class="px-2.5 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-xs font-extrabold">BAGIAN A · REKONSILIASI AUDIT SORE HARI</span>
+                        <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Cocokkan Rumus Saldo Fisik &amp; Kartu Stok</h3>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">Buktikan langsung rumus akuntansi persediaan pada <strong>SP008</strong>: <code class="font-mono font-bold">Saldo Awal (2) + Masuk (10) − Keluar (2) = 10 pasang</code>, dan pastikan setelah uji gangguan <code class="font-mono">rollBack</code> selisihnya tetap <strong>0 pasang</strong>!</p>
                     </div>
                     <div class="p-6 rounded-3xl bg-amber-50/70 dark:bg-amber-950/30 border-t-4 border-amber-500 border space-y-2.5">
                         <span class="px-2.5 py-1 rounded-lg bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 text-xs font-extrabold">BAGIAN B · KEPUTUSAN SOP MANAJER</span>
-                        <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Kasus Selisih Stock Opname &amp; Pembeli Borongan</h3>
-                        <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed">Bayangkan pada akhir hari kerja, sebuah instansi kantor datang membeli <strong>8 pasang sepatu SP008 secara sah (bukan tengkulak)</strong> untuk seragam pegawai, padahal sistem membatasi promo maksimal <strong>${escapeHtml(formState.maks_qty_promo || '3')} pasang/nota</strong>. Sebagai Manajer Toko, SOP kebijakan apa yang Anda ambil agar penjualan besar tetap masuk tanpa merusak kontrol sistem?</p>
+                        <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Kasus Pesanan Korporat vs Batas Promo</h3>
+                        <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed">Sebuah instansi kantor datang membeli <strong>8 pasang SP008 secara sah (bukan tengkulak)</strong> untuk seragam pegawai, padahal sistem membatasi promo maksimal <strong>${escapeHtml(formState.maks_qty_promo || '3')} pasang/nota</strong>. SOP apa yang Anda ambil agar penjualan besar tetap terlayani tanpa mematikan pagar sistem?</p>
                     </div>
                 </div>
             </div>`;
         }
 
-        // SLIDE 18: FORM ISIAN 4 — Ceklis Self-Audit & Keputusan SOP Manajer
+        // SLIDE 18: FORM ISIAN 4 — Ceklis Self-Audit + Bukti Hitung Rekonsiliasi & Keputusan SOP Manajer
         function renderSlide18() {
             const isSaved = isAuditComplete();
             const isEditing = uiWizard.peerEditing || !isSaved;
@@ -1685,7 +1786,7 @@
             const items = [
                 { no: 1, title: 'Anti-Faktur Ganda (409) pada stok-masuk.php', desc: 'Apakah input ulang PO-2026-01 berhasil ditolak dengan 409 sehingga stok SP008 tidak bertambah dua kali?' },
                 { no: 2, title: 'Pagar Kebijakan Promo ($maksQtyPerNota) pada stok-keluar.php', desc: 'Apakah pembelian 6 pasang berhasil ditolak dengan 400 dan menampilkan batas maksimal milik toko Anda?' },
-                { no: 3, title: 'Integritas Pembukuan Satu Paket Utuh (RollBack)', desc: 'Apakah saat tombol Misi 3 (gangguan tengah jalan) ditekan, saldo SP008 & log_stok tetap utuh tanpa selisih?' }
+                { no: 3, title: 'Rekonsiliasi Audit & Pembukuan Utuh (RollBack)', desc: 'Buktikan rumus Saldo Awal + Masuk − Keluar = Sisa Rak pada SP008 setelah uji RollBack (Selisih = 0).' }
             ];
             let bodyHtml = '';
             if (isEditing) {
@@ -1696,16 +1797,21 @@
                     const cKey = 'audit_' + it.no + '_catatan';
                     const status = formState[sKey];
                     const catatan = formState[cKey];
+                    const phText = status === 'Perlu Perbaikan'
+                        ? 'Wajib: tuliskan perbaikan...'
+                        : (it.no === 3
+                            ? 'Contoh bukti hitung: Awal(2) + Masuk(10) - Keluar(2) = 10 psg. Setelah RollBack tetap 10 (Selisih = 0)...'
+                            : 'Catatan bukti angka stok / hasil audit (opsional)...');
                     rowsHtml += `<tr class="border-t border-slate-200 dark:border-slate-700 align-top">
                         <td class="p-2 font-bold text-xs">${it.no}</td>
                         <td class="p-2 text-xs"><strong class="block text-slate-900 dark:text-white">${escapeHtml(it.title)}</strong><span class="text-slate-500 dark:text-slate-400">${escapeHtml(it.desc)}</span></td>
                         <td class="p-2"><div class="flex gap-1 flex-col"><button type="button" onclick="updateField('${sKey}', 'Sesuai'); renderCurrentSlide();" class="px-2 py-1 rounded text-[11px] font-extrabold border ${status === 'Sesuai' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-600'}">✓ Sesuai</button><button type="button" onclick="updateField('${sKey}', 'Perlu Perbaikan'); renderCurrentSlide();" class="px-2 py-1 rounded text-[11px] font-extrabold border ${status === 'Perlu Perbaikan' ? 'bg-amber-600 text-white border-amber-600' : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-600'}">↻ Perlu Perbaikan</button></div></td>
-                        <td class="p-2"><textarea id="inp_${cKey}" rows="2" oninput="autoResizeTextarea(this); updateField('${cKey}', this.value)" placeholder="${status === 'Perlu Perbaikan' ? 'Wajib: tuliskan perbaikan...' : 'Catatan bukti angka stok / hasil audit (opsional)...'}" class="auto-expand w-full p-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-[11px]">${escapeHtml(catatan)}</textarea></td>
+                        <td class="p-2"><textarea id="inp_${cKey}" rows="2" oninput="autoResizeTextarea(this); updateField('${cKey}', this.value)" placeholder="${escapeHtml(phText)}" class="auto-expand w-full p-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-[11px]">${escapeHtml(catatan)}</textarea></td>
                     </tr>`;
                 }
                 bodyHtml = `<div class="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border-2 border-emerald-600 shadow-md space-y-3.5">
                     ${renderWizardCardHeader('Form 4', 'Audit Sistem Transaksi & Keputusan SOP Manajer (Mandiri)', isSaved, true, false, '', '')}
-                    <div class="overflow-x-auto rounded-xl border border-slate-300 dark:border-slate-700"><table class="w-full text-left text-xs"><thead class="bg-slate-100 dark:bg-slate-800"><tr><th class="p-2 w-8">No</th><th class="p-2">Aspek Kontrol Internal yang Diverifikasi</th><th class="p-2 w-28">Status</th><th class="p-2">Catatan Bukti Audit</th></tr></thead><tbody>${rowsHtml}</tbody></table></div>
+                    <div class="overflow-x-auto rounded-xl border border-slate-300 dark:border-slate-700"><table class="w-full text-left text-xs"><thead class="bg-slate-100 dark:bg-slate-800"><tr><th class="p-2 w-8">No</th><th class="p-2">Aspek Kontrol Internal yang Diverifikasi</th><th class="p-2 w-28">Status</th><th class="p-2">Catatan Bukti Audit &amp; Rekonsiliasi</th></tr></thead><tbody>${rowsHtml}</tbody></table></div>
                     <div class="p-3.5 rounded-2xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-800 space-y-1.5">
                         <label class="text-xs font-extrabold text-amber-900 dark:text-amber-200 block">🧠 Keputusan SOP Manajer Anda (Wajib Diisi): Sebuah kantor resmi ingin membeli 8 pasang SP008 untuk seragam pegawai, padahal batas promo toko Anda maks. ${escapeHtml(formState.maks_qty_promo || '3')} pasang/nota. Kebijakan operasional / SOP apa yang Anda terapkan agar transaksi korporat tetap terlayani tanpa mematikan pagar kontrol sistem? *</label>
                         <textarea id="inp_keputusan_sop" rows="3" oninput="autoResizeTextarea(this); updateField('keputusan_sop_manajer', this.value)" placeholder="Tuliskan solusi SOP bisnis Anda (misal: jalur pemesanan grosir/B2B khusus dengan persetujuan manajer, atau pemisahan nota harga promo vs harga normal)..." class="auto-expand w-full p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 text-xs">${escapeHtml(formState.keputusan_sop_manajer)}</textarea>
@@ -1748,37 +1854,65 @@
                     <div class="flex justify-end pt-1"><button type="button" onclick="saveUmkmLkm6()" class="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs sm:text-sm font-extrabold transition flex items-center gap-2 shadow-sm"><i class="fa-solid fa-check"></i><span>Simpan Rancangan Bonus</span></button></div>
                 </div>`;
             } else {
-                bodyHtml = `<div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-amber-300 dark:border-amber-800">${renderWizardCardHeader('Form 5', 'BONUS UMKM: ' + (formState.umkm_nama || 'Tersimpan'), true, false, isMin, 'uiWizard.umkmEditing=true;renderCurrentSlide();', 'uiWizard.umkmMinimized=!uiWizard.umkmMinimized;renderCurrentSlide();')}</div>`;
+                bodyHtml = `<div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-amber-300 dark:border-amber-800">${renderWizardCardHeader('Form 5', 'BONUS UMKM: ' + (formState.umkm_nama || 'Opsional (Belum diisi)'), true, false, isMin, 'uiWizard.umkmEditing=true;renderCurrentSlide();', 'uiWizard.umkmMinimized=!uiWizard.umkmMinimized;renderCurrentSlide();')}</div>`;
             }
             return `<div class="slide-enter flex flex-col justify-between h-full gap-4"><div class="space-y-1"><span class="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400"><i class="fa-solid fa-lightbulb mr-1"></i>Form Isian 5 · OPSIONAL / BONUS</span><h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Inovasi Kontrol Internal Transaksi pada UMKM</h2></div><div class="my-auto">${bodyHtml}</div></div>`;
         }
 
-        // SLIDE 21: Berkas Pengumpulan & Pratinjau PDF A4 LKM 06
+        // SLIDE 21: Berkas Pengumpulan, Status Kelengkapan & Pratinjau PDF A4 LKM 06 (100% BEBAS ERROR)
         function renderSlide21() {
+            const checklist = [
+                { label: 'Form 1: Identitas & Promo', ok: isIdentitasComplete(), idx: 2 },
+                { label: 'Form 2: 3 Misi Investigasi', ok: isExpComplete(), idx: 13 },
+                { label: 'Form 3: 3 SOP Lapangan (' + getSopCompletedCount() + '/3)', ok: getSopCompletedCount() === 3, idx: 15 },
+                { label: 'Form 4: Audit & Keputusan SOP', ok: isAuditComplete(), idx: 17 },
+                { label: 'Form 5: Bonus UMKM (Opsional)', ok: !!formState.umkm_nama.trim(), idx: 19, opt: true }
+            ];
+            const allMandatoryDone = checklist.slice(0, 4).every(function (c) { return c.ok; });
+
+            const badgesHtml = checklist.map(function (c) {
+                const cls = c.ok
+                    ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300'
+                    : (c.opt
+                        ? 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500'
+                        : 'bg-rose-50 dark:bg-rose-950/60 border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-300');
+                const ico = c.ok ? 'fa-circle-check' : (c.opt ? 'fa-circle-dot' : 'fa-circle-exclamation');
+                return `<button type="button" onclick="jumpDirectToSlide(${c.idx})" class="px-3 py-1.5 rounded-xl border text-[11px] font-extrabold flex items-center gap-1.5 transition hover:opacity-85 ${cls}"><i class="fa-solid ${ico}"></i><span>${escapeHtml(c.label)}</span></button>`;
+            }).join('');
+
             return `
                 <div class="slide-enter space-y-4">
-                    <div class="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4 no-print">
-                        <div>
-                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-circle-check mr-1"></i>LKM 06 Siap Cetak • Pengumpulan Mandiri</span>
-                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Berkas Pengumpulan &amp; Pratinjau Resmi PDF LKM 06</h2>
-                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Klik <strong>Generate &amp; Unduh PDF</strong> untuk mengunduh laporan A4 resmi Anda.</p>
+                    <div class="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-3 no-print">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div>
+                                <span class="text-xs font-bold uppercase tracking-wider ${allMandatoryDone ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}">
+                                    <i class="fa-solid ${allMandatoryDone ? 'fa-circle-check' : 'fa-clock'} mr-1"></i>${allMandatoryDone ? 'Seluruh Form Wajib Lengkap • Siap Cetak PDF' : 'Pratinjau Dokumen • Lengkapi Form Bertanda Merah Sebelum Unduh PDF'}
+                                </span>
+                                <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Berkas Pengumpulan &amp; Pratinjau Resmi PDF LKM 06</h2>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Klik tombol biru <strong>Generate &amp; Unduh PDF</strong> untuk mengunduh laporan A4 resmi Anda (atau klik <strong>Cetak</strong> jika ingin memakai dialog print browser).</p>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2 shrink-0">
+                                <button type="button" onclick="exportJsonData()" class="px-3.5 py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-extrabold transition flex items-center gap-1.5"><i class="fa-solid fa-download"></i><span>Simpan .JSON</span></button>
+                                <button type="button" onclick="window.print()" class="px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition"><i class="fa-solid fa-print mr-1"></i>Cetak</button>
+                                <button type="button" id="btnDownloadPdf" onclick="downloadPdfLkm6()" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-extrabold transition shadow-md flex items-center gap-2"><i class="fa-solid fa-file-pdf"></i><span>Generate &amp; Unduh PDF</span></button>
+                            </div>
                         </div>
-                        <div class="flex flex-wrap items-center gap-2 shrink-0">
-                            <button type="button" onclick="exportJsonData()" class="px-3.5 py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-extrabold transition flex items-center gap-1.5"><i class="fa-solid fa-download"></i><span>Simpan .JSON</span></button>
-                            <button type="button" onclick="window.print()" class="px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition"><i class="fa-solid fa-print mr-1"></i>Cetak</button>
-                            <button type="button" id="btnDownloadPdf" onclick="downloadPdfLkm6()" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-extrabold transition shadow-md flex items-center gap-2"><i class="fa-solid fa-file-pdf"></i><span>Generate &amp; Unduh PDF</span></button>
+                        <div class="flex flex-wrap gap-1.5 pt-2 border-t border-slate-200/80 dark:border-slate-700/80">
+                            ${badgesHtml}
                         </div>
                     </div>
 
                     <div id="pdfWrapper" class="max-w-4xl mx-auto bg-white rounded-2xl shadow-md border border-slate-300 overflow-hidden">
-                        <div id="pdfPrintArea" class="p-6 sm:p-10 space-y-4">
+                        <div id="pdfPrintArea" class="p-6 sm:p-9 space-y-3">
                             ${generatePdfHtmlLkm6()}
                         </div>
                     </div>
                 </div>`;
         }
 
+        /* Generator HTML PDF A4 Resmi (Seluruh 5 Bagian Utuh & Bebas Undefined Variable) */
         function generatePdfHtmlLkm6() {
+            ensureSopStructure();
             const d = formState;
             const dash = function (v) { return (v && String(v).trim() !== '') ? escapeHtml(v) : '<span style="color:#94a3b8; font-style:italic;">(Belum diisi)</span>'; };
 
@@ -1794,15 +1928,15 @@
 
             let sopRowsStr = '';
             for (let i = 0; i < 3; i++) {
-                const s = d.sop_lapangan[i];
-                sopRowsStr += `<tr><td style="font-weight:700;">${escapeHtml(s.peran)}</td><td style="font-family:monospace; font-weight:700;">${dash(s.kode_error)}</td><td>${dash(s.langkah_staf)}</td><td>${dash(s.komunikasi_pihak)}</td><td style="color:#991b1b;">${dash(s.larangan_sop)}</td></tr>`;
+                const s = d.sop_lapangan[i] || {};
+                sopRowsStr += `<tr><td style="font-weight:700;">${dash(s.peran)}</td><td style="font-family:monospace; font-weight:700;">${dash(s.kode_error)}</td><td>${dash(s.langkah_staf)}</td><td>${dash(s.komunikasi_pihak)}</td><td style="color:#991b1b;">${dash(s.larangan_sop)}</td></tr>`;
             }
 
             let auditRows = '';
             const auditTitles = [
                 'Anti-Faktur Ganda (409) pada stok-masuk.php',
                 'Pagar Kebijakan Promo ($maksQtyPerNota) pada stok-keluar.php',
-                'Integritas Pembukuan Satu Paket Utuh (RollBack)'
+                'Rekonsiliasi Audit & Pembukuan Utuh (RollBack)'
             ];
             for (let a = 1; a <= 3; a++) {
                 const status = d['audit_' + a + '_status'];
@@ -1812,48 +1946,92 @@
 
             let imagesHtml = '';
             if (d.img_bukti_1 || d.img_bukti_2) {
-                imagesHtml = `<div style="margin-top: 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">${d.img_bukti_1 ? `<div style="border:1px solid #cbd5e1; padding:6px; border-radius:6px;"><div style="font-size:9.5px; font-weight:700; margin-bottom:4px;">Bukti 1: Penolakan Kontrol Internal (400 / 409)</div><img src="${d.img_bukti_1}" style="max-height:145px; width:100%; object-fit:contain;"></div>` : ''}${d.img_bukti_2 ? `<div style="border:1px solid #cbd5e1; padding:6px; border-radius:6px;"><div style="font-size:9.5px; font-weight:700; margin-bottom:4px;">Bukti 2: Dashboard Audit Gudang &amp; RollBack</div><img src="${d.img_bukti_2}" style="max-height:145px; width:100%; object-fit:contain;"></div>` : ''}</div>`;
+                imagesHtml = `<div style="margin-top: 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; break-inside: avoid; page-break-inside: avoid;">${d.img_bukti_1 ? `<div style="border:1px solid #cbd5e1; padding:6px; border-radius:6px;"><div style="font-size:9.5px; font-weight:700; margin-bottom:4px;">Bukti 1: Penolakan Kontrol Internal (400 / 409)</div><img src="${d.img_bukti_1}" style="max-height:140px; width:100%; object-fit:contain;"></div>` : ''}${d.img_bukti_2 ? `<div style="border:1px solid #cbd5e1; padding:6px; border-radius:6px;"><div style="font-size:9.5px; font-weight:700; margin-bottom:4px;">Bukti 2: Dashboard Audit Gudang &amp; RollBack</div><img src="${d.img_bukti_2}" style="max-height:140px; width:100%; object-fit:contain;"></div>` : ''}</div>`;
             }
 
             return `
                 <div style="border-bottom: 2px solid #1e293b; padding-bottom: 10px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
                     <div>
                         <div style="font-size: 10px; font-weight: 800; letter-spacing: 0.06em; color: #059669; text-transform: uppercase;">UNIVERSITAS PERINTIS INDONESIA (UPERTIS)</div>
-                        <div style="font-size: 14.5px; font-weight: 800; color: #0f172a; margin-top: 2px;">LEMBAR KERJA MAHASISWA (LKM 06) • TRANSAKSI POST, KONTROL INTERNAL &amp; PEMBUKUAN UTUH</div>
-                        <div style="font-size: 10.5px; color: #475569; margin-top: 1px;">Program Studi S1 Bisnis Digital • Sistem Terintegrasi (BD5231)</div>
+                        <div style="font-size: 14px; font-weight: 800; color: #0f172a; margin-top: 2px;">LEMBAR KERJA MAHASISWA (LKM 06) • TRANSAKSI POST, KONTROL INTERNAL &amp; PEMBUKUAN UTUH</div>
+                        <div style="font-size: 10px; color: #475569; margin-top: 1px;">Program Studi S1 Bisnis Digital • Sistem Terintegrasi (BD5231)</div>
                     </div>
-                    <div style="text-align: right; font-size: 10px; color: #475569; background: #f8fafc; padding: 6px 10px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                    <div style="text-align: right; font-size: 10px; color: #475569; background: #f8fafc; padding: 6px 10px; border-radius: 8px; border: 1px solid #cbd5e1; shrink: 0;">
                         <div style="font-weight: 800; color: #0f172a;">PERTEMUAN 6</div>
                         <div>Sub-CPMK 2.2 · Bobot 5%</div>
                     </div>
                 </div>
 
-                <div style="margin-bottom: 10px;">
-                    <div style="font-size: 10.5px; font-weight: 800; margin-bottom: 4px; text-transform: uppercase;">3. Buku Panduan SOP Penanganan Penolakan Sistem di Lapangan (Business Exception SOP)</div>
-                    <table class="pdf-table"><thead><tr><th style="width:18%;">Peran &amp; Situasi</th><th style="width:16%;">Kode HTTP &amp; API</th><th style="width:24%;">Langkah Tindakan Staf</th><th style="width:21%;">Komunikasi &amp; Eskalasi</th><th style="width:21%;">Larangan Keras SOP</th></tr></thead><tbody>${sopRowsStr}</tbody></table>
+                <div class="pdf-section">
+                    <div style="font-size: 10.5px; font-weight: 800; margin-bottom: 4px; text-transform: uppercase;">1. Identitas Mahasiswa &amp; Kebijakan Promo Toko</div>
+                    <table class="pdf-table">
+                        <tr>
+                            <th style="width: 22%;">Nama &amp; NIM</th>
+                            <td style="width: 28%; font-weight: 700;">${dash(d.nama)} (${dash(d.nim)})</td>
+                            <th style="width: 22%;">Kelas &amp; Tanggal</th>
+                            <td style="width: 28%;">${dash(d.kelas)} (${dash(d.tgl)})</td>
+                        </tr>
+                        <tr>
+                            <th>Nama Toko ($labelTokoAnda)</th>
+                            <td style="font-weight:700; color:#065f46;">${dash(d.nama_toko_custom)}</td>
+                            <th>Kebijakan Batas Promo</th>
+                            <td style="font-family:monospace; font-weight:700;">Maks. ${dash(d.maks_qty_promo)} pasang / nota</td>
+                        </tr>
+                        ${d.rekan_opsional && d.rekan_opsional.trim() ? `<tr><th>Rekan Diskusi (Opsional)</th><td colspan="3">${escapeHtml(d.rekan_opsional)}</td></tr>` : ''}
+                    </table>
                 </div>
 
-                <div style="margin-bottom: 10px;">
+                <div class="pdf-section">
                     <div style="font-size: 10.5px; font-weight: 800; margin-bottom: 4px; text-transform: uppercase;">2. Hasil Investigasi Mandiri (Sebelum → Sesudah → Mengapa)</div>
-                    <table class="pdf-table"><thead><tr><th style="width:20%;">Misi Investigasi</th><th style="width:24%;">Sebelum</th><th style="width:24%;">Sesudah</th><th style="width:32%;">Mengapa Penting bagi Bisnis</th></tr></thead><tbody>${expRows}</tbody></table>
+                    <table class="pdf-table">
+                        <thead>
+                            <tr>
+                                <th style="width:20%;">Misi Investigasi</th>
+                                <th style="width:24%;">Sebelum</th>
+                                <th style="width:24%;">Sesudah</th>
+                                <th style="width:32%;">Mengapa Penting bagi Bisnis</th>
+                            </tr>
+                        </thead>
+                        <tbody>${expRows}</tbody>
+                    </table>
                     ${imagesHtml}
                 </div>
 
-                <div style="margin-bottom: 10px;">
-                    <div style="font-size: 10.5px; font-weight: 800; margin-bottom: 4px; text-transform: uppercase;">3. Spesifikasi 4 Skenario Kontrol Internal &amp; Pembukuan Transaksi POST</div>
-                    <table class="pdf-table"><thead><tr><th style="width:16%;">Skenario</th><th style="width:18%;">Endpoint POST</th><th style="width:24%;">Pagar Kontrol &amp; Pembukuan</th><th style="width:20%;">Balasan kirim_json()</th><th style="width:22%;">Manfaat &amp; SOP Staf</th></tr></thead><tbody>${skRowsStr}</tbody></table>
+                <div class="pdf-section">
+                    <div style="font-size: 10.5px; font-weight: 800; margin-bottom: 4px; text-transform: uppercase;">3. Buku Panduan SOP Penanganan Penolakan Sistem di Lapangan (Business Exception SOP)</div>
+                    <table class="pdf-table">
+                        <thead>
+                            <tr>
+                                <th style="width:18%;">Peran &amp; Situasi</th>
+                                <th style="width:16%;">Kode HTTP &amp; API</th>
+                                <th style="width:24%;">Langkah Tindakan Staf</th>
+                                <th style="width:21%;">Komunikasi &amp; Eskalasi</th>
+                                <th style="width:21%;">Larangan Keras SOP</th>
+                            </tr>
+                        </thead>
+                        <tbody>${sopRowsStr}</tbody>
+                    </table>
                 </div>
 
-                <div style="margin-bottom: 10px;">
-                    <div style="font-size: 10.5px; font-weight: 800; margin-bottom: 4px; text-transform: uppercase;">4. Evaluasi Audit Transaksi &amp; Keputusan SOP Manajer Toko</div>
-                    <table class="pdf-table"><thead><tr><th style="width:36%;">Aspek Kontrol Internal yang Diverifikasi</th><th style="width:14%;">Status</th><th style="width:50%;">Catatan Bukti Audit</th></tr></thead><tbody>${auditRows}</tbody></table>
-                    <div style="font-size: 10.5px; margin-top: 6px; padding: 7px 9px; background: #fffbeb; border: 1px solid #fcd34d;">
+                <div class="pdf-section">
+                    <div style="font-size: 10.5px; font-weight: 800; margin-bottom: 4px; text-transform: uppercase;">4. Evaluasi Audit Transaksi, Rekonsiliasi &amp; Keputusan SOP Manajer Toko</div>
+                    <table class="pdf-table">
+                        <thead>
+                            <tr>
+                                <th style="width:36%;">Aspek Kontrol Internal yang Diverifikasi</th>
+                                <th style="width:14%;">Status</th>
+                                <th style="width:50%;">Catatan Bukti Audit &amp; Rekonsiliasi</th>
+                            </tr>
+                        </thead>
+                        <tbody>${auditRows}</tbody>
+                    </table>
+                    <div style="font-size: 10px; margin-top: 6px; padding: 7px 9px; background: #fffbeb; border: 1px solid #fcd34d; line-height: 1.45; white-space: pre-line;">
                         <strong>Keputusan SOP Manajerial (Penanganan Pesanan Korporat vs Batas Promo):</strong><br>${dash(d.keputusan_sop_manajer)}
                     </div>
                 </div>
 
-                ${d.umkm_nama ? `
-                <div style="margin-bottom: 12px;">
+                ${d.umkm_nama && d.umkm_nama.trim() ? `
+                <div class="pdf-section">
                     <div style="font-size: 10.5px; font-weight: 800; margin-bottom: 4px; text-transform: uppercase;">5. (BONUS) Kontrol Internal Transaksi pada UMKM: ${dash(d.umkm_nama)} (${dash(d.umkm_bidang)})</div>
                     <table class="pdf-table">
                         <tr><th style="width:28%;">Pagar Kontrol Bisnis (POST)</th><td>${dash(d.umkm_kontrol_ide)}</td></tr>
@@ -1861,9 +2039,9 @@
                     </table>
                 </div>` : ''}
 
-                <div style="display: flex; justify-content: space-between; align-items: flex-end; padding-top: 4px; font-size: 10px; color: #334155;">
-                    <div style="max-width: 360px; color: #64748b;"><strong>Pernyataan Orisinalitas:</strong> Seluruh pengujian kontrol internal, eksperimen kebijakan promo, dan analisis pembukuan pada LKM 06 ini dikerjakan secara mandiri.</div>
-                    <div style="text-align: center; min-width: 180px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; padding-top: 6px; font-size: 10px; color: #334155; break-inside: avoid; page-break-inside: avoid;">
+                    <div style="max-width: 360px; color: #64748b;"><strong>Pernyataan Orisinalitas:</strong> Seluruh pengujian kontrol internal, eksperimen kebijakan promo, perancangan SOP, dan analisis audit pada LKM 06 ini dikerjakan secara mandiri.</div>
+                    <div style="text-align: center; min-width: 185px;">
                         <div>Padang, ${d.tgl ? escapeHtml(d.tgl) : '........................'}</div>
                         <div style="margin-bottom: 34px; font-weight: 600;">Mahasiswa Pelaksana,</div>
                         <div style="font-weight: 800; text-decoration: underline; color: #0f172a;">${d.nama ? escapeHtml(d.nama) : '( ........................................ )'}</div>
@@ -1872,28 +2050,61 @@
                 </div>`;
         }
 
-        /* ================= HANDLERS & NAVIGASI SLIDE ================= */
-        function saveIdentitasLkm6() { if (!validateFormSlide(2)) return; uiWizard.identitasMinimized = false; triggerAutoSave(); renderCurrentSlide(); showToast('Identitas & kebijakan promo toko berhasil disimpan!', 'success'); }
-        function saveExpLkm6() { if (!validateFormSlide(13)) return; uiWizard.expMinimized = false; triggerAutoSave(); renderCurrentSlide(); showToast('Hasil investigasi siklus harian berhasil disimpan!', 'success'); }
+        /* =====================================================================
+           6. HANDLERS SIMPAN, SALIN KODE, PDF & NAVIGASI SLIDE
+           ===================================================================== */
+        function saveIdentitasLkm6() {
+            if (!validateFormSlide(2)) return;
+            uiWizard.identitasMinimized = false;
+            triggerAutoSave();
+            renderCurrentSlide();
+            showToast('Identitas & kebijakan promo toko berhasil disimpan!', 'success');
+        }
+
+        function saveExpLkm6() {
+            if (!validateFormSlide(13)) return;
+            uiWizard.expMinimized = false;
+            triggerAutoSave();
+            renderCurrentSlide();
+            showToast('Hasil investigasi siklus harian berhasil disimpan!', 'success');
+        }
 
         function saveSopItemLkm6(idx) {
+            ensureSopStructure();
             const it = formState.sop_lapangan[idx];
-            if (!it.peran.trim()) { highlightEmptyInput('inp_sop_peran_' + idx, 'Peran & Judul SOP #' + (idx + 1) + ' wajib diisi.'); return; }
-            if (!it.kode_error.trim()) { highlightEmptyInput('inp_sop_kode_' + idx, 'Kode HTTP & Pintu API SOP #' + (idx + 1) + ' wajib diisi.'); return; }
-            if (!it.langkah_staf.trim()) { highlightEmptyInput('inp_sop_langkah_' + idx, 'Langkah Tindakan Staf SOP #' + (idx + 1) + ' wajib diisi.'); return; }
-            if (!it.komunikasi_pihak.trim()) { highlightEmptyInput('inp_sop_kom_' + idx, 'Cara Komunikasi / Eskalasi SOP #' + (idx + 1) + ' wajib diisi.'); return; }
-            if (!it.larangan_sop.trim()) { highlightEmptyInput('inp_sop_larangan_' + idx, 'Hal yang Dilarang Staf SOP #' + (idx + 1) + ' wajib diisi.'); return; }
+            if (!String(it.peran || '').trim()) { highlightEmptyInput('inp_sop_peran_' + idx, 'Peran & Judul SOP #' + (idx + 1) + ' wajib diisi.'); return; }
+            if (!String(it.kode_error || '').trim()) { highlightEmptyInput('inp_sop_kode_' + idx, 'Kode HTTP & Pintu API SOP #' + (idx + 1) + ' wajib diisi.'); return; }
+            if (!String(it.langkah_staf || '').trim()) { highlightEmptyInput('inp_sop_langkah_' + idx, 'Langkah Tindakan Staf SOP #' + (idx + 1) + ' wajib diisi.'); return; }
+            if (!String(it.komunikasi_pihak || '').trim()) { highlightEmptyInput('inp_sop_kom_' + idx, 'Cara Komunikasi / Eskalasi SOP #' + (idx + 1) + ' wajib diisi.'); return; }
+            if (!String(it.larangan_sop || '').trim()) { highlightEmptyInput('inp_sop_larangan_' + idx, 'Hal yang Dilarang Staf SOP #' + (idx + 1) + ' wajib diisi.'); return; }
 
             uiWizard.epSaved[idx] = true;
             uiWizard.epMinimized[idx] = true;
-            if (idx < 2 && !isSopItemComplete(idx + 1)) { uiWizard.epActive = idx + 1; } else { uiWizard.epActive = -1; uiWizard.epMinimized[idx] = false; }
+            if (idx < 2 && !isSopItemComplete(idx + 1)) {
+                uiWizard.epActive = idx + 1;
+            } else {
+                uiWizard.epActive = -1;
+                uiWizard.epMinimized[idx] = false;
+            }
             triggerAutoSave();
             renderCurrentSlide();
             showToast('SOP #' + (idx + 1) + ' disimpan! (' + getSopCompletedCount() + '/3 SOP lengkap)', 'success');
         }
 
-        function saveAuditLkm6() { if (!validateFormSlide(17)) return; uiWizard.peerMinimized = false; triggerAutoSave(); renderCurrentSlide(); showToast('Hasil audit & keputusan SOP manajer berhasil disimpan!', 'success'); }
-        function saveUmkmLkm6() { uiWizard.umkmMinimized = false; triggerAutoSave(); renderCurrentSlide(); showToast('Rancangan UMKM (Bonus) berhasil disimpan!', 'success'); }
+        function saveAuditLkm6() {
+            if (!validateFormSlide(17)) return;
+            uiWizard.peerMinimized = false;
+            triggerAutoSave();
+            renderCurrentSlide();
+            showToast('Hasil audit & keputusan SOP manajer berhasil disimpan!', 'success');
+        }
+
+        function saveUmkmLkm6() {
+            uiWizard.umkmMinimized = false;
+            triggerAutoSave();
+            renderCurrentSlide();
+            showToast('Rancangan UMKM (Bonus) berhasil disimpan!', 'success');
+        }
 
         function copyCodeByKey(codeKey, btn) {
             const text = RAW_CODES[codeKey] || '';
@@ -1924,35 +2135,75 @@
             }
         }
 
+        /* Buka Slide 21 secara langsung untuk melihat pratinjau tanpa terkunci, tetapi pengunduhan tetap memvalidasi */
+        function openPdfSlidePreview() {
+            currentSlideIndex = TOTAL_SLIDES - 1;
+            renderCurrentSlide();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function jumpDirectToSlide(targetIdx) {
+            if (targetIdx < 0 || targetIdx >= TOTAL_SLIDES) return;
+            currentSlideIndex = targetIdx;
+            renderCurrentSlide();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
         function downloadPdfLkm6() {
-            for (let i = 0; i < TOTAL_SLIDES - 1; i++) {
-                if ([2, 13, 15, 17].indexOf(i) !== -1) {
-                    if (!validateFormSlide(i)) { currentSlideIndex = i; renderCurrentSlide(); return; }
+            // Validasi seluruh form wajib (Form 1, 2, 3, 4) sebelum mencetak berkas akhir
+            const wajibSlides = [2, 13, 15, 17];
+            for (let i = 0; i < wajibSlides.length; i++) {
+                const sIdx = wajibSlides[i];
+                if (!validateFormSlide(sIdx)) {
+                    currentSlideIndex = sIdx;
+                    renderCurrentSlide();
+                    return;
                 }
             }
-            if (currentSlideIndex !== TOTAL_SLIDES - 1) { currentSlideIndex = TOTAL_SLIDES - 1; renderCurrentSlide(); }
+            if (currentSlideIndex !== TOTAL_SLIDES - 1) {
+                currentSlideIndex = TOTAL_SLIDES - 1;
+                renderCurrentSlide();
+            }
+
             const el = document.getElementById('pdfPrintArea');
+            if (!el) {
+                showToast('Area pratinjau PDF tidak ditemukan. Coba muat ulang halaman.', 'error');
+                return;
+            }
             const d = formState;
             const cleanNim = (d.nim || 'NIM').replace(/[^a-zA-Z0-9_-]/g, '');
             const cleanNama = (d.nama || 'Mahasiswa').trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '');
             const fn = 'LKM_06_Transaksi_POST_' + cleanNim + '_' + cleanNama + '.pdf';
             const btn = document.getElementById('btnDownloadPdf');
             const orig = btn ? btn.innerHTML : '';
-            if (btn) { btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span>Menyiapkan PDF...</span>'; btn.disabled = true; }
-            if (typeof html2pdf !== 'undefined') {
-                html2pdf().set({
-                    margin: [8, 8, 8, 8],
-                    filename: fn,
-                    image: { type: 'jpeg', quality: 0.98 },
-                    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
-                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-                }).from(el).save().then(function () {
-                    if (btn) { btn.innerHTML = orig; btn.disabled = false; }
-                }).catch(function () {
+
+            if (btn) {
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span>Menyiapkan PDF...</span>';
+                btn.disabled = true;
+            }
+
+            try {
+                if (typeof html2pdf !== 'undefined') {
+                    html2pdf().set({
+                        margin: [8, 8, 8, 8],
+                        filename: fn,
+                        image: { type: 'jpeg', quality: 0.96 },
+                        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollY: 0 },
+                        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                        pagebreak: { mode: ['css', 'legacy'] }
+                    }).from(el).save().then(function () {
+                        if (btn) { btn.innerHTML = orig; btn.disabled = false; }
+                        showToast('PDF ' + fn + ' berhasil diunduh!', 'success');
+                    }).catch(function () {
+                        if (btn) { btn.innerHTML = orig; btn.disabled = false; }
+                        showToast('Membuka dialog cetak browser sebagai cadangan PDF...', 'error');
+                        window.print();
+                    });
+                } else {
                     if (btn) { btn.innerHTML = orig; btn.disabled = false; }
                     window.print();
-                });
-            } else {
+                }
+            } catch (err) {
                 if (btn) { btn.innerHTML = orig; btn.disabled = false; }
                 window.print();
             }
@@ -1977,11 +2228,7 @@
                 exp_2_sebelum: '', exp_2_sesudah: '', exp_2_mengapa: '',
                 exp_3_sebelum: '', exp_3_sesudah: '', exp_3_mengapa: '',
                 img_bukti_1: '', img_bukti_2: '',
-                sop_lapangan: [
-                    { peran: '1. SOP Staf Gudang — Penolakan 409 (Surat Jalan PO Ganda)', kode_error: '409 Conflict (POST /api/stok-masuk.php)', langkah_staf: '', komunikasi_pihak: '', larangan_sop: '' },
-                    { peran: '2. SOP Petugas Kasir — Penolakan 400 (Batas Promo / Stok Kurang)', kode_error: '400 Bad Request (POST /api/stok-keluar.php)', langkah_staf: '', komunikasi_pihak: '', larangan_sop: '' },
-                    { peran: '3. SOP Manajer Cabang — Penolakan 401 (Kunci Mati) / 500 (RollBack)', kode_error: '', langkah_staf: '', komunikasi_pihak: '', larangan_sop: '' }
-                ],
+                sop_lapangan: getDefaultSopList(),
                 audit_1_status: '', audit_1_catatan: '', audit_2_status: '', audit_2_catatan: '', audit_3_status: '', audit_3_catatan: '',
                 keputusan_sop_manajer: '',
                 umkm_nama: '', umkm_bidang: '', umkm_kontrol_ide: '', umkm_audit_ide: ''
@@ -2027,7 +2274,15 @@
             const slide = SLIDES[currentSlideIndex];
             const viewport = document.getElementById('slideViewport');
             if (!viewport || !slide) return;
-            viewport.innerHTML = slide.render();
+            try {
+                viewport.innerHTML = slide.render();
+            } catch (err) {
+                viewport.innerHTML = `
+                    <div class="p-6 rounded-2xl bg-rose-50 dark:bg-rose-950/50 border border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-200 space-y-2">
+                        <div class="font-extrabold text-sm">Terjadi kendala saat menampilkan Slide ${slide.id}</div>
+                        <div class="font-mono text-xs">${escapeHtml(err && err.message ? err.message : String(err))}</div>
+                    </div>`;
+            }
             const pct = Math.round(((currentSlideIndex + 1) / TOTAL_SLIDES) * 100);
             document.getElementById('topProgressBar').style.width = pct + '%';
             document.getElementById('slideCounterBadge').textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES;
