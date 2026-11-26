@@ -1,0 +1,2518 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pertemuan 7: Translasi Percabangan ke PHP (if-elseif-else & switch-case) - BD1205</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace']
+                    }
+                }
+            }
+        };
+    </script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Istilah teknis bersih berwarna indigo tanpa garis bawah */
+        .tech-term {
+            color: #4f46e5;
+            font-weight: 700;
+            cursor: pointer;
+            transition: color 0.15s ease, opacity 0.15s ease;
+        }
+        .dark .tech-term {
+            color: #818cf8;
+        }
+        .tech-term:hover {
+            color: #3730a3;
+            opacity: 0.85;
+        }
+        .dark .tech-term:hover {
+            color: #a5b4fc;
+        }
+
+        .slide-enter {
+            animation: fadeSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes fadeSlide {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fg-canvas {
+            background-color: #ffffff;
+            background-image: radial-gradient(#e2e8f0 1.2px, transparent 1.2px);
+            background-size: 18px 18px;
+        }
+        .dark .fg-canvas {
+            background-color: #0f172a;
+            background-image: radial-gradient(#1e293b 1.2px, transparent 1.2px);
+        }
+
+        .php-line-active {
+            background-color: rgba(239, 68, 68, 0.22);
+            border-left: 3px solid #ef4444;
+        }
+        .php-line-waiting {
+            background-color: rgba(79, 70, 229, 0.26);
+            border-left: 3px solid #6366f1;
+        }
+        .php-line-skipped {
+            opacity: 0.42;
+            text-decoration: line-through;
+        }
+
+        .syntax-pill {
+            transition: all 0.15s ease;
+            cursor: pointer;
+        }
+        .syntax-pill:hover {
+            transform: translateY(-1px);
+        }
+
+        .draggable-step {
+            cursor: grab;
+            user-select: none;
+            transition: all 0.15s ease;
+        }
+        .draggable-step:active {
+            cursor: grabbing;
+        }
+        .draggable-step.dragging {
+            opacity: 0.45;
+        }
+        .draggable-step.drag-over {
+            border-color: #4f46e5 !important;
+            transform: translateY(-2px);
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #334155;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col justify-between transition-colors duration-200">
+
+    <!-- Sticky Header -->
+    <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800">
+        <div class="w-full h-1 bg-slate-100 dark:bg-slate-800">
+            <div id="topProgressBar" class="h-full bg-indigo-600 dark:bg-indigo-500 transition-all duration-300" style="width: 6%;"></div>
+        </div>
+
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+                <button type="button" onclick="toggleSlideDrawer()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition flex items-center gap-2 text-xs sm:text-sm font-bold shrink-0">
+                    <i class="fa-solid fa-list-ul text-indigo-600 dark:text-indigo-400"></i>
+                    <span class="hidden sm:inline">Daftar Slide</span>
+                    <span id="slideCounterBadge" class="px-2 py-0.5 text-xs rounded-lg bg-indigo-600 text-white font-bold">1 / 18</span>
+                </button>
+
+                <div class="hidden md:flex items-center gap-2.5 min-w-0">
+                    <span id="slideCategoryPill" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 shrink-0">
+                        Modul 1
+                    </span>
+                    <h1 id="headerSlideTitle" class="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">
+                        Translasi Percabangan ke PHP (if-elseif-else &amp; switch-case)
+                    </h1>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 shrink-0">
+                <button type="button" onclick="openGlossaryIndex()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 text-xs sm:text-sm font-bold flex items-center gap-2 transition">
+                    <i class="fa-solid fa-book-open text-indigo-600 dark:text-indigo-400"></i>
+                    <span>Kamus Istilah</span>
+                </button>
+
+                <button type="button" onclick="toggleTheme()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center transition" title="Ganti Tema Layar">
+                    <i id="themeIcon" class="fa-solid fa-moon text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Slide Drawer -->
+    <div id="slideDrawerBackdrop" onclick="toggleSlideDrawer()" class="fixed inset-0 bg-slate-950/50 backdrop-blur-xs z-40 hidden opacity-0 transition-opacity duration-200"></div>
+    <aside id="slideDrawer" class="fixed top-0 left-0 bottom-0 w-80 sm:w-96 bg-white dark:bg-slate-900 z-50 shadow-2xl border-r border-slate-200 dark:border-slate-800 transform -translate-x-full transition-transform duration-200 flex flex-col">
+        <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Dasar Pemrograman 1 (BD1205)</span>
+                <h2 class="text-base font-extrabold text-slate-900 dark:text-white mt-0.5">Daftar Materi Pertemuan 7 (PHP)</h2>
+            </div>
+            <button type="button" onclick="toggleSlideDrawer()" class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div id="drawerSlideList" class="p-3.5 overflow-y-auto space-y-1 flex-1"></div>
+        <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 flex items-center justify-between">
+            <span>Gunakan tombol panah Kiri / Kanan</span>
+            <span class="font-bold">18 Slide</span>
+        </div>
+    </aside>
+
+    <!-- Main Slide Viewport -->
+    <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 flex flex-col justify-center">
+        <div id="slideViewport" class="bg-white dark:bg-slate-900 rounded-3xl shadow-xs border border-slate-200/80 dark:border-slate-800 p-6 sm:p-8 lg:p-10 min-h-[540px] flex flex-col justify-between relative overflow-hidden">
+            <!-- Konten slide dirender secara dinamis -->
+        </div>
+    </main>
+
+    <!-- Sticky Footer Navigation -->
+    <footer class="sticky bottom-0 z-20 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 py-3 px-4 sm:px-6">
+        <div class="max-w-6xl mx-auto flex items-center justify-between gap-4">
+            <button type="button" id="prevSlideBtn" onclick="changeSlide(-1)" class="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                <i class="fa-solid fa-arrow-left text-xs"></i>
+                <span>Sebelumnya</span>
+            </button>
+
+            <div id="slideDotsContainer" class="hidden md:flex items-center gap-1.5"></div>
+
+            <div class="md:hidden text-xs font-bold text-slate-500 dark:text-slate-400" id="mobileFooterCounter">
+                1 / 18
+            </div>
+
+            <button type="button" id="nextSlideBtn" onclick="changeSlide(1)" class="px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-indigo-600 hover:bg-indigo-700 text-white transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                <span id="nextBtnText">Selanjutnya</span>
+                <i class="fa-solid fa-arrow-right text-xs"></i>
+            </button>
+        </div>
+    </footer>
+
+    <!-- Modal Penjelasan Istilah -->
+    <div id="termModalBackdrop" onclick="closeTermModal()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl slide-enter">
+            <div class="flex items-start justify-between gap-4 mb-4">
+                <div>
+                    <span id="termCategoryBadge" class="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">Kategori</span>
+                    <h3 id="termTitle" class="text-xl font-extrabold text-slate-900 dark:text-white mt-1.5">Nama Istilah</h3>
+                </div>
+                <button type="button" onclick="closeTermModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <p id="termMainDesc" class="text-sm text-slate-700 dark:text-slate-200 leading-relaxed bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200/70 dark:border-slate-700/70"></p>
+
+                <div class="p-3.5 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-200/70 dark:border-indigo-800/70">
+                    <div class="text-[11px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-1">Contoh di UMKM Warung Digital:</div>
+                    <p id="termDetailDesc" class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed"></p>
+                </div>
+
+                <div class="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800 text-xs px-1">
+                    <span id="termSourceName" class="font-semibold text-slate-400">Referensi</span>
+                    <button type="button" onclick="closeTermModal(); openGlossaryIndex();" class="font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1.5">
+                        <span>Buka Kamus Lengkap</span>
+                        <i class="fa-solid fa-book-open text-[10px]"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Kamus Istilah Lengkap -->
+    <div id="glossaryModalBackdrop" onclick="closeGlossaryIndex()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-4xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden slide-enter">
+            <div class="p-5 sm:p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white">Kamus Istilah Pertemuan 7: PHP Percabangan (BD1205)</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Penjelasan ramah pemula untuk if-elseif-else, Kurung Kurawal { }, && / ||, switch-case, break, Fall-Through, PPN, PB1, dan DPP.</p>
+                </div>
+                <button type="button" onclick="closeGlossaryIndex()" class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-sm"></i>
+                    <input id="glossarySearchInput" oninput="renderGlossaryList(this.value)" type="text" placeholder="Cari istilah seperti elseif, Kurung Kurawal, switch, break, default, Fall-Through, strtolower, DPP, PPN..." class="w-full pl-10 pr-4 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+            <div id="glossaryListGrid" class="p-5 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+        </div>
+    </div>
+
+    <script>
+        const GLOSSARY_DB = {
+            ifelseif: {
+                title: "Struktur if - elseif - else (Percabangan PHP)",
+                category: "Sintaks Percabangan PHP",
+                main: "Struktur pengambilan keputusan di PHP. Syarat kondisi WAJIB ditaruh di dalam tanda kurung biasa (...), dan aksi di dalamnya dibungkus kurung kurawal { ... }. Kata kunci 'elseif' digunakan untuk mengecek syarat kedua, ketiga, dan seterusnya.",
+                detail: "Menentukan diskon Warung Digital: if ($totalBelanja >= 100000) dapat 15%, elseif ($totalBelanja >= 50000) dapat 10%, else 0%.",
+                source: "PHP Control Structures"
+            },
+            curlybraces: {
+                title: "Kurung Kurawal { ... } (Pembungkus Blok Aksi)",
+                category: "Aturan Sintaks PHP",
+                main: "Tanda buka '{' dan tutup '}' di PHP berfungsi seperti pagar pembatas yang memberi tahu komputer baris perintah mana saja yang termasuk di dalam cabang if, elseif, else, atau switch.",
+                detail: "Jika cabang if berisi 2 baris perintah (hitung diskon dan cetak pesan promo), keduanya WAJIB diapit { ... } agar tidak bocor keluar cabang.",
+                source: "PHP Basic Syntax"
+            },
+            logicops: {
+                title: "Operator Logika PHP (&&, ||, !)",
+                category: "Logika Majemuk",
+                main: "Simbol penghubung dua syarat di PHP: && (AND = keduanya harus benar), || (OR = minimal salah satu benar), dan ! (NOT = pembalik nilai benar/salah).",
+                detail: "if ($totalBelanja >= 100000 && $isMember) memberikan diskon ekstra 20% hanya jika KEDUA syarat terpenuhi.",
+                source: "PHP Logical Operators"
+            },
+            strictcmp: {
+                title: "Operator === (Sama Persis Nilai & Tipe Data)",
+                category: "Pembanding PHP",
+                main: "Operator pembanding ketat di PHP yang mengecek apakah dua nilai sama isi DAN sama tipe datanya. Lebih aman daripada == karena menghindari tebakan tipe otomatis PHP.",
+                detail: "$isMember = strtolower(trim(fgets(STDIN))) === 'y'; memastikan jawaban kasir benar-benar huruf 'y' bertipe string.",
+                source: "PHP Comparison Operators"
+            },
+            switchcase: {
+                title: "switch - case (Pencocokan Kategori Pasti)",
+                category: "Sintaks Percabangan PHP",
+                main: "Struktur percabangan PHP untuk mencocokkan satu nilai variabel terhadap beberapa daftar pilihan pasti (seperti kategori barang atau metode bayar), jauh lebih rapi daripada menulis banyak elseif ==.",
+                detail: "switch ($kategori) mencocokkan 'sembako' (0%), 'kuliner' (10%), dan 'ritel' (11%) untuk menentukan tarif pajak.",
+                source: "PHP Switch Statement"
+            },
+            breakcmd: {
+                title: "Perintah break; (Rem Berhenti di switch-case)",
+                category: "Sintaks switch-case",
+                main: "Kata kunci wajib di akhir setiap blok 'case' pada switch-case untuk memerintahkan PHP berhenti keluar dari switch begitu satu cabang yang cocok selesai dijalankan.",
+                detail: "Jika lupa menulis break; pada case 'kuliner', mesin PHP akan terus meluncur mengeksekusi case 'ritel' dan default di bawahnya!",
+                source: "PHP Switch Control"
+            },
+            fallthrough: {
+                title: "Efek Fall-Through (Bocor ke Case Bawah)",
+                category: "Bug switch-case",
+                main: "Kesalahan logika khas switch-case ketika programmer lupa menuliskan 'break;', menyebabkan kode pada case-case di bawahnya ikut tereksekusi secara tidak sengaja dan menimpa variabel hasil.",
+                detail: "Produk kuliner (10%) bisa tertimpa tarifnya menjadi 11% (ritel) atau 0% (default) jika case 'kuliner' tidak ditutup break;.",
+                source: "PHP Debugging Guide"
+            },
+            defaultcase: {
+                title: "default: (Jaring Pengaman di switch-case)",
+                category: "Sintaks switch-case",
+                main: "Blok cadangan di bagian paling bawah switch-case (fungsinya persis sama dengan 'else' pada if-elseif) yang otomatis dijalankan jika tidak ada satu pun 'case' di atasnya yang cocok.",
+                detail: "Jika kasir salah ketik kategori 'elektronik', blok default: menanganinya dengan aman agar program tidak error.",
+                source: "PHP Switch Statement"
+            },
+            strtolower_fn: {
+                title: "strtolower() (Pengecil Huruf Otomatis)",
+                category: "Fungsi String PHP",
+                main: "Fungsi bawaan PHP untuk mengubah seluruh huruf kapital pada teks ketikan pengguna menjadi huruf kecil semua, sehingga pencocokan teks di if atau switch tidak gagal gara-gara beda kapital.",
+                detail: "strtolower(\"KULINER\") menghasilkan \"kuliner\", sehingga cocok dengan case \"kuliner\":.",
+                source: "PHP String Functions"
+            },
+            exitcmd: {
+                title: "Perintah exit; (Hentikan Program Seketika)",
+                category: "Validasi Input PHP",
+                main: "Instruksi di PHP untuk menghentikan eksekusi skrip langsung pada baris tersebut (tidak melanjutkan ke baris di bawahnya). Sangat berguna untuk menolak input ilegal sejak awal.",
+                detail: "if ($totalBelanja <= 0) { echo \"Nominal tidak valid!\\n\"; exit; }",
+                source: "PHP Language Constructs"
+            },
+            ppn: {
+                title: "PPN (Pajak Pertambahan Nilai - 11%)",
+                category: "Bisnis Digital & Pajak",
+                main: "Pajak negara atas jual-beli barang ritel kemasan kena pajak (seperti biskuit pabrikan, sabun, minuman botol). Tarif standar berlaku sebesar 11% (0.11).",
+                detail: "Pada Warung Digital, produk kategori 'ritel' otomatis dikenai $tarifPajak = 0.11.",
+                source: "Perpajakan Ritel Indonesia"
+            },
+            pb1: {
+                title: "PB1 (Pajak Restoran / Kuliner - 10%)",
+                category: "Bisnis Digital & Pajak",
+                main: "Pajak daerah sebesar 10% (0.10) untuk makanan dan minuman olahan siap saji di kafe, warung makan, atau kedai kuliner.",
+                detail: "Menu kategori 'kuliner' seperti Kopi Susu Gula Aren dan Roti Bakar Cokelat dikenai PB1 sebesar 10%.",
+                source: "Perpajakan Daerah UMKM"
+            },
+            dpp: {
+                title: "DPP (Dasar Pengenaan Pajak / Subtotal Setelah Diskon)",
+                category: "Bisnis Digital & Pajak",
+                main: "Nilai transaksi bersih setelah dikurangi potongan diskon yang menjadi dasar pengalian persentase pajak. Pajak tidak boleh dihitung dari harga sebelum diskon.",
+                detail: "Jika $totalBelanja = 100000 dan $nominalDiskon = 15000, maka $dpp = 85000. Pajak 10% dihitung dari 85000 = Rp 8.500.",
+                source: "Akuntansi Transaksi POS"
+            }
+        };
+
+        function term(key, customLabel) {
+            const item = GLOSSARY_DB[key];
+            if (!item) return customLabel || key;
+            const label = customLabel || item.title.split(' (')[0];
+            return '<span class="tech-term" onclick="showTerm(\'' + key + '\')">' + label + '</span>';
+        }
+
+        function escapeHtml(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        let currentSlideIndex = 0;
+        const TOTAL_SLIDES = 18;
+
+        // State Slide 2: Manual vs Otomatisasi PHP
+        let s2Mode = 'auto_php'; // 'manual' | 'auto_php'
+
+        // State Slide 3: 2 Lapisan Keputusan Bisnis Warung Digital
+        let s3LayerTab = 'diskon'; // 'diskon' | 'pajak'
+
+        // State Slide 5: Bedah 6 Sintaks Asing Percabangan PHP
+        let s5TokenKey = 'if_cond'; // 'if_cond' | 'braces' | 'elseif_kw' | 'else_kw' | 'logic_and' | 'strict_eq'
+
+        // State Slide 6: Transformasi Visual Flowchart -> PHP (5 Tahap)
+        let s6SyncStage = 1; // 1..5
+
+        // State Slide 7: Lab Eksekusi Tangga Diskon if-elseif-else
+        let s7Belanja = 120000;
+        let s7IsMember = true;
+        let s7OrderMode = 'correct'; // 'correct' | 'bug_order'
+
+        // State Slide 8: Lab Operator Logika PHP (&&, ||, !) & strtolower()
+        let s8LogicOp = '&&'; // '&&' | '||' | '!'
+        let s8IsMember = true;
+        let s8Belanja = 110000;
+
+        // State Slide 10: Bedah switch-case + Simulasi Fall-Through tanpa break;
+        let s10Category = 'kuliner'; // 'sembako' | 'kuliner' | 'ritel' | 'lainnya'
+        let s10PieceKey = 'break_kw'; // 'switch_hd' | 'case_kw' | 'break_kw' | 'default_kw'
+        let s10UseBreak = true;
+
+        // State Slide 11: Panduan Memilih if-elseif-else vs switch-case + exit;
+        let s11CaseKey = 'diskon_range'; // 'diskon_range' | 'pajak_kat' | 'validasi_exit'
+
+        // State Slide 12: Detektif 4 Error Pemula Percabangan PHP
+        let s12ErrKey = 'no_paren'; // 'no_paren' | 'assign_in_if' | 'no_break' | 'missing_brace'
+        let s12Fixed = false;
+
+        // State Slide 13: Sandbox Terpadu Diskon, DPP, Pajak, & Metode Bayar (PHP)
+        let s13TotalBelanja = 120000;
+        let s13Kategori = 'kuliner';
+        let s13IsMember = true;
+        let s13Metode = 'qris';
+
+        // State Slide 15: Simulasi 1 - Live PHP CLI Runner Bercabang (15 Baris)
+        let phpStepIndex = -1;
+        let phpAutoTimer = null;
+        let phpIsAuto = false;
+        let phpWaitingVar = null;
+        let phpMemory = {};
+        let phpExecutedLines = {};
+        let phpSkippedLines = {};
+        let phpTerminalLog = [];
+        let phpBannerText = 'Klik tombol Run Skrip atau Step (Per Baris) untuk menyaksikan mesin PHP memilih cabang if-elseif-else dan switch-case secara langsung!';
+        let phpInputError = '';
+        let rawSimVals = { totalBelanja: 0, kategori: '', isMember: false, persenDiskon: 0, nominalDiskon: 0, dpp: 0, tarifPajak: 0, labelPajak: '', nominalPajak: 0, totalBayar: 0 };
+
+        // State Slide 16: Simulasi 2 - Lengkapi 5 Slot Kode Percabangan PHP
+        let activePhpSlot = 1;
+        let phpBuilderSlots = { 1: '', 2: '', 3: '', 4: '', 5: '' };
+        let phpBuilderFeedback = { type: '', text: '' };
+
+        // State Slide 17: Simulasi 3 - Drag & Drop 8 Tahap Skrip PHP Diskon & Pajak
+        const CORRECT_PHP_BRANCH_STEPS = [
+            { id: 1, tag: "Tag & Input 1", code: "<?php $totalBelanja = (float) trim(fgets(STDIN));", desc: "Membuka PHP dan membaca nominal total belanja pelanggan" },
+            { id: 2, tag: "Input 2 & 3", code: "$kategori = strtolower(trim(fgets(STDIN))); $isMember = ... === 'y';", desc: "Membaca kategori (dikecilkan hurufnya) dan status member" },
+            { id: 3, tag: "if Tertinggi", code: "if ($totalBelanja >= 100000 && $isMember) { $persen = 20; }", desc: "Mengecek syarat diskon tertinggi 20% (Member + >= 100rb)" },
+            { id: 4, tag: "elseif / else", code: "elseif ($totalBelanja >= 100000) { $persen = 15; } elseif (>= 50rb) ... else { 0 }", desc: "Menangani jenjang diskon 15%, 10%, dan 0% secara berurutan" },
+            { id: 5, tag: "Hitung DPP", code: "$diskon = $totalBelanja * ($persen / 100); $dpp = $totalBelanja - $diskon;", desc: "Menghitung rupiah potongan diskon dan Dasar Pengenaan Pajak" },
+            { id: 6, tag: "switch-case", code: "switch ($kategori) { case 'sembako': 0%; case 'kuliner': 10%; case 'ritel': 11%; break; }", desc: "Mencocokkan tarif pajak kategori dengan rem break; di setiap case" },
+            { id: 7, tag: "Hitung Akhir", code: "$pajak = $dpp * $tarifPajak; $totalBayar = $dpp + $pajak;", desc: "Menghitung rupiah pajak dari DPP dan total tagihan akhir" },
+            { id: 8, tag: "echo Struk", code: "echo \"TOTAL BAYAR: Rp \" . number_format($totalBayar, 0, ',', '.') . \"\\n\"; ?>", desc: "Mencetak struk resmi Warung Digital dan menutup tag PHP" }
+        ];
+        let phpStepsOrder = [...CORRECT_PHP_BRANCH_STEPS].sort(function () { return Math.random() - 0.5; });
+        let phpShowValidation = false;
+        let phpFeedbackText = '';
+        let draggedPhpIndex = null;
+
+        // State Slide 18: Cek Pemahaman Mandiri
+        let selfCheckFeedback = { 1: null, 2: null, 3: null };
+
+        function renderSlide1() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-8">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center my-auto">
+                        <div class="lg:col-span-7 space-y-5">
+                            <div class="inline-flex flex-wrap items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 text-xs font-bold border border-indigo-200/60 dark:border-indigo-800/60">
+                                <span>Pertemuan 7 • Sub-CPMK 2.2 (Bobot 3%)</span>
+                                <span>•</span>
+                                <span>Fase 2: PHP Murni (Pra-UTS)</span>
+                            </div>
+
+                            <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 dark:text-white leading-tight tracking-tight">
+                                Translasi Percabangan ke PHP (<span class="font-mono text-indigo-600 dark:text-indigo-400">if-elseif-else</span> &amp; <span class="font-mono text-indigo-600 dark:text-indigo-400">switch-case</span>)
+                            </h2>
+
+                            <p class="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Di Pertemuan 6 Anda telah menulis skrip PHP Murni perdana yang berjalan lurus (<em>Sequence</em>). Hari ini kita melangkah lebih jauh: menerjemahkan belah ketupat percabangan Flowgorithm (Minggu 4) ke dalam sintaks ${term('ifelseif', 'if-elseif-else')} dan ${term('switchcase', 'switch-case')} PHP untuk <strong>Kalkulator Diskon &amp; Pajak Transaksi UMKM "Warung Digital"</strong>!
+                            </p>
+
+                            <div class="p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200/70 dark:border-indigo-800/70 flex items-center gap-3 text-xs sm:text-sm text-slate-700 dark:text-slate-200">
+                                <i class="fa-brands fa-php text-indigo-600 dark:text-indigo-400 text-2xl shrink-0"></i>
+                                <span><strong>Target Pengalaman Belajar Minggu 7 (RPS OBE BD1205):</strong> Menerjemahkan logika kalkulasi diskon dan tarif pajak transaksi Warung Digital ke baris kode PHP (<span class="font-mono">if-elseif-else</span> &amp; <span class="font-mono">switch-case</span>) secara aman dan akurat sebelum menghadapi <strong>UTS Minggu 8</strong>.</span>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-5">
+                            <div class="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 space-y-4">
+                                <div>
+                                    <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Peta 18 Slide Pertemuan 7 (PHP)</span>
+                                    <h3 class="text-lg font-extrabold text-slate-900 dark:text-white mt-1">4 Modul Pembelajaran Terstruktur</h3>
+                                </div>
+
+                                <div class="space-y-2.5">
+                                    <button type="button" onclick="goToSlide(1)" class="w-full text-left flex items-start gap-3 p-3.5 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 dark:hover:bg-slate-800/80 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-0.5 font-extrabold text-xs">M1</div>
+                                        <div>
+                                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">Modul 1: Konteks Diskon, DPP &amp; Pajak UMKM (Slide 1-3)</h4>
+                                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Aturan diskon berjenjang, DPP, serta pajak Sembako/PB1/PPN.</p>
+                                        </div>
+                                    </button>
+
+                                    <button type="button" onclick="goToSlide(4)" class="w-full text-left flex items-start gap-3 p-3.5 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 dark:hover:bg-slate-800/80 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-0.5 font-extrabold text-xs">M2</div>
+                                        <div>
+                                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">Modul 2: Bedah Sintaks if-elseif-else &amp; Flowchart (Slide 5-8)</h4>
+                                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Bedah 6 simbol asing ({ }, &&, ||, ===) &amp; transformasi Flowchart -> PHP.</p>
+                                        </div>
+                                    </button>
+
+                                    <button type="button" onclick="goToSlide(9)" class="w-full text-left flex items-start gap-3 p-3.5 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 dark:hover:bg-slate-800/80 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-0.5 font-extrabold text-xs">M3</div>
+                                        <div>
+                                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">Modul 3: switch-case, Fall-Through, &amp; Sandbox (Slide 10-13)</h4>
+                                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Uji lupa break;, detektif 4 error PHP, &amp; Sandbox Kasir lengkap.</p>
+                                        </div>
+                                    </button>
+
+                                    <button type="button" onclick="goToSlide(14)" class="w-full text-left flex items-start gap-3 p-3.5 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 dark:hover:bg-slate-800/80 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-0.5 font-extrabold text-xs">M4</div>
+                                        <div>
+                                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">Modul 4: 3 Simulator Lab PHP &amp; Kisi-Kisi UTS (Slide 15-18)</h4>
+                                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Live PHP CLI Runner bercabang, lengkapi kode, &amp; persiapan UTS.</p>
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide2() {
+            const isAuto = s2Mode === 'auto_php';
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-6">
+                    <div class="space-y-2">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 1 • Konteks Kepatuhan Pajak &amp; Promo UMKM</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Mengapa Diskon &amp; Pajak (${term('ppn', 'PPN')} / ${term('pb1', 'PB1')}) Wajib Diotomatisasi di PHP?</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Saat UMKM <strong>Warung Digital</strong> menjual berbagai produk, perlakuan pajaknya berbeda sesuai regulasi Indonesia: <strong>Sembako pokok (0%)</strong>, <strong>Kuliner siap saji (PB1 10%)</strong>, dan <strong>Ritel kemasan (PPN 11%)</strong>. Pajak juga wajib dihitung dari ${term('dpp', 'DPP (harga setelah diskon)')}. Bandingkan manual vs kode PHP:
+                        </p>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" onclick="setS2Mode('manual')" class="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm border transition ${!isAuto ? 'bg-rose-600 text-white border-rose-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <i class="fa-solid fa-triangle-exclamation mr-1.5"></i>1. Hitung Diskon &amp; Pajak Manual di Meja Kasir
+                        </button>
+                        <button type="button" onclick="setS2Mode('auto_php')" class="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm border transition ${isAuto ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <i class="fa-brands fa-php mr-1.5"></i>2. Otomatisasi Percabangan PHP (if-elseif &amp; switch-case)
+                        </button>
+                    </div>
+
+                    <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 my-auto">
+                        ${!isAuto ? `
+                            <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
+                                <div class="lg:col-span-6 p-5 rounded-2xl bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 space-y-3">
+                                    <div class="text-xs font-extrabold text-rose-700 dark:text-rose-300 uppercase">Risiko Salah Tagih &amp; Protes Pelanggan:</div>
+                                    <ul class="text-xs sm:text-sm text-slate-700 dark:text-slate-200 space-y-2 list-disc pl-4">
+                                        <li>Kasir keliru menagih PPN 11% untuk paket beras/telur (sembako seharusnya 0%), membuat pelanggan komplain.</li>
+                                        <li>Kasir menghitung pajak dari harga <em>sebelum diskon</em>, padahal aturan akuntansi mengharuskan pajak dihitung dari ${term('dpp', 'DPP')}.</li>
+                                        <li>Kasir baru lambat melayani antrean karena harus mengecek tabel promo dan tarif pajak di kertas.</li>
+                                    </ul>
+                                </div>
+                                <div class="lg:col-span-6 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 font-mono text-xs space-y-2">
+                                    <div class="text-rose-600 font-sans font-extrabold">Contoh Salah Urutan Hitung (Merugikan Pembeli):</div>
+                                    <div>Belanja Kuliner: Rp 100.000</div>
+                                    <div>Diskon 15%: -Rp 15.000 (Harga Bersih DPP = Rp 85.000)</div>
+                                    <div class="text-rose-600 font-bold">SALAH: Pajak 10% x 100.000 = Rp 10.000 (Kelebihan Rp 1.500!)</div>
+                                    <div class="text-emerald-600 font-bold">BENAR: Pajak 10% x 85.000 (DPP) = Rp 8.500</div>
+                                </div>
+                            </div>
+                        ` : `
+                            <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
+                                <div class="lg:col-span-6 p-4 rounded-2xl bg-slate-900 text-emerald-300 font-mono text-xs space-y-2">
+                                    <div class="text-slate-400">// 1. Diskon otomatis dengan if-elseif-else</div>
+                                    <pre class="whitespace-pre-wrap">if ($totalBelanja &gt;= 100000 &amp;&amp; $isMember) {
+    $persenDiskon = 20;
+} elseif ($totalBelanja &gt;= 100000) {
+    $persenDiskon = 15;
+} elseif ($totalBelanja &gt;= 50000) {
+    $persenDiskon = 10;
+} else { $persenDiskon = 0; }</pre>
+                                    <div class="text-slate-400 pt-1">// 2. Tarif pajak otomatis dengan switch-case</div>
+                                    <pre class="whitespace-pre-wrap">switch ($kategori) {
+    case "sembako": $tarifPajak = 0.00; break;
+    case "kuliner": $tarifPajak = 0.10; break;
+    case "ritel":   $tarifPajak = 0.11; break;
+}</pre>
+                                </div>
+                                <div class="lg:col-span-6 space-y-2.5 text-xs sm:text-sm">
+                                    <div class="font-extrabold text-emerald-700 dark:text-emerald-400">3 Keunggulan Percabangan PHP di Kasir UMKM:</div>
+                                    <div class="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                        <strong>1. Kepatuhan Pajak 100% Konsisten:</strong> Sistem otomatis memisahkan sembako (0%), kuliner (10%), dan ritel (11%).
+                                    </div>
+                                    <div class="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                        <strong>2. Rumus DPP Terjaga:</strong> Kode PHP selalu memotong diskon dulu (<span class="font-mono">$dpp = $totalBelanja - $nominalDiskon;</span>), baru mengalikan pajak.
+                                    </div>
+                                    <div class="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                        <strong>3. Mudah Diperbarui Manajemen:</strong> Jika tarif PPN berubah, cukup ubah 1 angka di baris <span class="font-mono">case "ritel":</span>!
+                                    </div>
+                                </div>
+                            </div>
+                        `}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide3() {
+            const isDiskon = s3LayerTab === 'diskon';
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 1 • Spesifikasi Aturan Bisnis (M07_DiskonPajak)</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">2 Lapisan Aturan Keputusan di Kasir "Warung Digital"</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Sesuai Modul Praktikum Pertemuan 7, skrip PHP kita akan menggabungkan <strong>2 lapisan keputusan</strong> secara berurutan. Klik kedua tab di bawah ini:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <button type="button" onclick="setS3Layer('diskon')" class="p-4 rounded-2xl border text-left transition ${isDiskon ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-[11px] font-bold opacity-80">Lapisan 1 • Menggunakan if - elseif - else</div>
+                            <div class="text-sm font-extrabold mt-0.5">Aturan Diskon Berjenjang + Bonus Member (Rentang Angka)</div>
+                        </button>
+                        <button type="button" onclick="setS3Layer('pajak')" class="p-4 rounded-2xl border text-left transition ${!isDiskon ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-[11px] font-bold opacity-80">Lapisan 2 • Menggunakan switch - case</div>
+                            <div class="text-sm font-extrabold mt-0.5">Aturan Tarif Pajak Berdasarkan Kategori Produk (Nilai Pasti)</div>
+                        </button>
+                    </div>
+
+                    <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 my-auto">
+                        ${isDiskon ? `
+                            <div class="space-y-3">
+                                <div class="text-xs font-extrabold text-indigo-600 dark:text-indigo-400 uppercase">Tabel Jenjang Diskon Berdasarkan <span class="font-mono">$totalBelanja</span> &amp; <span class="font-mono">$isMember</span>:</div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs sm:text-sm">
+                                    <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-purple-400 dark:border-purple-700">
+                                        <span class="text-[10px] font-mono font-extrabold px-2 py-0.5 rounded bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300">&gt;= 100rb &amp;&amp; Member</span>
+                                        <div class="text-lg font-extrabold text-purple-600 dark:text-purple-400 mt-1.5">Diskon 20%</div>
+                                        <p class="text-xs text-slate-500 mt-1">Syarat tertinggi: Pelanggan VIP Member dengan belanja minimal Rp 100.000.</p>
+                                    </div>
+                                    <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-emerald-400 dark:border-emerald-700">
+                                        <span class="text-[10px] font-mono font-extrabold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">&gt;= 100rb (Non-Member)</span>
+                                        <div class="text-lg font-extrabold text-emerald-600 dark:text-emerald-400 mt-1.5">Diskon 15%</div>
+                                        <p class="text-xs text-slate-500 mt-1">Transaksi besar minimal Rp 100.000 untuk pembeli umum.</p>
+                                    </div>
+                                    <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-indigo-400 dark:border-indigo-700">
+                                        <span class="text-[10px] font-mono font-extrabold px-2 py-0.5 rounded bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300">&gt;= 50rb</span>
+                                        <div class="text-lg font-extrabold text-indigo-600 dark:text-indigo-400 mt-1.5">Diskon 10%</div>
+                                        <p class="text-xs text-slate-500 mt-1">Transaksi menengah antara Rp 50.000 hingga Rp 99.999.</p>
+                                    </div>
+                                    <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+                                        <span class="text-[10px] font-mono font-extrabold px-2 py-0.5 rounded bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300">else (Lainnya)</span>
+                                        <div class="text-lg font-extrabold text-slate-700 dark:text-slate-300 mt-1.5">Diskon 0%</div>
+                                        <p class="text-xs text-slate-500 mt-1">Belanja di bawah Rp 50.000 membayar harga normal.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        ` : `
+                            <div class="space-y-3">
+                                <div class="text-xs font-extrabold text-indigo-600 dark:text-indigo-400 uppercase">Tabel Tarif Pajak Berdasarkan <span class="font-mono">$kategori</span> (Dikalikan ke ${term('dpp', 'DPP')}):</div>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs sm:text-sm">
+                                    <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border-2 border-emerald-400 dark:border-emerald-700">
+                                        <span class="text-[11px] font-mono font-extrabold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">case "sembako":</span>
+                                        <div class="text-lg font-extrabold text-emerald-600 dark:text-emerald-400 mt-2">Pajak 0% (0.00)</div>
+                                        <p class="text-xs text-slate-500 mt-1">Beras, minyak goreng curah, telur, dan bahan pokok bebas pajak.</p>
+                                    </div>
+                                    <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border-2 border-amber-400 dark:border-amber-700">
+                                        <span class="text-[11px] font-mono font-extrabold px-2 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">case "kuliner":</span>
+                                        <div class="text-lg font-extrabold text-amber-600 dark:text-amber-400 mt-2">${term('pb1', 'PB1 10%')} (0.10)</div>
+                                        <p class="text-xs text-slate-500 mt-1">Kopi Susu Gula Aren, Roti Bakar, dan makanan olahan siap saji.</p>
+                                    </div>
+                                    <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border-2 border-indigo-400 dark:border-indigo-700">
+                                        <span class="text-[11px] font-mono font-extrabold px-2 py-0.5 rounded bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300">case "ritel":</span>
+                                        <div class="text-lg font-extrabold text-indigo-600 dark:text-indigo-400 mt-2">${term('ppn', 'PPN 11%')} (0.11)</div>
+                                        <p class="text-xs text-slate-500 mt-1">Biskuit kemasan pabrikan, air mineral botol, dan kebutuhan harian.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide4() {
+            return `
+                <div class="slide-enter flex flex-col justify-center h-full my-auto">
+                    <div class="p-8 sm:p-12 rounded-3xl bg-gradient-to-br from-indigo-600 to-slate-900 text-white space-y-6 shadow-lg">
+                        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/15 text-indigo-100 text-xs font-extrabold uppercase tracking-wider">
+                            <i class="fa-solid fa-bridge"></i>
+                            <span>Jembatan Antar Topik • Modul 1 Menuju Modul 2</span>
+                        </div>
+
+                        <h2 class="text-2xl sm:text-4xl font-extrabold leading-tight">
+                            Di percabangan PHP muncul banyak simbol baru seperti kurung <span class="font-mono text-amber-300">( ... )</span>, kurung kurawal <span class="font-mono text-amber-300">{ ... }</span>, <span class="font-mono text-amber-300">elseif</span>, <span class="font-mono text-amber-300">&amp;&amp;</span>, dan <span class="font-mono text-amber-300">===</span>. Apa arti masing-masing?
+                        </h2>
+
+                        <p class="text-indigo-100 text-sm sm:text-base leading-relaxed max-w-3xl">
+                            Di <strong>Modul 2 (Slide 5 s/d 8)</strong>, kita akan membedah <strong>satu per satu 6 sintaks asing percabangan PHP</strong> beserta <strong>padanan simbol Flowchart-nya</strong>, lalu melihat langsung perubahan visual dari <strong>Belah Ketupat Flowgorithm ke kode PHP <span class="font-mono">if-elseif-else</span></strong>!
+                        </p>
+
+                        <div class="pt-2">
+                            <button type="button" onclick="changeSlide(1)" class="px-5 py-3 rounded-xl bg-white text-indigo-700 hover:bg-indigo-50 font-extrabold text-xs sm:text-sm transition inline-flex items-center gap-2 shadow-sm">
+                                <span>Masuk ke Modul 2: Bedah 6 Sintaks Asing Percabangan PHP</span>
+                                <i class="fa-solid fa-arrow-right text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide5() {
+            const tokens = {
+                if_cond: {
+                    pill: "if ( ... )",
+                    title: "1. Kata Kunci if ( syarat ) : Pintu Keputusan Utama",
+                    flowLabel: "Pengganti Belah Ketupat If Merah Muda",
+                    svg: `<svg class="w-full max-w-[240px] h-auto" viewBox="0 0 260 54"><polygon points="130,4 236,27 130,50 24,27" fill="#fce7f3" stroke="#db2777" stroke-width="2.2"/><text x="130" y="31" text-anchor="middle" fill="#831843" font-weight="800" font-size="10.5">totalBelanja &gt;= 100000</text></svg>`,
+                    guna: "Menyuruh komputer menguji apakah sebuah syarat bernilai Benar (true) atau Salah (false) sebelum menjalankan perintah di bawahnya.",
+                    pakai: "Di PHP, syarat kondisi WAJIB dibungkus tanda kurung biasa ( ... ) tepat setelah kata if, dan TIDAK diakhiri titik koma (;) di ujung baris if!",
+                    contoh: "if ($totalBelanja >= 100000) {\n    $persenDiskon = 15;\n}"
+                },
+                braces: {
+                    pill: "{ ... }",
+                    title: "2. Kurung Kurawal { ... } : Pagar Pembatas Blok Cabang",
+                    flowLabel: "Pengganti Jalur Cabang True / False",
+                    svg: `<svg class="w-full max-w-[240px] h-auto" viewBox="0 0 260 54"><rect x="20" y="6" width="220" height="42" rx="8" fill="#eef2ff" stroke="#4f46e5" stroke-width="2.2" stroke-dasharray="5,3"/><text x="130" y="31" text-anchor="middle" fill="#3730a3" font-weight="800" font-size="11">Semua aksi dalam { ... } milik cabang ini</text></svg>`,
+                    guna: "Menandai batas awal '{' dan batas akhir '}' kumpulan instruksi yang hanya boleh dijalankan apabila syarat percabangan terpenuhi.",
+                    pakai: "Buka dengan '{' setelah syarat if/elseif/else, tulis baris aksi di dalamnya (pakai indentasi agar rapi), lalu tutup rapat dengan '}'.",
+                    contoh: "if ($totalBelanja >= 50000) {\n    $persenDiskon = 10;\n    echo \"Selamat! Dapat diskon 10%\\n\";\n}"
+                },
+                elseif_kw: {
+                    pill: "elseif ( ... )",
+                    title: "3. Kata Kunci elseif : Belah Ketupat Lanjutan (Syarat ke-2, ke-3)",
+                    flowLabel: "Pengganti Belah Ketupat di Cabang False",
+                    svg: `<svg class="w-full max-w-[240px] h-auto" viewBox="0 0 260 54"><polygon points="130,4 236,27 130,50 24,27" fill="#fef3c7" stroke="#d97706" stroke-width="2.2"/><text x="130" y="31" text-anchor="middle" fill="#78350f" font-weight="800" font-size="10.2">Jika atas False, cek syarat ini</text></svg>`,
+                    guna: "Memeriksa syarat alternatif berikutnya apabila syarat 'if' di atasnya bernilai False. Di PHP ditulis menyambung: elseif (tanpa spasi lebih rapi).",
+                    pakai: "Letakkan tepat setelah kurung kurawal tutup '}' milik blok if sebelumnya, diikuti syarat baru di dalam kurung ( ... ).",
+                    contoh: "if ($totalBelanja >= 100000) {\n    $persenDiskon = 15;\n} elseif ($totalBelanja >= 50000) {\n    $persenDiskon = 10;\n}"
+                },
+                else_kw: {
+                    pill: "else { ... }",
+                    title: "4. Kata Kunci else : Jalan Cadangan Terakhir",
+                    flowLabel: "Pengganti Cabang False Paling Akhir",
+                    svg: `<svg class="w-full max-w-[240px] h-auto" viewBox="0 0 260 54"><rect x="26" y="8" width="208" height="38" rx="6" fill="#fee2e2" stroke="#dc2626" stroke-width="2.2"/><text x="130" y="31" text-anchor="middle" fill="#991b1b" font-weight="800" font-size="10.8">Jika semua syarat False -&gt; Masuk sini</text></svg>`,
+                    guna: "Menangkap seluruh sisa kemungkinan ketika semua syarat 'if' dan 'elseif' di atasnya bernilai False.",
+                    pakai: "TIDAK boleh diberi tanda kurung syarat (...) di belakang kata else! Langsung diikuti kurung kurawal { ... }.",
+                    contoh: "} else {\n    $persenDiskon = 0;\n}"
+                },
+                logic_and: {
+                    pill: "&&  dan  ||",
+                    title: "5. Operator && (AND) & || (OR) : Penggabung 2 Syarat",
+                    flowLabel: "Pengganti Kata AND / OR di Flowgorithm",
+                    svg: `<svg class="w-full max-w-[240px] h-auto" viewBox="0 0 260 54"><rect x="14" y="8" width="232" height="38" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="2.2"/><text x="130" y="31" text-anchor="middle" fill="#14532d" font-weight="800" font-size="10.5">&amp;&amp; = Keduanya True | || = Salah Satu True</text></svg>`,
+                    guna: "Simbol && berarti DAN (kedua syarat wajib True). Simbol || (dua garis tegak di tombol dekat Enter) berarti ATAU (minimal satu syarat True).",
+                    pakai: "Letakkan di antara dua kondisi di dalam tanda kurung if(...), contoh: ($totalBelanja >= 100000 && $isMember).",
+                    contoh: "if ($totalBelanja >= 100000 && $isMember) {\n    $persenDiskon = 20;\n}"
+                },
+                strict_eq: {
+                    pill: "==  dan  ===",
+                    title: "6. Pembanding == dan === : Mengecek Kesamaan (Bukan Mengisi!)",
+                    flowLabel: "Pembanding Kesamaan di Dalam Belah Ketupat",
+                    svg: `<svg class="w-full max-w-[240px] h-auto" viewBox="0 0 260 54"><rect x="14" y="8" width="232" height="38" rx="8" fill="#e0f2fe" stroke="#0284c7" stroke-width="2.2"/><text x="130" y="31" text-anchor="middle" fill="#0c4a6e" font-weight="800" font-size="10.5">= Mengisi Laci | === Membandingkan Ketat</text></svg>`,
+                    guna: "Di PHP, 1 sama dengan (=) berarti MENGISI variabel. Untuk MEMBANDINGKAN apakah dua nilai sama, wajib memakai == (sama nilai) atau === (sama nilai & tipe data).",
+                    pakai: "Gunakan === saat membandingkan jawaban teks kasir seperti $jawaban === 'y' agar 100% akurat.",
+                    contoh: "$isMember = strtolower(trim(fgets(STDIN))) === 'y';"
+                }
+            };
+
+            const keys = ['if_cond', 'braces', 'elseif_kw', 'else_kw', 'logic_and', 'strict_eq'];
+            const btnsHtml = keys.map(function (k) {
+                const active = s5TokenKey === k;
+                return `
+                    <button type="button" onclick="setS5Token('${k}')" class="syntax-pill p-2.5 rounded-2xl border-2 text-center font-mono text-xs sm:text-sm font-extrabold transition ${active ? 'bg-indigo-600 text-white border-indigo-500 shadow-xs' : 'bg-slate-900 text-emerald-300 border-slate-700 hover:border-indigo-400'}">
+                        ${escapeHtml(tokens[k].pill)}
+                    </button>
+                `;
+            }).join('');
+
+            const cur = tokens[s5TokenKey] || tokens.if_cond;
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 2 • Kenalan dengan 6 Simbol Asing Percabangan PHP</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Bedah Arti, Fungsi, &amp; Cara Pakai 6 Sintaks Percabangan PHP</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                            Klik salah satu dari <strong>6 tombol sintaks PHP</strong> di bawah ini untuk mengetahui bentuk padanannya di Flowchart, gunanya apa, dan cara memakainya:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+                        ${btnsHtml}
+                    </div>
+
+                    <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-2 border-indigo-500/60 grid grid-cols-1 lg:grid-cols-12 gap-5 items-center my-auto">
+                        <div class="lg:col-span-7 space-y-2.5">
+                            <span class="text-xs font-extrabold px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">${escapeHtml(cur.title)}</span>
+                            <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed">
+                                <strong class="text-indigo-600 dark:text-indigo-400">Gunanya Apa?</strong> ${escapeHtml(cur.guna)}
+                            </div>
+                            <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed">
+                                <strong class="text-emerald-600 dark:text-emerald-400">Cara Pakainya:</strong> ${escapeHtml(cur.pakai)}
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-5 space-y-3">
+                            <div class="fg-canvas p-3 rounded-2xl border border-slate-200 dark:border-slate-700 flex flex-col items-center gap-1">
+                                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">${escapeHtml(cur.flowLabel)}</span>
+                                ${cur.svg}
+                            </div>
+                            <div class="p-3.5 rounded-2xl bg-slate-900 text-emerald-300 font-mono text-xs">
+                                <div class="text-slate-400 text-[10px] mb-1">// Contoh penulisan di PHP:</div>
+                                <pre class="whitespace-pre-wrap leading-relaxed">${escapeHtml(cur.contoh)}</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide6() {
+            const stages = {
+                1: {
+                    label: "Tahap 1: Belah Ketupat #1 -> if ($totalBelanja >= 100000 && $isMember)",
+                    change: "Belah ketupat teratas di Flowgorithm berubah menjadi kata kunci 'if', syarat kondisi ditaruh dalam kurung (...), dan kata AND berubah menjadi simbol &&.",
+                    tip: "Tips: Perhatikan kurung kurawal buka '{' menggantikan garis cabang True ke kanan."
+                },
+                2: {
+                    label: "Tahap 2: Cabang True #1 -> { $persenDiskon = 20; }",
+                    change: "Kotak kuning Assign pada cabang True belah ketupat pertama ditulis di dalam pagar kurung kurawal { ... } milik blok if, diakhiri titik koma (;).",
+                    tip: "Tips: Jika cabang ini dijalankan, PHP langsung melompati seluruh blok elseif dan else di bawahnya!"
+                },
+                3: {
+                    label: "Tahap 3: Belah Ketupat #2 (di Cabang False) -> } elseif ($totalBelanja >= 100000) {",
+                    change: "Di Flowgorithm, syarat lanjutan digambar bersarang di cabang False. Di PHP jauh lebih ringkas: cukup tutup kurung '}' lalu tulis 'elseif (...)' sejajar lurus ke bawah!",
+                    tip: "Tips: Jika belanja >= 100.000 tapi bukan member, syarat #1 False sehingga turun ke syarat #2 (15%)."
+                },
+                4: {
+                    label: "Tahap 4: Belah Ketupat #3 -> } elseif ($totalBelanja >= 50000) {",
+                    change: "Anda bisa menumpuk 'elseif' sebanyak jenjang diskon yang dibutuhkan bisnis (misalnya 10% untuk belanja minimal Rp 50.000).",
+                    tip: "Tips: Pastikan selalu berurutan dari batas nominal terbesar ke terkecil."
+                },
+                5: {
+                    label: "Tahap 5: Cabang False Terakhir & Merge -> } else { $persenDiskon = 0; }",
+                    change: "Cabang False paling ujung berubah menjadi 'else { ... }', dan kurung kurawal tutup '}' paling akhir adalah padanan titik gabung (Merge) sebelum lanjut menghitung $dpp.",
+                    tip: "Tips: Setelah keluar dari blok else, barulah kita hitung $nominalDiskon dan $dpp."
+                }
+            };
+
+            const cur = stages[s6SyncStage] || stages[1];
+            const phpHighlight = function (idx) {
+                return s6SyncStage === idx
+                    ? 'bg-indigo-600 text-white px-2.5 py-1 rounded-lg font-bold shadow-xs'
+                    : 'px-2.5 py-1 text-emerald-300 hover:bg-slate-800 rounded-lg cursor-pointer transition';
+            };
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-3.5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 2 • Transformasi Visual Flowchart ke Kode PHP</span>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Perubahan Bentuk: Flowchart Nested If -&gt; PHP <span class="font-mono text-indigo-600 dark:text-indigo-400">if-elseif-else</span></h2>
+                        </div>
+                        <div class="flex items-center gap-1.5 shrink-0">
+                            <button type="button" onclick="stepS6Sync(-1)" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-xs font-bold">◀ Sebelumnya</button>
+                            <span class="px-2.5 py-1 rounded-lg bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-mono text-xs font-extrabold">${s6SyncStage} / 5</span>
+                            <button type="button" onclick="stepS6Sync(1)" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold">Berikutnya ▶</button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch my-auto">
+                        <!-- Kiri: Flowchart Nested If Diskon -->
+                        <div class="lg:col-span-5 fg-canvas rounded-3xl border border-slate-200 dark:border-slate-800 p-3 flex flex-col items-center justify-center">
+                            <div class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">1. Flowchart Belah Ketupat Flowgorithm (Klik Blok)</div>
+                            <svg class="w-full max-w-[300px] h-auto" viewBox="0 0 320 295">
+                                <line x1="125" y1="4" x2="125" y2="20" stroke="#64748b" stroke-width="2"/>
+
+                                <!-- Cabang True #1 -->
+                                <polyline points="205,46 268,46 268,266 155,266" fill="none" stroke="#16a34a" stroke-width="2"/>
+                                <text x="214" y="39" fill="#16a34a" font-size="9" font-weight="800">True</text>
+
+                                <!-- Cabang False #1 -> Diamond #2 -->
+                                <polyline points="45,46 28,46 28,112 52,112" fill="none" stroke="#dc2626" stroke-width="2"/>
+                                <text x="26" y="39" fill="#dc2626" font-size="9" font-weight="800">False</text>
+
+                                <!-- 1. Diamond #1 -->
+                                <g class="cursor-pointer" onclick="setS6Sync(1)">
+                                    <polygon points="125,20 205,46 125,72 45,46" fill="${s6SyncStage === 1 ? '#4f46e5' : '#fce7f3'}" stroke="#db2777" stroke-width="2"/>
+                                    <text x="125" y="49" text-anchor="middle" fill="${s6SyncStage === 1 ? '#ffffff' : '#831843'}" font-size="8.2" font-weight="800">1. &gt;=100rb &amp;&amp; Mem</text>
+                                </g>
+
+                                <!-- 2. Assign 20% -->
+                                <g class="cursor-pointer" onclick="setS6Sync(2)">
+                                    <rect x="220" y="78" width="94" height="28" fill="${s6SyncStage === 2 ? '#4f46e5' : '#dcfce7'}" stroke="#16a34a" stroke-width="2"/>
+                                    <text x="267" y="96" text-anchor="middle" fill="${s6SyncStage === 2 ? '#ffffff' : '#14532d'}" font-size="8.8" font-weight="800">2. persen = 20</text>
+                                </g>
+
+                                <!-- Cabang Diamond #2 -->
+                                <polyline points="198,112 222,112 222,250 155,250" fill="none" stroke="#16a34a" stroke-width="1.8"/>
+                                <polyline points="52,112 36,112 36,184 56,184" fill="none" stroke="#dc2626" stroke-width="1.8"/>
+
+                                <!-- 3. Diamond #2 (elseif 1) -->
+                                <g class="cursor-pointer" onclick="setS6Sync(3)">
+                                    <polygon points="125,88 198,112 125,136 52,112" fill="${s6SyncStage === 3 ? '#4f46e5' : '#fef3c7'}" stroke="#d97706" stroke-width="2"/>
+                                    <text x="125" y="115" text-anchor="middle" fill="${s6SyncStage === 3 ? '#ffffff' : '#78350f'}" font-size="8.5" font-weight="800">3. total &gt;= 100rb</text>
+                                </g>
+
+                                <rect x="184" y="142" width="76" height="24" fill="#fef08a" stroke="#a16207" stroke-width="1.6"/>
+                                <text x="222" y="158" text-anchor="middle" fill="#713f12" font-size="8.2" font-weight="700">persen = 15</text>
+
+                                <!-- Cabang Diamond #3 -->
+                                <polyline points="184,184 198,184 198,236 155,236" fill="none" stroke="#16a34a" stroke-width="1.8"/>
+                                <polyline points="56,184 36,184 36,266 155,266" fill="none" stroke="#dc2626" stroke-width="1.8"/>
+
+                                <!-- 4. Diamond #3 (elseif 2) -->
+                                <g class="cursor-pointer" onclick="setS6Sync(4)">
+                                    <polygon points="120,162 184,184 120,206 56,184" fill="${s6SyncStage === 4 ? '#4f46e5' : '#fef3c7'}" stroke="#d97706" stroke-width="2"/>
+                                    <text x="120" y="187" text-anchor="middle" fill="${s6SyncStage === 4 ? '#ffffff' : '#78350f'}" font-size="8.5" font-weight="800">4. total &gt;= 50rb</text>
+                                </g>
+
+                                <!-- 5. Else (persen = 0) & Merge -->
+                                <g class="cursor-pointer" onclick="setS6Sync(5)">
+                                    <rect x="6" y="218" width="74" height="26" fill="${s6SyncStage === 5 ? '#4f46e5' : '#fee2e2'}" stroke="#dc2626" stroke-width="2"/>
+                                    <text x="43" y="235" text-anchor="middle" fill="${s6SyncStage === 5 ? '#ffffff' : '#991b1b'}" font-size="8.5" font-weight="800">5. persen = 0</text>
+                                </g>
+
+                                <rect x="160" y="208" width="72" height="22" fill="#fef08a" stroke="#a16207" stroke-width="1.6"/>
+                                <text x="196" y="222" text-anchor="middle" fill="#713f12" font-size="8" font-weight="700">persen = 10</text>
+
+                                <line x1="155" y1="236" x2="155" y2="288" stroke="#64748b" stroke-width="2"/>
+                                <circle cx="155" cy="266" r="4.5" fill="#4f46e5"/>
+                            </svg>
+                        </div>
+
+                        <!-- Kanan: Hasil Kode PHP -->
+                        <div class="lg:col-span-7 flex flex-col justify-between gap-3">
+                            <div class="p-4 rounded-3xl bg-slate-900 font-mono text-xs space-y-1">
+                                <div class="text-slate-400 text-[10px] uppercase font-sans font-bold mb-1">2. Hasil Translasi ke Kode PHP (Klik Baris):</div>
+                                <div onclick="setS6Sync(1)" class="${phpHighlight(1)}"><span class="text-pink-400">if</span> ($totalBelanja &gt;= 100000 &amp;&amp; $isMember) {</div>
+                                <div onclick="setS6Sync(2)" class="${phpHighlight(2)}">&nbsp;&nbsp;&nbsp;&nbsp;$persenDiskon = 20;</div>
+                                <div onclick="setS6Sync(3)" class="${phpHighlight(3)}">} <span class="text-amber-300">elseif</span> ($totalBelanja &gt;= 100000) {<br>&nbsp;&nbsp;&nbsp;&nbsp;$persenDiskon = 15;</div>
+                                <div onclick="setS6Sync(4)" class="${phpHighlight(4)}">} <span class="text-amber-300">elseif</span> ($totalBelanja &gt;= 50000) {<br>&nbsp;&nbsp;&nbsp;&nbsp;$persenDiskon = 10;</div>
+                                <div onclick="setS6Sync(5)" class="${phpHighlight(5)}">} <span class="text-rose-400">else</span> {<br>&nbsp;&nbsp;&nbsp;&nbsp;$persenDiskon = 0;<br>}</div>
+                            </div>
+
+                            <div class="p-4 rounded-2xl bg-indigo-50/90 dark:bg-indigo-950/50 border-2 border-indigo-400/70 space-y-1.5">
+                                <div class="text-xs font-extrabold text-indigo-700 dark:text-indigo-300 uppercase">${escapeHtml(cur.label)}</div>
+                                <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed">${escapeHtml(cur.change)}</p>
+                                <div class="text-xs font-semibold text-emerald-700 dark:text-emerald-400 pt-0.5"><i class="fa-solid fa-lightbulb mr-1"></i>${escapeHtml(cur.tip)}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide7() {
+            let activeBranch = 4;
+            let pct = 0;
+            let bugAlert = '';
+
+            if (s7OrderMode === 'correct') {
+                if (s7Belanja >= 100000 && s7IsMember) { activeBranch = 1; pct = 20; }
+                else if (s7Belanja >= 100000) { activeBranch = 2; pct = 15; }
+                else if (s7Belanja >= 50000) { activeBranch = 3; pct = 10; }
+                else { activeBranch = 4; pct = 0; }
+            } else {
+                if (s7Belanja >= 50000) {
+                    activeBranch = 1;
+                    pct = 10;
+                    if (s7Belanja >= 100000) {
+                        bugAlert = 'BUG URUTAN TERDETEKSI! Pembeli belanja Rp ' + s7Belanja.toLocaleString('id-ID') + ' (harusnya ' + (s7IsMember ? '20%' : '15%') + '), tapi karena if ($totalBelanja >= 50000) ditaruh paling atas, PHP langsung berhenti di cabang 10% dan melompati cabang di bawahnya!';
+                    }
+                } else if (s7Belanja >= 100000) {
+                    activeBranch = 2;
+                    pct = 15;
+                } else {
+                    activeBranch = 4;
+                    pct = 0;
+                }
+            }
+
+            const discRp = Math.round(s7Belanja * (pct / 100));
+            const dpp = s7Belanja - discRp;
+            const branchStyle = function (idx) {
+                return activeBranch === idx
+                    ? 'bg-emerald-600/25 border-l-4 border-emerald-400 text-white font-bold px-3 py-1 rounded-r-lg'
+                    : 'px-3 py-1 text-slate-400 opacity-50';
+            };
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 2 • Laboratorium Eksekusi if-elseif-else PHP</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Aturan Emas Tangga Diskon: Wajib Urut dari Syarat Paling Spesifik!</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                            PHP mengecek syarat <span class="font-mono font-bold">if-elseif-else</span> dari atas ke bawah dan <strong>hanya mengeksekusi SATU cabang pertama yang True</strong>. Uji perbedaannya saat urutan dibalik:
+                        </p>
+                    </div>
+
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div class="flex flex-wrap gap-2">
+                            <button type="button" onclick="setS7Order('correct')" class="px-3.5 py-2 rounded-xl font-bold text-xs border transition ${s7OrderMode === 'correct' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">1. Urutan Benar (Tertinggi Dulu)</button>
+                            <button type="button" onclick="setS7Order('bug_order')" class="px-3.5 py-2 rounded-xl font-bold text-xs border transition ${s7OrderMode === 'bug_order' ? 'bg-rose-600 text-white border-rose-600' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">2. Urutan Terbalik (&gt;= 50rb Dulu)</button>
+                        </div>
+
+                        <div class="flex flex-wrap items-center gap-1.5">
+                            <button type="button" onclick="toggleS7Member()" class="px-2.5 py-1.5 rounded-lg font-mono text-xs font-bold border ${s7IsMember ? 'bg-purple-600 text-white border-purple-600' : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700'}">Member: ${s7IsMember ? 'true' : 'false'}</button>
+                            <button type="button" onclick="setS7Belanja(40000)" class="px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 font-mono text-xs font-bold">40rb</button>
+                            <button type="button" onclick="setS7Belanja(75000)" class="px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 font-mono text-xs font-bold">75rb</button>
+                            <button type="button" onclick="setS7Belanja(120000)" class="px-2.5 py-1.5 rounded-lg bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-mono text-xs font-bold">120rb</button>
+                            <input type="number" step="5000" value="${s7Belanja}" oninput="setS7Belanja(this.value)" class="w-24 px-2 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 font-mono text-xs font-extrabold text-indigo-600">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <div class="lg:col-span-7 p-4 rounded-3xl bg-slate-900 font-mono text-xs space-y-1 flex flex-col justify-center">
+                            <div class="text-slate-400 text-[11px]">$totalBelanja = ${s7Belanja}; $isMember = ${s7IsMember ? 'true' : 'false'};</div>
+                            ${s7OrderMode === 'correct' ? `
+                                <div class="${branchStyle(1)}">if ($totalBelanja &gt;= 100000 &amp;&amp; $isMember) { $persenDiskon = 20; }</div>
+                                <div class="${branchStyle(2)}">elseif ($totalBelanja &gt;= 100000) { $persenDiskon = 15; }</div>
+                                <div class="${branchStyle(3)}">elseif ($totalBelanja &gt;= 50000) { $persenDiskon = 10; }</div>
+                                <div class="${branchStyle(4)}">else { $persenDiskon = 0; }</div>
+                            ` : `
+                                <div class="${branchStyle(1)}">if ($totalBelanja &gt;= 50000) { $persenDiskon = 10; }</div>
+                                <div class="${branchStyle(2)}">elseif ($totalBelanja &gt;= 100000) { $persenDiskon = 15; } // Tak tercapai!</div>
+                                <div class="${branchStyle(4)}">else { $persenDiskon = 0; }</div>
+                            `}
+                        </div>
+
+                        <div class="lg:col-span-5 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-3">
+                            <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 font-mono space-y-1">
+                                <div class="text-xs text-slate-400">Hasil Cabang Aktif:</div>
+                                <div class="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400">${pct}% (-Rp ${discRp.toLocaleString('id-ID')})</div>
+                                <div class="text-xs text-slate-500 pt-1">Subtotal Bersih (DPP): <strong>Rp ${dpp.toLocaleString('id-ID')}</strong></div>
+                            </div>
+                            ${bugAlert
+                                ? `<div class="p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-400 text-rose-800 dark:text-rose-200 text-xs font-bold">${escapeHtml(bugAlert)}</div>`
+                                : `<div class="p-3 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-xs font-semibold">Baris yang menyala hijau adalah satu-satunya cabang yang dieksekusi PHP!</div>`
+                            }
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide8() {
+            const condA = s8IsMember;
+            const condB = s8Belanja >= 100000;
+            let result = false;
+            let phpCode = '';
+            let desc = '';
+
+            if (s8LogicOp === '&&') {
+                result = condA && condB;
+                phpCode = 'if ($totalBelanja >= 100000 && $isMember) {\n    $persenDiskon = 20;\n}';
+                desc = 'Simbol && (AND): KEDUA syarat wajib true ($totalBelanja >= 100000 DAN $isMember == true). Jika salah satu false, maka gagal dapat 20%.';
+            } else if (s8LogicOp === '||') {
+                result = condA || condB;
+                phpCode = 'if ($totalBelanja >= 100000 || $isMember) {\n    echo "Gratis Es Teh Manis Warung Digital!\\n";\n}';
+                desc = 'Simbol || (OR): Cukup MINIMAL SALAH SATU syarat bernilai true untuk meloloskan promo gratis es teh.';
+            } else {
+                result = !condA;
+                phpCode = 'if (!$isMember) {\n    echo "Yuk daftar Member gratis di kasir!\\n";\n}';
+                desc = 'Simbol ! (NOT): Membalik nilai Boolean. Jika $isMember bernilai false, maka !$isMember menjadi true!';
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 2 • Syarat Majemuk &amp; Normalisasi Input PHP</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Operator Logika PHP (${term('logicops', '&&, ||, !')}) &amp; Fungsi ${term('strtolower_fn', 'strtolower()')}</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                            Uji ketiga simbol logika PHP di bawah ini, dan perhatikan bagaimana <span class="font-mono font-bold">strtolower(trim(fgets(STDIN)))</span> mengamankan input huruf besar/kecil kasir:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-2.5">
+                        <button type="button" onclick="setS8Op('&&')" class="p-3 rounded-2xl border text-left transition ${s8LogicOp === '&&' ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <div class="font-mono text-sm font-extrabold">&amp;&amp; (AND)</div>
+                            <div class="text-[11px] opacity-85">Keduanya Wajib True</div>
+                        </button>
+                        <button type="button" onclick="setS8Op('||')" class="p-3 rounded-2xl border text-left transition ${s8LogicOp === '||' ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <div class="font-mono text-sm font-extrabold">|| (OR)</div>
+                            <div class="text-[11px] opacity-85">Minimal Satu True</div>
+                        </button>
+                        <button type="button" onclick="setS8Op('!')" class="p-3 rounded-2xl border text-left transition ${s8LogicOp === '!' ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <div class="font-mono text-sm font-extrabold">! (NOT)</div>
+                            <div class="text-[11px] opacity-85">Membalik True/False</div>
+                        </button>
+                    </div>
+
+                    <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-3.5 my-auto">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                                <span class="font-mono text-xs font-bold">$isMember = <strong class="${condA ? 'text-emerald-600' : 'text-rose-600'}">${condA ? 'true' : 'false'}</strong></span>
+                                <button type="button" onclick="toggleS8Member()" class="px-3 py-1 rounded-xl bg-indigo-600 text-white font-mono text-xs font-bold">Ubah true/false</button>
+                            </div>
+                            <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2">
+                                <span class="font-mono text-xs font-bold">$totalBelanja (&ge; 100rb: ${condB ? 'true' : 'false'})</span>
+                                <input type="number" step="10000" value="${s8Belanja}" oninput="updateS8Belanja(this.value)" class="w-28 px-2 py-1 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-xs font-extrabold">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+                            <div class="lg:col-span-7 p-4 rounded-2xl bg-slate-900 text-emerald-300 font-mono text-xs space-y-2">
+                                <pre class="whitespace-pre-wrap leading-relaxed">${escapeHtml(phpCode)}</pre>
+                                <div class="text-slate-400 pt-1 border-t border-slate-800 text-[11px]">// Tips Input Aman (Kecilkan Huruf):<br><span class="text-amber-300">$isMember = strtolower(trim(fgets(STDIN))) === 'y';</span></div>
+                            </div>
+                            <div class="lg:col-span-5 p-4 rounded-2xl border-2 text-center space-y-1 ${result ? 'bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-500' : 'bg-rose-50/70 dark:bg-rose-950/30 border-rose-400'}">
+                                <div class="font-mono text-lg font-extrabold ${result ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'}">${result ? 'true (Blok Jalan!)' : 'false (Dilewati)'}</div>
+                                <p class="text-xs text-slate-600 dark:text-slate-300">${escapeHtml(desc)}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide9() {
+            return `
+                <div class="slide-enter flex flex-col justify-center h-full my-auto">
+                    <div class="p-8 sm:p-12 rounded-3xl bg-gradient-to-br from-indigo-600 to-slate-900 text-white space-y-6 shadow-lg">
+                        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/15 text-indigo-100 text-xs font-extrabold uppercase tracking-wider">
+                            <i class="fa-solid fa-bridge"></i>
+                            <span>Jembatan Antar Topik • Modul 2 Menuju Modul 3</span>
+                        </div>
+
+                        <h2 class="text-2xl sm:text-4xl font-extrabold leading-tight">
+                            Kita sudah menguasai <span class="font-mono text-amber-300">if-elseif-else</span> untuk rentang nominal diskon. Sekarang bagaimana cara mencocokkan kategori pajak pasti ("sembako", "kuliner", "ritel") dengan rapi?
+                        </h2>
+
+                        <p class="text-indigo-100 text-sm sm:text-base leading-relaxed max-w-3xl">
+                            Di <strong>Modul 3 (Slide 10 s/d 13)</strong>, kita akan membedah 4 sintaks inti <strong><span class="font-mono">switch-case</span></strong> PHP (termasuk eksperimen langsung apa yang terjadi jika lupa menulis <strong><span class="font-mono">break;</span></strong>!), membedah 4 error pemula, serta menguji <strong>Sandbox Terpadu Kasir Warung Digital</strong>!
+                        </p>
+
+                        <div class="pt-2">
+                            <button type="button" onclick="changeSlide(1)" class="px-5 py-3 rounded-xl bg-white text-indigo-700 hover:bg-indigo-50 font-extrabold text-xs sm:text-sm transition inline-flex items-center gap-2 shadow-sm">
+                                <span>Masuk ke Modul 3: Bedah switch-case &amp; Efek break;</span>
+                                <i class="fa-solid fa-arrow-right text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide10() {
+            const pieces = {
+                switch_hd: {
+                    pill: "switch ($kategori)",
+                    desc: "Menentukan 1 variabel utama ($kategori) yang nilainya akan dicocokkan dengan daftar pilihan case di bawahnya."
+                },
+                case_kw: {
+                    pill: 'case "kuliner":',
+                    desc: "Mendefinisikan satu nilai kecocokan pasti. Perhatikan akhir baris case menggunakan TITIK DUA (:), bukan titik koma (;)."
+                },
+                break_kw: {
+                    pill: "break;",
+                    desc: "REM WAJIB! Menghentikan eksekusi dan langsung keluar dari blok switch. Tanpa break;, PHP akan meluncur terus ke case di bawahnya (Fall-Through)!"
+                },
+                default_kw: {
+                    pill: "default:",
+                    desc: "Jaring pengaman (persis seperti 'else') yang berjalan bila nilai $kategori tidak cocok dengan satu pun case di atas."
+                }
+            };
+
+            // Simulasi eksekusi switch-case (dengan atau tanpa break;)
+            let executedCases = [];
+            let finalRate = '0%';
+            let finalLabel = 'Kategori Tidak Dikenal (0%)';
+
+            if (s10UseBreak) {
+                if (s10Category === 'sembako') { executedCases = ['sembako']; finalRate = '0%'; finalLabel = 'Bebas Pajak Sembako (0%)'; }
+                else if (s10Category === 'kuliner') { executedCases = ['kuliner']; finalRate = '10%'; finalLabel = 'PB1 Kuliner (10%)'; }
+                else if (s10Category === 'ritel') { executedCases = ['ritel']; finalRate = '11%'; finalLabel = 'PPN Ritel (11%)'; }
+                else { executedCases = ['default']; finalRate = '0%'; finalLabel = 'Kategori Tidak Dikenal (0%)'; }
+            } else {
+                // Efek Fall-Through! Bocor ke bawah hingga default!
+                if (s10Category === 'sembako') { executedCases = ['sembako', 'kuliner', 'ritel', 'default']; }
+                else if (s10Category === 'kuliner') { executedCases = ['kuliner', 'ritel', 'default']; }
+                else if (s10Category === 'ritel') { executedCases = ['ritel', 'default']; }
+                else { executedCases = ['default']; }
+                finalRate = '0% (TERTIMPA default!)';
+                finalLabel = 'BUG FALL-THROUGH! Semua case di bawah ikut jalan hingga tertimpa default!';
+            }
+
+            const caseCls = function (k) {
+                const hit = executedCases.indexOf(k) !== -1;
+                if (!hit) return 'px-3 py-1 text-slate-400 opacity-45';
+                return s10UseBreak
+                    ? 'bg-emerald-600/25 border-l-4 border-emerald-400 text-white font-bold px-3 py-1 rounded-r-lg'
+                    : 'bg-rose-600/30 border-l-4 border-rose-400 text-white font-bold px-3 py-1 rounded-r-lg';
+            };
+
+            const pKeys = ['switch_hd', 'case_kw', 'break_kw', 'default_kw'];
+            const pieceBtns = pKeys.map(function (k) {
+                return `<button type="button" onclick="setS10Piece('${k}')" class="syntax-pill px-2.5 py-1 rounded-xl font-mono text-xs font-extrabold border ${s10PieceKey === k ? 'bg-indigo-600 text-white border-indigo-400' : 'bg-slate-800 text-emerald-300 border-slate-700'}">${escapeHtml(pieces[k].pill)}</button>`;
+            }).join('');
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-3.5">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 3 • Bedah Sintaks switch-case &amp; Uji Rem break;</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Struktur ${term('switchcase', 'switch-case')}, ${term('breakcmd', 'break;')}, &amp; Bahaya ${term('fallthrough', 'Fall-Through')}</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                            Klik 4 potongan sintaks di bawah untuk mengetahui artinya, lalu coba matikan sakelar <strong>Pakai break;</strong> untuk membuktikan bahaya <em>Fall-Through</em>!
+                        </p>
+                    </div>
+
+                    <!-- Bedah 4 Sintaks switch-case -->
+                    <div class="p-3 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                        <div class="flex flex-wrap gap-1.5">${pieceBtns}</div>
+                        <div class="text-xs text-slate-200 flex-1 sm:pl-2">${escapeHtml(pieces[s10PieceKey].desc)}</div>
+                    </div>
+
+                    <!-- Pilih Kategori & Sakelar break; -->
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div class="flex flex-wrap gap-1.5">
+                            <button type="button" onclick="setS10Cat('sembako')" class="px-3 py-1.5 rounded-xl font-mono text-xs font-extrabold border ${s10Category === 'sembako' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700'}">"sembako"</button>
+                            <button type="button" onclick="setS10Cat('kuliner')" class="px-3 py-1.5 rounded-xl font-mono text-xs font-extrabold border ${s10Category === 'kuliner' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700'}">"kuliner"</button>
+                            <button type="button" onclick="setS10Cat('ritel')" class="px-3 py-1.5 rounded-xl font-mono text-xs font-extrabold border ${s10Category === 'ritel' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700'}">"ritel"</button>
+                            <button type="button" onclick="setS10Cat('lainnya')" class="px-3 py-1.5 rounded-xl font-mono text-xs font-extrabold border ${s10Category === 'lainnya' ? 'bg-amber-600 text-white border-amber-600' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700'}">"jasa" (default)</button>
+                        </div>
+
+                        <button type="button" onclick="toggleS10Break()" class="px-3.5 py-1.5 rounded-xl font-mono text-xs font-extrabold transition ${s10UseBreak ? 'bg-emerald-600 text-white hover:bg-emerald-700' : 'bg-rose-600 text-white hover:bg-rose-700 animate-pulse'}">
+                            ${s10UseBreak ? 'Rem break;: AKTIF ✓ (Klik untuk uji lupa break)' : 'Rem break;: DIHAPUS! (Efek Fall-Through!)'}
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch my-auto">
+                        <div class="lg:col-span-7 p-4 rounded-3xl bg-slate-900 font-mono text-xs space-y-1 flex flex-col justify-center">
+                            <div class="text-pink-400 font-bold">switch ($kategori) { <span class="text-slate-400 font-normal">// $kategori = "${s10Category === 'lainnya' ? 'jasa' : s10Category}"</span></div>
+                            <div class="${caseCls('sembako')}">&nbsp;&nbsp;&nbsp;&nbsp;case "sembako": $tarifPajak = 0.00; ${s10UseBreak ? '<span class="text-amber-300">break;</span>' : '<span class="text-rose-400">// lupa break!</span>'}</div>
+                            <div class="${caseCls('kuliner')}">&nbsp;&nbsp;&nbsp;&nbsp;case "kuliner": $tarifPajak = 0.10; ${s10UseBreak ? '<span class="text-amber-300">break;</span>' : '<span class="text-rose-400">// lupa break!</span>'}</div>
+                            <div class="${caseCls('ritel')}">&nbsp;&nbsp;&nbsp;&nbsp;case "ritel":   $tarifPajak = 0.11; ${s10UseBreak ? '<span class="text-amber-300">break;</span>' : '<span class="text-rose-400">// lupa break!</span>'}</div>
+                            <div class="${caseCls('default')}">&nbsp;&nbsp;&nbsp;&nbsp;default:        $tarifPajak = 0.00; ${s10UseBreak ? '<span class="text-amber-300">break;</span>' : ''}</div>
+                            <div class="text-pink-400 font-bold">}</div>
+                        </div>
+
+                        <div class="lg:col-span-5 p-5 rounded-3xl border-2 flex flex-col justify-center gap-2 ${s10UseBreak ? 'bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-500' : 'bg-rose-50/70 dark:bg-rose-950/30 border-rose-500'}">
+                            <span class="text-xs font-extrabold uppercase ${s10UseBreak ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'}">
+                                ${s10UseBreak ? 'Eksekusi Sehat (Berhenti Tepat di break;)' : 'Bencana Fall-Through (Bocor ke Bawah!)'}
+                            </span>
+                            <div class="font-mono text-xl font-extrabold text-slate-900 dark:text-white">Tarif Akhir: ${finalRate}</div>
+                            <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed">${escapeHtml(finalLabel)}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide11() {
+            const cases = {
+                diskon_range: {
+                    btn: "Kasus 1: Diskon Berdasarkan Rentang Nominal (&gt;= 100rb / &gt;= 50rb) + Member",
+                    rec: "Gunakan if - elseif - else",
+                    badge: "Syarat Berupa Rentang Angka atau Gabungan 2 Variabel",
+                    code: "if ($totalBelanja >= 100000 && $isMember) { ... }\nelseif ($totalBelanja >= 50000) { ... }",
+                    reason: "Struktur switch-case tidak cocok untuk perbandingan rentang (>=, <) atau syarat gabungan 2 variabel (&&). Gunakan if-elseif-else!"
+                },
+                pajak_kat: {
+                    btn: "Kasus 2: Tarif Pajak Kategori atau Pilihan Metode Bayar (QRIS/Transfer/Tunai)",
+                    rec: "Gunakan switch - case",
+                    badge: "Mencocokkan 1 Variabel dengan Daftar Nilai Pasti",
+                    code: "switch ($metodeBayar) {\n    case \"qris\": $cashback = 2000; break;\n    case \"transfer\": $biayaAdmin = 1000; break;\n    default: $cashback = 0; break;\n}",
+                    reason: "Ketika mencocokkan satu variabel dengan daftar pilihan pasti seperti kategori produk, metode bayar, atau nomor menu [1-4], switch-case membuat kode sangat bersih."
+                },
+                validasi_exit: {
+                    btn: "Kasus 3: Menolak Input Ilegal di Awal Program (Nominal <= 0)",
+                    rec: "Gunakan Guard Clause: if (...) { exit; }",
+                    badge: "Validasi Keamanan Input dengan " + term('exitcmd', 'exit;'),
+                    code: "if ($totalBelanja <= 0) {\n    echo \"Error: Nominal belanja harus > 0!\\n\";\n    exit;\n}",
+                    reason: "Meletakkan pengecekan input ilegal di paling atas lalu memanggil perintah exit; mencegah komputer menghitung diskon atau pajak dari angka negatif/nol."
+                }
+            };
+
+            const cur = cases[s11CaseKey];
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 3 • Panduan Memilih Struktur Percabangan PHP</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Kapan Memakai <span class="font-mono">if-elseif-else</span>, <span class="font-mono">switch-case</span>, &amp; ${term('exitcmd', 'exit;')}?</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Klik ketiga skenario bisnis Warung Digital di bawah ini untuk melihat pilihan struktur kode yang paling bersih:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        <button type="button" onclick="setS11Case('diskon_range')" class="p-3.5 rounded-2xl border text-left transition ${s11CaseKey === 'diskon_range' ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-xs font-extrabold">${cases.diskon_range.btn}</div>
+                        </button>
+                        <button type="button" onclick="setS11Case('pajak_kat')" class="p-3.5 rounded-2xl border text-left transition ${s11CaseKey === 'pajak_kat' ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-xs font-extrabold">${cases.pajak_kat.btn}</div>
+                        </button>
+                        <button type="button" onclick="setS11Case('validasi_exit')" class="p-3.5 rounded-2xl border text-left transition ${s11CaseKey === 'validasi_exit' ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-xs font-extrabold">${cases.validasi_exit.btn}</div>
+                        </button>
+                    </div>
+
+                    <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-2 border-indigo-500/60 grid grid-cols-1 lg:grid-cols-12 gap-5 items-center my-auto">
+                        <div class="lg:col-span-6 space-y-2.5">
+                            <span class="text-xs font-bold px-3 py-1 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">${cur.badge}</span>
+                            <h3 class="text-lg sm:text-xl font-extrabold font-mono text-indigo-600 dark:text-indigo-400">${cur.rec}</h3>
+                            <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed">${cur.reason}</p>
+                        </div>
+                        <div class="lg:col-span-6 p-4 rounded-2xl bg-slate-900 text-emerald-300 font-mono text-xs">
+                            <pre class="whitespace-pre-wrap leading-relaxed">${escapeHtml(cur.code)}</pre>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide12() {
+            const errs = {
+                no_paren: {
+                    btn: "1. Lupa Kurung (...) di if",
+                    bad: "if $totalBelanja >= 50000 {\n    $persenDiskon = 10;\n}",
+                    good: "if ($totalBelanja >= 50000) {\n    $persenDiskon = 10;\n}",
+                    msg: "Parse error: syntax error, unexpected variable \"$totalBelanja\", expecting \"(\"",
+                    note: "Di PHP, kondisi setelah kata kunci if, elseif, dan switch WAJIB selalu diapit tanda kurung biasa (...)."
+                },
+                assign_in_if: {
+                    btn: "2. Pakai = Bukan == di Syarat",
+                    bad: "if ($kategori = \"kuliner\") {\n    $tarifPajak = 0.10;\n}",
+                    good: "if ($kategori === \"kuliner\") {\n    $tarifPajak = 0.10;\n}",
+                    msg: "Bug Logika Berbahaya! $kategori tertimpa jadi \"kuliner\" dan syarat selalu TRUE!",
+                    note: "PHP tidak selalu melempar error saat Anda menulis = di dalam if, melainkan menimpa variabelnya! Selalu gunakan == atau === untuk membandingkan."
+                },
+                no_break: {
+                    btn: "3. Lupa break; di switch",
+                    bad: "switch ($kategori) {\n    case \"kuliner\": $tarifPajak = 0.10;\n    case \"ritel\":   $tarifPajak = 0.11;\n}",
+                    good: "switch ($kategori) {\n    case \"kuliner\": $tarifPajak = 0.10; break;\n    case \"ritel\":   $tarifPajak = 0.11; break;\n}",
+                    msg: "Bug Fall-Through! Produk kuliner ikut kena tarif ritel 11% (0.11).",
+                    note: "Selalu tutup setiap blok case dengan perintah break; agar PHP tidak meluncur mengeksekusi case di bawahnya."
+                },
+                missing_brace: {
+                    btn: "4. Lupa Kurung Kurawal Tutup }",
+                    bad: "if ($totalBelanja >= 50000) {\n    $persenDiskon = 10;\nelse {\n    $persenDiskon = 0;\n}",
+                    good: "if ($totalBelanja >= 50000) {\n    $persenDiskon = 10;\n} else {\n    $persenDiskon = 0;\n}",
+                    msg: "Parse error: syntax error, unexpected token \"else\"",
+                    note: "Setiap kurung kurawal buka '{' wajib memiliki pasangan penutup '}' sebelum kata kunci elseif atau else."
+                }
+            };
+
+            const cur = errs[s12ErrKey];
+            const keys = ['no_paren', 'assign_in_if', 'no_break', 'missing_brace'];
+            const btns = keys.map(function (k) {
+                return `
+                    <button type="button" onclick="setS12Err('${k}')" class="p-3 rounded-2xl border text-left transition ${s12ErrKey === k ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                        <div class="text-xs font-extrabold">${errs[k].btn}</div>
+                    </button>
+                `;
+            }).join('');
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 3 • Klinik Debugging Percabangan PHP</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Detektif 4 Error Paling Sering pada Percabangan PHP</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Pilih salah satu dari 4 jebakan di bawah ini, lalu tekan tombol <strong>Perbaiki Kode</strong> untuk melihat solusinya:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-2">
+                        ${btns}
+                    </div>
+
+                    <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 grid grid-cols-1 lg:grid-cols-12 gap-4 items-center my-auto">
+                        <div class="lg:col-span-6 p-4 rounded-2xl bg-slate-900 font-mono text-xs space-y-2">
+                            <div class="flex items-center justify-between">
+                                <span class="${s12Fixed ? 'text-emerald-400' : 'text-rose-400'} font-bold">${s12Fixed ? '// KODE PHP SUDAH BENAR:' : '// KODE PHP BERMASALAH:'}</span>
+                                <button type="button" onclick="toggleS12Fix()" class="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-sans font-bold text-[11px]">
+                                    ${s12Fixed ? 'Lihat Versi Error' : 'Perbaiki Kode ⚡'}
+                                </button>
+                            </div>
+                            <pre class="text-slate-100 whitespace-pre-wrap leading-relaxed">${escapeHtml(s12Fixed ? cur.good : cur.bad)}</pre>
+                        </div>
+
+                        <div class="lg:col-span-6 space-y-2.5">
+                            <div class="p-3 rounded-2xl font-mono text-xs font-bold border ${s12Fixed ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-400 text-emerald-800 dark:text-emerald-200' : 'bg-rose-50 dark:bg-rose-950/40 border-rose-400 text-rose-800 dark:text-rose-200'}">
+                                ${s12Fixed ? 'Terminal PHP: Running Well tanpa error dan logika akurat!' : escapeHtml(cur.msg)}
+                            </div>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${escapeHtml(cur.note)}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide13() {
+            let persenDiskon = 0;
+            if (s13TotalBelanja >= 100000 && s13IsMember) persenDiskon = 20;
+            else if (s13TotalBelanja >= 100000) persenDiskon = 15;
+            else if (s13TotalBelanja >= 50000) persenDiskon = 10;
+
+            const nominalDiskon = Math.round(s13TotalBelanja * (persenDiskon / 100));
+            const dpp = s13TotalBelanja - nominalDiskon;
+
+            let tarifPajak = 0;
+            let labelPajak = 'Bebas Pajak (0%)';
+            if (s13Kategori === 'kuliner') { tarifPajak = 0.10; labelPajak = 'PB1 Kuliner (10%)'; }
+            else if (s13Kategori === 'ritel') { tarifPajak = 0.11; labelPajak = 'PPN Ritel (11%)'; }
+
+            const nominalPajak = Math.round(dpp * tarifPajak);
+            let totalBayar = dpp + nominalPajak;
+
+            let penyesuaianBayar = 0;
+            let labelMetode = 'Tunai (Rp 0)';
+            if (s13Metode === 'qris' && totalBayar >= 25000) {
+                penyesuaianBayar = -2000;
+                labelMetode = 'Cashback QRIS (-Rp 2.000)';
+            } else if (s13Metode === 'transfer') {
+                penyesuaianBayar = 1000;
+                labelMetode = 'Admin Transfer (+Rp 1.000)';
+            }
+            totalBayar += penyesuaianBayar;
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 3 • Sandbox Lengkap Tugas Praktikum 7</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Sandbox Kasir PHP: Diskon, DPP, Pajak, &amp; Metode Bayar</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                            Ubah 4 parameter transaksi di bawah ini untuk melihat hasil integrasi <span class="font-mono font-bold">if-elseif-else</span> (diskon) dan 2 blok <span class="font-mono font-bold">switch-case</span> (pajak &amp; metode bayar):
+                        </p>
+                    </div>
+
+                    <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-4 my-auto">
+                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+                            <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <label class="text-[11px] font-bold text-slate-400 block mb-1">1. $totalBelanja (Rp):</label>
+                                <input type="number" step="10000" value="${s13TotalBelanja}" oninput="updateS13Sandbox('belanja', this.value)" class="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-xs sm:text-sm font-extrabold text-indigo-600">
+                            </div>
+                            <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <label class="text-[11px] font-bold text-slate-400 block mb-1">2. $kategori (switch #1):</label>
+                                <select onchange="updateS13Sandbox('kategori', this.value)" class="w-full px-2 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-xs font-bold">
+                                    <option value="sembako" ${s13Kategori === 'sembako' ? 'selected' : ''}>sembako (0%)</option>
+                                    <option value="kuliner" ${s13Kategori === 'kuliner' ? 'selected' : ''}>kuliner (PB1 10%)</option>
+                                    <option value="ritel" ${s13Kategori === 'ritel' ? 'selected' : ''}>ritel (PPN 11%)</option>
+                                </select>
+                            </div>
+                            <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <label class="text-[11px] font-bold text-slate-400 block mb-1">3. $metode (switch #2):</label>
+                                <select onchange="updateS13Sandbox('metode', this.value)" class="w-full px-2 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-xs font-bold">
+                                    <option value="tunai" ${s13Metode === 'tunai' ? 'selected' : ''}>tunai (Rp 0)</option>
+                                    <option value="qris" ${s13Metode === 'qris' ? 'selected' : ''}>qris (-Rp 2.000)</option>
+                                    <option value="transfer" ${s13Metode === 'transfer' ? 'selected' : ''}>transfer (+Rp 1.000)</option>
+                                </select>
+                            </div>
+                            <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col justify-between">
+                                <label class="text-[11px] font-bold text-slate-400 block">4. Status Member:</label>
+                                <button type="button" onclick="toggleS13Member()" class="w-full py-1.5 px-2.5 rounded-xl font-mono text-xs font-extrabold transition ${s13IsMember ? 'bg-indigo-600 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200'}">
+                                    $isMember = ${s13IsMember ? 'true' : 'false'}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-emerald-500 space-y-1.5 font-mono text-xs sm:text-sm">
+                            <div class="text-emerald-700 dark:text-emerald-400 font-extrabold">=== STRUK PEMBAYARAN WARUNG DIGITAL (PHP) ===</div>
+                            <div class="flex justify-between"><span>1. Subtotal Belanja Awal:</span><strong>Rp ${s13TotalBelanja.toLocaleString('id-ID')}</strong></div>
+                            <div class="flex justify-between text-amber-600 dark:text-amber-400"><span>2. Diskon (${persenDiskon}%):</span><strong>-Rp ${nominalDiskon.toLocaleString('id-ID')}</strong></div>
+                            <div class="flex justify-between text-slate-500"><span>3. Subtotal Bersih (DPP):</span><strong>Rp ${dpp.toLocaleString('id-ID')}</strong></div>
+                            <div class="flex justify-between text-indigo-600 dark:text-indigo-400"><span>4. ${labelPajak}:</span><strong>+Rp ${nominalPajak.toLocaleString('id-ID')}</strong></div>
+                            <div class="flex justify-between text-sky-600 dark:text-sky-400"><span>5. Metode Bayar (${labelMetode}):</span><strong>${penyesuaianBayar < 0 ? '-Rp 2.000' : penyesuaianBayar > 0 ? '+Rp 1.000' : 'Rp 0'}</strong></div>
+                            <div class="flex justify-between pt-2 border-t border-slate-200 dark:border-slate-800 text-base font-extrabold text-emerald-700 dark:text-emerald-400">
+                                <span>TOTAL BAYAR AKHIR:</span>
+                                <span>Rp ${totalBayar.toLocaleString('id-ID')}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide14() {
+            return `
+                <div class="slide-enter flex flex-col justify-center h-full my-auto">
+                    <div class="p-8 sm:p-12 rounded-3xl bg-gradient-to-br from-indigo-600 to-slate-900 text-white space-y-6 shadow-lg">
+                        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/15 text-indigo-100 text-xs font-extrabold uppercase tracking-wider">
+                            <i class="fa-solid fa-terminal"></i>
+                            <span>Jembatan Antar Topik • Modul 3 Menuju Modul 4 (Praktikum PHP CLI)</span>
+                        </div>
+
+                        <h2 class="text-2xl sm:text-4xl font-extrabold leading-tight">
+                            Saatnya Menjalankan <span class="font-mono text-amber-300">M07_DiskonPajak_WarungDigital.php</span> Baris demi Baris!
+                        </h2>
+
+                        <p class="text-indigo-100 text-sm sm:text-base leading-relaxed max-w-3xl">
+                            Di <strong>Modul 4 (Slide 15 s/d 18)</strong>, Anda akan langsung mencoba: (1) <strong>Live PHP CLI Runner Bercabang</strong> (amati bagaimana PHP menyorot cabang aktif dan mencoret cabang yang dilewati!), (2) <strong>Melengkapi 5 Slot Percabangan PHP</strong>, dan (3) <strong>Drag &amp; Drop 8 Tahap Skrip Kasir</strong> sebelum melihat kisi-kisi <strong>UTS Minggu 8 (15%)</strong>.
+                        </p>
+
+                        <div class="pt-2">
+                            <button type="button" onclick="changeSlide(1)" class="px-5 py-3 rounded-xl bg-white text-indigo-700 hover:bg-indigo-50 font-extrabold text-xs sm:text-sm transition inline-flex items-center gap-2 shadow-sm">
+                                <span>Mulai Simulasi 1: Live PHP CLI Runner Bercabang</span>
+                                <i class="fa-solid fa-arrow-right text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide15() {
+            const codeLines = [
+                '$totalBelanja = (float) trim(fgets(STDIN));',
+                '$kategori = strtolower(trim(fgets(STDIN)));',
+                '$isMember = strtolower(trim(fgets(STDIN))) === \'y\';',
+                'if ($totalBelanja >= 100000 && $isMember) {',
+                '    $persenDiskon = 20;',
+                '} elseif ($totalBelanja >= 100000) {',
+                '    $persenDiskon = 15;',
+                '} elseif ($totalBelanja >= 50000) {',
+                '    $persenDiskon = 10;',
+                '} else { $persenDiskon = 0; }',
+                '$dpp = $totalBelanja - ($totalBelanja * ($persenDiskon / 100));',
+                'switch ($kategori) {',
+                '    case "sembako": $tarifPajak = 0.00; break;',
+                '    case "kuliner": $tarifPajak = 0.10; break;',
+                '    case "ritel":   $tarifPajak = 0.11; break;',
+                '    default:        $tarifPajak = 0.00; break;',
+                '} $totalBayar = $dpp + ($dpp * $tarifPajak); echo "TOTAL: Rp ...";'
+            ];
+
+            const linesHtml = codeLines.map(function (line, idx) {
+                let cls = 'px-2.5 py-0.5 rounded transition cursor-pointer ';
+                if (phpStepIndex === idx) {
+                    cls += phpWaitingVar ? 'php-line-waiting font-bold text-white' : 'php-line-active font-bold text-white';
+                } else if (phpSkippedLines[idx]) {
+                    cls += 'php-line-skipped text-slate-500';
+                } else if (phpExecutedLines[idx]) {
+                    cls += 'text-emerald-300 font-semibold';
+                } else {
+                    cls += 'text-slate-300 hover:bg-slate-800';
+                }
+                return `<div onclick="stepPhpSim()" class="${cls}"><span class="text-slate-500 mr-2 select-none inline-block w-4 text-right">${idx + 1}</span>${escapeHtml(line)}</div>`;
+            }).join('');
+
+            let termHtml = '';
+            if (phpTerminalLog.length === 0) {
+                termHtml = `<div class="text-slate-400 text-center my-auto font-sans text-xs py-5">Klik <strong>Run Skrip</strong> atau <strong>Step</strong> di atas. Ketik data <span class="font-mono">$totalBelanja</span>, <span class="font-mono">$kategori</span>, dan <span class="font-mono">$isMember</span> satu per satu!</div>`;
+            } else {
+                termHtml = phpTerminalLog.map(function (entry) {
+                    if (entry.type === 'out') return `<div class="text-emerald-300 font-semibold">${entry.html}</div>`;
+                    if (entry.type === 'in') return `<div class="text-amber-300 font-semibold">&gt;&gt; ${escapeHtml(entry.text)}</div>`;
+                    return `<div class="text-indigo-300 font-bold animate-pulse">${escapeHtml(entry.text)}</div>`;
+                }).join('');
+            }
+
+            let chips = [];
+            let placeholder = 'Menunggu giliran fgets(STDIN)...';
+            let promptLabel = 'Terminal Input (Aktif saat baris fgets(STDIN) dijalankan):';
+            if (phpWaitingVar === 'totalBelanja') {
+                chips = ['40000', '75000', '120000'];
+                placeholder = 'Ketik angka total belanja...';
+                promptLabel = '1. Masukkan $totalBelanja (Rp):';
+            } else if (phpWaitingVar === 'kategori') {
+                chips = ['sembako', 'kuliner', 'ritel', 'KULINER'];
+                placeholder = 'Ketik kategori (sembako / kuliner / ritel)...';
+                promptLabel = '2. Masukkan $kategori (otomatis strtolower):';
+            } else if (phpWaitingVar === 'isMember') {
+                chips = ['y', 'n', 'Y'];
+                placeholder = 'Apakah Member? Ketik y atau n...';
+                promptLabel = '3. Apakah Pelanggan Member? (y/n):';
+            }
+
+            const chipsHtml = chips.map(function (c) {
+                return `<button type="button" onclick="fillPhpQuickChip('${c}')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-indigo-100 dark:bg-slate-800 dark:hover:bg-indigo-950 text-slate-700 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700 transition">${c}</button>`;
+            }).join('');
+
+            const memKeys = Object.keys(phpMemory);
+            const memHtml = memKeys.length === 0
+                ? `<div class="col-span-2 text-xs text-slate-400 p-2 text-center">Belum ada variabel di memori PHP.</div>`
+                : memKeys.map(function (k) {
+                    return `
+                        <div class="p-1.5 px-2 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 flex items-center justify-between text-[11px] font-mono">
+                            <span class="font-bold text-indigo-600 dark:text-indigo-400">$${escapeHtml(k)}</span>
+                            <span class="font-extrabold text-emerald-600 dark:text-emerald-400 truncate">${escapeHtml(phpMemory[k])}</span>
+                        </div>
+                    `;
+                }).join('');
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-3">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 4 • Simulasi Praktik 1 dari 3 (Sub-CPMK 2.2)</span>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Live PHP CLI Runner: <span class="font-mono text-indigo-600 dark:text-indigo-400">M07_DiskonPajak_WarungDigital.php</span></h2>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2 shrink-0">
+                            <button type="button" onclick="runFullPhpSim()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-xs">
+                                <i class="fa-solid fa-play"></i>
+                                <span>Run Skrip</span>
+                            </button>
+                            <button type="button" onclick="stepPhpSim()" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-xs">
+                                <i class="fa-solid fa-forward-step"></i>
+                                <span>Step (Per Baris)</span>
+                            </button>
+                            <button type="button" onclick="resetPhpSim()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs transition">
+                                <i class="fa-solid fa-rotate-left mr-1"></i>Reset
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200">
+                        ${escapeHtml(phpBannerText)}
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch my-auto">
+                        <!-- Kiri: Editor PHP 17 Baris -->
+                        <div class="lg:col-span-7 rounded-2xl bg-slate-900 border border-slate-800 p-3 font-mono text-[11px] leading-snug flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between border-b border-slate-800 pb-1.5 mb-1.5 text-slate-400">
+                                    <span><i class="fa-brands fa-php text-indigo-400 mr-1.5 text-sm"></i>M07_DiskonPajak_WarungDigital.php</span>
+                                    <span class="text-[10px]">Baris dicoret = cabang dilewati PHP</span>
+                                </div>
+                                <div class="space-y-0.5">
+                                    ${linesHtml}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Kanan: Terminal CLI & Memory Watch -->
+                        <div class="lg:col-span-5 flex flex-col justify-between gap-3">
+                            <div class="rounded-2xl border-2 ${phpWaitingVar ? 'border-indigo-600 shadow-sm' : 'border-slate-200 dark:border-slate-800'} overflow-hidden bg-slate-950">
+                                <div class="bg-slate-900 px-3.5 py-1.5 border-b border-slate-800 flex items-center justify-between">
+                                    <span class="text-xs font-extrabold text-slate-200">Terminal PHP CLI</span>
+                                    ${phpWaitingVar ? '<span class="px-2 py-0.5 rounded bg-indigo-600 text-white text-[10px] font-extrabold animate-pulse">MENUNGGU INPUT</span>' : ''}
+                                </div>
+
+                                <div id="phpTerminalBox" class="p-3 min-h-[95px] max-h-[125px] overflow-y-auto flex flex-col gap-1.5 font-mono text-xs">
+                                    ${termHtml}
+                                </div>
+
+                                <form onsubmit="submitManualPhpInput(event)" class="p-2.5 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
+                                    <div class="text-xs font-bold ${phpWaitingVar ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'} mb-1">
+                                        ${promptLabel}
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <input id="phpConsoleInputBox" type="text" ${phpWaitingVar ? '' : 'disabled'} placeholder="${placeholder}" class="flex-1 px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50">
+                                        <button type="submit" ${phpWaitingVar ? '' : 'disabled'} class="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white font-bold text-xs transition shrink-0">
+                                            Enter ↵
+                                        </button>
+                                    </div>
+                                    ${chips.length > 0 ? `<div class="mt-1.5 flex flex-wrap items-center gap-1.5"><span class="text-[10px] font-semibold text-slate-400">Ketik cepat:</span>${chipsHtml}</div>` : ''}
+                                    ${phpInputError ? `<div class="mt-1.5 p-2 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs font-bold">${escapeHtml(phpInputError)}</div>` : ''}
+                                </form>
+                            </div>
+
+                            <div class="rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden bg-white dark:bg-slate-900">
+                                <div class="bg-slate-100 dark:bg-slate-800 px-3 py-1.5 border-b border-slate-200 dark:border-slate-700 text-xs font-extrabold text-slate-700 dark:text-slate-200">
+                                    PHP Memory Watch
+                                </div>
+                                <div class="p-2 grid grid-cols-2 gap-1.5">
+                                    ${memHtml}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide16() {
+            const slotTasks = {
+                1: "Slot 1: Syarat if tertinggi untuk diskon VIP 20% (Belanja >= 100rb DAN Member)",
+                2: "Slot 2: Syarat elseif untuk diskon 10% (Belanja >= 50rb)",
+                3: "Slot 3: Blok cadangan untuk belanja di bawah Rp 50.000",
+                4: "Slot 4: Header pencocokan kategori pajak dengan switch",
+                5: "Slot 5: Perintah rem wajib di akhir case \"kuliner\" agar tidak Fall-Through"
+            };
+
+            const codeMap = {
+                'IF_VIP': 'if ($totalBelanja >= 100000 && $isMember) {',
+                'ELIF_50': '} elseif ($totalBelanja >= 50000) {',
+                'ELSE_0': '} else {',
+                'SW_KAT': 'switch ($kategori) {',
+                'BREAK_KW': '        $tarifPajak = 0.10; break;'
+            };
+
+            let slotTabs = '';
+            for (let i = 1; i <= 5; i++) {
+                const active = activePhpSlot === i;
+                slotTabs += `
+                    <button type="button" onclick="selectPhpBuilderSlot(${i})" class="px-3 py-1.5 rounded-xl font-bold text-xs transition ${active ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">
+                        Slot #${i}
+                    </button>
+                `;
+            }
+
+            const renderSlotLine = function (num, bodyLine) {
+                const filled = phpBuilderSlots[num];
+                const isSel = activePhpSlot === num;
+                return `
+                    <div onclick="selectPhpBuilderSlot(${num})" class="p-2.5 rounded-xl border-2 cursor-pointer transition font-mono text-xs ${isSel ? 'border-indigo-500 bg-slate-800 text-white' : 'border-slate-800 bg-slate-950/70 text-emerald-300'}">
+                        <div>${filled ? escapeHtml(codeMap[filled]) : '<span class="text-amber-300 italic">[ Klik untuk mengisi Slot #' + num + ' ]</span>'}</div>
+                        <div class="text-slate-400 pl-4 mt-0.5">${escapeHtml(bodyLine)}</div>
+                    </div>
+                `;
+            };
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 4 • Simulasi Praktik 2 dari 3</span>
+                            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Lengkapi 5 Slot Percabangan Diskon &amp; Pajak PHP</h2>
+                        </div>
+                        <button type="button" onclick="resetPhpBuilder()" class="self-start sm:self-center px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-rose-600 dark:text-rose-400 font-bold text-xs transition">
+                            <i class="fa-solid fa-trash-can mr-1"></i>Kosongkan Editor
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <!-- Kiri: Editor Preview -->
+                        <div class="lg:col-span-6 rounded-3xl bg-slate-900 border border-slate-800 p-4 space-y-2 flex flex-col justify-center">
+                            ${renderSlotLine(1, '$persenDiskon = 20;')}
+                            ${renderSlotLine(2, '$persenDiskon = 10;')}
+                            ${renderSlotLine(3, '$persenDiskon = 0; }')}
+                            ${renderSlotLine(4, 'case "kuliner":')}
+                            ${renderSlotLine(5, 'default: $tarifPajak = 0.00; break; }')}
+                        </div>
+
+                        <!-- Kanan: Pilihan Potongan Kode -->
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-3.5">
+                            <div class="space-y-3">
+                                <div class="flex flex-wrap gap-2">
+                                    ${slotTabs}
+                                </div>
+
+                                <div class="p-3.5 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800">
+                                    <div class="font-extrabold text-indigo-900 dark:text-indigo-200 text-sm">${escapeHtml(slotTasks[activePhpSlot])}</div>
+                                    <p class="text-xs text-indigo-700 dark:text-indigo-300 mt-0.5">Klik potongan sintaks PHP yang tepat untuk Slot #${activePhpSlot}:</p>
+                                </div>
+
+                                <div class="space-y-1.5 font-mono text-xs">
+                                    <button type="button" onclick="assignPhpSlot('SW_KAT')" class="w-full text-left p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-indigo-500 font-bold transition">switch ($kategori) {</button>
+                                    <button type="button" onclick="assignPhpSlot('ELSE_0')" class="w-full text-left p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-indigo-500 font-bold transition">} else {</button>
+                                    <button type="button" onclick="assignPhpSlot('IF_VIP')" class="w-full text-left p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-indigo-500 font-bold transition">if ($totalBelanja &gt;= 100000 &amp;&amp; $isMember) {</button>
+                                    <button type="button" onclick="assignPhpSlot('BREAK_KW')" class="w-full text-left p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-indigo-500 font-bold transition">$tarifPajak = 0.10; break;</button>
+                                    <button type="button" onclick="assignPhpSlot('ELIF_50')" class="w-full text-left p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-indigo-500 font-bold transition">} elseif ($totalBelanja &gt;= 50000) {</button>
+                                </div>
+                            </div>
+
+                            <div class="space-y-2">
+                                <button type="button" onclick="checkPhpBuilder()" class="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm transition shadow-xs">
+                                    Periksa Sintaks Percabangan PHP
+                                </button>
+                                ${phpBuilderFeedback.text ? `<div class="p-3 rounded-xl text-xs font-bold text-center ${phpBuilderFeedback.type === 'success' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'}">${escapeHtml(phpBuilderFeedback.text)}</div>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide17() {
+            let rowsHtml = '';
+            for (let index = 0; index < phpStepsOrder.length; index++) {
+                const item = phpStepsOrder[index];
+                const isPosCorrect = item.id === index + 1;
+                let borderClass = 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900';
+                let statusBadge = '';
+
+                if (phpShowValidation) {
+                    if (isPosCorrect) {
+                        borderClass = 'border-emerald-500 bg-emerald-50/40 dark:bg-emerald-950/30';
+                        statusBadge = '<span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 text-[11px] font-bold">✓ Tepat</span>';
+                    } else {
+                        borderClass = 'border-rose-400 bg-rose-50/40 dark:bg-rose-950/30';
+                        statusBadge = '<span class="px-2 py-0.5 rounded bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 text-[11px] font-bold">✗ Geser</span>';
+                    }
+                }
+
+                rowsHtml += `
+                    <div draggable="true" ondragstart="onPhpDragStart(event, ${index})" ondragover="onPhpDragOver(event, ${index})" ondragleave="onPhpDragLeave(event)" ondrop="onPhpDrop(event, ${index})" ondragend="onPhpDragEnd()" class="draggable-step border-2 ${borderClass} rounded-2xl p-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                            <span class="text-slate-400 font-extrabold text-sm px-1 cursor-grab select-none">⋮⋮</span>
+                            <span class="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center shrink-0">${index + 1}</span>
+                            <span class="px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-[10px] font-extrabold shrink-0">${escapeHtml(item.tag)}</span>
+                            <span class="font-mono text-xs font-bold text-slate-800 dark:text-slate-200 truncate">${escapeHtml(item.code)}</span>
+                        </div>
+                        <div class="flex items-center justify-end gap-1.5 shrink-0">
+                            ${statusBadge}
+                            <button type="button" onclick="movePhpStep(${index}, -1)" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-indigo-600 hover:text-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs transition" title="Geser Naik">▲</button>
+                            <button type="button" onclick="movePhpStep(${index}, 1)" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-indigo-600 hover:text-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs transition" title="Geser Turun">▼</button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-3.5">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 4 • Simulasi Praktik 3 dari 3</span>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Susun 8 Tahap Skrip PHP Diskon &amp; Pajak Warung Digital</h2>
+                        </div>
+                        <span class="text-xs font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200 dark:border-indigo-800 px-3 py-1 rounded-xl">
+                            Tarik kartu (Drag &amp; Drop) atau klik ▲ / ▼
+                        </span>
+                    </div>
+
+                    <div class="space-y-1.5 my-auto">
+                        ${rowsHtml}
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-3">
+                        <button type="button" onclick="checkPhpOrder()" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm transition shadow-xs">
+                            Periksa Urutan Skrip Kasir PHP
+                        </button>
+                        <button type="button" onclick="shufflePhpSteps()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs sm:text-sm transition">
+                            Acak Ulang
+                        </button>
+                        ${phpFeedbackText ? `<span class="text-xs sm:text-sm font-bold text-indigo-600 dark:text-indigo-400">${escapeHtml(phpFeedbackText)}</span>` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide18() {
+            const renderFb = function (qNum) {
+                const fb = selfCheckFeedback[qNum];
+                if (!fb) return '';
+                const cls = fb.ok
+                    ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200'
+                    : 'bg-rose-50 dark:bg-rose-950/50 border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-200';
+                return `<div class="mt-2 p-2.5 rounded-xl border text-xs font-bold ${cls}">${escapeHtml(fb.msg)}</div>`;
+            };
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Penutup Pertemuan 7 &amp; Persiapan UTS (Minggu 8)</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Uji Pemahaman Sub-CPMK 2.2 &amp; Kisi-Kisi UTS</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Pastikan Anda telah menguasai percabangan PHP Murni di bawah ini sebelum menghadapi Ujian Tengah Semester minggu depan:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <div class="lg:col-span-7 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-3.5">
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Cek Pengetahuan Mandiri (Klik Jawaban yang Tepat)</h3>
+
+                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <div class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white mb-2">1. Apa yang terjadi jika kita lupa menulis perintah <span class="font-mono">break;</span> pada <span class="font-mono">case "kuliner":</span> di dalam <span class="font-mono">switch ($kategori)</span>?</div>
+                                <div class="flex flex-wrap gap-2">
+                                    <button type="button" onclick="answerSelfCheck(1, true, 'Tepat! Terjadi efek Fall-Through sehingga PHP terus mengeksekusi case ritel dan default di bawahnya dan menimpa nilai $tarifPajak!')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 font-semibold text-xs">Terjadi Fall-Through (case di bawah ikut dijalankan)</button>
+                                    <button type="button" onclick="answerSelfCheck(1, false, 'PHP tidak mengeluarkan syntax error saat lupa break;, melainkan diam-diam mengeksekusi case di bawahnya (bug logika Fall-Through).')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 font-semibold text-xs">Muncul Syntax Error di Terminal</button>
+                                </div>
+                                ${renderFb(1)}
+                            </div>
+
+                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <div class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white mb-2">2. Mengapa menulis <span class="font-mono">if ($kategori = "kuliner")</span> dengan 1 tanda sama dengan (<span class="font-mono">=</span>) sangat berbahaya?</div>
+                                <div class="flex flex-wrap gap-2">
+                                    <button type="button" onclick="answerSelfCheck(2, true, 'Benar! Tanda = adalah pengisi nilai (Assignment), bukan pembanding. Akibatnya $kategori berubah jadi \"kuliner\" dan syarat selalu dianggap True! Gunakan == atau ===.')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 font-semibold text-xs">Karena = menimpa isi $kategori sehingga syarat selalu True</button>
+                                    <button type="button" onclick="answerSelfCheck(2, false, 'Tanda = memang berfungsi untuk pengisian variabel, sehingga di dalam if ia malah menimpa nilai variabelnya!')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 font-semibold text-xs">Tidak berbahaya, sama saja dengan ==</button>
+                                </div>
+                                ${renderFb(2)}
+                            </div>
+
+                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <div class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white mb-2">3. Jika belanja kuliner Rp 100.000 mendapat diskon 15% (Rp 15.000), lalu dikenai PB1 10%, berapakah nominal pajaknya berdasarkan ${term('dpp', 'DPP')}?</div>
+                                <div class="flex flex-wrap gap-2">
+                                    <button type="button" onclick="answerSelfCheck(3, true, 'Sempurna! DPP = 100.000 - 15.000 = Rp 85.000, sehingga pajak PB1 10% x 85.000 = Rp 8.500 (Total Bayar = Rp 93.500).')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 font-mono font-semibold text-xs">Rp 8.500 (10% dari Rp 85.000)</button>
+                                    <button type="button" onclick="answerSelfCheck(3, false, 'Pajak dihitung dari harga bersih setelah dipotong diskon (DPP = Rp 85.000), bukan dari Rp 100.000.')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 font-mono font-semibold text-xs">Rp 10.000 (10% dari Rp 100.000)</button>
+                                </div>
+                                ${renderFb(3)}
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-5 flex flex-col justify-between gap-4">
+                            <div class="p-6 rounded-3xl bg-slate-900 text-white space-y-3">
+                                <span class="inline-block px-2.5 py-0.5 rounded-md bg-indigo-500/30 text-indigo-300 font-bold text-[11px] uppercase tracking-wider">
+                                    Tugas Praktikum Minggu 7 (Laporan Praktikum)
+                                </span>
+                                <h3 class="text-base sm:text-lg font-extrabold leading-snug">
+                                    Buat File <span class="font-mono text-indigo-300">M07_[NIM]_[Nama]_DiskonPajak.php</span>
+                                </h3>
+                                <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                                    Kembangkan kode <span class="font-mono text-amber-300">if-elseif-else</span> (diskon 20%/15%/10%/0%) dan <span class="font-mono text-emerald-300">switch-case</span> (pajak sembako/kuliner/ritel) dengan menambahkan validasi <span class="font-mono text-rose-300">if ($totalBelanja &lt;= 0) exit;</span> serta <span class="font-mono text-sky-300">switch-case</span> metode pembayaran (QRIS, Transfer, Tunai)!
+                                </p>
+                            </div>
+
+                            <div class="p-5 rounded-3xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 space-y-2">
+                                <span class="inline-block px-2.5 py-0.5 rounded-md bg-amber-600 text-white font-bold text-[11px]">MINGGU DEPAN • PERTEMUAN 8: UTS (BOBOT 15%)</span>
+                                <h3 class="font-extrabold text-slate-900 dark:text-white text-sm sm:text-base">Kisi-Kisi Ujian Tengah Semester (Variasi Kasus UMKM Baru)</h3>
+                                <p class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+                                    Ujian terdiri atas <strong>Flowgorithm (.fprg - 40%)</strong> dan <strong>PHP CLI (.php - 60%)</strong> yang menguji Sequence, Aritmatika/Relasional, Percabangan (<span class="font-mono">if-elseif-else</span> &amp; <span class="font-mono">switch-case</span>), serta Sintaks Dasar PHP pada kasus UMKM baru (contoh latihan: <em>Laundry Kilat Kampus</em> di Modul Praktikum).
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        const SLIDES = [
+            { id: 1, category: "Modul 1 • Orientasi", title: "Translasi Percabangan ke PHP: if-elseif-else & switch-case", render: renderSlide1 },
+            { id: 2, category: "Modul 1 • Konteks Bisnis", title: "Otomatisasi Diskon & Pajak (PPN 11% / PB1 10%) di PHP", render: renderSlide2 },
+            { id: 3, category: "Modul 1 • Aturan Bisnis", title: "2 Lapisan Aturan Keputusan di Kasir Warung Digital", render: renderSlide3 },
+            { id: 4, category: "Jembatan Topik 1 ke 2", title: "Dari Aturan Bisnis Menuju Bedah Sintaks Percabangan PHP", render: renderSlide4 },
+            { id: 5, category: "Modul 2 • Bedah Sintaks", title: "Bedah 6 Sintaks Asing Percabangan PHP (if, {}, elseif, &&, ===)", render: renderSlide5 },
+            { id: 6, category: "Modul 2 • Flowchart -> PHP", title: "Transformasi Visual: Flowchart Belah Ketupat -> if-elseif-else PHP", render: renderSlide6 },
+            { id: 7, category: "Modul 2 • Tangga Diskon", title: "Lab Eksekusi Tangga Diskon if-elseif-else & Urutan Syarat", render: renderSlide7 },
+            { id: 8, category: "Modul 2 • Logika Majemuk", title: "Operator Logika PHP (&&, ||, !) & Normalisasi strtolower()", render: renderSlide8 },
+            { id: 9, category: "Jembatan Topik 2 ke 3", title: "Menuju Pencocokan Kategori Pasti dengan switch-case PHP", render: renderSlide9 },
+            { id: 10, category: "Modul 3 • switch-case", title: "Bedah switch-case, Rem break;, & Simulasi Fall-Through", render: renderSlide10 },
+            { id: 11, category: "Modul 3 • Panduan Pilih", title: "Kapan Memilih if-elseif-else, switch-case, & Validasi exit;", render: renderSlide11 },
+            { id: 12, category: "Modul 3 • Debugging", title: "Detektif 4 Error Paling Sering pada Percabangan PHP", render: renderSlide12 },
+            { id: 13, category: "Modul 3 • Sandbox", title: "Sandbox Kasir PHP: Diskon, DPP, Pajak, & Metode Bayar", render: renderSlide13 },
+            { id: 14, category: "Jembatan Topik 3 ke 4", title: "Masuk ke 3 Simulator Lab Percabangan PHP CLI", render: renderSlide14 },
+            { id: 15, category: "Modul 4 • Simulasi 1", title: "Live PHP CLI Runner: M07_DiskonPajak_WarungDigital.php", render: renderSlide15 },
+            { id: 16, category: "Modul 4 • Simulasi 2", title: "Lengkapi 5 Slot Percabangan Diskon & Pajak PHP", render: renderSlide16 },
+            { id: 17, category: "Modul 4 • Simulasi 3", title: "Drag & Drop 8 Tahap Skrip PHP Diskon & Pajak Warung Digital", render: renderSlide17 },
+            { id: 18, category: "Evaluasi & Kisi-Kisi UTS", title: "Uji Pemahaman Sub-CPMK 2.2 & Persiapan UTS (Minggu 8)", render: renderSlide18 }
+        ];
+
+        function renderCurrentSlide() {
+            const slide = SLIDES[currentSlideIndex];
+            const viewport = document.getElementById('slideViewport');
+            viewport.innerHTML = slide.render();
+
+            const pct = Math.round(((currentSlideIndex + 1) / TOTAL_SLIDES) * 100);
+            document.getElementById('topProgressBar').style.width = pct + '%';
+            document.getElementById('slideCounterBadge').textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES;
+            document.getElementById('mobileFooterCounter').textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES;
+            document.getElementById('slideCategoryPill').textContent = slide.category;
+            document.getElementById('headerSlideTitle').textContent = slide.title;
+
+            const prevBtn = document.getElementById('prevSlideBtn');
+            const nextBtn = document.getElementById('nextSlideBtn');
+            const nextBtnText = document.getElementById('nextBtnText');
+
+            prevBtn.disabled = currentSlideIndex === 0;
+            if (currentSlideIndex === TOTAL_SLIDES - 1) {
+                nextBtnText.textContent = "Selesai";
+                nextBtn.disabled = true;
+            } else {
+                nextBtnText.textContent = "Selanjutnya";
+                nextBtn.disabled = false;
+            }
+
+            renderDotsAndDrawer();
+
+            if (currentSlideIndex === 14 && phpWaitingVar) {
+                const inputEl = document.getElementById('phpConsoleInputBox');
+                if (inputEl) inputEl.focus();
+            }
+        }
+
+        function renderDotsAndDrawer() {
+            const dotsContainer = document.getElementById('slideDotsContainer');
+            let dotsHtml = '';
+            let drawerHtml = '';
+
+            for (let idx = 0; idx < SLIDES.length; idx++) {
+                const s = SLIDES[idx];
+                const isActive = idx === currentSlideIndex;
+                const dotClass = isActive
+                    ? 'w-6 bg-indigo-600 dark:bg-indigo-400'
+                    : 'w-2 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400';
+
+                dotsHtml += `<button type="button" onclick="goToSlide(${idx})" title="${escapeHtml(s.title)}" class="h-2 rounded-full transition-all ${dotClass}"></button>`;
+
+                const itemClass = isActive
+                    ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 font-bold'
+                    : 'hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-300';
+                const badgeClass = isActive
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500';
+
+                drawerHtml += `
+                    <button type="button" onclick="selectSlideFromDrawer(${idx})" class="w-full text-left p-3 rounded-xl transition flex items-start gap-3 ${itemClass}">
+                        <span class="w-6 h-6 rounded-lg text-xs font-extrabold flex items-center justify-center shrink-0 ${badgeClass}">${s.id}</span>
+                        <div class="min-w-0">
+                            <div class="text-[10px] uppercase tracking-wider opacity-75">${escapeHtml(s.category)}</div>
+                            <div class="text-xs sm:text-sm truncate">${escapeHtml(s.title)}</div>
+                        </div>
+                    </button>
+                `;
+            }
+
+            dotsContainer.innerHTML = dotsHtml;
+            document.getElementById('drawerSlideList').innerHTML = drawerHtml;
+        }
+
+        function selectSlideFromDrawer(index) {
+            goToSlide(index);
+            toggleSlideDrawer();
+        }
+
+        function changeSlide(direction) {
+            const nextIdx = currentSlideIndex + direction;
+            if (nextIdx >= 0 && nextIdx < TOTAL_SLIDES) {
+                if (phpAutoTimer) clearTimeout(phpAutoTimer);
+                currentSlideIndex = nextIdx;
+                renderCurrentSlide();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function goToSlide(index) {
+            if (index >= 0 && index < TOTAL_SLIDES) {
+                if (phpAutoTimer) clearTimeout(phpAutoTimer);
+                currentSlideIndex = index;
+                renderCurrentSlide();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function toggleSlideDrawer() {
+            const drawer = document.getElementById('slideDrawer');
+            const backdrop = document.getElementById('slideDrawerBackdrop');
+            const isClosed = drawer.classList.contains('-translate-x-full');
+
+            if (isClosed) {
+                backdrop.classList.remove('hidden');
+                setTimeout(function () {
+                    backdrop.classList.remove('opacity-0');
+                }, 10);
+                drawer.classList.remove('-translate-x-full');
+            } else {
+                backdrop.classList.add('opacity-0');
+                drawer.classList.add('-translate-x-full');
+                setTimeout(function () {
+                    backdrop.classList.add('hidden');
+                }, 200);
+            }
+        }
+
+        // State Handlers Slide 2 s.d. Slide 13
+        function setS2Mode(m) { s2Mode = m; renderCurrentSlide(); }
+        function setS3Layer(l) { s3LayerTab = l; renderCurrentSlide(); }
+        function setS5Token(tok) { s5TokenKey = tok; renderCurrentSlide(); }
+        function setS6Sync(stage) { s6SyncStage = stage; renderCurrentSlide(); }
+        function stepS6Sync(delta) {
+            s6SyncStage += delta;
+            if (s6SyncStage < 1) s6SyncStage = 5;
+            if (s6SyncStage > 5) s6SyncStage = 1;
+            renderCurrentSlide();
+        }
+        function setS7Order(m) { s7OrderMode = m; renderCurrentSlide(); }
+        function setS7Belanja(v) { s7Belanja = Math.max(0, parseInt(v, 10) || 0); renderCurrentSlide(); }
+        function toggleS7Member() { s7IsMember = !s7IsMember; renderCurrentSlide(); }
+        function setS8Op(op) { s8LogicOp = op; renderCurrentSlide(); }
+        function toggleS8Member() { s8IsMember = !s8IsMember; renderCurrentSlide(); }
+        function updateS8Belanja(v) { s8Belanja = Math.max(0, parseInt(v, 10) || 0); renderCurrentSlide(); }
+        function setS10Cat(c) { s10Category = c; renderCurrentSlide(); }
+        function setS10Piece(p) { s10PieceKey = p; renderCurrentSlide(); }
+        function toggleS10Break() { s10UseBreak = !s10UseBreak; renderCurrentSlide(); }
+        function setS11Case(k) { s11CaseKey = k; renderCurrentSlide(); }
+        function setS12Err(k) { s12ErrKey = k; s12Fixed = false; renderCurrentSlide(); }
+        function toggleS12Fix() { s12Fixed = !s12Fixed; renderCurrentSlide(); }
+        function updateS13Sandbox(field, val) {
+            if (field === 'belanja') s13TotalBelanja = Math.max(0, parseInt(val, 10) || 0);
+            if (field === 'kategori') s13Kategori = val;
+            if (field === 'metode') s13Metode = val;
+            renderCurrentSlide();
+        }
+        function toggleS13Member() { s13IsMember = !s13IsMember; renderCurrentSlide(); }
+
+        // Handlers Slide 15: Live PHP CLI Runner Bercabang (17 Baris: index 0..16)
+        function resetPhpSim() {
+            if (phpAutoTimer) clearTimeout(phpAutoTimer);
+            phpIsAuto = false;
+            phpStepIndex = -1;
+            phpWaitingVar = null;
+            phpMemory = {};
+            phpExecutedLines = {};
+            phpSkippedLines = {};
+            phpTerminalLog = [];
+            phpInputError = '';
+            rawSimVals = { totalBelanja: 0, kategori: '', isMember: false, persenDiskon: 0, nominalDiskon: 0, dpp: 0, tarifPajak: 0, labelPajak: '', nominalPajak: 0, totalBayar: 0 };
+            phpBannerText = 'Klik tombol Run Skrip atau Step (Per Baris) untuk menyaksikan mesin PHP memilih cabang if-elseif-else dan switch-case secara langsung!';
+            renderCurrentSlide();
+        }
+
+        function fillPhpQuickChip(val) {
+            const box = document.getElementById('phpConsoleInputBox');
+            if (box) {
+                box.value = val;
+                box.focus();
+            }
+        }
+
+        function stepPhpSim() {
+            if (phpWaitingVar) {
+                phpInputError = 'Ketik dulu nilai untuk "$' + phpWaitingVar + '" pada kotak Terminal lalu tekan Enter!';
+                renderCurrentSlide();
+                return;
+            }
+            if (phpStepIndex >= 16) {
+                resetPhpSim();
+            }
+
+            if (phpStepIndex === -1) phpStepIndex = 0;
+            else if (phpStepIndex === 0) phpStepIndex = 1;
+            else if (phpStepIndex === 1) phpStepIndex = 2;
+            else if (phpStepIndex === 2) phpStepIndex = 3;
+            else if (phpStepIndex === 3) {
+                if (rawSimVals.totalBelanja >= 100000 && rawSimVals.isMember) {
+                    phpSkippedLines[5] = true; phpSkippedLines[6] = true; phpSkippedLines[7] = true; phpSkippedLines[8] = true; phpSkippedLines[9] = true;
+                    phpStepIndex = 4;
+                } else {
+                    phpSkippedLines[4] = true;
+                    phpStepIndex = 5;
+                }
+            } else if (phpStepIndex === 4) {
+                phpStepIndex = 10;
+            } else if (phpStepIndex === 5) {
+                if (rawSimVals.totalBelanja >= 100000) {
+                    phpSkippedLines[7] = true; phpSkippedLines[8] = true; phpSkippedLines[9] = true;
+                    phpStepIndex = 6;
+                } else {
+                    phpSkippedLines[6] = true;
+                    phpStepIndex = 7;
+                }
+            } else if (phpStepIndex === 6) {
+                phpStepIndex = 10;
+            } else if (phpStepIndex === 7) {
+                if (rawSimVals.totalBelanja >= 50000) {
+                    phpSkippedLines[9] = true;
+                    phpStepIndex = 8;
+                } else {
+                    phpSkippedLines[8] = true;
+                    phpStepIndex = 9;
+                }
+            } else if (phpStepIndex === 8 || phpStepIndex === 9) {
+                phpStepIndex = 10;
+            } else if (phpStepIndex === 10) {
+                phpStepIndex = 11;
+            } else if (phpStepIndex === 11) {
+                if (rawSimVals.kategori === 'sembako') {
+                    phpSkippedLines[13] = true; phpSkippedLines[14] = true; phpSkippedLines[15] = true;
+                    phpStepIndex = 12;
+                } else if (rawSimVals.kategori === 'kuliner') {
+                    phpSkippedLines[12] = true; phpSkippedLines[14] = true; phpSkippedLines[15] = true;
+                    phpStepIndex = 13;
+                } else if (rawSimVals.kategori === 'ritel') {
+                    phpSkippedLines[12] = true; phpSkippedLines[13] = true; phpSkippedLines[15] = true;
+                    phpStepIndex = 14;
+                } else {
+                    phpSkippedLines[12] = true; phpSkippedLines[13] = true; phpSkippedLines[14] = true;
+                    phpStepIndex = 15;
+                }
+            } else if (phpStepIndex >= 12 && phpStepIndex <= 15) {
+                phpStepIndex = 16;
+            }
+
+            executePhpStep(phpStepIndex);
+        }
+
+        function executePhpStep(step) {
+            phpInputError = '';
+            phpExecutedLines[step] = true;
+
+            if (step === 0) {
+                phpTerminalLog = [];
+                phpTerminalLog.push({ type: 'out', html: '$ php M07_DiskonPajak_WarungDigital.php' });
+                phpWaitingVar = 'totalBelanja';
+                phpTerminalLog.push({ id: 'w_tot', type: 'wait', text: 'Masukkan Total Belanja (Rp): _' });
+                phpBannerText = 'Baris 1 [(float) trim(fgets(STDIN))]: Menunggu input nominal total belanja pelanggan.';
+            } else if (step === 1) {
+                phpWaitingVar = 'kategori';
+                phpTerminalLog.push({ id: 'w_kat', type: 'wait', text: 'Kategori (sembako/kuliner/ritel): _' });
+                phpBannerText = 'Baris 2 [strtolower(trim(fgets(STDIN)))]: Menunggu kategori produk (otomatis diubah ke huruf kecil).';
+            } else if (step === 2) {
+                phpWaitingVar = 'isMember';
+                phpTerminalLog.push({ id: 'w_mem', type: 'wait', text: 'Apakah Pelanggan Member? (y/n): _' });
+                phpBannerText = 'Baris 3 [=== \'y\']: Menunggu konfirmasi member untuk menghasilkan nilai bool (true/false).';
+            } else if (step === 3) {
+                const ok = rawSimVals.totalBelanja >= 100000 && rawSimVals.isMember;
+                phpBannerText = 'Baris 4 [if >= 100rb && $isMember]: Hasilnya ' + (ok ? 'TRUE! Masuk baris 5 ($persenDiskon = 20).' : 'FALSE! Lompati baris 5, lanjut cek elseif baris 6.');
+            } else if (step === 4) {
+                rawSimVals.persenDiskon = 20;
+                phpMemory.persenDiskon = 'int(20)%';
+                phpBannerText = 'Baris 5 [Blok if]: Diskon VIP 20% ditetapkan! Seluruh blok elseif & else di bawah dilewati.';
+            } else if (step === 5) {
+                const ok = rawSimVals.totalBelanja >= 100000;
+                phpBannerText = 'Baris 6 [elseif >= 100rb]: Hasilnya ' + (ok ? 'TRUE! Masuk baris 7 ($persenDiskon = 15).' : 'FALSE! Lompati baris 7, lanjut cek baris 8.');
+            } else if (step === 6) {
+                rawSimVals.persenDiskon = 15;
+                phpMemory.persenDiskon = 'int(15)%';
+                phpBannerText = 'Baris 7 [Blok elseif #1]: Diskon 15% ditetapkan! Cabang di bawah dilewati.';
+            } else if (step === 7) {
+                const ok = rawSimVals.totalBelanja >= 50000;
+                phpBannerText = 'Baris 8 [elseif >= 50rb]: Hasilnya ' + (ok ? 'TRUE! Masuk baris 9 ($persenDiskon = 10).' : 'FALSE! Lompati baris 9, masuk ke else baris 10.');
+            } else if (step === 8) {
+                rawSimVals.persenDiskon = 10;
+                phpMemory.persenDiskon = 'int(10)%';
+                phpBannerText = 'Baris 9 [Blok elseif #2]: Diskon 10% ditetapkan! Blok else dilewati.';
+            } else if (step === 9) {
+                rawSimVals.persenDiskon = 0;
+                phpMemory.persenDiskon = 'int(0)%';
+                phpBannerText = 'Baris 10 [Blok else]: Belanja di bawah Rp 50.000, $persenDiskon = 0.';
+            } else if (step === 10) {
+                rawSimVals.nominalDiskon = Math.round(rawSimVals.totalBelanja * (rawSimVals.persenDiskon / 100));
+                rawSimVals.dpp = rawSimVals.totalBelanja - rawSimVals.nominalDiskon;
+                phpMemory.dpp = 'Rp ' + rawSimVals.dpp.toLocaleString('id-ID');
+                phpBannerText = 'Baris 11 [Hitung DPP]: Diskon = Rp ' + rawSimVals.nominalDiskon.toLocaleString('id-ID') + ', sehingga $dpp = Rp ' + rawSimVals.dpp.toLocaleString('id-ID') + '.';
+            } else if (step === 11) {
+                phpBannerText = 'Baris 12 [switch ($kategori)]: Mencocokkan "' + rawSimVals.kategori + '" ke daftar case pajak.';
+            } else if (step === 12) {
+                rawSimVals.tarifPajak = 0.00;
+                rawSimVals.labelPajak = 'Sembako 0%';
+                phpMemory.tarifPajak = '0.00 (0%)';
+                phpBannerText = 'Baris 13 [case "sembako"]: Cocok! Tarif 0%, lalu break; keluar dari switch.';
+            } else if (step === 13) {
+                rawSimVals.tarifPajak = 0.10;
+                rawSimVals.labelPajak = 'PB1 10%';
+                phpMemory.tarifPajak = '0.10 (10%)';
+                phpBannerText = 'Baris 14 [case "kuliner"]: Cocok! Tarif PB1 10%, lalu break; keluar dari switch.';
+            } else if (step === 14) {
+                rawSimVals.tarifPajak = 0.11;
+                rawSimVals.labelPajak = 'PPN 11%';
+                phpMemory.tarifPajak = '0.11 (11%)';
+                phpBannerText = 'Baris 15 [case "ritel"]: Cocok! Tarif PPN 11%, lalu break; keluar dari switch.';
+            } else if (step === 15) {
+                rawSimVals.tarifPajak = 0.00;
+                rawSimVals.labelPajak = 'Lainnya 0%';
+                phpMemory.tarifPajak = '0.00 (default)';
+                phpBannerText = 'Baris 16 [default:]: Kategori "' + rawSimVals.kategori + '" tidak dikenali, ditangani aman oleh default (0%).';
+            } else if (step === 16) {
+                rawSimVals.nominalPajak = Math.round(rawSimVals.dpp * rawSimVals.tarifPajak);
+                rawSimVals.totalBayar = rawSimVals.dpp + rawSimVals.nominalPajak;
+                phpMemory.totalBayar = 'Rp ' + rawSimVals.totalBayar.toLocaleString('id-ID');
+                phpTerminalLog.push({
+                    type: 'out',
+                    html: '<strong>STRUK WARUNG DIGITAL:</strong> Diskon ' + rawSimVals.persenDiskon + '% (-Rp ' + rawSimVals.nominalDiskon.toLocaleString('id-ID') + ') | Pajak ' + rawSimVals.labelPajak + ' (+Rp ' + rawSimVals.nominalPajak.toLocaleString('id-ID') + ') | <strong>TOTAL BAYAR: Rp ' + rawSimVals.totalBayar.toLocaleString('id-ID') + '</strong>'
+                });
+                phpIsAuto = false;
+                phpBannerText = 'Baris 17 [Hitung Akhir & echo]: Struk selesai dicetak! Perhatikan baris dicoret yang tidak dijalankan PHP.';
+            }
+
+            renderCurrentSlide();
+            const termBox = document.getElementById('phpTerminalBox');
+            if (termBox) termBox.scrollTop = termBox.scrollHeight;
+
+            if (phpIsAuto && !phpWaitingVar && step < 16) {
+                phpAutoTimer = setTimeout(function () {
+                    stepPhpSim();
+                }, 650);
+            }
+        }
+
+        function submitManualPhpInput(e) {
+            e.preventDefault();
+            if (!phpWaitingVar) return;
+            const box = document.getElementById('phpConsoleInputBox');
+            const rawVal = box ? box.value.trim() : '';
+
+            if (!rawVal) {
+                phpInputError = 'Input tidak boleh kosong!';
+                renderCurrentSlide();
+                return;
+            }
+
+            if (phpWaitingVar === 'totalBelanja') {
+                if (!/^\d+$/.test(rawVal) || parseInt(rawVal, 10) <= 0) {
+                    phpInputError = 'Masukkan angka bulat positif (> 0) tanpa titik atau huruf Rp!';
+                    renderCurrentSlide();
+                    return;
+                }
+                const num = parseInt(rawVal, 10);
+                rawSimVals.totalBelanja = num;
+                phpMemory.totalBelanja = 'Rp ' + num.toLocaleString('id-ID');
+                phpTerminalLog = phpTerminalLog.filter(function (m) { return m.id !== 'w_tot'; });
+                phpTerminalLog.push({ type: 'in', text: 'Total Belanja: ' + num });
+            } else if (phpWaitingVar === 'kategori') {
+                const lowered = rawVal.toLowerCase();
+                rawSimVals.kategori = lowered;
+                phpMemory.kategori = '"' + lowered + '"';
+                phpTerminalLog = phpTerminalLog.filter(function (m) { return m.id !== 'w_kat'; });
+                phpTerminalLog.push({ type: 'in', text: 'Kategori: ' + rawVal + ' -> strtolower = "' + lowered + '"' });
+            } else if (phpWaitingVar === 'isMember') {
+                const isMem = rawVal.toLowerCase() === 'y';
+                rawSimVals.isMember = isMem;
+                phpMemory.isMember = 'bool(' + (isMem ? 'true' : 'false') + ')';
+                phpTerminalLog = phpTerminalLog.filter(function (m) { return m.id !== 'w_mem'; });
+                phpTerminalLog.push({ type: 'in', text: 'Member (y/n): ' + rawVal + ' -> ' + (isMem ? 'true' : 'false') });
+            }
+
+            phpWaitingVar = null;
+            phpInputError = '';
+            renderCurrentSlide();
+
+            if (phpIsAuto) {
+                phpAutoTimer = setTimeout(function () {
+                    stepPhpSim();
+                }, 450);
+            }
+        }
+
+        function runFullPhpSim() {
+            resetPhpSim();
+            phpIsAuto = true;
+            stepPhpSim();
+        }
+
+        // Handlers Slide 16: Lengkapi 5 Slot Percabangan PHP
+        function selectPhpBuilderSlot(slotNum) { activePhpSlot = slotNum; renderCurrentSlide(); }
+        function assignPhpSlot(codeKey) {
+            phpBuilderSlots[activePhpSlot] = codeKey;
+            phpBuilderFeedback = { type: '', text: '' };
+            if (activePhpSlot < 5) activePhpSlot++;
+            renderCurrentSlide();
+        }
+        function checkPhpBuilder() {
+            if (
+                phpBuilderSlots[1] === 'IF_VIP' &&
+                phpBuilderSlots[2] === 'ELIF_50' &&
+                phpBuilderSlots[3] === 'ELSE_0' &&
+                phpBuilderSlots[4] === 'SW_KAT' &&
+                phpBuilderSlots[5] === 'BREAK_KW'
+            ) {
+                phpBuilderFeedback = {
+                    type: 'success',
+                    text: 'Sempurna (5/5 Tepat)! Struktur if-elseif-else dan switch-case PHP Warung Digital sudah 100% valid!'
+                };
+            } else {
+                phpBuilderFeedback = {
+                    type: 'error',
+                    text: 'Masih ada slot yang belum tepat. Pastikan: Slot 1 (if VIP &&) -> Slot 2 (elseif >= 50000) -> Slot 3 (else) -> Slot 4 (switch $kategori) -> Slot 5 ($tarifPajak = 0.10; break;).'
+                };
+            }
+            renderCurrentSlide();
+        }
+        function resetPhpBuilder() {
+            phpBuilderSlots = { 1: '', 2: '', 3: '', 4: '', 5: '' };
+            activePhpSlot = 1;
+            phpBuilderFeedback = { type: '', text: '' };
+            renderCurrentSlide();
+        }
+
+        // Handlers Slide 17: Drag & Drop 8 Langkah Skrip PHP Diskon & Pajak
+        function shufflePhpSteps() {
+            phpStepsOrder = [...CORRECT_PHP_BRANCH_STEPS].sort(function () { return Math.random() - 0.5; });
+            phpShowValidation = false;
+            phpFeedbackText = '';
+            renderCurrentSlide();
+        }
+        function movePhpStep(index, direction) {
+            const target = index + direction;
+            if (target < 0 || target >= phpStepsOrder.length) return;
+            const moved = phpStepsOrder.splice(index, 1)[0];
+            phpStepsOrder.splice(target, 0, moved);
+            phpShowValidation = false;
+            phpFeedbackText = '';
+            renderCurrentSlide();
+        }
+        function onPhpDragStart(e, index) {
+            draggedPhpIndex = index;
+            if (e.currentTarget) e.currentTarget.classList.add('dragging');
+            if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+        }
+        function onPhpDragOver(e, index) {
+            e.preventDefault();
+            if (index !== draggedPhpIndex && e.currentTarget) e.currentTarget.classList.add('drag-over');
+        }
+        function onPhpDragLeave(e) {
+            if (e.currentTarget) e.currentTarget.classList.remove('drag-over');
+        }
+        function onPhpDrop(e, targetIndex) {
+            e.preventDefault();
+            if (draggedPhpIndex !== null && draggedPhpIndex !== targetIndex) {
+                const moved = phpStepsOrder.splice(draggedPhpIndex, 1)[0];
+                phpStepsOrder.splice(targetIndex, 0, moved);
+                phpShowValidation = false;
+                phpFeedbackText = '';
+                renderCurrentSlide();
+            }
+            draggedPhpIndex = null;
+        }
+        function onPhpDragEnd() {
+            draggedPhpIndex = null;
+            document.querySelectorAll('.draggable-step').forEach(function (el) {
+                el.classList.remove('dragging', 'drag-over');
+            });
+        }
+        function checkPhpOrder() {
+            phpShowValidation = true;
+            let correctCount = 0;
+            for (let i = 0; i < phpStepsOrder.length; i++) {
+                if (phpStepsOrder[i].id === i + 1) correctCount++;
+            }
+            if (correctCount === phpStepsOrder.length) {
+                phpFeedbackText = 'Luar Biasa (8/8 Tepat)! Alur skrip PHP Diskon, DPP, & Pajak Warung Digital sudah 100% runtut!';
+            } else {
+                phpFeedbackText = 'Baru ' + correctCount + '/8 tahap yang tepat. Geser baris bertanda "✗ Geser".';
+            }
+            renderCurrentSlide();
+        }
+
+        function answerSelfCheck(qNum, isOk, msg) {
+            selfCheckFeedback[qNum] = { ok: isOk, msg: msg };
+            renderCurrentSlide();
+        }
+
+        // Modal Istilah & Kamus Lengkap
+        function showTerm(key) {
+            const item = GLOSSARY_DB[key];
+            if (!item) return;
+
+            document.getElementById('termCategoryBadge').textContent = item.category;
+            document.getElementById('termTitle').textContent = item.title;
+            document.getElementById('termMainDesc').textContent = item.main;
+            document.getElementById('termDetailDesc').textContent = item.detail;
+            document.getElementById('termSourceName').textContent = "Sumber: " + item.source;
+
+            const modal = document.getElementById('termModalBackdrop');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeTermModal() {
+            const modal = document.getElementById('termModalBackdrop');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function openGlossaryIndex() {
+            document.getElementById('glossarySearchInput').value = '';
+            renderGlossaryList('');
+            const modal = document.getElementById('glossaryModalBackdrop');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeGlossaryIndex() {
+            const modal = document.getElementById('glossaryModalBackdrop');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function selectGlossaryTerm(key) {
+            closeGlossaryIndex();
+            showTerm(key);
+        }
+
+        function renderGlossaryList(query) {
+            const q = String(query || '').trim().toLowerCase();
+            const allKeys = Object.keys(GLOSSARY_DB);
+            const matchedKeys = [];
+
+            for (let i = 0; i < allKeys.length; i++) {
+                const k = allKeys[i];
+                const item = GLOSSARY_DB[k];
+                if (
+                    item.title.toLowerCase().indexOf(q) !== -1 ||
+                    item.category.toLowerCase().indexOf(q) !== -1 ||
+                    item.main.toLowerCase().indexOf(q) !== -1
+                ) {
+                    matchedKeys.push(k);
+                }
+            }
+
+            const container = document.getElementById('glossaryListGrid');
+            if (matchedKeys.length === 0) {
+                container.innerHTML = '<div class="col-span-2 text-center py-8 text-xs text-slate-500">Istilah tidak ditemukan.</div>';
+                return;
+            }
+
+            let html = '';
+            for (let i = 0; i < matchedKeys.length; i++) {
+                const k = matchedKeys[i];
+                const item = GLOSSARY_DB[k];
+                html += `
+                    <button type="button" onclick="selectGlossaryTerm('${k}')" class="text-left p-4 rounded-2xl bg-slate-50 hover:bg-indigo-50/60 dark:bg-slate-800/50 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800 transition space-y-1">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">${escapeHtml(item.category)}</span>
+                            <span class="text-[10px] text-slate-400">${escapeHtml(item.source)}</span>
+                        </div>
+                        <div class="text-sm font-extrabold text-slate-900 dark:text-white">${escapeHtml(item.title)}</div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">${escapeHtml(item.main)}</p>
+                    </button>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function toggleTheme() {
+            const htmlEl = document.documentElement;
+            const icon = document.getElementById('themeIcon');
+            htmlEl.classList.toggle('dark');
+            const isDark = htmlEl.classList.contains('dark');
+            icon.className = isDark ? 'fa-solid fa-sun text-amber-400 text-sm' : 'fa-solid fa-moon text-sm';
+        }
+
+        document.addEventListener('keydown', function (e) {
+            const activeTag = document.activeElement && document.activeElement.tagName
+                ? document.activeElement.tagName.toLowerCase()
+                : '';
+            if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') return;
+
+            if (e.key === 'ArrowRight') changeSlide(1);
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+            if (e.key === 'Escape') {
+                closeTermModal();
+                closeGlossaryIndex();
+            }
+        });
+
+        window.onload = function () {
+            renderCurrentSlide();
+        };
+    </script>
+</body>
+</html>
