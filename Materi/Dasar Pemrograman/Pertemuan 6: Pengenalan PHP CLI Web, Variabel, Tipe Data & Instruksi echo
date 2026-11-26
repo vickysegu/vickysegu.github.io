@@ -1,0 +1,2441 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pertemuan 6: Pengenalan PHP CLI/Web, Variabel, Tipe Data & Instruksi echo (BD1205)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace']
+                    }
+                }
+            }
+        };
+    </script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Istilah teknis bersih berwarna indigo tanpa garis bawah */
+        .tech-term {
+            color: #4f46e5;
+            font-weight: 700;
+            cursor: pointer;
+            transition: color 0.15s ease, opacity 0.15s ease;
+        }
+        .dark .tech-term {
+            color: #818cf8;
+        }
+        .tech-term:hover {
+            color: #3730a3;
+            opacity: 0.85;
+        }
+        .dark .tech-term:hover {
+            color: #a5b4fc;
+        }
+
+        .slide-enter {
+            animation: fadeSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes fadeSlide {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fg-canvas {
+            background-color: #ffffff;
+            background-image: radial-gradient(#e2e8f0 1.2px, transparent 1.2px);
+            background-size: 18px 18px;
+        }
+        .dark .fg-canvas {
+            background-color: #0f172a;
+            background-image: radial-gradient(#1e293b 1.2px, transparent 1.2px);
+        }
+
+        .php-line-active {
+            background-color: rgba(239, 68, 68, 0.2);
+            border-left: 3px solid #ef4444;
+        }
+        .php-line-waiting {
+            background-color: rgba(79, 70, 229, 0.25);
+            border-left: 3px solid #6366f1;
+        }
+
+        .draggable-step {
+            cursor: grab;
+            user-select: none;
+            transition: all 0.15s ease;
+        }
+        .draggable-step:active {
+            cursor: grabbing;
+        }
+        .draggable-step.dragging {
+            opacity: 0.45;
+        }
+        .draggable-step.drag-over {
+            border-color: #4f46e5 !important;
+            transform: translateY(-2px);
+        }
+
+        .syntax-pill {
+            transition: all 0.15s ease;
+            cursor: pointer;
+        }
+        .syntax-pill:hover {
+            transform: translateY(-1px);
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #334155;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col justify-between transition-colors duration-200">
+
+    <!-- Sticky Header -->
+    <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800">
+        <div class="w-full h-1 bg-slate-100 dark:bg-slate-800">
+            <div id="topProgressBar" class="h-full bg-indigo-600 dark:bg-indigo-500 transition-all duration-300" style="width: 6%;"></div>
+        </div>
+
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+                <button type="button" onclick="toggleSlideDrawer()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition flex items-center gap-2 text-xs sm:text-sm font-bold shrink-0">
+                    <i class="fa-solid fa-list-ul text-indigo-600 dark:text-indigo-400"></i>
+                    <span class="hidden sm:inline">Daftar Slide</span>
+                    <span id="slideCounterBadge" class="px-2 py-0.5 text-xs rounded-lg bg-indigo-600 text-white font-bold">1 / 18</span>
+                </button>
+
+                <div class="hidden md:flex items-center gap-2.5 min-w-0">
+                    <span id="slideCategoryPill" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 shrink-0">
+                        Modul 1
+                    </span>
+                    <h1 id="headerSlideTitle" class="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">
+                        Pengenalan PHP CLI/Web, Variabel, Tipe Data &amp; echo
+                    </h1>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 shrink-0">
+                <button type="button" onclick="openGlossaryIndex()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 text-xs sm:text-sm font-bold flex items-center gap-2 transition">
+                    <i class="fa-solid fa-book-open text-indigo-600 dark:text-indigo-400"></i>
+                    <span>Kamus Istilah</span>
+                </button>
+
+                <button type="button" onclick="toggleTheme()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center transition" title="Ganti Tema Layar">
+                    <i id="themeIcon" class="fa-solid fa-moon text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Slide Drawer -->
+    <div id="slideDrawerBackdrop" onclick="toggleSlideDrawer()" class="fixed inset-0 bg-slate-950/50 backdrop-blur-xs z-40 hidden opacity-0 transition-opacity duration-200"></div>
+    <aside id="slideDrawer" class="fixed top-0 left-0 bottom-0 w-80 sm:w-96 bg-white dark:bg-slate-900 z-50 shadow-2xl border-r border-slate-200 dark:border-slate-800 transform -translate-x-full transition-transform duration-200 flex flex-col">
+        <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Dasar Pemrograman 1 (BD1205)</span>
+                <h2 class="text-base font-extrabold text-slate-900 dark:text-white mt-0.5">Daftar Materi Pertemuan 6 (PHP)</h2>
+            </div>
+            <button type="button" onclick="toggleSlideDrawer()" class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div id="drawerSlideList" class="p-3.5 overflow-y-auto space-y-1 flex-1"></div>
+        <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 flex items-center justify-between">
+            <span>Gunakan tombol panah Kiri / Kanan</span>
+            <span class="font-bold">18 Slide</span>
+        </div>
+    </aside>
+
+    <!-- Main Slide Viewport -->
+    <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 flex flex-col justify-center">
+        <div id="slideViewport" class="bg-white dark:bg-slate-900 rounded-3xl shadow-xs border border-slate-200/80 dark:border-slate-800 p-6 sm:p-8 lg:p-10 min-h-[540px] flex flex-col justify-between relative overflow-hidden">
+            <!-- Konten slide dirender secara dinamis -->
+        </div>
+    </main>
+
+    <!-- Sticky Footer Navigation -->
+    <footer class="sticky bottom-0 z-20 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 py-3 px-4 sm:px-6">
+        <div class="max-w-6xl mx-auto flex items-center justify-between gap-4">
+            <button type="button" id="prevSlideBtn" onclick="changeSlide(-1)" class="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                <i class="fa-solid fa-arrow-left text-xs"></i>
+                <span>Sebelumnya</span>
+            </button>
+
+            <div id="slideDotsContainer" class="hidden md:flex items-center gap-1.5"></div>
+
+            <div class="md:hidden text-xs font-bold text-slate-500 dark:text-slate-400" id="mobileFooterCounter">
+                1 / 18
+            </div>
+
+            <button type="button" id="nextSlideBtn" onclick="changeSlide(1)" class="px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-indigo-600 hover:bg-indigo-700 text-white transition flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                <span id="nextBtnText">Selanjutnya</span>
+                <i class="fa-solid fa-arrow-right text-xs"></i>
+            </button>
+        </div>
+    </footer>
+
+    <!-- Modal Penjelasan Istilah -->
+    <div id="termModalBackdrop" onclick="closeTermModal()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl slide-enter">
+            <div class="flex items-start justify-between gap-4 mb-4">
+                <div>
+                    <span id="termCategoryBadge" class="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">Kategori</span>
+                    <h3 id="termTitle" class="text-xl font-extrabold text-slate-900 dark:text-white mt-1.5">Nama Istilah</h3>
+                </div>
+                <button type="button" onclick="closeTermModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <p id="termMainDesc" class="text-sm text-slate-700 dark:text-slate-200 leading-relaxed bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200/70 dark:border-slate-700/70"></p>
+
+                <div class="p-3.5 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-200/70 dark:border-indigo-800/70">
+                    <div class="text-[11px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-1">Contoh di UMKM Warung Digital:</div>
+                    <p id="termDetailDesc" class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed"></p>
+                </div>
+
+                <div class="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800 text-xs px-1">
+                    <span id="termSourceName" class="font-semibold text-slate-400">Referensi</span>
+                    <button type="button" onclick="closeTermModal(); openGlossaryIndex();" class="font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1.5">
+                        <span>Buka Kamus Lengkap</span>
+                        <i class="fa-solid fa-book-open text-[10px]"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Kamus Istilah Lengkap -->
+    <div id="glossaryModalBackdrop" onclick="closeGlossaryIndex()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-4xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden slide-enter">
+            <div class="p-5 sm:p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white">Kamus Istilah Pertemuan 6 — PHP Murni (BD1205)</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Penjelasan ramah pemula untuk PHP CLI/Web, Variabel $, Tipe Data, echo, fgets(STDIN), dan var_dump().</p>
+                </div>
+                <button type="button" onclick="closeGlossaryIndex()" class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-sm"></i>
+                    <input id="glossarySearchInput" oninput="renderGlossaryList(this.value)" type="text" placeholder="Cari istilah seperti PHP, CLI, XAMPP, echo, $, Titik Koma, fgets, trim, var_dump, number_format..." class="w-full pl-10 pr-4 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+            <div id="glossaryListGrid" class="p-5 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+        </div>
+    </div>
+
+    <script>
+        const GLOSSARY_DB = {
+            php: {
+                title: "PHP (Hypertext Preprocessor)",
+                category: "Bahasa Pemrograman",
+                main: "Bahasa pemrograman populer di sisi server (server-side) maupun terminal (CLI) yang menggerakkan lebih dari 75% situs web dan toko online di dunia (termasuk WordPress, WooCommerce, dan sistem kasir web UMKM).",
+                detail: "Sesuai RPS OBE BD1205, mulai Pertemuan 6 hingga Mini Project Pertemuan 15, seluruh logika Warung Digital diterjemahkan ke kode PHP Murni (.php).",
+                source: "PHP.net Documentation"
+            },
+            cli: {
+                title: "PHP CLI (Command Line Interface)",
+                category: "Lingkungan Eksekusi",
+                main: "Cara menjalankan file PHP langsung melalui layar hitam Terminal / Command Prompt menggunakan perintah 'php nama_file.php' tanpa perlu membuka browser atau menulis tag HTML dulu.",
+                detail: "Berfungsi persis seperti Console Window di Flowgorithm sehingga fokus belajar murni pada logika bisnis kasir Warung Digital.",
+                source: "Sub-CPMK 2.1 BD1205"
+            },
+            xampp: {
+                title: "XAMPP / Laragon (Server Web Lokal)",
+                category: "Perangkat Praktikum",
+                main: "Paket perangkat lunak gratis yang memasang mesin interpreter PHP beserta server web Apache di laptop Anda sehingga file .php bisa dijalankan di Terminal (CLI) maupun di Browser (localhost).",
+                detail: "File PHP Web disimpan di folder htdocs (XAMPP) lalu dibuka lewat alamat http://localhost/warung_digital/.",
+                source: "Panduan Praktikum BD1205"
+            },
+            phptag: {
+                title: "Tag Pembuka & Penutup PHP (<?php ... ?>)",
+                category: "Sintaks Dasar PHP",
+                main: "Penanda resmi tempat kode PHP dimulai (<?php) dan diakhiri (?>). Tanpa tag pembuka <?php, mesin PHP akan menganggap tulisan di file Anda sebagai teks biasa, bukan program.",
+                detail: "Setiap file praktikum seperti M06_Produk_WarungDigital.php wajib diawali baris <?php pada baris pertama.",
+                source: "PHP Language Reference"
+            },
+            dollarvar: {
+                title: "Variabel PHP (Wajib Awalan Dolar $)",
+                category: "Aturan Variabel",
+                main: "Di PHP, setiap nama variabel WAJIB diawali tanda dolar ($), diikuti huruf atau garis bawah, dan bersifat peka terhadap huruf besar/kecil (case-sensitive).",
+                detail: "Contoh: $namaProduk, $hargaModal, $hargaJual, dan $stokAwal. Ingat: $hargaJual berbeda dengan $hargajual!",
+                source: "PHP Variables"
+            },
+            semicolon: {
+                title: "Titik Koma (;) — Penutup Pernyataan",
+                category: "Sintaks Dasar PHP",
+                main: "Tanda baca wajib di akhir setiap baris instruksi PHP untuk memberitahu komputer bahwa satu perintah telah selesai. Lupa 1 titik koma akan memicu Parse Error.",
+                detail: "echo \"Selamat Datang di Warung Digital\"; wajib ditutup dengan tanda titik koma (;).",
+                source: "PHP Basic Syntax"
+            },
+            dynamictyping: {
+                title: "Dynamic Typing (Loosely Typed)",
+                category: "Karakteristik PHP",
+                main: "Kemampuan PHP menentukan tipe data variabel secara otomatis sesuai nilai yang dimasukkan, sehingga Anda tidak perlu membuat blok Declare tipe data terlebih dahulu seperti di Flowgorithm.",
+                detail: "Menulis $hargaJual = 15000; otomatis menjadikan variabel tersebut bertipe int (bilangan bulat).",
+                source: "PHP Types"
+            },
+            echocmd: {
+                title: "Instruksi echo (Output PHP)",
+                category: "Instruksi Dasar",
+                main: "Perintah utama di PHP untuk mencetak teks sapaan, isi variabel, atau hasil perhitungan ke layar Terminal maupun halaman Browser (padanan blok Output hijau di Flowgorithm).",
+                detail: "echo \"=== SELAMAT DATANG DI WARUNG DIGITAL ===\\n\"; menampilkan banner sapaan pembuka toko.",
+                source: "PHP Language Constructs"
+            },
+            stdin: {
+                title: "trim(fgets(STDIN)) (Input Keyboard PHP CLI)",
+                category: "Instruksi Dasar CLI",
+                main: "Gabungan 3 perintah untuk membaca ketikan kasir dari papan ketik di PHP CLI: STDIN adalah papan ketik, fgets() membaca 1 baris teks beserta tombol Enter, dan trim() memotong sisa karakter Enter (\\n) agar teks bersih.",
+                detail: "$namaProduk = trim(fgets(STDIN)); adalah padanan langsung dari blok Input namaProduk di Flowgorithm.",
+                source: "PHP CLI Input/Output"
+            },
+            fgets_fn: {
+                title: "fgets() (File Get String)",
+                category: "Bedah Sintaks Input",
+                main: "Fungsi bawaan PHP untuk mengambil satu baris teks dari suatu sumber masukan (seperti papan ketik STDIN) sampai pengguna menekan tombol Enter.",
+                detail: "Jika kasir mengetik Kopi Susu lalu tekan Enter, fgets(STDIN) menghasilkan \"Kopi Susu\\n\".",
+                source: "PHP Filesystem Functions"
+            },
+            trim_fn: {
+                title: "trim() (Pembersih Spasi & Enter di Ujung)",
+                category: "Bedah Sintaks Input",
+                main: "Fungsi bawaan PHP yang bekerja seperti gunting untuk memotong spasi berlebih dan karakter Enter (\\n) di awal maupun akhir sebuah teks.",
+                detail: "trim(\"Kopi Susu\\n\") menghasilkan teks bersih \"Kopi Susu\" tanpa lompatan baris.",
+                source: "PHP String Functions"
+            },
+            newline_esc: {
+                title: "\\n (Escape Character Newline / Enter)",
+                category: "Format Teks CLI",
+                main: "Kode khusus di dalam tanda kutip ganda (\"...\") untuk menyuruh Terminal pindah ke baris baru (sama seperti menekan tombol Enter). Untuk PHP Web di browser, gantinya adalah tag <br>.",
+                detail: "echo \"Baris 1\\nBaris 2\\n\"; membuat teks tampil rapi ke bawah, tidak menempel menyamping.",
+                source: "PHP String Escapes"
+            },
+            typecasting: {
+                title: "Type Casting: (int) & (float)",
+                category: "Konversi Tipe Data",
+                main: "Tanda kurung tipe data di depan input untuk memastikan nilai teks dari keyboard dikonversi secara tegas menjadi bilangan bulat (int) atau desimal (float).",
+                detail: "$hargaJual = (int) trim(fgets(STDIN)); menjamin angka 15000 tersimpan murni sebagai integer.",
+                source: "PHP Type Juggling"
+            },
+            concat: {
+                title: "Operator Titik (.) — Concatenation",
+                category: "Perangkai Teks PHP",
+                main: "Simbol titik (.) di PHP digunakan untuk menggabungkan dua potong teks atau menggabungkan teks dengan variabel / hasil fungsi (menggantikan tanda & di Flowgorithm).",
+                detail: "echo \"Total Aset: Rp \" . number_format($totalAset, 0, ',', '.');",
+                source: "PHP String Operators"
+            },
+            vardump: {
+                title: "Fungsi var_dump() (Pemeriksa Tipe & Isi)",
+                category: "Debugging PHP",
+                main: "Fungsi bawaan PHP yang sangat berguna saat belajar untuk membongkar tipe data, panjang karakter, sekaligus isi nilai asli yang sedang tersimpan di dalam sebuah variabel.",
+                detail: "Memanggil var_dump($hargaJual); akan menampilkan int(15000) di terminal.",
+                source: "PHP Variable Handling"
+            },
+            numfmt: {
+                title: "Fungsi number_format()",
+                category: "Formatting Rupiah",
+                main: "Fungsi bawaan PHP untuk memformat angka mentah seperti 150000 menjadi format mata uang Indonesia yang rapi dengan titik ribuan (150.000).",
+                detail: "number_format($hargaJual, 0, ',', '.') mengubah 15000 menjadi 15.000 pada struk Warung Digital.",
+                source: "PHP String Functions"
+            }
+        };
+
+        function term(key, customLabel) {
+            const item = GLOSSARY_DB[key];
+            if (!item) return customLabel || key;
+            const label = customLabel || item.title.split(' (')[0];
+            return '<span class="tech-term" onclick="showTerm(\'' + key + '\')">' + label + '</span>';
+        }
+
+        function escapeHtml(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        let currentSlideIndex = 0;
+        const TOTAL_SLIDES = 18;
+
+        // State Slide 2: Mengapa PHP untuk Bisnis Digital
+        let s2Tab = 'compare'; // 'compare' | 'bisnis_usecase'
+
+        // State Slide 3: Lingkungan Kerja PHP (CLI vs Web vs VS Code)
+        let s3EnvTab = 'cli'; // 'cli' | 'web' | 'vscode'
+
+        // State Slide 5: Bedah 6 Sintaks Asing Dasar PHP + Transformasi Flowchart
+        let s5DiffItem = 'dollar'; // 'dollar' | 'semicolon' | 'io'
+        let s5TokenKey = 'phptag'; // 'phptag' | 'dollar' | 'assign' | 'echo' | 'newline' | 'semicolon'
+
+        // State Slide 6: 4 Tipe Data Dasar PHP & var_dump()
+        let s6PhpType = 'string';
+
+        // State Slide 7: Bedah Per Potongan (int) trim(fgets(STDIN))
+        let s7CastMode = 'with_cast'; // 'raw_fgets' | 'with_cast'
+        let s7PieceKey = 'fgets'; // 'var' | 'cast' | 'trim' | 'fgets' | 'stdin' | 'semi'
+        let s7HargaRaw = '15000';
+        let s7StokRaw = '20';
+
+        // State Slide 8: Operator Aritmatika & Komentar di PHP
+        let s8OpKey = '%';
+
+        // State Slide 10: Instruksi echo, Titik (.), & Kutip Ganda vs Kutip Tunggal
+        let s10EchoStyle = 'double'; // 'dot' | 'double' | 'single_trap'
+
+        // State Slide 11: Bengkel echo & Bedah 4 Parameter number_format()
+        let s11Produk = 'Kopi Susu Gula Aren';
+        let s11Modal = 9000;
+        let s11Jual = 15000;
+        let s11Stok = 20;
+        let s11UseNumFmt = true;
+        let s11ParamKey = 'p4'; // 'p1' | 'p2' | 'p3' | 'p4'
+
+        // State Slide 12: Peta Transformasi Lengkap Flowchart SVG -> Kode PHP (7 Tahap)
+        let s12SyncBlock = 1;
+
+        // State Slide 13: Detektif 4 Error Pemula PHP
+        let s13ErrCase = 'semicolon'; // 'semicolon' | 'no_dollar' | 'case_sensitive' | 'no_tag'
+        let s13Fixed = false;
+
+        // State Slide 15: Simulasi 1 — Live PHP CLI Runner (8 Baris Skrip)
+        let phpStepIndex = -1;
+        let phpAutoTimer = null;
+        let phpIsAuto = false;
+        let phpWaitingVar = null;
+        let phpMemory = {};
+        let phpTerminalLog = [];
+        let phpBannerText = 'Klik tombol Run Skrip atau Step (Per Baris) di kanan atas untuk menjalankan M06_Produk_WarungDigital.php!';
+        let phpInputError = '';
+
+        // State Slide 16: Simulasi 2 — Lengkapi 4 Baris Skrip PHP
+        let activePhpSlot = 1;
+        let phpBuilderSlots = { 1: '', 2: '', 3: '', 4: '' };
+        let phpBuilderFeedback = { type: '', text: '' };
+
+        // State Slide 17: Simulasi 3 — Drag & Drop 8 Baris Skrip PHP
+        const CORRECT_PHP_STEPS = [
+            { id: 1, tag: "Tag Pembuka", code: "<?php", desc: "Wajib membuka file agar mesin mengenali kode PHP" },
+            { id: 2, tag: "Output Sapaan", code: "echo \"=== SELAMAT DATANG DI WARUNG DIGITAL ===\\n\";", desc: "Mencetak sapaan pembuka toko ke terminal CLI" },
+            { id: 3, tag: "Input String", code: "$namaProduk = trim(fgets(STDIN));", desc: "Membaca ketikan nama produk dan menghapus sisa Enter" },
+            { id: 4, tag: "Input Integer", code: "$hargaJual = (int) trim(fgets(STDIN));", desc: "Membaca harga jual dan mengonversinya menjadi tipe int" },
+            { id: 5, tag: "Input Integer", code: "$stokAwal = (int) trim(fgets(STDIN));", desc: "Membaca jumlah stok awal sebagai bilangan bulat (int)" },
+            { id: 6, tag: "Proses Hitung", code: "$totalNilaiAset = $hargaJual * $stokAwal;", desc: "Menghitung total nilai aset stok produk Warung Digital" },
+            { id: 7, tag: "Output Kartu", code: "echo \"Produk: $namaProduk | Aset: Rp \" . number_format($totalNilaiAset, 0, ',', '.') . \"\\n\";", desc: "Menampilkan kartu data produk dengan format ribuan Rupiah" },
+            { id: 8, tag: "Tag Penutup", code: "?>", desc: "Menutup blok kode PHP dengan rapi" }
+        ];
+        let phpStepsOrder = [...CORRECT_PHP_STEPS].sort(function () { return Math.random() - 0.5; });
+        let phpShowValidation = false;
+        let phpFeedbackText = '';
+        let draggedPhpIndex = null;
+
+        // State Slide 18: Cek Pemahaman Mandiri
+        let selfCheckFeedback = { 1: null, 2: null, 3: null };
+
+        function renderSlide1() {
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-8">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center my-auto">
+                        <div class="lg:col-span-7 space-y-5">
+                            <div class="inline-flex flex-wrap items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 text-xs font-bold border border-indigo-200/60 dark:border-indigo-800/60">
+                                <span>Pertemuan 6 • Sub-CPMK 2.1 (Bobot 3%)</span>
+                                <span>•</span>
+                                <span>Fase 2: PHP Murni (Minggu 6–15)</span>
+                            </div>
+
+                            <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 dark:text-white leading-tight tracking-tight">
+                                Pengenalan ${term('php', 'PHP')} CLI/Web, Variabel <span class="font-mono text-indigo-600 dark:text-indigo-400">$</span>, Tipe Data, &amp; Instruksi <span class="font-mono text-indigo-600 dark:text-indigo-400">echo</span>
+                            </h2>
+
+                            <p class="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+                                Selamat memasuki <strong>Fase 2 Perkuliahan (Sesuai RPS OBE BD1205)</strong>! Setelah 5 minggu mematangkan logika visual di Flowgorithm, hari ini kita mulai menulis <strong>kode PHP Murni perdana</strong> untuk menampilkan <strong>sapaan pembuka</strong> dan mencatat <strong>data produk UMKM "Warung Digital"</strong>!
+                            </p>
+
+                            <div class="p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200/70 dark:border-indigo-800/70 flex items-center gap-3 text-xs sm:text-sm text-slate-700 dark:text-slate-200">
+                                <i class="fa-brands fa-php text-indigo-600 dark:text-indigo-400 text-2xl shrink-0"></i>
+                                <span><strong>Target Pengalaman Belajar Minggu 6:</strong> Menulis kode PHP perdana (<span class="font-mono">.php</span>) untuk menampilkan sapaan pembuka dan mencatat data produk Warung Digital menggunakan variabel (<span class="font-mono">$</span>), tipe data, serta instruksi <span class="font-mono">echo</span> dan <span class="font-mono">fgets(STDIN)</span> tanpa <em>syntax error</em>.</span>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-5">
+                            <div class="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 space-y-4">
+                                <div>
+                                    <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Peta 18 Slide Pertemuan 6</span>
+                                    <h3 class="text-lg font-extrabold text-slate-900 dark:text-white mt-1">4 Modul Pembelajaran PHP Dasar</h3>
+                                </div>
+
+                                <div class="space-y-2.5">
+                                    <button type="button" onclick="goToSlide(1)" class="w-full text-left flex items-start gap-3 p-3.5 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 dark:hover:bg-slate-800/80 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-0.5 font-extrabold text-xs">M1</div>
+                                        <div>
+                                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">Modul 1: PHP di Bisnis Digital &amp; Setup CLI/Web (Slide 1-3)</h4>
+                                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Peran PHP di ekosistem toko online &amp; beda PHP CLI vs PHP Web.</p>
+                                        </div>
+                                    </button>
+
+                                    <button type="button" onclick="goToSlide(4)" class="w-full text-left flex items-start gap-3 p-3.5 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 dark:hover:bg-slate-800/80 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-0.5 font-extrabold text-xs">M2</div>
+                                        <div>
+                                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">Modul 2: Variabel $, Tipe Data &amp; Input CLI (Slide 5-8)</h4>
+                                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Aturan $, titik koma (;), 4 tipe data + var_dump(), &amp; type casting.</p>
+                                        </div>
+                                    </button>
+
+                                    <button type="button" onclick="goToSlide(9)" class="w-full text-left flex items-start gap-3 p-3.5 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 dark:hover:bg-slate-800/80 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-0.5 font-extrabold text-xs">M3</div>
+                                        <div>
+                                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">Modul 3: Instruksi echo, Titik (.), &amp; Translasi (Slide 10-13)</h4>
+                                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Kutip ganda vs tunggal, number_format(), translasi, &amp; detektif error.</p>
+                                        </div>
+                                    </button>
+
+                                    <button type="button" onclick="goToSlide(14)" class="w-full text-left flex items-start gap-3 p-3.5 rounded-2xl bg-white hover:bg-indigo-50/50 dark:bg-slate-900 dark:hover:bg-slate-800/80 border border-slate-200/70 dark:border-slate-800 transition">
+                                        <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-0.5 font-extrabold text-xs">M4</div>
+                                        <div>
+                                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">Modul 4: 3 Simulator Lab PHP Warung Digital (Slide 15-18)</h4>
+                                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Live PHP CLI Runner, lengkapi kode produk, &amp; Drag-Drop 8 baris.</p>
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide2() {
+            const isCompare = s2Tab === 'compare';
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 1 • Mengapa Mempelajari PHP di Bisnis Digital?</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Peran ${term('php', 'PHP')} dalam Ekosistem Toko Online &amp; Kasir UMKM</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Di Minggu 1–5 kita melatih logika lewat gambar (Flowgorithm). Mulai Minggu 6 hingga Mini Project Minggu 15, kita menerjemahkan logika tersebut ke <strong>PHP Murni</strong> agar program kasir <strong>Warung Digital</strong> dapat dijalankan nyata di komputer maupun server web.
+                        </p>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" onclick="setS2Tab('compare')" class="px-4 py-2 rounded-xl font-bold text-xs sm:text-sm border transition ${isCompare ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            1. Transisi: Flowgorithm (M1–5) vs PHP (M6–15)
+                        </button>
+                        <button type="button" onclick="setS2Tab('bisnis_usecase')" class="px-4 py-2 rounded-xl font-bold text-xs sm:text-sm border transition ${!isCompare ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            2. Contoh Nyata PHP di Industri Bisnis Digital
+                        </button>
+                    </div>
+
+                    <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 my-auto">
+                        ${isCompare ? `
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
+                                    <span class="text-xs font-extrabold px-2.5 py-0.5 rounded-md bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">Fase 1: Flowgorithm (Minggu 1–5)</span>
+                                    <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Merancang Logika dengan Gambar</h3>
+                                    <ul class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 space-y-1.5 list-disc pl-4">
+                                        <li>Cocok untuk belajar alur <em>Sequence</em>, <em>If-Else</em>, dan <em>Loop</em> secara visual.</li>
+                                        <li>Hanya berjalan di aplikasi Flowgorithm (<span class="font-mono">.fprg</span>), belum bisa dipakai sebagai aplikasi kasir nyata.</li>
+                                        <li>Tipe data wajib dideklarasikan manual dengan blok Segi Enam (<span class="font-mono">Declare</span>).</li>
+                                    </ul>
+                                </div>
+                                <div class="p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border-2 border-indigo-500/70 space-y-2">
+                                    <span class="text-xs font-extrabold px-2.5 py-0.5 rounded-md bg-indigo-600 text-white">Fase 2: PHP Murni (Minggu 6–15)</span>
+                                    <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Membangun Aplikasi Kasir Sungguhan</h3>
+                                    <ul class="text-xs sm:text-sm text-slate-700 dark:text-slate-200 space-y-1.5 list-disc pl-4">
+                                        <li>Ditulis dalam file teks (<span class="font-mono">.php</span>) yang langsung dieksekusi oleh mesin PHP.</li>
+                                        <li>Menjadi fondasi langsung mata kuliah <strong>Pemrograman Web</strong> (PHP + MySQL) di semester berikutnya.</li>
+                                        <li>Sangat cepat untuk merancang katalog produk, kalkulator diskon/pajak, dan sistem POS UMKM.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        ` : `
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-xs sm:text-sm">
+                                <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                                    <div class="w-9 h-9 rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center"><i class="fa-solid fa-cart-shopping"></i></div>
+                                    <h4 class="font-extrabold text-slate-900 dark:text-white">WordPress &amp; WooCommerce</h4>
+                                    <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">Jutaan toko online UMKM dan website perusahaan di seluruh dunia berjalan di atas mesin bahasa PHP.</p>
+                                </div>
+                                <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                                    <div class="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center"><i class="fa-solid fa-cash-register"></i></div>
+                                    <h4 class="font-extrabold text-slate-900 dark:text-white">Aplikasi Kasir (POS) &amp; ERP</h4>
+                                    <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">Banyak sistem kasir berbasis web, manajemen stok gudang, dan pembukuan UMKM di Indonesia dibangun menggunakan PHP (Laravel / CodeIgniter).</p>
+                                </div>
+                                <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                                    <div class="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-400 flex items-center justify-center"><i class="fa-solid fa-server"></i></div>
+                                    <h4 class="font-extrabold text-slate-900 dark:text-white">Hosting Murah &amp; Ramah UMKM</h4>
+                                    <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">Hampir seluruh penyedia server lokal di Indonesia langsung mendukung file <span class="font-mono">.php</span> dengan biaya terjangkau untuk bisnis rintisan.</p>
+                                </div>
+                            </div>
+                        `}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide3() {
+            const envs = {
+                cli: {
+                    badge: "Mode Utama Minggu 6–15 • PHP CLI (Terminal)",
+                    title: "Menjalankan File .php di Terminal (Command Line Interface)",
+                    desc: "Di mode " + term('cli', 'PHP CLI') + ", kita menjalankan kode langsung dari layar Terminal VS Code tanpa perlu repot menulis HTML. Pindah baris menggunakan kode " + term('newline_esc', '\\n') + ".",
+                    cmd: "php M06_Produk_WarungDigital.php",
+                    code: '<?php\necho "=== SELAMAT DATANG DI WARUNG DIGITAL ===\\n";\necho "Menu Unggulan: Kopi Susu Gula Aren\\n";\n?>',
+                    tip: "Cara paling bersih untuk melatih logika algoritma (Sequence, If-Else, Loop, Array, Fungsi) sebelum belajar HTML/CSS."
+                },
+                web: {
+                    badge: "Mode Web Browser • XAMPP / Laragon (Localhost)",
+                    title: "Menjalankan File .php di Browser (Apache Server)",
+                    desc: "Di mode Web, file disimpan di folder htdocs (" + term('xampp', 'XAMPP') + "), lalu dibuka lewat alamat http://localhost/warung_digital/. Karena tampil di halaman web, pindah baris menggunakan tag HTML <br>.",
+                    cmd: "http://localhost/warung_digital/index.php",
+                    code: '<?php\necho "<h3>=== SELAMAT DATANG DI WARUNG DIGITAL ===</h3>";\necho "Menu Unggulan: Kopi Susu Gula Aren<br>";\n?>',
+                    tip: "Pastikan layanan Apache di XAMPP Control Panel sudah berstatus hijau (Running) sebelum membuka alamat localhost."
+                },
+                vscode: {
+                    badge: "Alat Tulis Kode • Visual Studio Code (VS Code)",
+                    title: "Langkah Menyiapkan & Menguji PHP di Laptop Anda",
+                    desc: "Kita menulis file .php di VS Code, menyimpannya dengan Ctrl+S, lalu membuka Terminal bawaan (Ctrl+`) untuk menjalankan perintah php.",
+                    cmd: "php -v   (Untuk cek apakah PHP sudah aktif di laptop)",
+                    code: "C:\\warung_digital> php -v\nPHP 8.2.12 (cli) (built: Oct 2023)\n\nC:\\warung_digital> php M06_Produk_WarungDigital.php",
+                    tip: "Jika muncul pesan 'php is not recognized', tambahkan folder C:\\xampp\\php ke Environment Variable (PATH) Windows."
+                }
+            };
+
+            const cur = envs[s3EnvTab] || envs.cli;
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 1 • Mengenal Lingkungan Eksekusi PHP</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Mode Eksekusi: ${term('cli', 'PHP CLI (Terminal)')} vs PHP Web (${term('xampp', 'XAMPP')})</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            PHP bisa dijalankan di layar Terminal (<strong>CLI</strong>) maupun di Browser (<strong>Web</strong>). Pada praktikum Dasar Pemrograman 1 kita fokus memakai <strong>PHP CLI</strong> agar alur tanya-jawabnya persis seperti <em>Console Window</em> Flowgorithm. Klik 3 tab di bawah:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        <button type="button" onclick="setS3Env('cli')" class="p-3 rounded-2xl border text-left transition ${s3EnvTab === 'cli' ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-xs sm:text-sm font-extrabold"><i class="fa-solid fa-terminal mr-1.5"></i>1. PHP CLI (Fokus Praktikum)</div>
+                        </button>
+                        <button type="button" onclick="setS3Env('web')" class="p-3 rounded-2xl border text-left transition ${s3EnvTab === 'web' ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-xs sm:text-sm font-extrabold"><i class="fa-solid fa-globe mr-1.5"></i>2. PHP Web (XAMPP Localhost)</div>
+                        </button>
+                        <button type="button" onclick="setS3Env('vscode')" class="p-3 rounded-2xl border text-left transition ${s3EnvTab === 'vscode' ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-xs sm:text-sm font-extrabold"><i class="fa-solid fa-laptop-code mr-1.5"></i>3. Setup VS Code &amp; Cek php -v</div>
+                        </button>
+                    </div>
+
+                    <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 grid grid-cols-1 lg:grid-cols-12 gap-5 items-center my-auto">
+                        <div class="lg:col-span-6 space-y-3">
+                            <span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">${cur.badge}</span>
+                            <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">${cur.title}</h3>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${cur.desc}</p>
+                            <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-300">
+                                <i class="fa-solid fa-lightbulb text-amber-500 mr-1.5"></i>${escapeHtml(cur.tip)}
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-6 space-y-2.5">
+                            <div class="px-3.5 py-2 rounded-xl bg-indigo-950 text-indigo-200 font-mono text-xs font-bold flex items-center gap-2">
+                                <i class="fa-solid fa-play text-emerald-400 text-[10px]"></i>
+                                <span class="truncate">${escapeHtml(cur.cmd)}</span>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-slate-900 text-emerald-300 font-mono text-xs">
+                                <pre class="whitespace-pre-wrap leading-relaxed">${escapeHtml(cur.code)}</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide4() {
+            return `
+                <div class="slide-enter flex flex-col justify-center h-full my-auto">
+                    <div class="p-8 sm:p-12 rounded-3xl bg-gradient-to-br from-indigo-600 to-slate-900 text-white space-y-6 shadow-lg">
+                        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/15 text-indigo-100 text-xs font-extrabold uppercase tracking-wider">
+                            <i class="fa-solid fa-bridge"></i>
+                            <span>Jembatan Antar Topik • Modul 1 Menuju Modul 2</span>
+                        </div>
+
+                        <h2 class="text-2xl sm:text-4xl font-extrabold leading-tight">
+                            Banyak simbol baru di PHP yang terlihat asing bagi pemula seperti <span class="font-mono text-amber-300">&lt;?php</span>, tanda dolar <span class="font-mono text-amber-300">$</span>, titik koma <span class="font-mono text-amber-300">;</span>, dan <span class="font-mono text-amber-300">fgets(STDIN)</span>. Apa guna masing-masing?
+                        </h2>
+
+                        <p class="text-indigo-100 text-sm sm:text-base leading-relaxed max-w-3xl">
+                            Jangan khawatir! Di <strong>Modul 2 (Slide 5 s/d 8)</strong>, kita akan membedah <strong>satu per satu setiap simbol asing PHP</strong> lengkap dengan <strong>padanan bentuk Flowchart-nya</strong>, menjelaskan gunanya apa, serta bagaimana cara memakainya agar Anda tidak sekadar menyalin kode.
+                        </p>
+
+                        <div class="pt-2">
+                            <button type="button" onclick="changeSlide(1)" class="px-5 py-3 rounded-xl bg-white text-indigo-700 hover:bg-indigo-50 font-extrabold text-xs sm:text-sm transition inline-flex items-center gap-2 shadow-sm">
+                                <span>Masuk ke Modul 2: Bedah 6 Sintaks Asing Dasar PHP</span>
+                                <i class="fa-solid fa-arrow-right text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide5() {
+            const tokens = {
+                phptag: {
+                    pill: "<?php ... ?>",
+                    title: "1. Tag Pembuka & Penutup PHP (<?php ... ?>)",
+                    flowLabel: "Pengganti Kapsul Main & End",
+                    svg: `<svg class="w-full max-w-[230px] h-auto" viewBox="0 0 240 46"><rect x="35" y="5" width="170" height="36" rx="18" fill="#f3e8ff" stroke="#7e22ce" stroke-width="2.2"/><text x="120" y="27" text-anchor="middle" fill="#581c87" font-weight="800" font-size="12">Main  /  End</text></svg>`,
+                    guna: "Memberi tahu komputer di baris mana kode program PHP dimulai (<?php) dan diakhiri (?>). Tanpa tag pembuka ini, komputer mengira tulisan Anda hanya teks biasa.",
+                    pakai: "Selalu tulis <?php pada baris pertama file .php dan tutup dengan ?> di baris paling bawah.",
+                    contoh: "<?php\n  // Seluruh perintah kasir ditulis di sini\n?>"
+                },
+                dollar: {
+                    pill: "$namaProduk",
+                    title: "2. Tanda Dolar ($) di Depan Nama Variabel",
+                    flowLabel: "Pengganti Nama Laci Variabel",
+                    svg: `<svg class="w-full max-w-[240px] h-auto" viewBox="0 0 260 46"><polygon points="24,5 236,5 252,23 236,41 24,41 8,23" fill="#fef9c3" stroke="#b45309" stroke-width="2.2"/><text x="130" y="27" text-anchor="middle" fill="#78350f" font-weight="800" font-size="11.5">Variabel: namaProduk</text></svg>`,
+                    guna: "Ciri khas utama bahasa PHP! Tanda $ adalah penanda wajib bahwa sebuah kata adalah wadah/laci variabel di memori (bukan kata perintah).",
+                    pakai: "Wajib selalu ditulis di depan nama variabel baik saat mengisi nilai maupun saat memanggilnya. Ingat: huruf besar & kecil dibedakan ($harga != $Harga).",
+                    contoh: '$namaProduk = "Kopi Susu Aren";\n$hargaJual  = 15000;'
+                },
+                assign: {
+                    pill: "=",
+                    title: "3. Tanda Sama Dengan (=) — Pengisi Nilai (Assign)",
+                    flowLabel: "Pengganti Blok Assign Kuning",
+                    svg: `<svg class="w-full max-w-[240px] h-auto" viewBox="0 0 260 46"><rect x="14" y="5" width="232" height="36" fill="#fef08a" stroke="#a16207" stroke-width="2.2"/><text x="130" y="27" text-anchor="middle" fill="#713f12" font-weight="800" font-size="11.5">Assign total = harga * stok</text></svg>`,
+                    guna: "Memasukkan nilai atau hasil perhitungan dari sebelah kanan ke dalam laci variabel di sebelah kiri (sekaligus membuat lacinya otomatis tanpa blok Declare).",
+                    pakai: "Letakkan nama variabel target ($total) di sebelah kiri = dan nilai atau rumusnya ($hargaJual * $stokAwal) di sebelah kanan.",
+                    contoh: "$totalAset = $hargaJual * $stokAwal;"
+                },
+                echo: {
+                    pill: "echo",
+                    title: "4. Kata Kunci echo — Perintah Cetak Layar (Output)",
+                    flowLabel: "Pengganti Blok Output Hijau",
+                    svg: `<svg class="w-full max-w-[240px] h-auto" viewBox="0 0 260 46"><polygon points="26,5 248,5 234,41 12,41" fill="#dcfce7" stroke="#16a34a" stroke-width="2.2"/><text x="130" y="27" text-anchor="middle" fill="#14532d" font-weight="800" font-size="11.5">Output "Halo Warung"</text></svg>`,
+                    guna: "Menampilkan tulisan sapaan, pertanyaan input, isi variabel, atau struk belanja ke layar Terminal CLI maupun halaman Browser.",
+                    pakai: "Tulis echo diikuti spasi, lalu teks yang diapit tanda kutip ganda (\"...\") agar variabel di dalamnya bisa langsung terbuka.",
+                    contoh: 'echo "Menu: $namaProduk\\n";'
+                },
+                newline: {
+                    pill: "\\n",
+                    title: "5. Kode \\n (Backslash + n) — Tombol Enter di Terminal",
+                    flowLabel: "Pindah ke Baris Baru (Newline)",
+                    svg: `<svg class="w-full max-w-[240px] h-auto" viewBox="0 0 260 46"><rect x="20" y="5" width="220" height="36" rx="8" fill="#e0f2fe" stroke="#0284c7" stroke-width="2.2"/><text x="130" y="27" text-anchor="middle" fill="#0c4a6e" font-weight="800" font-size="11.5">Enter ↵ (Turun ke Baris Bawah)</text></svg>`,
+                    guna: "Menyuruh kursor Terminal turun ke baris baru setelah mencetak teks. Tanpa \\n, semua hasil echo akan menempel menyamping dalam 1 baris panjang.",
+                    pakai: "Selalu ditulis di dalam tanda kutip ganda (\"...\\n\"), jangan di dalam kutip tunggal ('...\\n') karena tidak akan berfungsi.",
+                    contoh: 'echo "Baris 1\\n";\necho "Baris 2\\n";'
+                },
+                semicolon: {
+                    pill: ";",
+                    title: "6. Titik Koma (;) — Penutup Setiap Baris Instruksi",
+                    flowLabel: "Tanda Akhir 1 Blok Perintah",
+                    svg: `<svg class="w-full max-w-[240px] h-auto" viewBox="0 0 260 46"><rect x="20" y="5" width="220" height="36" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="2.2"/><text x="130" y="27" text-anchor="middle" fill="#991b1b" font-weight="800" font-size="11.5">Wajib Tutup Baris dengan ( ; )</text></svg>`,
+                    guna: "Seperti tanda titik (.) di akhir kalimat bahasa Indonesia, titik koma (;) memberi tahu mesin PHP bahwa 1 perintah telah selesai dan lanjut ke perintah berikutnya.",
+                    pakai: "Pasang di ujung kanan setiap baris echo, pengisian variabel, atau var_dump(). Lupa 1 tanda ; akan memicu Parse Error!",
+                    contoh: '$hargaJual = 15000;\necho "Harga: Rp $hargaJual\\n";'
+                }
+            };
+
+            const keys = ['phptag', 'dollar', 'assign', 'echo', 'newline', 'semicolon'];
+            const btnsHtml = keys.map(function (k) {
+                const active = s5TokenKey === k;
+                return `
+                    <button type="button" onclick="setS5Token('${k}')" class="syntax-pill p-2.5 rounded-2xl border-2 text-center font-mono text-xs sm:text-sm font-extrabold transition ${active ? 'bg-indigo-600 text-white border-indigo-500 shadow-xs' : 'bg-slate-900 text-emerald-300 border-slate-700 hover:border-indigo-400'}">
+                        ${escapeHtml(tokens[k].pill)}
+                    </button>
+                `;
+            }).join('');
+
+            const cur = tokens[s5TokenKey] || tokens.phptag;
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 2 • Kenalan dengan 6 Simbol Asing Dasar PHP</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Bedah Arti, Fungsi, &amp; Cara Pakai 6 Sintaks Dasar PHP</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                            Klik salah satu dari <strong>6 tombol sintaks PHP</strong> di bawah ini untuk melihat bentuk padanannya di Flowchart, gunanya apa, dan contoh penulisannya:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                        ${btnsHtml}
+                    </div>
+
+                    <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-2 border-indigo-500/60 grid grid-cols-1 lg:grid-cols-12 gap-5 items-center my-auto">
+                        <div class="lg:col-span-7 space-y-2.5">
+                            <span class="text-xs font-extrabold px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">${escapeHtml(cur.title)}</span>
+                            <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed">
+                                <strong class="text-indigo-600 dark:text-indigo-400">Gunanya Apa?</strong> ${escapeHtml(cur.guna)}
+                            </div>
+                            <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed">
+                                <strong class="text-emerald-600 dark:text-emerald-400">Cara Pakainya:</strong> ${escapeHtml(cur.pakai)}
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-5 space-y-3">
+                            <div class="fg-canvas p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700 flex flex-col items-center gap-1.5">
+                                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">${escapeHtml(cur.flowLabel)}</span>
+                                ${cur.svg}
+                            </div>
+                            <div class="p-3.5 rounded-2xl bg-slate-900 text-emerald-300 font-mono text-xs">
+                                <div class="text-slate-400 text-[10px] mb-1">// Contoh penulisan di PHP:</div>
+                                <pre class="whitespace-pre-wrap leading-relaxed">${escapeHtml(cur.contoh)}</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide6() {
+            const typesDB = {
+                string: {
+                    name: "1. string (Teks)",
+                    varEx: '$namaProduk = "Kopi Susu Gula Aren";',
+                    dumpOut: 'string(19) "Kopi Susu Gula Aren"',
+                    guna: "Menyimpan huruf, nama menu, kategori produk, atau alamat pembeli. Di PHP, teks wajib diapit tanda kutip dua (\"...\") atau kutip tunggal ('...').",
+                    pakai: "Saat memakai var_dump($namaProduk); PHP menampilkan kata string(19) yang berarti teks dengan panjang 19 huruf/spasi."
+                },
+                int: {
+                    name: "2. int (Bilangan Bulat)",
+                    varEx: '$hargaJual = 15000;',
+                    dumpOut: 'int(15000)',
+                    guna: "Menyimpan angka bulat utuh tanpa desimal, tanpa huruf Rp, dan tanpa titik ribuan (seperti harga modal, harga jual, dan stok barang).",
+                    pakai: "Gunakan langsung angka murni 15000 (jangan 15.000). Jika berasal dari keyboard CLI, wajib memakai (int) trim(fgets(STDIN))."
+                },
+                float: {
+                    name: "3. float (Bilangan Desimal)",
+                    varEx: '$persenMargin = 66.67;',
+                    dumpOut: 'float(66.67)',
+                    guna: "Menyimpan angka pecahan atau desimal (seperti persentase margin keuntungan, berat kopi 0.5 kg, atau tarif PPN 0.11). Pemisah desimal wajib tanda TITIK (.).",
+                    pakai: "Padanan tipe data Real di Flowgorithm. Jika input dari keyboard CLI berupa desimal, gunakan (float) trim(fgets(STDIN))."
+                },
+                bool: {
+                    name: "4. bool (Logika Benar/Salah)",
+                    varEx: '$produkAktif = true;',
+                    dumpOut: 'bool(true)',
+                    guna: "Menyimpan status biner yang hanya bernilai true (Benar/Aktif) atau false (Salah/Nonaktif), ditulis tanpa tanda kutip.",
+                    pakai: "Digunakan untuk menandai status ketersediaan menu di etalase atau status keanggotaan member Warung Digital."
+                }
+            };
+
+            const keys = ['string', 'int', 'float', 'bool'];
+            const tabsHtml = keys.map(function (k) {
+                const active = s6PhpType === k;
+                return `
+                    <button type="button" onclick="setS6PhpType('${k}')" class="p-3.5 rounded-2xl border text-left transition ${active ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:bg-slate-100'}">
+                        <div class="font-mono text-sm font-extrabold">${k}</div>
+                        <div class="text-[11px] ${active ? 'text-indigo-100' : 'text-slate-500 dark:text-slate-400'} mt-0.5">${typesDB[k].name.split(' (')[1].replace(')', '')}</div>
+                    </button>
+                `;
+            }).join('');
+
+            const cur = typesDB[s6PhpType] || typesDB.string;
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 2 • 4 Tipe Data Dasar PHP &amp; Inspektor var_dump()</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Tipe Data Otomatis (${term('dynamictyping', 'Dynamic Typing')}) &amp; Fungsi ${term('vardump', 'var_dump()')}</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Di PHP, Anda tidak perlu menulis <span class="font-mono font-bold">Declare Integer</span>. PHP menebak tipe datanya otomatis saat Anda mengisi variabel, dan Anda bisa mengecek hasil tebakan PHP lewat fungsi <span class="font-mono font-bold">var_dump($variabel);</span>. Klik 4 tipe data di bawah:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+                        ${tabsHtml}
+                    </div>
+
+                    <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 grid grid-cols-1 lg:grid-cols-12 gap-5 items-center my-auto">
+                        <div class="lg:col-span-6 space-y-3">
+                            <span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">${escapeHtml(cur.name)}</span>
+                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed">
+                                <strong class="text-indigo-600 dark:text-indigo-400 block text-xs uppercase mb-1">Gunanya Apa?</strong>
+                                ${escapeHtml(cur.guna)}
+                            </div>
+                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                                <strong class="text-emerald-600 dark:text-emerald-400 block uppercase mb-1">Cara Pakai &amp; Cek Tipe:</strong>
+                                ${escapeHtml(cur.pakai)}
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-6 space-y-3">
+                            <div class="p-4 rounded-2xl bg-slate-900 text-emerald-300 font-mono text-xs space-y-2">
+                                <div class="text-slate-400">// 1. Menulis variabel PHP (tanpa Declare):</div>
+                                <div class="text-sm font-bold text-white">${escapeHtml(cur.varEx)}</div>
+                                <div class="text-slate-400 pt-1">// 2. Mengecek tipe data &amp; isinya:</div>
+                                <div class="text-amber-300 font-bold">var_dump(${escapeHtml(cur.varEx.split(' =')[0])});</div>
+                            </div>
+
+                            <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 font-mono text-xs space-y-1">
+                                <div class="text-slate-400">// Output var_dump() di Terminal CLI:</div>
+                                <div class="text-emerald-400 text-sm font-extrabold">${escapeHtml(cur.dumpOut)}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide7() {
+            const rawHarga = String(s7HargaRaw || '15000');
+            const cleanHarga = rawHarga.trim();
+            const intHarga = parseInt(cleanHarga.replace(/[^\d]/g, ''), 10) || 0;
+
+            const pieces = {
+                var: {
+                    code: "$hargaJual =",
+                    title: "1. Variabel Penampung ($hargaJual =)",
+                    guna: "Menyiapkan laci variabel bernama $hargaJual untuk menampung hasil akhir ketikan kasir.",
+                    pakai: "Ganti nama variabel sesuai data yang diminta, misalnya $namaProduk = ... atau $stokAwal = ..."
+                },
+                cast: {
+                    code: "(int)",
+                    title: "2. Type Casting (int) — Pengubah Paksa ke Angka Bulat",
+                    guna: "Semua ketikan dari keyboard awalnya berwujud teks (String). Tanda (int) di depan mengubah teks \"15000\" menjadi bilangan bulat murni 15000 agar aman dikalikan.",
+                    pakai: "Pasang (int) untuk angka bulat (harga, stok), pasang (float) untuk desimal (berat 0.5 kg), dan HAPUS (int) jika input berupa teks (nama produk)!"
+                },
+                trim: {
+                    code: "trim( ... )",
+                    title: "3. Fungsi " + term('trim_fn', 'trim()') + " — Gunting Pembersih Enter",
+                    guna: "Saat kasir menekan tombol Enter, karakter baris baru (\\n) ikut terbawa di ujung teks. trim() menggunting \\n dan spasi kosong di ujung teks.",
+                    pakai: "Bungkus hasil fgets(STDIN) di dalam kurung trim(...): trim(fgets(STDIN))."
+                },
+                fgets: {
+                    code: "fgets( ... )",
+                    title: "4. Fungsi " + term('fgets_fn', 'fgets()') + " — File Get String (Pembaca 1 Baris)",
+                    guna: "Singkatan dari File Get String. Tugasnya menghentikan program sejenak untuk menunggu dan membaca satu baris ketikan sampai pengguna menekan Enter.",
+                    pakai: "Selalu diisi sumber masukan STDIN di dalam kurungnya: fgets(STDIN)."
+                },
+                stdin: {
+                    code: "STDIN",
+                    title: "5. Konstanta STDIN (Standard Input / Papan Ketik)",
+                    guna: "Singkatan dari Standard Input — memberi tahu fungsi fgets() bahwa data berasal dari ketikan Keyboard di Terminal CLI (wajib ditulis HURUF BESAR semua).",
+                    pakai: "Khusus untuk PHP CLI (Terminal). Jika input dari formulir web browser, nanti di mata kuliah Web memakai $_POST."
+                },
+                semi: {
+                    code: ";",
+                    title: "6. Titik Koma (;) — Penutup Instruksi",
+                    guna: "Menutup baris instruksi input agar mesin PHP lanjut mengeksekusi baris kode di bawahnya.",
+                    pakai: "Wajib ada di paling kanan setiap selesai menulis perintah input."
+                }
+            };
+
+            const cur = pieces[s7PieceKey];
+            const pieceKeys = ['var', 'cast', 'trim', 'fgets', 'stdin', 'semi'];
+            const interactiveFormula = pieceKeys.map(function (k) {
+                const active = s7PieceKey === k;
+                return `<button type="button" onclick="setS7Piece('${k}')" class="syntax-pill px-2.5 py-1.5 rounded-xl font-mono text-xs sm:text-sm font-extrabold border-2 transition ${active ? 'bg-indigo-600 text-white border-indigo-400 shadow-sm scale-105' : 'bg-slate-800 text-emerald-300 border-slate-700 hover:border-indigo-400'}">${escapeHtml(pieces[k].code)}</button>`;
+            }).join(' ');
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 2 • Bedah Sintaks Input CLI yang Terlihat "Rumit"</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Membedah Arti <span class="font-mono text-indigo-600 dark:text-indigo-400">(int) trim(fgets(STDIN))</span> per Potongan!</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                            Di Flowgorithm kita cukup menulis 1 blok <span class="font-mono font-bold">Input hargaJual</span>. Di PHP CLI, satu baris input tersusun atas potongan-potongan kecil yang dibaca <strong>dari dalam ke luar</strong>. Klik setiap potongan warna di bawah ini:
+                        </p>
+                    </div>
+
+                    <!-- Baris Sintaks Interaktif per Potongan -->
+                    <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <span class="text-[11px] font-bold text-slate-400">Klik 1 per 1 potongan sintaks di bawah untuk mengetahui artinya:</span>
+                            <span class="text-[11px] font-mono text-amber-300 font-bold">Padanan Flowgorithm: [Input hargaJual]</span>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            ${interactiveFormula}
+                        </div>
+                    </div>
+
+                    <!-- Kartu Penjelasan Potongan Terpilih + Alur Transformasi Data Real-Time -->
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch my-auto">
+                        <div class="lg:col-span-7 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-2 border-indigo-500/60 flex flex-col justify-between gap-3">
+                            <div class="space-y-2">
+                                <span class="text-xs font-extrabold px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">${cur.title}</span>
+                                <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed pt-1"><strong>Gunanya:</strong> ${cur.guna}</p>
+                                <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed"><strong>Cara Pakai:</strong> ${escapeHtml(cur.pakai)}</p>
+                            </div>
+
+                            <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-mono space-y-1">
+                                <div class="text-slate-400 font-sans font-bold text-[11px]">Cukup Hafalkan 2 Template Pakai Ini:</div>
+                                <div class="text-rose-600 dark:text-rose-400 font-bold">1. Input Teks (String)  : $nama = trim(fgets(STDIN));</div>
+                                <div class="text-indigo-600 dark:text-indigo-400 font-bold">2. Input Angka (Integer): $harga = (int) trim(fgets(STDIN));</div>
+                            </div>
+                        </div>
+
+                        <!-- Kanan: Simulasi Alur Perubahan Data dari Keyboard -> Variabel -->
+                        <div class="lg:col-span-5 p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-2.5">
+                            <div class="flex items-center justify-between gap-2">
+                                <label class="text-xs font-extrabold text-slate-700 dark:text-slate-200">Coba Ketik Harga:</label>
+                                <input type="text" value="${escapeHtml(rawHarga)}" oninput="updateS7Inputs('harga', this.value)" class="w-28 px-2.5 py-1 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 font-mono text-xs font-extrabold text-indigo-600">
+                            </div>
+
+                            <div class="space-y-1.5 font-mono text-[11px]">
+                                <div class="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex justify-between">
+                                    <span class="text-slate-500">1. fgets(STDIN)</span>
+                                    <span class="text-rose-600 font-bold">"${escapeHtml(rawHarga)}\\n" <span class="font-sans text-[10px]">(ada Enter)</span></span>
+                                </div>
+                                <div class="text-center text-slate-400 text-[10px]">↓ dibersihkan oleh trim()</div>
+                                <div class="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex justify-between">
+                                    <span class="text-slate-500">2. trim(...)</span>
+                                    <span class="text-amber-600 font-bold">"${escapeHtml(cleanHarga)}" <span class="font-sans text-[10px]">(masih teks)</span></span>
+                                </div>
+                                <div class="text-center text-slate-400 text-[10px]">↓ diubah tipe oleh (int)</div>
+                                <div class="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-400 flex justify-between">
+                                    <span class="text-emerald-700 dark:text-emerald-300 font-bold">3. $hargaJual</span>
+                                    <span class="text-emerald-700 dark:text-emerald-300 font-extrabold">int(${intHarga}) ✓</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        function renderSlide11() {
+            const margin = s11Jual - s11Modal;
+            const persenMargin = s11Modal > 0 ? ((margin / s11Modal) * 100).toFixed(2) : '0.00';
+            const totalAset = s11Jual * s11Stok;
+
+            const fmtRp = function (n) {
+                return s11UseNumFmt ? n.toLocaleString('id-ID') : String(n);
+            };
+
+            const paramsDB = {
+                p1: {
+                    code: "$totalAset",
+                    label: "Parameter 1: Angka yang Mau Diformat",
+                    desc: "Berisi variabel atau angka mentah yang ingin diberi titik ribuan (contoh: 300000)."
+                },
+                p2: {
+                    code: "0",
+                    label: "Parameter 2: Jumlah Angka di Belakang Koma",
+                    desc: "Diisi 0 untuk harga Rupiah bulat (tanpa ,00 di belakang). Jika ingin 2 angka desimal seperti persentase margin (66,67%), isi angka 2."
+                },
+                p3: {
+                    code: "','",
+                    label: "Parameter 3: Simbol Pemisah Desimal",
+                    desc: "Di standar Indonesia, pemisah angka pecahan desimal memakai tanda koma (',')."
+                },
+                p4: {
+                    code: "'.'",
+                    label: "Parameter 4: Simbol Pemisah Ribuan",
+                    desc: "Di standar mata uang Indonesia, setiap 3 digit ribuan dipisahkan tanda titik ('.') sehingga 300000 tampil rapi menjadi 300.000!"
+                }
+            };
+
+            const curP = paramsDB[s11ParamKey];
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-3.5">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 3 • Bedah Fungsi Format Rupiah PHP</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Cara Pakai ${term('numfmt', 'number_format()')} &amp; Arti 4 Parameternya</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                            Di PHP, angka <span class="font-mono">300000</span> dicetak mentah tanpa titik ribuan. Agar tampil rapi menjadi <strong>Rp 300.000</strong>, kita memakai fungsi <span class="font-mono font-bold">number_format()</span>. Klik 4 bagian di dalam kurungnya untuk tahu artinya:
+                        </p>
+                    </div>
+
+                    <!-- Bedah 4 Parameter number_format -->
+                    <div class="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
+                        <div class="flex flex-wrap items-center gap-1.5 font-mono text-xs sm:text-sm">
+                            <span class="text-amber-300 font-bold">number_format(</span>
+                            <button type="button" onclick="setS11Param('p1')" class="syntax-pill px-2 py-0.5 rounded-lg font-extrabold border ${s11ParamKey === 'p1' ? 'bg-indigo-600 text-white border-indigo-400' : 'bg-slate-800 text-sky-300 border-slate-700'}">$totalAset</button>
+                            <span class="text-slate-400">,</span>
+                            <button type="button" onclick="setS11Param('p2')" class="syntax-pill px-2 py-0.5 rounded-lg font-extrabold border ${s11ParamKey === 'p2' ? 'bg-indigo-600 text-white border-indigo-400' : 'bg-slate-800 text-emerald-300 border-slate-700'}">0</button>
+                            <span class="text-slate-400">,</span>
+                            <button type="button" onclick="setS11Param('p3')" class="syntax-pill px-2 py-0.5 rounded-lg font-extrabold border ${s11ParamKey === 'p3' ? 'bg-indigo-600 text-white border-indigo-400' : 'bg-slate-800 text-pink-300 border-slate-700'}">','</button>
+                            <span class="text-slate-400">,</span>
+                            <button type="button" onclick="setS11Param('p4')" class="syntax-pill px-2 py-0.5 rounded-lg font-extrabold border ${s11ParamKey === 'p4' ? 'bg-indigo-600 text-white border-indigo-400' : 'bg-slate-800 text-amber-300 border-slate-700'}">'.'</button>
+                            <span class="text-amber-300 font-bold">)</span>
+                        </div>
+                        <div class="text-xs text-slate-200 bg-slate-800/80 p-2.5 rounded-xl">
+                            <strong class="text-indigo-300">${escapeHtml(curP.label)}:</strong> ${escapeHtml(curP.desc)}
+                        </div>
+                    </div>
+
+                    <!-- Bengkel Uji Coba Real-Time -->
+                    <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-3 my-auto">
+                        <div class="grid grid-cols-2 lg:grid-cols-5 gap-2">
+                            <div class="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 col-span-2 lg:col-span-1">
+                                <label class="text-[10px] font-bold text-slate-400 block mb-0.5">$namaProduk:</label>
+                                <input type="text" value="${escapeHtml(s11Produk)}" oninput="updateS11Catalog('produk', this.value)" class="w-full px-2 py-1 rounded bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-xs font-bold text-rose-600">
+                            </div>
+                            <div class="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <label class="text-[10px] font-bold text-slate-400 block mb-0.5">$hargaModal:</label>
+                                <input type="number" step="500" value="${s11Modal}" oninput="updateS11Catalog('modal', this.value)" class="w-full px-2 py-1 rounded bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-xs font-bold">
+                            </div>
+                            <div class="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <label class="text-[10px] font-bold text-slate-400 block mb-0.5">$hargaJual:</label>
+                                <input type="number" step="500" value="${s11Jual}" oninput="updateS11Catalog('jual', this.value)" class="w-full px-2 py-1 rounded bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-xs font-bold text-indigo-600">
+                            </div>
+                            <div class="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <label class="text-[10px] font-bold text-slate-400 block mb-0.5">$stokAwal:</label>
+                                <input type="number" min="1" value="${s11Stok}" oninput="updateS11Catalog('stok', this.value)" class="w-full px-2 py-1 rounded bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-xs font-bold text-sky-600">
+                            </div>
+                            <div class="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col justify-between">
+                                <label class="text-[10px] font-bold text-slate-400 block">Bandingkan:</label>
+                                <button type="button" onclick="toggleS11Format()" class="w-full py-1 px-2 rounded-lg font-mono text-[11px] font-extrabold transition ${s11UseNumFmt ? 'bg-indigo-600 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200'}">
+                                    ${s11UseNumFmt ? 'Pakai Format ✓' : 'Tanpa Format'}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-emerald-500 font-mono text-xs sm:text-sm space-y-1">
+                            <div class="text-emerald-700 dark:text-emerald-400 font-extrabold">--- KARTU DATA PRODUK WARUNG DIGITAL ---</div>
+                            <div>Menu: <strong>${escapeHtml(s11Produk)}</strong> (${s11Stok} unit) | Jual: <strong>Rp ${fmtRp(s11Jual)}</strong></div>
+                            <div>Margin: <strong class="${margin >= 0 ? 'text-emerald-600' : 'text-rose-600'}">Rp ${fmtRp(margin)} (${persenMargin}%)</strong> | Total Aset: <strong class="text-indigo-600 dark:text-indigo-400">Rp ${fmtRp(totalAset)}</strong></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide8() {
+            const opsDB = {
+                '+': { name: "Penjumlahan (+)", code: "$total = $subtotal + $ongkir;", calc: "50000 + 5000 = 55000", desc: "Menjumlahkan dua nilai angka (misal menambahkan biaya ongkir kurir ke subtotal belanja)." },
+                '-': { name: "Pengurangan (-)", code: "$margin = $hargaJual - $hargaModal;", calc: "15000 - 9000 = 6000", desc: "Mengurangi harga jual dengan harga modal untuk mendapatkan margin keuntungan per unit produk." },
+                '*': { name: "Perkalian (*)", code: "$totalAset = $hargaJual * $stokAwal;", calc: "15000 * 20 = 300000", desc: "Mengalikan harga satuan dengan jumlah stok atau kuantitas beli (wajib pakai bintang *, bukan x)." },
+                '/': { name: "Pembagian (/)", code: "$persenMargin = ($margin / $hargaModal) * 100;", calc: "(6000 / 9000) * 100 = 66.67", desc: "Membagi dua angka. Di PHP, hasil pembagian yang tidak habis otomatis berubah menjadi tipe float (desimal)." },
+                '%': { name: "Modulo / Sisa Bagi (%)", code: "$sisaBotol = $stokAwal % 6;", calc: "20 % 6 = 2 (3 kardus, sisa 2 botol)", desc: "Mencari sisa hasil pembagian bilangan bulat (berguna untuk menghitung sisa kemasan eceran di gudang)." },
+                '**': { name: "Pangkat (**)", code: "$kuadrat = 2 ** 3;", calc: "2 ** 3 = 8", desc: "Menghitung perpangkatan angka di PHP (misal proyeksi pertumbuhan bunga majemuk)." }
+            };
+
+            const keys = ['+', '-', '*', '/', '%', '**'];
+            const tabsHtml = keys.map(function (k) {
+                const active = s8OpKey === k;
+                return `
+                    <button type="button" onclick="setS8Op('${k}')" class="p-3 rounded-2xl border text-center transition ${active ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:bg-slate-100'}">
+                        <div class="font-mono text-base font-extrabold ${active ? 'text-amber-300' : 'text-indigo-600 dark:text-indigo-400'}">${k}</div>
+                        <div class="text-[10px] font-bold mt-0.5 truncate">${opsDB[k].name.split(' (')[0]}</div>
+                    </button>
+                `;
+            }).join('');
+
+            const cur = opsDB[s8OpKey] || opsDB['%'];
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 2 • Operasi Hitung &amp; Catatan Kode (Komentar)</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Operator Aritmatika PHP &amp; Cara Menulis Komentar (<span class="font-mono text-indigo-600 dark:text-indigo-400">//</span>)</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Simbol aritmatika di PHP hampir sama persis dengan Flowgorithm (tetap mematuhi prioritas tanda kurung <span class="font-mono font-bold">()</span>). Klik ke-6 operator di bawah ini untuk melihat contoh penerapannya:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                        ${tabsHtml}
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <div class="lg:col-span-7 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-3">
+                            <div class="space-y-2">
+                                <span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">${escapeHtml(cur.name)}</span>
+                                <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed pt-1">${escapeHtml(cur.desc)}</p>
+                            </div>
+                            <div class="p-4 rounded-2xl bg-slate-900 font-mono text-xs space-y-1.5">
+                                <div class="text-emerald-300 font-bold text-sm">${escapeHtml(cur.code)}</div>
+                                <div class="text-amber-300">// Hasil Uji: ${escapeHtml(cur.calc)}</div>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-5 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-3">
+                            <div>
+                                <span class="text-xs font-extrabold uppercase tracking-wider text-slate-500">Cara Menulis Komentar (Catatan Programmer)</span>
+                                <p class="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
+                                    Komentar adalah catatan pribadi di dalam kode yang <strong>diabaikan oleh mesin PHP</strong> saat dijalankan. Sangat berguna untuk menjelaskan rumus bisnis agar rekan tim paham.
+                                </p>
+                            </div>
+                            <div class="p-3.5 rounded-2xl bg-slate-900 text-slate-300 font-mono text-xs space-y-2">
+                                <div><span class="text-slate-400">// Komentar 1 baris (paling sering dipakai)</span></div>
+                                <div><span class="text-slate-400">/* Komentar panjang<br>&nbsp;&nbsp;&nbsp;untuk beberapa baris sekaligus */</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide9() {
+            return `
+                <div class="slide-enter flex flex-col justify-center h-full my-auto">
+                    <div class="p-8 sm:p-12 rounded-3xl bg-gradient-to-br from-indigo-600 to-slate-900 text-white space-y-6 shadow-lg">
+                        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/15 text-indigo-100 text-xs font-extrabold uppercase tracking-wider">
+                            <i class="fa-solid fa-bridge"></i>
+                            <span>Jembatan Antar Topik • Modul 2 Menuju Modul 3</span>
+                        </div>
+
+                        <h2 class="text-2xl sm:text-4xl font-extrabold leading-tight">
+                            Kita sudah paham variabel $, tipe data, dan cara mengambil input keyboard CLI. Sekarang bagaimana cara mencetak struk produk yang rapi dengan echo dan titik ribuan Rupiah?
+                        </h2>
+
+                        <p class="text-indigo-100 text-sm sm:text-base leading-relaxed max-w-3xl">
+                            Di <strong>Modul 3 (Slide 10 s/d 13)</strong>, kita akan menguasai <strong>instruksi <span class="font-mono">echo</span></strong>, perbedaan penting <strong>kutip ganda (<span class="font-mono">"..."</span>) vs kutip tunggal (<span class="font-mono">'...'</span>)</strong>, operator penyambung <strong>titik (<span class="font-mono">.</span>)</strong>, bedah 4 parameter <strong><span class="font-mono">number_format()</span></strong>, serta peta transformasi lengkap <strong>Flowchart &rarr; Kode PHP</strong>!
+                        </p>
+
+                        <div class="pt-2">
+                            <button type="button" onclick="changeSlide(1)" class="px-5 py-3 rounded-xl bg-white text-indigo-700 hover:bg-indigo-50 font-extrabold text-xs sm:text-sm transition inline-flex items-center gap-2 shadow-sm">
+                                <span>Masuk ke Modul 3: Instruksi echo &amp; Format Rupiah</span>
+                                <i class="fa-solid fa-arrow-right text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide10() {
+            const styles = {
+                double: {
+                    btn: "1. Kutip Ganda (\"...\") — Interpolasi Variabel",
+                    code: '$namaProduk = "Kopi Susu Aren";\n$stokAwal = 20;\necho "Menu: $namaProduk (Stok: $stokAwal unit)\\n";',
+                    out: "Menu: Kopi Susu Aren (Stok: 20 unit)",
+                    isOk: true,
+                    note: "PALING PRAKTIS! Di dalam tanda kutip ganda (\"...\"), PHP otomatis mengenali dan membuka isi variabel ($namaProduk) serta menjalankan enter (\\n)."
+                },
+                dot: {
+                    btn: "2. Operator Titik (.) — Penyambung Teks & Fungsi",
+                    code: '$hargaJual = 15000;\necho "Harga: Rp " . number_format($hargaJual, 0, \',\', \'.\') . "\\n";',
+                    out: "Harga: Rp 15.000",
+                    isOk: true,
+                    note: "WAJIB UNTUK FUNGSI! Jika di Flowgorithm kita menyambung teks dengan &, maka di PHP kita menggunakan tanda TITIK (.) untuk menyambung teks dengan hasil fungsi seperti number_format()."
+                },
+                single_trap: {
+                    btn: "3. Jebakan Kutip Tunggal ('...')",
+                    code: '$namaProduk = "Kopi Susu Aren";\necho \'Menu: $namaProduk\\n\';',
+                    out: "Menu: $namaProduk\\n",
+                    isOk: false,
+                    note: "JEBAKAN PEMULA PHP! Di dalam tanda kutip tunggal ('...'), PHP TIDAK mau membuka isi variabel $namaProduk dan tidak menerjemahkan \\n — semuanya dicetak mentah apa adanya!"
+                }
+            };
+
+            const cur = styles[s10EchoStyle] || styles.double;
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 3 • Mencetak Output ke Layar</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Instruksi ${term('echocmd', 'echo')}, Operator ${term('concat', 'Titik (.)')}, &amp; Kutip Ganda vs Tunggal</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Instruksi <span class="font-mono font-bold">echo</span> adalah padanan simbol <strong>Output</strong> di Flowgorithm. Namun hati-hati memilih tanda kutip di PHP! Bandingkan 3 cara penulisan di bawah ini:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        <button type="button" onclick="setS10Style('double')" class="p-3 rounded-2xl border text-left transition ${s10EchoStyle === 'double' ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-xs font-extrabold">${styles.double.btn}</div>
+                        </button>
+                        <button type="button" onclick="setS10Style('dot')" class="p-3 rounded-2xl border text-left transition ${s10EchoStyle === 'dot' ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-xs font-extrabold">${styles.dot.btn}</div>
+                        </button>
+                        <button type="button" onclick="setS10Style('single_trap')" class="p-3 rounded-2xl border text-left transition ${s10EchoStyle === 'single_trap' ? 'bg-rose-600 text-white border-rose-600 shadow-xs' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                            <div class="text-xs font-extrabold">${styles.single_trap.btn}</div>
+                        </button>
+                    </div>
+
+                    <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-4 my-auto">
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+                            <div class="lg:col-span-7 p-4 rounded-2xl bg-slate-900 text-emerald-300 font-mono text-xs flex flex-col justify-center">
+                                <div class="text-slate-400 text-[11px] mb-1">// Kode PHP:</div>
+                                <pre class="whitespace-pre-wrap leading-relaxed">${escapeHtml(cur.code)}</pre>
+                            </div>
+                            <div class="lg:col-span-5 p-4 rounded-2xl bg-white dark:bg-slate-900 border-2 ${cur.isOk ? 'border-emerald-500' : 'border-rose-400'} flex flex-col justify-center gap-1.5">
+                                <div class="text-[11px] font-bold uppercase text-slate-400">Hasil Tampil di Terminal CLI:</div>
+                                <div class="font-mono text-xs sm:text-sm font-extrabold ${cur.isOk ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'} break-all">
+                                    ${escapeHtml(cur.out)}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-3.5 rounded-2xl border text-xs sm:text-sm font-semibold ${cur.isOk ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200' : 'bg-rose-50 dark:bg-rose-950/40 border-rose-300 dark:border-rose-800 text-rose-900 dark:text-rose-200'}">
+                            ${escapeHtml(cur.note)}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide12() {
+            const stages = {
+                1: {
+                    label: "Tahap 1: Main & End -> <?php ... ?>",
+                    change: "Kapsul ungu Main (mulai) dan End (selesai) di Flowgorithm berubah menjadi tag pembuka <?php di baris pertama dan penutup ?> di baris terakhir.",
+                    syntaxTip: "Aturan pakai: Semua kode PHP wajib berada di antara <?php dan ?>."
+                },
+                2: {
+                    label: "Tahap 2: Declare -> Hilang (Otomatis / Dynamic Typing!)",
+                    change: "Segi enam kuning Declare di Flowgorithm TIDAK perlu ditulis lagi di PHP! Saat Anda menulis $namaProduk = ... atau $hargaJual = ..., PHP langsung membuatkan laci variabel dan menebak tipe datanya otomatis.",
+                    syntaxTip: "Aturan pakai: Cukup beri awalan tanda dolar ($) pada setiap nama variabel."
+                },
+                3: {
+                    label: "Tahap 3: Output Sapaan -> echo \"...\\n\";",
+                    change: "Jajar genjang hijau Output berubah menjadi perintah kata kunci echo diikuti teks di dalam tanda kutip ganda, karakter \\n untuk Enter, dan ditutup titik koma (;).",
+                    syntaxTip: "Aturan pakai: echo \"=== SELAMAT DATANG DI WARUNG DIGITAL ===\\n\";"
+                },
+                4: {
+                    label: "Tahap 4: Input String -> $namaProduk = trim(fgets(STDIN));",
+                    change: "Jajar genjang biru Input untuk teks berubah menjadi pasangan trim(fgets(STDIN)) agar ketikan kasir terbaca bersih tanpa membawa tombol Enter.",
+                    syntaxTip: "Aturan pakai: Tidak memakai (int) karena nama produk adalah teks (string)."
+                },
+                5: {
+                    label: "Tahap 5: Input Integer -> (int) trim(fgets(STDIN));",
+                    change: "Jajar genjang biru Input untuk angka bulat (hargaJual & stokAwal) ditambahkan (int) di depannya supaya teks angka dari keyboard berubah jadi bilangan bulat siap hitung.",
+                    syntaxTip: "Aturan pakai: Satu baris input untuk satu variabel, masing-masing diakhiri titik koma (;)."
+                },
+                6: {
+                    label: "Tahap 6: Assign Rumus -> $totalAset = $hargaJual * $stokAwal;",
+                    change: "Persegi panjang kuning Assign diterjemahkan persis sama rumusnya (*, +, -, /), hanya saja setiap nama variabel wajib diberi awalan $ dan ujung baris diberi titik koma (;).",
+                    syntaxTip: "Aturan pakai: Arah tetap sama (hitung sisi kanan dulu, simpan hasilnya ke variabel kiri)."
+                },
+                7: {
+                    label: "Tahap 7: Output Struk (&) -> echo + Operator Titik (.)",
+                    change: "Tanda penyambung teks & (Ampersand) di Flowgorithm berubah menjadi tanda TITIK (.) di PHP, dan kita tambahkan number_format() agar nominal Rupiah rapi bertitik ribuan.",
+                    syntaxTip: "Aturan pakai: \"Produk: $namaProduk | Rp \" . number_format($totalAset, 0, ',', '.') . \"\\n\";"
+                }
+            };
+
+            const cur = stages[s12SyncBlock] || stages[1];
+            const phpHighlight = function (idx) {
+                return s12SyncBlock === idx
+                    ? 'bg-indigo-600 text-white px-2.5 py-1 rounded-lg font-bold shadow-xs'
+                    : 'px-2.5 py-1 text-emerald-300 hover:bg-slate-800 rounded-lg cursor-pointer transition';
+            };
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-3.5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 3 • Transformasi Visual Bentuk Flowchart ke Kode PHP</span>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Perubahan Lengkap: Flowchart Flowgorithm -&gt; Kode PHP</h2>
+                        </div>
+                        <div class="flex items-center gap-1.5 shrink-0">
+                            <button type="button" onclick="stepS12Sync(-1)" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-xs font-bold">◀ Tahap Sebelumnya</button>
+                            <span class="px-2.5 py-1 rounded-lg bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-mono text-xs font-extrabold">${s12SyncBlock} / 7</span>
+                            <button type="button" onclick="stepS12Sync(1)" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold">Tahap Berikutnya ▶</button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch my-auto">
+                        <!-- Kiri: Flowchart Flowgorithm Lengkap (7 Bentuk Simbol) -->
+                        <div class="lg:col-span-5 fg-canvas rounded-3xl border border-slate-200 dark:border-slate-800 p-3 flex flex-col items-center justify-center">
+                            <div class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">1. Bentuk Visual Flowgorithm (Klik Simbol)</div>
+                            <svg class="w-full max-w-[285px] h-auto" viewBox="0 0 310 318">
+                                <line x1="155" y1="22" x2="155" y2="294" stroke="#64748b" stroke-width="2"/>
+
+                                <!-- 1. Main -->
+                                <g class="cursor-pointer" onclick="setS12Sync(1)">
+                                    <rect x="95" y="2" width="120" height="22" rx="11" fill="${s12SyncBlock === 1 ? '#4f46e5' : '#f3e8ff'}" stroke="#7e22ce" stroke-width="2"/>
+                                    <text x="155" y="17" text-anchor="middle" fill="${s12SyncBlock === 1 ? '#ffffff' : '#581c87'}" font-size="10" font-weight="800">1. Main (Mulai)</text>
+                                </g>
+
+                                <!-- 2. Declare (Segi Enam) -->
+                                <g class="cursor-pointer" onclick="setS12Sync(2)">
+                                    <polygon points="34,32 276,32 290,46 276,60 34,60 20,46" fill="${s12SyncBlock === 2 ? '#4f46e5' : '#fef9c3'}" stroke="#b45309" stroke-width="2"/>
+                                    <text x="155" y="50" text-anchor="middle" fill="${s12SyncBlock === 2 ? '#ffffff' : '#78350f'}" font-size="9.2" font-weight="800">2. Declare namaProduk, hargaJual, stok, aset</text>
+                                </g>
+
+                                <!-- 3. Output Sapaan -->
+                                <g class="cursor-pointer" onclick="setS12Sync(3)">
+                                    <polygon points="36,70 284,70 272,98 24,98" fill="${s12SyncBlock === 3 ? '#4f46e5' : '#dcfce7'}" stroke="#16a34a" stroke-width="2"/>
+                                    <text x="155" y="88" text-anchor="middle" fill="${s12SyncBlock === 3 ? '#ffffff' : '#14532d'}" font-size="9.5" font-weight="800">3. Output "Selamat Datang..."</text>
+                                </g>
+
+                                <!-- 4. Input String -->
+                                <g class="cursor-pointer" onclick="setS12Sync(4)">
+                                    <polygon points="48,108 272,108 260,136 36,136" fill="${s12SyncBlock === 4 ? '#4f46e5' : '#e0f2fe'}" stroke="#0284c7" stroke-width="2"/>
+                                    <text x="155" y="126" text-anchor="middle" fill="${s12SyncBlock === 4 ? '#ffffff' : '#0c4a6e'}" font-size="9.5" font-weight="800">4. Input namaProduk (String)</text>
+                                </g>
+
+                                <!-- 5. Input Integer -->
+                                <g class="cursor-pointer" onclick="setS12Sync(5)">
+                                    <polygon points="44,146 276,146 264,174 32,174" fill="${s12SyncBlock === 5 ? '#4f46e5' : '#e0f2fe'}" stroke="#0284c7" stroke-width="2"/>
+                                    <text x="155" y="164" text-anchor="middle" fill="${s12SyncBlock === 5 ? '#ffffff' : '#0c4a6e'}" font-size="9.5" font-weight="800">5. Input hargaJual &amp; stokAwal (Int)</text>
+                                </g>
+
+                                <!-- 6. Assign -->
+                                <g class="cursor-pointer" onclick="setS12Sync(6)">
+                                    <rect x="34" y="184" width="242" height="28" fill="${s12SyncBlock === 6 ? '#4f46e5' : '#fef08a'}" stroke="#a16207" stroke-width="2"/>
+                                    <text x="155" y="202" text-anchor="middle" fill="${s12SyncBlock === 6 ? '#ffffff' : '#713f12'}" font-size="9.5" font-weight="800">6. Assign totalAset = hargaJual * stokAwal</text>
+                                </g>
+
+                                <!-- 7. Output Struk -->
+                                <g class="cursor-pointer" onclick="setS12Sync(7)">
+                                    <polygon points="34,222 286,222 274,250 22,250" fill="${s12SyncBlock === 7 ? '#4f46e5' : '#dcfce7'}" stroke="#16a34a" stroke-width="2"/>
+                                    <text x="155" y="240" text-anchor="middle" fill="${s12SyncBlock === 7 ? '#ffffff' : '#14532d'}" font-size="9.2" font-weight="800">7. Output "Produk: " &amp; nama &amp; " Rp " &amp; aset</text>
+                                </g>
+
+                                <!-- 1. End -->
+                                <g class="cursor-pointer" onclick="setS12Sync(1)">
+                                    <rect x="95" y="294" width="120" height="22" rx="11" fill="${s12SyncBlock === 1 ? '#4f46e5' : '#f3e8ff'}" stroke="#7e22ce" stroke-width="2"/>
+                                    <text x="155" y="309" text-anchor="middle" fill="${s12SyncBlock === 1 ? '#ffffff' : '#581c87'}" font-size="10" font-weight="800">1. End (Selesai)</text>
+                                </g>
+                            </svg>
+                        </div>
+
+                        <!-- Kanan: Hasil Perubahan ke Kode PHP + Penjelasan Perubahan -->
+                        <div class="lg:col-span-7 flex flex-col justify-between gap-3">
+                            <div class="p-4 rounded-3xl bg-slate-900 font-mono text-xs space-y-1">
+                                <div class="text-slate-400 text-[10px] uppercase font-sans font-bold mb-1">2. Hasil Perubahan ke Kode PHP (Klik Baris):</div>
+                                <div onclick="setS12Sync(1)" class="${phpHighlight(1)}">&lt;?php   <span class="opacity-75">// &lt;-- Pengganti Kapsul Main</span></div>
+                                <div onclick="setS12Sync(2)" class="${phpHighlight(2)}">// [Tanpa Declare! PHP otomatis buat variabel saat diisi $]</div>
+                                <div onclick="setS12Sync(3)" class="${phpHighlight(3)}">echo "=== SELAMAT DATANG DI WARUNG DIGITAL ===\\n";</div>
+                                <div onclick="setS12Sync(4)" class="${phpHighlight(4)}">$namaProduk = trim(fgets(STDIN));</div>
+                                <div onclick="setS12Sync(5)" class="${phpHighlight(5)}">$hargaJual = (int) trim(fgets(STDIN));<br>$stokAwal  = (int) trim(fgets(STDIN));</div>
+                                <div onclick="setS12Sync(6)" class="${phpHighlight(6)}">$totalAset = $hargaJual * $stokAwal;</div>
+                                <div onclick="setS12Sync(7)" class="${phpHighlight(7)}">echo "Produk: $namaProduk | Rp " . number_format($totalAset, 0, ',', '.') . "\\n";</div>
+                                <div onclick="setS12Sync(1)" class="${phpHighlight(1)}">?&gt;      <span class="opacity-75">// &lt;-- Pengganti Kapsul End</span></div>
+                            </div>
+
+                            <div class="p-4 rounded-2xl bg-indigo-50/90 dark:bg-indigo-950/50 border-2 border-indigo-400/70 space-y-1.5">
+                                <div class="text-xs font-extrabold text-indigo-700 dark:text-indigo-300 uppercase">${escapeHtml(cur.label)}</div>
+                                <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed">${escapeHtml(cur.change)}</p>
+                                <div class="text-xs font-mono font-bold text-emerald-700 dark:text-emerald-400 pt-0.5">${escapeHtml(cur.syntaxTip)}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide13() {
+            const errs = {
+                semicolon: {
+                    btn: "1. Lupa Titik Koma (;)",
+                    bad: '<?php\necho "Selamat Datang di Warung Digital\\n"\necho "Menu: Kopi Susu\\n";\n?>',
+                    good: '<?php\necho "Selamat Datang di Warung Digital\\n";\necho "Menu: Kopi Susu\\n";\n?>',
+                    msg: "Parse error: syntax error, unexpected token \"echo\", expecting \",\" or \";\" on line 3",
+                    note: "Perhatikan pesan error PHP menunjuk baris 3, padahal titik koma (;) yang hilang ada di ujung baris 2! Selalu periksa 1 baris di atas nomor baris yang dilaporkan."
+                },
+                no_dollar: {
+                    btn: "2. Lupa Tanda Dolar ($)",
+                    bad: '<?php\nhargaJual = 15000;\necho hargaJual;\n?>',
+                    good: '<?php\n$hargaJual = 15000;\necho $hargaJual;\n?>',
+                    msg: "Parse error: syntax error, unexpected token \"=\" on line 2",
+                    note: "Di PHP, setiap nama variabel WAJIB diawali tanda dolar ($) baik saat mengisi nilai maupun saat menampilkannya dengan echo."
+                },
+                case_sensitive: {
+                    btn: "3. Salah Huruf Besar/Kecil",
+                    bad: '<?php\n$hargaJual = 15000;\necho "Harga: Rp $hargajual\\n";\n?>',
+                    good: '<?php\n$hargaJual = 15000;\necho "Harga: Rp $hargaJual\\n";\n?>',
+                    msg: "Warning: Undefined variable $hargajual on line 3",
+                    note: "Nama variabel di PHP bersifat Case-Sensitive! $hargaJual (J kapital) dianggap variabel berbeda dengan $hargajual (j kecil)."
+                },
+                no_tag: {
+                    btn: "4. Lupa Tag Pembuka <?php",
+                    bad: 'echo "Selamat Datang di Warung Digital\\n";',
+                    good: '<?php\necho "Selamat Datang di Warung Digital\\n";\n?>',
+                    msg: "Output tercetak mentah: echo \"Selamat Datang di Warung Digital\\n\";",
+                    note: "Tanpa tag pembuka <?php di baris pertama, mesin PHP tidak mengeksekusi perintah Anda melainkan hanya mencetak kodenya sebagai teks biasa."
+                }
+            };
+
+            const cur = errs[s13ErrCase] || errs.semicolon;
+            const keys = ['semicolon', 'no_dollar', 'case_sensitive', 'no_tag'];
+            const btns = keys.map(function (k) {
+                return `
+                    <button type="button" onclick="setS13Err('${k}')" class="p-3 rounded-2xl border text-left transition ${s13ErrCase === k ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}">
+                        <div class="text-xs font-extrabold">${errs[k].btn}</div>
+                    </button>
+                `;
+            }).join('');
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 3 • Kemandirian Debugging PHP</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Detektif 4 Error Paling Sering Saat Menulis PHP Perdana</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Pilih salah satu dari 4 kasus <em>syntax error</em> pemula di bawah ini, lalu tekan tombol <strong>Perbaiki Kode</strong> untuk memahami solusinya:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-2">
+                        ${btns}
+                    </div>
+
+                    <div class="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 grid grid-cols-1 lg:grid-cols-12 gap-4 items-center my-auto">
+                        <div class="lg:col-span-6 p-4 rounded-2xl bg-slate-900 font-mono text-xs space-y-2">
+                            <div class="flex items-center justify-between">
+                                <span class="${s13Fixed ? 'text-emerald-400' : 'text-rose-400'} font-bold">${s13Fixed ? '// KODE PHP SUDAH BENAR:' : '// KODE PHP ERROR:'}</span>
+                                <button type="button" onclick="toggleS13Fix()" class="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-sans font-bold text-[11px]">
+                                    ${s13Fixed ? 'Lihat Versi Error' : 'Perbaiki Kode ⚡'}
+                                </button>
+                            </div>
+                            <pre class="text-slate-100 whitespace-pre-wrap leading-relaxed">${escapeHtml(s13Fixed ? cur.good : cur.bad)}</pre>
+                        </div>
+
+                        <div class="lg:col-span-6 space-y-2.5">
+                            <div class="p-3 rounded-2xl font-mono text-xs font-bold border ${s13Fixed ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-400 text-emerald-800 dark:text-emerald-200' : 'bg-rose-50 dark:bg-rose-950/40 border-rose-400 text-rose-800 dark:text-rose-200'}">
+                                ${s13Fixed ? 'Terminal PHP: Running Well tanpa syntax error!' : escapeHtml(cur.msg)}
+                            </div>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${escapeHtml(cur.note)}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide14() {
+            return `
+                <div class="slide-enter flex flex-col justify-center h-full my-auto">
+                    <div class="p-8 sm:p-12 rounded-3xl bg-gradient-to-br from-indigo-600 to-slate-900 text-white space-y-6 shadow-lg">
+                        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/15 text-indigo-100 text-xs font-extrabold uppercase tracking-wider">
+                            <i class="fa-solid fa-terminal"></i>
+                            <span>Jembatan Antar Topik • Modul 3 Menuju Modul 4 (Praktikum PHP CLI)</span>
+                        </div>
+
+                        <h2 class="text-2xl sm:text-4xl font-extrabold leading-tight">
+                            Seluruh sintaks dasar PHP (<span class="font-mono">&lt;?php</span>, <span class="font-mono">$</span>, <span class="font-mono">echo</span>, <span class="font-mono">fgets(STDIN)</span>, dan <span class="font-mono">number_format()</span>) sudah Anda kuasai. Saatnya praktik langsung!
+                        </h2>
+
+                        <p class="text-indigo-100 text-sm sm:text-base leading-relaxed max-w-3xl">
+                            Di <strong>Modul 4 (Slide 15 s/d 18)</strong>, Anda akan menguji: (1) <strong>Live PHP CLI Runner</strong> untuk menjalankan <span class="font-mono">M06_Produk_WarungDigital.php</span> baris per baris lengkap dengan inspektor <span class="font-mono">var_dump()</span>, (2) <strong>Melengkapi 4 Baris Skrip PHP</strong>, dan (3) <strong>Drag &amp; Drop 8 Baris Skrip Kasir</strong>.
+                        </p>
+
+                        <div class="pt-2">
+                            <button type="button" onclick="changeSlide(1)" class="px-5 py-3 rounded-xl bg-white text-indigo-700 hover:bg-indigo-50 font-extrabold text-xs sm:text-sm transition inline-flex items-center gap-2 shadow-sm">
+                                <span>Mulai Simulasi 1: Live PHP CLI Runner</span>
+                                <i class="fa-solid fa-arrow-right text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide15() {
+            const codeLines = [
+                '<?php',
+                'echo "=== SELAMAT DATANG DI WARUNG DIGITAL ===\\n";',
+                '$namaProduk = trim(fgets(STDIN));',
+                '$hargaModal = (int) trim(fgets(STDIN));',
+                '$hargaJual  = (int) trim(fgets(STDIN));',
+                '$stokAwal   = (int) trim(fgets(STDIN));',
+                '$margin = $hargaJual - $hargaModal; $aset = $hargaJual * $stokAwal;',
+                'echo "Produk: $namaProduk | Margin: Rp " . number_format($margin, 0, \',\', \'.\') . " | Aset: Rp " . number_format($aset, 0, \',\', \'.\') . "\\n";'
+            ];
+
+            const linesHtml = codeLines.map(function (line, idx) {
+                let cls = 'px-2.5 py-1 rounded transition cursor-pointer ';
+                if (phpStepIndex === idx) {
+                    cls += phpWaitingVar ? 'php-line-waiting font-bold text-white' : 'php-line-active font-bold text-white';
+                } else {
+                    cls += 'text-emerald-300 hover:bg-slate-800';
+                }
+                return `<div onclick="stepPhpSim()" class="${cls}"><span class="text-slate-500 mr-2 select-none inline-block w-4 text-right">${idx + 1}</span>${escapeHtml(line)}</div>`;
+            }).join('');
+
+            let termHtml = '';
+            if (phpTerminalLog.length === 0) {
+                termHtml = `<div class="text-slate-400 text-center my-auto font-sans text-xs py-5">Klik <strong>Run Skrip</strong> atau <strong>Step</strong> di atas. Ketik data produk Warung Digital satu per satu untuk melihat hasil <em>output</em> dan inspeksi <span class="font-mono">var_dump()</span>!</div>`;
+            } else {
+                termHtml = phpTerminalLog.map(function (entry) {
+                    if (entry.type === 'out') return `<div class="text-emerald-300 font-semibold">${entry.html}</div>`;
+                    if (entry.type === 'in') return `<div class="text-amber-300 font-semibold">&gt;&gt; ${escapeHtml(entry.text)}</div>`;
+                    return `<div class="text-indigo-300 font-bold animate-pulse">${escapeHtml(entry.text)}</div>`;
+                }).join('');
+            }
+
+            let chips = [];
+            let placeholder = 'Menunggu giliran fgets(STDIN)...';
+            let promptLabel = 'Terminal Input (Aktif saat baris fgets(STDIN) dijalankan):';
+            if (phpWaitingVar === 'namaProduk') {
+                chips = ['Kopi Susu Gula Aren', 'Roti Bakar Cokelat', 'Paket Sembako'];
+                placeholder = 'Ketik nama produk...';
+                promptLabel = '1. Masukkan $namaProduk (string):';
+            } else if (phpWaitingVar === 'hargaModal') {
+                chips = ['9000', '7000', '55000'];
+                placeholder = 'Ketik angka bulat modal (tanpa titik/Rp)...';
+                promptLabel = '2. Masukkan $hargaModal (int):';
+            } else if (phpWaitingVar === 'hargaJual') {
+                chips = ['15000', '12000', '65000'];
+                placeholder = 'Ketik angka bulat harga jual...';
+                promptLabel = '3. Masukkan $hargaJual (int):';
+            } else if (phpWaitingVar === 'stokAwal') {
+                chips = ['20', '15', '10'];
+                placeholder = 'Ketik jumlah stok awal...';
+                promptLabel = '4. Masukkan $stokAwal (int):';
+            }
+
+            const chipsHtml = chips.map(function (c) {
+                return `<button type="button" onclick="fillPhpQuickChip('${c}')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-indigo-100 dark:bg-slate-800 dark:hover:bg-indigo-950 text-slate-700 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700 transition">${c}</button>`;
+            }).join('');
+
+            const memKeys = Object.keys(phpMemory);
+            const memHtml = memKeys.length === 0
+                ? `<div class="col-span-2 text-xs text-slate-400 p-2 text-center">Belum ada variabel di memori PHP.</div>`
+                : memKeys.map(function (k) {
+                    return `
+                        <div class="p-1.5 px-2 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 text-[11px] font-mono">
+                            <span class="font-bold text-indigo-600 dark:text-indigo-400">$${escapeHtml(k)}</span>
+                            <span class="font-extrabold text-emerald-600 dark:text-emerald-400 truncate">${escapeHtml(phpMemory[k].dump)}</span>
+                        </div>
+                    `;
+                }).join('');
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-3">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 4 • Simulasi Praktik 1 dari 3 (Sub-CPMK 2.1)</span>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Live PHP CLI Runner: <span class="font-mono text-indigo-600 dark:text-indigo-400">M06_Produk_WarungDigital.php</span></h2>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2 shrink-0">
+                            <button type="button" onclick="runFullPhpSim()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-xs">
+                                <i class="fa-solid fa-play"></i>
+                                <span>Run Skrip</span>
+                            </button>
+                            <button type="button" onclick="stepPhpSim()" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-xs">
+                                <i class="fa-solid fa-forward-step"></i>
+                                <span>Step (Per Baris)</span>
+                            </button>
+                            <button type="button" onclick="resetPhpSim()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs transition">
+                                <i class="fa-solid fa-rotate-left mr-1"></i>Reset
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200">
+                        ${escapeHtml(phpBannerText)}
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch my-auto">
+                        <!-- Kiri: Editor PHP -->
+                        <div class="lg:col-span-6 rounded-2xl bg-slate-900 border border-slate-800 p-3.5 font-mono text-xs leading-relaxed flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between border-b border-slate-800 pb-2 mb-2 text-slate-400">
+                                    <span><i class="fa-brands fa-php text-indigo-400 mr-1.5 text-sm"></i>M06_Produk_WarungDigital.php</span>
+                                    <span class="text-[10px]">Klik baris / Step untuk lanjut</span>
+                                </div>
+                                <div class="space-y-1">
+                                    ${linesHtml}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Kanan: Terminal CLI & var_dump Memory Watch -->
+                        <div class="lg:col-span-6 flex flex-col justify-between gap-3">
+                            <div class="rounded-2xl border-2 ${phpWaitingVar ? 'border-indigo-600 shadow-sm' : 'border-slate-200 dark:border-slate-800'} overflow-hidden bg-slate-950">
+                                <div class="bg-slate-900 px-3.5 py-1.5 border-b border-slate-800 flex items-center justify-between">
+                                    <span class="text-xs font-extrabold text-slate-200">Terminal PHP CLI</span>
+                                    ${phpWaitingVar ? '<span class="px-2 py-0.5 rounded bg-indigo-600 text-white text-[10px] font-extrabold animate-pulse">MENUNGGU INPUT</span>' : ''}
+                                </div>
+
+                                <div id="phpTerminalBox" class="p-3 min-h-[100px] max-h-[135px] overflow-y-auto flex flex-col gap-1.5 font-mono text-xs">
+                                    ${termHtml}
+                                </div>
+
+                                <form onsubmit="submitManualPhpInput(event)" class="p-2.5 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
+                                    <div class="text-xs font-bold ${phpWaitingVar ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'} mb-1">
+                                        ${promptLabel}
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <input id="phpConsoleInputBox" type="text" ${phpWaitingVar ? '' : 'disabled'} placeholder="${placeholder}" class="flex-1 px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50">
+                                        <button type="submit" ${phpWaitingVar ? '' : 'disabled'} class="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white font-bold text-xs transition shrink-0">
+                                            Enter ↵
+                                        </button>
+                                    </div>
+                                    ${chips.length > 0 ? `<div class="mt-1.5 flex flex-wrap items-center gap-1.5"><span class="text-[10px] font-semibold text-slate-400">Ketik cepat:</span>${chipsHtml}</div>` : ''}
+                                    ${phpInputError ? `<div class="mt-1.5 p-2 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs font-bold">${escapeHtml(phpInputError)}</div>` : ''}
+                                </form>
+                            </div>
+
+                            <div class="rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden bg-white dark:bg-slate-900">
+                                <div class="bg-slate-100 dark:bg-slate-800 px-3 py-1.5 border-b border-slate-200 dark:border-slate-700 text-xs font-extrabold text-slate-700 dark:text-slate-200">
+                                    Inspektor Memori (Hasil var_dump())
+                                </div>
+                                <div class="p-2 grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                                    ${memHtml}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide16() {
+            const slotTasks = {
+                1: "Slot 1: Tag pembuka PHP dan sapaan pembuka toko dengan echo",
+                2: "Slot 2: Membaca nama produk (String) bersih tanpa Enter dari keyboard CLI",
+                3: "Slot 3: Membaca harga jual (Integer) dengan type casting (int)",
+                4: "Slot 4: Mencetak hasil dengan operator titik (.) dan number_format()"
+            };
+
+            const codeMap = {
+                'OPEN_ECHO': '<?php echo "=== WARUNG DIGITAL ===\\n";',
+                'IN_STR': '$namaProduk = trim(fgets(STDIN));',
+                'IN_INT': '$hargaJual = (int) trim(fgets(STDIN));',
+                'OUT_FMT': 'echo "Menu: $namaProduk | Rp " . number_format($hargaJual, 0, \',\', \'.\') . "\\n";'
+            };
+
+            let slotTabs = '';
+            for (let i = 1; i <= 4; i++) {
+                const active = activePhpSlot === i;
+                slotTabs += `
+                    <button type="button" onclick="selectPhpBuilderSlot(${i})" class="px-3 py-1.5 rounded-xl font-bold text-xs transition ${active ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">
+                        Baris #${i}
+                    </button>
+                `;
+            }
+
+            const renderSlotBox = function (num, label) {
+                const filled = phpBuilderSlots[num];
+                const isSel = activePhpSlot === num;
+                return `
+                    <div onclick="selectPhpBuilderSlot(${num})" class="p-3 rounded-xl border-2 cursor-pointer transition font-mono text-xs ${isSel ? 'border-indigo-500 bg-slate-800 text-white' : 'border-slate-800 bg-slate-950/70 text-emerald-300'}">
+                        <div class="text-[10px] font-sans font-bold text-slate-400 mb-0.5">Baris ${num}: ${label}</div>
+                        <div>${filled ? escapeHtml(codeMap[filled]) : '<span class="text-amber-300 italic">[ Klik untuk mengisi Baris #' + num + ' ]</span>'}</div>
+                    </div>
+                `;
+            };
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 4 • Simulasi Praktik 2 dari 3</span>
+                            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Lengkapi 4 Baris Skrip PHP Sapaan &amp; Katalog Produk</h2>
+                        </div>
+                        <button type="button" onclick="resetPhpBuilder()" class="self-start sm:self-center px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-rose-600 dark:text-rose-400 font-bold text-xs transition">
+                            <i class="fa-solid fa-trash-can mr-1"></i>Kosongkan Editor
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <div class="lg:col-span-6 rounded-3xl bg-slate-900 border border-slate-800 p-4 space-y-2.5 flex flex-col justify-center">
+                            ${renderSlotBox(1, 'Pembuka PHP & Sapaan')}
+                            ${renderSlotBox(2, 'Input String (Nama Produk)')}
+                            ${renderSlotBox(3, 'Input Integer (Harga Jual)')}
+                            ${renderSlotBox(4, 'Output Struk Format Rupiah')}
+                            <div class="px-3 py-1 font-mono text-xs text-pink-400 font-bold">?&gt;</div>
+                        </div>
+
+                        <div class="lg:col-span-6 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-3.5">
+                            <div class="space-y-3">
+                                <div class="flex flex-wrap gap-2">
+                                    ${slotTabs}
+                                </div>
+
+                                <div class="p-3.5 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800">
+                                    <div class="font-extrabold text-indigo-900 dark:text-indigo-200 text-sm">${escapeHtml(slotTasks[activePhpSlot])}</div>
+                                    <p class="text-xs text-indigo-700 dark:text-indigo-300 mt-0.5">Klik potongan kode PHP yang tepat untuk dipasang pada Baris #${activePhpSlot}:</p>
+                                </div>
+
+                                <div class="space-y-2 font-mono text-xs">
+                                    <button type="button" onclick="assignPhpSlot('IN_INT')" class="w-full text-left p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-indigo-500 font-bold transition">$hargaJual = (int) trim(fgets(STDIN));</button>
+                                    <button type="button" onclick="assignPhpSlot('OUT_FMT')" class="w-full text-left p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-indigo-500 font-bold transition">echo "Menu: $namaProduk | Rp " . number_format($hargaJual, 0, ',', '.') . "\\n";</button>
+                                    <button type="button" onclick="assignPhpSlot('OPEN_ECHO')" class="w-full text-left p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-indigo-500 font-bold transition">&lt;?php echo "=== WARUNG DIGITAL ===\\n";</button>
+                                    <button type="button" onclick="assignPhpSlot('IN_STR')" class="w-full text-left p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-indigo-500 font-bold transition">$namaProduk = trim(fgets(STDIN));</button>
+                                </div>
+                            </div>
+
+                            <div class="space-y-2">
+                                <button type="button" onclick="checkPhpBuilder()" class="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm transition shadow-xs">
+                                    Periksa Skrip PHP Perdana
+                                </button>
+                                ${phpBuilderFeedback.text ? `<div class="p-3 rounded-xl text-xs font-bold text-center ${phpBuilderFeedback.type === 'success' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'}">${escapeHtml(phpBuilderFeedback.text)}</div>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide17() {
+            let rowsHtml = '';
+            for (let index = 0; index < phpStepsOrder.length; index++) {
+                const item = phpStepsOrder[index];
+                const isPosCorrect = item.id === index + 1;
+                let borderClass = 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900';
+                let statusBadge = '';
+
+                if (phpShowValidation) {
+                    if (isPosCorrect) {
+                        borderClass = 'border-emerald-500 bg-emerald-50/40 dark:bg-emerald-950/30';
+                        statusBadge = '<span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 text-[11px] font-bold">✓ Tepat</span>';
+                    } else {
+                        borderClass = 'border-rose-400 bg-rose-50/40 dark:bg-rose-950/30';
+                        statusBadge = '<span class="px-2 py-0.5 rounded bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 text-[11px] font-bold">✗ Geser</span>';
+                    }
+                }
+
+                rowsHtml += `
+                    <div draggable="true" ondragstart="onPhpDragStart(event, ${index})" ondragover="onPhpDragOver(event, ${index})" ondragleave="onPhpDragLeave(event)" ondrop="onPhpDrop(event, ${index})" ondragend="onPhpDragEnd()" class="draggable-step border-2 ${borderClass} rounded-2xl p-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                            <span class="text-slate-400 font-extrabold text-sm px-1 cursor-grab select-none">⋮⋮</span>
+                            <span class="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center shrink-0">${index + 1}</span>
+                            <span class="px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-[10px] font-extrabold shrink-0">${escapeHtml(item.tag)}</span>
+                            <span class="font-mono text-xs font-bold text-slate-800 dark:text-slate-200 truncate">${escapeHtml(item.code)}</span>
+                        </div>
+                        <div class="flex items-center justify-end gap-1.5 shrink-0">
+                            ${statusBadge}
+                            <button type="button" onclick="movePhpStep(${index}, -1)" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-indigo-600 hover:text-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs transition" title="Geser Naik">▲</button>
+                            <button type="button" onclick="movePhpStep(${index}, 1)" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-indigo-600 hover:text-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs transition" title="Geser Turun">▼</button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-3.5">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Modul 4 • Simulasi Praktik 3 dari 3</span>
+                            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Susun 8 Baris Skrip PHP Kasir Warung Digital</h2>
+                        </div>
+                        <span class="text-xs font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200 dark:border-indigo-800 px-3 py-1 rounded-xl">
+                            Tarik kartu (Drag &amp; Drop) atau klik ▲ / ▼
+                        </span>
+                    </div>
+
+                    <div class="space-y-1.5 my-auto">
+                        ${rowsHtml}
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-3">
+                        <button type="button" onclick="checkPhpOrder()" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm transition shadow-xs">
+                            Periksa Urutan Skrip PHP
+                        </button>
+                        <button type="button" onclick="shufflePhpSteps()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs sm:text-sm transition">
+                            Acak Ulang
+                        </button>
+                        ${phpFeedbackText ? `<span class="text-xs sm:text-sm font-bold text-indigo-600 dark:text-indigo-400">${escapeHtml(phpFeedbackText)}</span>` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlide18() {
+            const renderFb = function (qNum) {
+                const fb = selfCheckFeedback[qNum];
+                if (!fb) return '';
+                const cls = fb.ok
+                    ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200'
+                    : 'bg-rose-50 dark:bg-rose-950/50 border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-200';
+                return `<div class="mt-2 p-2.5 rounded-xl border text-xs font-bold ${cls}">${escapeHtml(fb.msg)}</div>`;
+            };
+
+            return `
+                <div class="slide-enter flex flex-col justify-between h-full gap-5">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Penutup &amp; Evaluasi Mandiri Pertemuan 6</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Uji Pemahaman Sub-CPMK 2.1 &amp; Persiapan Minggu 7</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Uji penguasaan sintaks dasar PHP Murni Anda melalui 3 pertanyaan kasus di bawah ini:
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
+                        <div class="lg:col-span-7 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-3.5">
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Cek Pengetahuan Mandiri (Klik Jawaban yang Tepat)</h3>
+
+                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <div class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white mb-2">1. Apa yang tampil di layar jika kita menulis <span class="font-mono">echo 'Menu: $namaProduk';</span> memakai tanda kutip tunggal (<span class="font-mono">'...'</span>)?</div>
+                                <div class="flex flex-wrap gap-2">
+                                    <button type="button" onclick="answerSelfCheck(1, true, 'Tepat! Di dalam kutip tunggal, PHP tidak membuka isi variabel sehingga yang muncul mentah adalah teks Menu: $namaProduk. Gunakan kutip ganda \"...\"!')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 font-mono font-semibold text-xs">Menu: $namaProduk (Mentah)</button>
+                                    <button type="button" onclick="answerSelfCheck(1, false, 'Salah! Pembukaan isi variabel secara langsung hanya bekerja di dalam tanda kutip ganda (\"...\").')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 font-mono font-semibold text-xs">Menu: Kopi Susu Aren</button>
+                                </div>
+                                ${renderFb(1)}
+                            </div>
+
+                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <div class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white mb-2">2. Pada instruksi <span class="font-mono">$hargaJual = (int) trim(fgets(STDIN));</span>, apa fungsi dari <span class="font-mono">trim()</span>?</div>
+                                <div class="flex flex-wrap gap-2">
+                                    <button type="button" onclick="answerSelfCheck(2, true, 'Benar! trim() menggunting spasi berlebih dan karakter Enter (\\n) yang terbawa dari fgets(STDIN) agar teks input bersih.')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 font-semibold text-xs">Memotong sisa Enter (\\n) &amp; spasi di ujung ketikan</button>
+                                    <button type="button" onclick="answerSelfCheck(2, false, 'Yang mengubah teks ke bilangan bulat adalah (int), sedangkan trim() membersihkan sisa Enter (\\n).')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 font-semibold text-xs">Mengubah teks menjadi angka bulat</button>
+                                </div>
+                                ${renderFb(2)}
+                            </div>
+
+                            <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                <div class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white mb-2">3. Simbol apakah yang menggantikan tanda <span class="font-mono">&amp;</span> (Ampersand) di Flowgorithm untuk menyambung teks dan hasil fungsi di PHP?</div>
+                                <div class="flex flex-wrap gap-2">
+                                    <button type="button" onclick="answerSelfCheck(3, true, 'Sempurna! Di PHP, operator penyambung teks (concatenation) adalah tanda titik (.), contoh: \"Rp \" . number_format($total, 0, \',\', \'.\').')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 font-mono font-semibold text-xs">Tanda Titik (.)</button>
+                                    <button type="button" onclick="answerSelfCheck(3, false, 'Di PHP, tanda + khusus untuk penjumlahan angka, bukan penyambung teks. Gunakan titik (.)!')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 font-mono font-semibold text-xs">Tanda Plus (+)</button>
+                                </div>
+                                ${renderFb(3)}
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-5 flex flex-col justify-between gap-4">
+                            <div class="p-6 rounded-3xl bg-slate-900 text-white space-y-3">
+                                <span class="inline-block px-2.5 py-0.5 rounded-md bg-indigo-500/30 text-indigo-300 font-bold text-[11px] uppercase tracking-wider">
+                                    Tugas Praktikum Live Coding Minggu 6
+                                </span>
+                                <h3 class="text-base sm:text-lg font-extrabold leading-snug">
+                                    Buat File <span class="font-mono text-indigo-300">M06_[NIM]_[Nama]_ProdukWarung.php</span>
+                                </h3>
+                                <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                                    Tulis skrip PHP CLI yang menerima input <span class="font-mono text-amber-300">$namaProduk</span>, <span class="font-mono text-amber-300">$hargaModal</span>, <span class="font-mono text-amber-300">$hargaJual</span>, dan <span class="font-mono text-amber-300">$stokAwal</span>, lalu tampilkan margin keuntungan (Rp &amp; %) serta total aset menggunakan <span class="font-mono text-emerald-300">number_format()</span>!
+                                </p>
+                            </div>
+
+                            <div class="p-5 rounded-3xl bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 space-y-2">
+                                <span class="inline-block px-2.5 py-0.5 rounded-md bg-indigo-600 text-white font-bold text-[11px]">MINGGU DEPAN • PERTEMUAN 7 (Sub-CPMK 2.2 • 3%)</span>
+                                <h3 class="font-extrabold text-slate-900 dark:text-white text-sm sm:text-base">Translasi Percabangan ke PHP (if-elseif-else &amp; switch-case)</h3>
+                                <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    Minggu depan kita menerjemahkan logika diskon berjenjang dan tarif pajak transaksi (Sembako 0%, Kuliner PB1 10%, Ritel PPN 11%) ke dalam struktur <span class="font-mono font-bold">if-elseif-else</span> dan <span class="font-mono font-bold">switch-case</span> di PHP!
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        const SLIDES = [
+            { id: 1, category: "Modul 1 • Orientasi", title: "Pengenalan PHP CLI/Web, Variabel $, Tipe Data & echo", render: renderSlide1 },
+            { id: 2, category: "Modul 1 • Konteks Bisnis", title: "Mengapa PHP Menjadi Fondasi Penting di Bisnis Digital?", render: renderSlide2 },
+            { id: 3, category: "Modul 1 • Alat Kerja", title: "Mode Eksekusi PHP: PHP CLI (Terminal) vs PHP Web (XAMPP)", render: renderSlide3 },
+            { id: 4, category: "Jembatan Topik 1 ke 2", title: "4 Perubahan Sintaks Mendasar: Flowgorithm Menuju PHP", render: renderSlide4 },
+            { id: 5, category: "Modul 2 • Bedah Sintaks", title: "Bedah 6 Sintaks Asing Dasar PHP (<?php, $, =, echo, \\n, ;)", render: renderSlide5 },
+            { id: 6, category: "Modul 2 • Tipe Data", title: "4 Tipe Data Dasar PHP (string, int, float, bool) & var_dump()", render: renderSlide6 },
+            { id: 7, category: "Modul 2 • Bedah Input CLI", title: "Bedah Per Potongan: (int) trim(fgets(STDIN))", render: renderSlide7 },
+            { id: 8, category: "Modul 2 • Operator", title: "Operator Aritmatika PHP (+, -, *, /, %, **) & Komentar (//)", render: renderSlide8 },
+            { id: 9, category: "Jembatan Topik 2 ke 3", title: "Dari Variabel $ Menuju Sapaan & Kartu Produk dengan echo", render: renderSlide9 },
+            { id: 10, category: "Modul 3 • Output echo", title: "Instruksi echo, Operator Titik (.), & Kutip Ganda vs Tunggal", render: renderSlide10 },
+            { id: 11, category: "Modul 3 • Format Rupiah", title: "Bedah 4 Parameter number_format() & Kartu Produk Warung", render: renderSlide11 },
+            { id: 12, category: "Modul 3 • Flowchart -> PHP", title: "Transformasi Visual Lengkap: Bentuk Flowchart ke Kode PHP", render: renderSlide12 },
+            { id: 13, category: "Modul 3 • Debugging", title: "Detektif 4 Error Pemula PHP (Titik Koma, $, Case-Sensitive, Tag)", render: renderSlide13 },
+            { id: 14, category: "Jembatan Topik 3 ke 4", title: "Masuk ke 3 Simulator Lab PHP CLI Warung Digital", render: renderSlide14 },
+            { id: 15, category: "Modul 4 • Simulasi 1", title: "Live PHP CLI Runner: Sapaan & Data Produk Warung Digital", render: renderSlide15 },
+            { id: 16, category: "Modul 4 • Simulasi 2", title: "Lengkapi 4 Baris Skrip PHP Sapaan & Katalog Produk", render: renderSlide16 },
+            { id: 17, category: "Modul 4 • Simulasi 3", title: "Drag & Drop 8 Baris Skrip PHP Kasir Warung Digital", render: renderSlide17 },
+            { id: 18, category: "Evaluasi & Penutup", title: "Uji Pemahaman Sub-CPMK 2.1 & Persiapan Minggu 7 (PHP)", render: renderSlide18 }
+        ];
+
+        function renderCurrentSlide() {
+            const slide = SLIDES[currentSlideIndex];
+            const viewport = document.getElementById('slideViewport');
+            viewport.innerHTML = slide.render();
+
+            const pct = Math.round(((currentSlideIndex + 1) / TOTAL_SLIDES) * 100);
+            document.getElementById('topProgressBar').style.width = pct + '%';
+            document.getElementById('slideCounterBadge').textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES;
+            document.getElementById('mobileFooterCounter').textContent = (currentSlideIndex + 1) + ' / ' + TOTAL_SLIDES;
+            document.getElementById('slideCategoryPill').textContent = slide.category;
+            document.getElementById('headerSlideTitle').textContent = slide.title;
+
+            const prevBtn = document.getElementById('prevSlideBtn');
+            const nextBtn = document.getElementById('nextSlideBtn');
+            const nextBtnText = document.getElementById('nextBtnText');
+
+            prevBtn.disabled = currentSlideIndex === 0;
+            if (currentSlideIndex === TOTAL_SLIDES - 1) {
+                nextBtnText.textContent = "Selesai";
+                nextBtn.disabled = true;
+            } else {
+                nextBtnText.textContent = "Selanjutnya";
+                nextBtn.disabled = false;
+            }
+
+            renderDotsAndDrawer();
+
+            if (currentSlideIndex === 14 && phpWaitingVar) {
+                const inputEl = document.getElementById('phpConsoleInputBox');
+                if (inputEl) inputEl.focus();
+            }
+        }
+
+        function renderDotsAndDrawer() {
+            const dotsContainer = document.getElementById('slideDotsContainer');
+            let dotsHtml = '';
+            let drawerHtml = '';
+
+            for (let idx = 0; idx < SLIDES.length; idx++) {
+                const s = SLIDES[idx];
+                const isActive = idx === currentSlideIndex;
+                const dotClass = isActive
+                    ? 'w-6 bg-indigo-600 dark:bg-indigo-400'
+                    : 'w-2 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400';
+
+                dotsHtml += `<button type="button" onclick="goToSlide(${idx})" title="${escapeHtml(s.title)}" class="h-2 rounded-full transition-all ${dotClass}"></button>`;
+
+                const itemClass = isActive
+                    ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 font-bold'
+                    : 'hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-300';
+                const badgeClass = isActive
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500';
+
+                drawerHtml += `
+                    <button type="button" onclick="selectSlideFromDrawer(${idx})" class="w-full text-left p-3 rounded-xl transition flex items-start gap-3 ${itemClass}">
+                        <span class="w-6 h-6 rounded-lg text-xs font-extrabold flex items-center justify-center shrink-0 ${badgeClass}">${s.id}</span>
+                        <div class="min-w-0">
+                            <div class="text-[10px] uppercase tracking-wider opacity-75">${escapeHtml(s.category)}</div>
+                            <div class="text-xs sm:text-sm truncate">${escapeHtml(s.title)}</div>
+                        </div>
+                    </button>
+                `;
+            }
+
+            dotsContainer.innerHTML = dotsHtml;
+            document.getElementById('drawerSlideList').innerHTML = drawerHtml;
+        }
+
+        function selectSlideFromDrawer(index) {
+            goToSlide(index);
+            toggleSlideDrawer();
+        }
+
+        function changeSlide(direction) {
+            const nextIdx = currentSlideIndex + direction;
+            if (nextIdx >= 0 && nextIdx < TOTAL_SLIDES) {
+                if (phpAutoTimer) clearTimeout(phpAutoTimer);
+                currentSlideIndex = nextIdx;
+                renderCurrentSlide();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function goToSlide(index) {
+            if (index >= 0 && index < TOTAL_SLIDES) {
+                if (phpAutoTimer) clearTimeout(phpAutoTimer);
+                currentSlideIndex = index;
+                renderCurrentSlide();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function toggleSlideDrawer() {
+            const drawer = document.getElementById('slideDrawer');
+            const backdrop = document.getElementById('slideDrawerBackdrop');
+            const isClosed = drawer.classList.contains('-translate-x-full');
+
+            if (isClosed) {
+                backdrop.classList.remove('hidden');
+                setTimeout(function () {
+                    backdrop.classList.remove('opacity-0');
+                }, 10);
+                drawer.classList.remove('-translate-x-full');
+            } else {
+                backdrop.classList.add('opacity-0');
+                drawer.classList.add('-translate-x-full');
+                setTimeout(function () {
+                    backdrop.classList.add('hidden');
+                }, 200);
+            }
+        }
+
+        function setS2Tab(t) { s2Tab = t; renderCurrentSlide(); }
+        function setS3Env(e) { s3EnvTab = e; renderCurrentSlide(); }
+        function setS5Diff(d) { s5DiffItem = d; renderCurrentSlide(); }
+        function setS5Token(tok) { s5TokenKey = tok; renderCurrentSlide(); }
+        function setS6PhpType(t) { s6PhpType = t; renderCurrentSlide(); }
+        function setS7CastMode(m) { s7CastMode = m; renderCurrentSlide(); }
+        function setS7Piece(p) { s7PieceKey = p; renderCurrentSlide(); }
+        function updateS7Inputs(field, val) {
+            if (field === 'harga') s7HargaRaw = val || '0';
+            if (field === 'stok') s7StokRaw = val || '1';
+            renderCurrentSlide();
+        }
+        function setS8Op(op) { s8OpKey = op; renderCurrentSlide(); }
+        function setS10Style(st) { s10EchoStyle = st; renderCurrentSlide(); }
+        function updateS11Catalog(field, val) {
+            if (field === 'produk') s11Produk = val || 'Kopi Susu';
+            if (field === 'modal') s11Modal = Math.max(0, parseInt(val, 10) || 0);
+            if (field === 'jual') s11Jual = Math.max(0, parseInt(val, 10) || 0);
+            if (field === 'stok') s11Stok = Math.max(1, parseInt(val, 10) || 1);
+            renderCurrentSlide();
+        }
+        function toggleS11Format() { s11UseNumFmt = !s11UseNumFmt; renderCurrentSlide(); }
+        function setS11Param(p) { s11ParamKey = p; renderCurrentSlide(); }
+        function setS12Sync(idx) { s12SyncBlock = idx; renderCurrentSlide(); }
+        function stepS12Sync(delta) {
+            s12SyncBlock = s12SyncBlock + delta;
+            if (s12SyncBlock < 1) s12SyncBlock = 7;
+            if (s12SyncBlock > 7) s12SyncBlock = 1;
+            renderCurrentSlide();
+        }
+        function setS13Err(c) { s13ErrCase = c; s13Fixed = false; renderCurrentSlide(); }
+        function toggleS13Fix() { s13Fixed = !s13Fixed; renderCurrentSlide(); }
+
+        // Handlers Slide 15: Live PHP CLI Runner
+        function resetPhpSim() {
+            if (phpAutoTimer) clearTimeout(phpAutoTimer);
+            phpIsAuto = false;
+            phpStepIndex = -1;
+            phpWaitingVar = null;
+            phpMemory = {};
+            phpTerminalLog = [];
+            phpInputError = '';
+            phpBannerText = 'Klik tombol Run Skrip atau Step (Per Baris) di kanan atas untuk menjalankan M06_Produk_WarungDigital.php!';
+            renderCurrentSlide();
+        }
+
+        function fillPhpQuickChip(val) {
+            const box = document.getElementById('phpConsoleInputBox');
+            if (box) {
+                box.value = val;
+                box.focus();
+            }
+        }
+
+        function stepPhpSim() {
+            if (phpWaitingVar) {
+                phpInputError = 'Ketik dulu nilai untuk "$' + phpWaitingVar + '" pada kotak Terminal lalu tekan Enter!';
+                renderCurrentSlide();
+                return;
+            }
+            if (phpStepIndex >= 7) {
+                resetPhpSim();
+            }
+            phpStepIndex++;
+            executePhpStep(phpStepIndex);
+        }
+
+        function executePhpStep(step) {
+            phpInputError = '';
+            if (step === 0) {
+                phpTerminalLog = [];
+                phpTerminalLog.push({ type: 'out', html: '$ php M06_Produk_WarungDigital.php' });
+                phpBannerText = 'Baris 1 [<?php]: Mesin PHP mendeteksi tag pembuka dan memulai eksekusi skrip.';
+            } else if (step === 1) {
+                phpTerminalLog.push({ type: 'out', html: '=== SELAMAT DATANG DI WARUNG DIGITAL ===' });
+                phpBannerText = 'Baris 2 [echo]: Mencetak banner sapaan pembuka Warung Digital ke Terminal CLI.';
+            } else if (step === 2) {
+                phpWaitingVar = 'namaProduk';
+                phpTerminalLog.push({ id: 'w_nama', type: 'wait', text: 'Masukkan Nama Produk : _' });
+                phpBannerText = 'Baris 3 [trim(fgets(STDIN))]: Menunggu ketikan nama produk (string) dari keyboard.';
+            } else if (step === 3) {
+                phpWaitingVar = 'hargaModal';
+                phpTerminalLog.push({ id: 'w_modal', type: 'wait', text: 'Masukkan Harga Modal (Rp) : _' });
+                phpBannerText = 'Baris 4 [(int) trim(fgets(STDIN))]: Menunggu angka modal satuan lalu mengonversinya ke int.';
+            } else if (step === 4) {
+                phpWaitingVar = 'hargaJual';
+                phpTerminalLog.push({ id: 'w_jual', type: 'wait', text: 'Masukkan Harga Jual (Rp) : _' });
+                phpBannerText = 'Baris 5 [(int) trim(fgets(STDIN))]: Menunggu angka harga jual satuan lalu mengonversinya ke int.';
+            } else if (step === 5) {
+                phpWaitingVar = 'stokAwal';
+                phpTerminalLog.push({ id: 'w_stok', type: 'wait', text: 'Masukkan Stok Awal (unit) : _' });
+                phpBannerText = 'Baris 6 [(int) trim(fgets(STDIN))]: Menunggu jumlah stok awal produk sebagai int.';
+            } else if (step === 6) {
+                const margin = phpMemory.hargaJual.raw - phpMemory.hargaModal.raw;
+                const aset = phpMemory.hargaJual.raw * phpMemory.stokAwal.raw;
+                phpMemory.margin = { raw: margin, dump: 'int(' + margin + ')' };
+                phpMemory.aset = { raw: aset, dump: 'int(' + aset + ')' };
+                phpBannerText = 'Baris 7 [Aritmatika]: Menghitung $margin = Rp ' + margin.toLocaleString('id-ID') + ' dan $aset = Rp ' + aset.toLocaleString('id-ID') + '.';
+            } else if (step === 7) {
+                phpTerminalLog.push({
+                    type: 'out',
+                    html: '<strong>Produk: ' + escapeHtml(phpMemory.namaProduk.raw) + ' | Margin: Rp ' + phpMemory.margin.raw.toLocaleString('id-ID') + ' | Aset: Rp ' + phpMemory.aset.raw.toLocaleString('id-ID') + '</strong>'
+                });
+                phpIsAuto = false;
+                phpBannerText = 'Baris 8 [echo + number_format()]: Mencetak kartu data produk lengkap ke Terminal. Eksekusi PHP selesai!';
+            }
+
+            renderCurrentSlide();
+            const termBox = document.getElementById('phpTerminalBox');
+            if (termBox) termBox.scrollTop = termBox.scrollHeight;
+
+            if (phpIsAuto && !phpWaitingVar && step < 7) {
+                phpAutoTimer = setTimeout(function () {
+                    stepPhpSim();
+                }, 650);
+            }
+        }
+
+        function submitManualPhpInput(e) {
+            e.preventDefault();
+            if (!phpWaitingVar) return;
+            const box = document.getElementById('phpConsoleInputBox');
+            const rawVal = box ? box.value.trim() : '';
+
+            if (!rawVal) {
+                phpInputError = 'Input tidak boleh kosong!';
+                renderCurrentSlide();
+                return;
+            }
+
+            if (phpWaitingVar === 'namaProduk') {
+                phpMemory.namaProduk = { raw: rawVal, dump: 'string(' + rawVal.length + ') "' + rawVal + '"' };
+                phpTerminalLog = phpTerminalLog.filter(function (m) { return m.id !== 'w_nama'; });
+                phpTerminalLog.push({ type: 'in', text: 'Masukkan Nama Produk : ' + rawVal });
+            } else {
+                if (!/^\d+$/.test(rawVal)) {
+                    phpInputError = 'Masukkan angka bulat murni (tanpa titik atau huruf Rp) agar hasil casting (int) akurat!';
+                    renderCurrentSlide();
+                    return;
+                }
+                const num = parseInt(rawVal, 10);
+                if (phpWaitingVar === 'hargaModal') {
+                    phpMemory.hargaModal = { raw: num, dump: 'int(' + num + ')' };
+                    phpTerminalLog = phpTerminalLog.filter(function (m) { return m.id !== 'w_modal'; });
+                    phpTerminalLog.push({ type: 'in', text: 'Masukkan Harga Modal (Rp) : ' + num });
+                } else if (phpWaitingVar === 'hargaJual') {
+                    phpMemory.hargaJual = { raw: num, dump: 'int(' + num + ')' };
+                    phpTerminalLog = phpTerminalLog.filter(function (m) { return m.id !== 'w_jual'; });
+                    phpTerminalLog.push({ type: 'in', text: 'Masukkan Harga Jual (Rp) : ' + num });
+                } else if (phpWaitingVar === 'stokAwal') {
+                    phpMemory.stokAwal = { raw: num, dump: 'int(' + num + ')' };
+                    phpTerminalLog = phpTerminalLog.filter(function (m) { return m.id !== 'w_stok'; });
+                    phpTerminalLog.push({ type: 'in', text: 'Masukkan Stok Awal (unit) : ' + num });
+                }
+            }
+
+            phpWaitingVar = null;
+            phpInputError = '';
+            renderCurrentSlide();
+
+            if (phpIsAuto) {
+                phpAutoTimer = setTimeout(function () {
+                    stepPhpSim();
+                }, 450);
+            }
+        }
+
+        function runFullPhpSim() {
+            resetPhpSim();
+            phpIsAuto = true;
+            stepPhpSim();
+        }
+
+        // Handlers Slide 16: Lengkapi 4 Baris Skrip PHP
+        function selectPhpBuilderSlot(slotNum) { activePhpSlot = slotNum; renderCurrentSlide(); }
+        function assignPhpSlot(codeKey) {
+            phpBuilderSlots[activePhpSlot] = codeKey;
+            phpBuilderFeedback = { type: '', text: '' };
+            if (activePhpSlot < 4) activePhpSlot++;
+            renderCurrentSlide();
+        }
+        function checkPhpBuilder() {
+            if (
+                phpBuilderSlots[1] === 'OPEN_ECHO' &&
+                phpBuilderSlots[2] === 'IN_STR' &&
+                phpBuilderSlots[3] === 'IN_INT' &&
+                phpBuilderSlots[4] === 'OUT_FMT'
+            ) {
+                phpBuilderFeedback = {
+                    type: 'success',
+                    text: 'Sempurna (4/4 Tepat)! Skrip PHP Sapaan & Pencatatan Produk Warung Digital sudah 100% valid!'
+                };
+            } else {
+                phpBuilderFeedback = {
+                    type: 'error',
+                    text: 'Urutan baris belum tepat. Pastikan: Baris 1 (<?php echo) -> Baris 2 (trim fgets namaProduk) -> Baris 3 ((int) trim fgets hargaJual) -> Baris 4 (echo + number_format).'
+                };
+            }
+            renderCurrentSlide();
+        }
+        function resetPhpBuilder() {
+            phpBuilderSlots = { 1: '', 2: '', 3: '', 4: '' };
+            activePhpSlot = 1;
+            phpBuilderFeedback = { type: '', text: '' };
+            renderCurrentSlide();
+        }
+
+        // Handlers Slide 17: Drag & Drop 8 Baris Skrip PHP
+        function shufflePhpSteps() {
+            phpStepsOrder = [...CORRECT_PHP_STEPS].sort(function () { return Math.random() - 0.5; });
+            phpShowValidation = false;
+            phpFeedbackText = '';
+            renderCurrentSlide();
+        }
+        function movePhpStep(index, direction) {
+            const target = index + direction;
+            if (target < 0 || target >= phpStepsOrder.length) return;
+            const moved = phpStepsOrder.splice(index, 1)[0];
+            phpStepsOrder.splice(target, 0, moved);
+            phpShowValidation = false;
+            phpFeedbackText = '';
+            renderCurrentSlide();
+        }
+        function onPhpDragStart(e, index) {
+            draggedPhpIndex = index;
+            if (e.currentTarget) e.currentTarget.classList.add('dragging');
+            if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+        }
+        function onPhpDragOver(e, index) {
+            e.preventDefault();
+            if (index !== draggedPhpIndex && e.currentTarget) e.currentTarget.classList.add('drag-over');
+        }
+        function onPhpDragLeave(e) {
+            if (e.currentTarget) e.currentTarget.classList.remove('drag-over');
+        }
+        function onPhpDrop(e, targetIndex) {
+            e.preventDefault();
+            if (draggedPhpIndex !== null && draggedPhpIndex !== targetIndex) {
+                const moved = phpStepsOrder.splice(draggedPhpIndex, 1)[0];
+                phpStepsOrder.splice(targetIndex, 0, moved);
+                phpShowValidation = false;
+                phpFeedbackText = '';
+                renderCurrentSlide();
+            }
+            draggedPhpIndex = null;
+        }
+        function onPhpDragEnd() {
+            draggedPhpIndex = null;
+            document.querySelectorAll('.draggable-step').forEach(function (el) {
+                el.classList.remove('dragging', 'drag-over');
+            });
+        }
+        function checkPhpOrder() {
+            phpShowValidation = true;
+            let correctCount = 0;
+            for (let i = 0; i < phpStepsOrder.length; i++) {
+                if (phpStepsOrder[i].id === i + 1) correctCount++;
+            }
+            if (correctCount === phpStepsOrder.length) {
+                phpFeedbackText = 'Luar Biasa (8/8 Tepat)! Urutan eksekusi skrip PHP Warung Digital sudah 100% runtut!';
+            } else {
+                phpFeedbackText = 'Baru ' + correctCount + '/8 baris yang tepat. Geser baris bertanda "✗ Geser".';
+            }
+            renderCurrentSlide();
+        }
+
+        function answerSelfCheck(qNum, isOk, msg) {
+            selfCheckFeedback[qNum] = { ok: isOk, msg: msg };
+            renderCurrentSlide();
+        }
+
+        // Modal Istilah & Kamus Lengkap
+        function showTerm(key) {
+            const item = GLOSSARY_DB[key];
+            if (!item) return;
+
+            document.getElementById('termCategoryBadge').textContent = item.category;
+            document.getElementById('termTitle').textContent = item.title;
+            document.getElementById('termMainDesc').textContent = item.main;
+            document.getElementById('termDetailDesc').textContent = item.detail;
+            document.getElementById('termSourceName').textContent = "Sumber: " + item.source;
+
+            const modal = document.getElementById('termModalBackdrop');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeTermModal() {
+            const modal = document.getElementById('termModalBackdrop');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function openGlossaryIndex() {
+            document.getElementById('glossarySearchInput').value = '';
+            renderGlossaryList('');
+            const modal = document.getElementById('glossaryModalBackdrop');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeGlossaryIndex() {
+            const modal = document.getElementById('glossaryModalBackdrop');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function selectGlossaryTerm(key) {
+            closeGlossaryIndex();
+            showTerm(key);
+        }
+
+        function renderGlossaryList(query) {
+            const q = String(query || '').trim().toLowerCase();
+            const allKeys = Object.keys(GLOSSARY_DB);
+            const matchedKeys = [];
+
+            for (let i = 0; i < allKeys.length; i++) {
+                const k = allKeys[i];
+                const item = GLOSSARY_DB[k];
+                if (
+                    item.title.toLowerCase().indexOf(q) !== -1 ||
+                    item.category.toLowerCase().indexOf(q) !== -1 ||
+                    item.main.toLowerCase().indexOf(q) !== -1
+                ) {
+                    matchedKeys.push(k);
+                }
+            }
+
+            const container = document.getElementById('glossaryListGrid');
+            if (matchedKeys.length === 0) {
+                container.innerHTML = '<div class="col-span-2 text-center py-8 text-xs text-slate-500">Istilah tidak ditemukan.</div>';
+                return;
+            }
+
+            let html = '';
+            for (let i = 0; i < matchedKeys.length; i++) {
+                const k = matchedKeys[i];
+                const item = GLOSSARY_DB[k];
+                html += `
+                    <button type="button" onclick="selectGlossaryTerm('${k}')" class="text-left p-4 rounded-2xl bg-slate-50 hover:bg-indigo-50/60 dark:bg-slate-800/50 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800 transition space-y-1">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">${escapeHtml(item.category)}</span>
+                            <span class="text-[10px] text-slate-400">${escapeHtml(item.source)}</span>
+                        </div>
+                        <div class="text-sm font-extrabold text-slate-900 dark:text-white">${escapeHtml(item.title)}</div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">${escapeHtml(item.main)}</p>
+                    </button>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function toggleTheme() {
+            const htmlEl = document.documentElement;
+            const icon = document.getElementById('themeIcon');
+            htmlEl.classList.toggle('dark');
+            const isDark = htmlEl.classList.contains('dark');
+            icon.className = isDark ? 'fa-solid fa-sun text-amber-400 text-sm' : 'fa-solid fa-moon text-sm';
+        }
+
+        document.addEventListener('keydown', function (e) {
+            const activeTag = document.activeElement && document.activeElement.tagName
+                ? document.activeElement.tagName.toLowerCase()
+                : '';
+            if (activeTag === 'input' || activeTag === 'textarea') return;
+
+            if (e.key === 'ArrowRight') changeSlide(1);
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+            if (e.key === 'Escape') {
+                closeTermModal();
+                closeGlossaryIndex();
+            }
+        });
+
+        window.onload = function () {
+            renderCurrentSlide();
+        };
+    </script>
+</body>
+</html>
