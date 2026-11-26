@@ -272,14 +272,14 @@
                 title: "Pending & Retry (Antrean Cadangan / Queue)",
                 category: "Kebijakan Darurat",
                 main: "Kebijakan tetap melayani pembeli saat koneksi Gudang putus dengan menyimpan nota berstatus PENDING di db_penjualan, lalu mengirimkannya ulang (Retry) saat jaringan pulih.",
-                detail: "Omzet terselamatkan, namun tetap memiliki risiko bentrokan stok (400 Stok Kurang) jika cabang lain yang online keburu menghabiskan stok terakhir.",
+                detail: "Omzet terselamatkan, namun tetap memiliki risiko bentrokan stok (400 Stok Kurang) bila barang fisik dibawa pulang pembeli toko saat pembeli online (Web/Marketplace) ikut checkout stok terakhir.",
                 source: "Slide 7, 8 & 9"
             },
             overselling_offline: {
-                title: "Overselling Transaksi Offline",
+                title: "Overselling Transaksi Offline (Omnichannel & Showroom)",
                 category: "Risiko Bisnis Kritis",
-                main: "Kondisi ketika cabang yang sedang offline tetap menjual 1 barang terakhir (status PENDING), sementara cabang online menjual barang yang sama di menit bersamaan—sehingga saat Retry ditolak 400 Stok Kurang.",
-                detail: "Pagar 409 hanya mencegah 1 struk memotong stok 2 kali, BUKAN mencegah 2 cabang berebut 1 stok saat offline.",
+                main: "Kondisi saat pembeli di toko fisik membawa pulang 1 pasang terakhir dalam mode offline (PENDING), sementara pembeli online ikut checkout stok yang sama di db_gudang—sehingga saat Retry ditolak 400 Stok Kurang.",
+                detail: "Selain kasus omnichannel (toko fisik vs online), bentrokan serupa juga terjadi pada model showroom (barang dikirim dari Gudang Pusat). Pagar 409 hanya mencegah 1 struk memotong stok 2 kali, bukan mencegah perebutan stok terakhir saat offline.",
                 source: "Slide 8"
             },
             retur_nota: {
@@ -410,20 +410,20 @@
         const MANAGER_CASES_M7 = [
             {
                 id: 1,
-                badge: "🎯 Kasus 1 · Dilema Flash Sale Akhir Pekan",
-                title: "Toko Anda menggelar Flash Sale akhir pekan untuk sepatu eksklusif yang sisa stoknya tinggal 2 pasang dan dijual serentak di 3 cabang. Tiba-tiba koneksi internet di Cabang Padang terputus selama 10 menit. Strategi darurat apa yang paling tepat ditetapkan Manajer?",
+                badge: "🎯 Kasus 1 · Dilema Flash Sale Akhir Pekan (Omnichannel)",
+                title: "Toko Sepatu Nusantara menggelar Flash Sale akhir pekan untuk sepatu eksklusif yang sisa stoknya tinggal 2 pasang dan dijual serentak di Toko Fisik & Web/Marketplace (omnichannel). Tiba-tiba koneksi internet di kasir toko fisik terputus selama 10 menit. Strategi darurat apa yang paling tepat ditetapkan Manajer?",
                 options: [
                     {
                         ltr: "A",
                         text: "Aktifkan Strict Stop (Fail-Closed) khusus produk stok kritis, sementara produk stok melimpah tetap boleh dilayani atau dialihkan ke katalog alternatif.",
                         best: true,
-                        feedback: "Keputusan Manajerial Sangat Tepat! Untuk stok tersisa 2 pasang di 3 cabang, mode Pending hampir pasti memicu overselling dan kekecewaan pelanggan. Strict Stop menjaga kredibilitas toko sambil mengarahkan kasir menawarkan model lain."
+                        feedback: "Keputusan Manajerial Sangat Tepat! Untuk stok tersisa 2 pasang yang berbagi stok secara omnichannel (toko fisik & online), mode Pending hampir pasti memicu overselling jika barang dibawa pulang pembeli fisik sementara pembeli online ikut checkout."
                     },
                     {
                         ltr: "B",
                         text: "Paksa pakai Pending & Retry untuk semua produk stok kritis dan biarkan kasir menerima uang dulu, urusan stok habis dipikirkan nanti malam.",
                         best: false,
-                        feedback: "Berisiko Tinggi! Saat Retry dijalankan dan ditolak 400 Stok Kurang, toko harus melakukan refund massal dan menghadapi ulasan buruk pelanggan yang merasa dibohongi."
+                        feedback: "Berisiko Tinggi! Saat Retry dijalankan dan ditolak 400 Stok Kurang karena sudah terlanjur dibeli pelanggan online, toko harus membatalkan pesanan online dan menanggung penalti/ulasan buruk."
                     },
                     {
                         ltr: "C",
@@ -436,7 +436,7 @@
             {
                 id: 2,
                 badge: "🎯 Kasus 2 · Selisih 2 Pasang saat Rekonsiliasi Tutup Toko",
-                title: "Saat tutup shift jam 21.00, bar Rekonsiliasi Tutup Toko menunjukkan SELISIH 2 pasang. Setelah diperiksa, ada 1 struk PENDING (TRX-007, 2 psg SP008) yang baru di-Retry tetapi ditolak Gudang dengan '400 Stok Kurang' karena stok sudah habis dibeli cabang lain. Apa langkah pemulihan yang benar?",
+                title: "Saat tutup shift jam 21.00, bar Rekonsiliasi Tutup Toko menunjukkan SELISIH 2 pasang. Setelah diperiksa, ada 1 struk PENDING kasir fisik (TRX-007, 2 psg SP008 yang sudah dibawa pulang pembeli) yang baru di-Retry tetapi ditolak Gudang dengan '400 Stok Kurang' karena stok sudah terlanjur di-checkout pembeli online (Web/Marketplace). Apa langkah pemulihan yang benar?",
                 options: [
                     {
                         ltr: "A",
@@ -446,9 +446,9 @@
                     },
                     {
                         ltr: "B",
-                        text: "Hubungi pelanggan untuk opsi tukar model/pengiriman dari cabang lain atau refund resmi, lalu perbarui status nota menjadi DIBATALKAN/REFUND dengan berita acara audit.",
+                        text: "Hubungi pembeli online untuk opsi tukar model/pengiriman dari stok cabang lain atau refund resmi, lalu perbarui status pesanan & catat berita acara audit agar saldo sinkron.",
                         best: true,
-                        feedback: "Tepat Sekali! Pelanggan ditangani secara transparan, uang kas tetap tercatat jelas lewat prosedur refund resmi, dan angka penjualan bersih kembali cocok 100% dengan Gudang (Selisih 0)."
+                        feedback: "Tepat Sekali! Karena pembeli fisik sudah membawa barangnya, pembeli online ditangani secara transparan (tukar model/kirim cabang lain/refund resmi), jejak audit keuangan terjaga, dan angka rekonsiliasi kembali Selisih 0."
                     },
                     {
                         ltr: "C",
@@ -524,13 +524,13 @@
             {
                 id: 4,
                 tag: "M7 · Kritis",
-                q: "Jika Cabang Padang menjual 1 pasang terakhir secara offline (PENDING) lalu Toko Pusat yang online menjual sepatu terakhir itu, kode penolakan apa yang diterima Padang saat klik Retry?",
+                q: "Jika kasir toko fisik menjual 1 pasang terakhir secara offline (PENDING, barang langsung dibawa pulang) lalu di menit sama pembeli online di Web/Marketplace ikut checkout sepatu itu, kode penolakan apa yang diterima kasir saat klik Retry?",
                 opts: [
                     { k: "A", t: "409 Conflict (Struk Ganda)" },
                     { k: "B", t: "400 Bad Request (Stok Kurang — Overselling Offline)" }
                 ],
                 ans: "B",
-                exp: "Nomor struknya unik (bukan duplikat), tetapi sisa stok fisik sudah 0. Karena itu Gudang menolak dengan 400 Stok Kurang!"
+                exp: "Nomor struknya unik (bukan duplikat), tetapi sisa stok di db_gudang sudah 0 karena terlanjur di-checkout pembeli online. Karena itu Gudang menolak dengan 400 Stok Kurang!"
             },
             {
                 id: 5,
@@ -692,7 +692,7 @@
 
             return `
                 <div class="slide-enter flex flex-col justify-between h-full gap-5">
-                    ${slideHeader("Babak 1 · Front-Office UX", "Kasir Tidak Membaca JSON: Terjemahan Otomatis di Layar POS", "Kualitas ${term('front_office_ux', 'Front-Office UX')} menentukan ketenangan kasir saat menghadapi penolakan sistem di depan antrean pelanggan.")}
+                    ${slideHeader("Babak 1 · Front-Office UX", "Kasir Tidak Membaca JSON: Terjemahan Otomatis di Layar POS", `Kualitas ${term('front_office_ux', 'Front-Office UX')} menentukan ketenangan kasir saat menghadapi penolakan sistem di depan antrean pelanggan.`)}
 
                     <div class="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 my-auto">
                         <table class="w-full text-left border-collapse">
@@ -716,7 +716,7 @@
         function renderSlide4() {
             return `
                 <div class="slide-enter flex flex-col justify-between h-full gap-5">
-                    ${slideHeader("Babak 1 · Gambaran Arsitektur (Tanpa Bedah Sintaks Kode)", "Cara Kerja ${term('api_client', 'Kurir Digital (API Client / PHP cURL)')} di Balik Tombol Bayar", "Sebagai lulusan Bisnis Digital, Anda tidak perlu merakit kode kurirnya—cukup pahami 4 tugasnya dan atur kebijakannya dari Panel Pengaturan POS.")}
+                    ${slideHeader("Babak 1 · Gambaran Arsitektur (Tanpa Bedah Sintaks Kode)", `Cara Kerja ${term('api_client', 'Kurir Digital (API Client / PHP cURL)')} di Balik Tombol Bayar`, "Sebagai lulusan Bisnis Digital, Anda tidak perlu merakit kode kurirnya—cukup pahami 4 tugasnya dan atur kebijakannya dari Panel Pengaturan POS.")}
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 my-auto">
                         <div class="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-t-4 border-emerald-600 border-x border-b border-slate-200 dark:border-slate-800 space-y-2.5">
@@ -769,7 +769,7 @@
         function renderSlide5() {
             return `
                 <div class="slide-enter flex flex-col justify-between h-full gap-6">
-                    ${slideHeader("Babak 2 · Manajemen Antrean &amp; SLA", "Mengapa ${term('sla_timeout', 'Batas Waktu Tunggu (SLA Timeout)')} Menentukan Omzet Toko?", "Analogi sederhana dari keseharian: mesin EDC kartu atau QRIS di meja kasir minimarket saat jam pulang kerja.", "text-amber-600 dark:text-amber-400")}
+                    ${slideHeader("Babak 2 · Manajemen Antrean &amp; SLA", `Mengapa ${term('sla_timeout', 'Batas Waktu Tunggu (SLA Timeout)')} Menentukan Omzet Toko?`, "Analogi sederhana dari keseharian: mesin EDC kartu atau QRIS di meja kasir minimarket saat jam pulang kerja.", "text-amber-600 dark:text-amber-400")}
 
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 my-auto">
                         <div class="p-6 rounded-3xl bg-rose-50/70 dark:bg-rose-950/30 border-2 border-rose-300 dark:border-rose-800 space-y-3">
@@ -939,7 +939,7 @@
                                 </div>
                             </div>
                             <div class="text-xs p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
-                                <strong>Cocok untuk:</strong> Produk stok sangat tipis / barang mewah / promo rebutan lintas cabang.
+                                <strong>Cocok untuk:</strong> Produk stok sangat tipis / barang mewah / promo rebutan lintas kanal (toko fisik &amp; online).
                             </div>
                         </div>
 
@@ -952,7 +952,7 @@
                                 </p>
                                 <div class="space-y-1.5 text-xs sm:text-sm pt-2">
                                     <div class="text-emerald-700 dark:text-emerald-400 font-bold">✓ Keunggulan: Omzet tetap aman masuk kas &amp; antrean lancar.</div>
-                                    <div class="text-amber-800 dark:text-amber-300 font-bold">⚠️ Risiko Tersembunyi: Rawan bentrokan stok (<em>overselling offline</em>)!</div>
+                                    <div class="text-amber-800 dark:text-amber-300 font-bold">⚠️ Risiko Tersembunyi: Rawan bentrokan stok (<em>overselling omnichannel</em>) jika stok tipis!</div>
                                 </div>
                             </div>
                             <div class="text-xs p-3 rounded-2xl bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-800">
@@ -966,40 +966,45 @@
             `;
         }
 
-        // SLIDE 8: Koreksi Kritis Bisnis — Mengapa 409 TIDAK Mencegah Overselling Offline
+        // SLIDE 8: Koreksi Kritis Bisnis — Skenario 1 (Omnichannel Toko Sepatu) & Catatan Skenario 2 (Showroom)
         function renderSlide8() {
             return `
-                <div class="slide-enter flex flex-col justify-between h-full gap-5">
-                    ${slideHeader("Babak 2 · Koreksi Kritis Bisnis", "Mengapa Pagar <code class='font-mono'>409</code> TIDAK Mencegah ${term('overselling_offline', 'Overselling Saat Offline')}?", "Pagar 409 hanya mencegah 1 struk memotong stok 2 kali—bukan mencegah 2 cabang berebut 1 stok terakhir!", "text-rose-600 dark:text-rose-400")}
+                <div class="slide-enter flex flex-col justify-between h-full gap-4">
+                    ${slideHeader("Babak 2 · Koreksi Kritis Bisnis (Konteks Toko Sepatu Omnichannel)", `Mengapa Pagar <code class='font-mono'>409</code> TIDAK Mencegah ${term('overselling_offline', 'Overselling Saat Offline')}?`, "Pagar 409 hanya mencegah 1 struk memotong stok 2 kali—bukan mencegah <strong>Toko Fisik (Offline)</strong> dan <strong>Toko Online (Web/Marketplace)</strong> berebut 1 pasang terakhir!", "text-rose-600 dark:text-rose-400")}
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 my-auto">
-                        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
-                            <span class="px-2.5 py-0.5 rounded-lg bg-slate-200 dark:bg-slate-700 font-mono text-xs font-extrabold">LANGKAH 1</span>
-                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Sisa SP008 Tinggal 1 Pasang</h3>
-                            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">Di Gudang Pusat, sepatu <strong>SP008</strong> tinggal <strong>1 pasang terakhir</strong>. Cabang Padang sedang <strong>OFFLINE</strong> (mode Pending).</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 my-auto">
+                        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                            <span class="px-2.5 py-0.5 rounded-lg bg-slate-200 dark:bg-slate-700 font-mono text-[11px] font-extrabold">LANGKAH 1 · SKENARIO 1</span>
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Stok Gabungan Sisa 1 Pasang</h3>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">Toko Fisik &amp; Web/Marketplace berbagi 1 stok di <code class="font-mono">db_gudang</code>. Sisa <strong>SP008 tinggal 1 pasang</strong> di rak, dan internet kasir sedang <strong>PUTUS</strong>.</p>
                         </div>
 
-                        <div class="p-4 rounded-3xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-800 space-y-2">
-                            <span class="px-2.5 py-0.5 rounded-lg bg-amber-500 text-white font-mono text-xs font-extrabold">LANGKAH 2</span>
-                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Padang Jual ke Pembeli A</h3>
-                            <p class="text-xs text-slate-700 dark:text-slate-200 leading-relaxed">Cabang Padang (offline) tetap melayani Pembeli A dengan struk <code class="font-mono font-bold">TRX-PDG-01</code> berstatus <strong>PENDING</strong>.</p>
+                        <div class="p-4 rounded-3xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-800 space-y-1.5">
+                            <span class="px-2.5 py-0.5 rounded-lg bg-amber-500 text-white font-mono text-[11px] font-extrabold">LANGKAH 2 · TOKO FISIK</span>
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Pembeli A Bawa Pulang Barang</h3>
+                            <p class="text-xs text-slate-700 dark:text-slate-200 leading-relaxed">Pembeli A datang ke toko, bayar di kasir offline (<code class="font-mono font-bold">TRX-TOKO-01</code> status <strong>PENDING</strong>) &amp; <strong>langsung bawa pulang sepatunya</strong>. Di server, stok masih terbaca <strong>1</strong>.</p>
                         </div>
 
-                        <div class="p-4 rounded-3xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-300 dark:border-indigo-800 space-y-2">
-                            <span class="px-2.5 py-0.5 rounded-lg bg-indigo-600 text-white font-mono text-xs font-extrabold">LANGKAH 3</span>
-                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Pusat (Online) Jual ke Pembeli B</h3>
-                            <p class="text-xs text-slate-700 dark:text-slate-200 leading-relaxed">Di menit yang sama, Toko Pusat yang online menjual 1 pasang terakhir ke Pembeli B. <strong>Stok Gudang jadi 0!</strong></p>
+                        <div class="p-4 rounded-3xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-300 dark:border-indigo-800 space-y-1.5">
+                            <span class="px-2.5 py-0.5 rounded-lg bg-indigo-600 text-white font-mono text-[11px] font-extrabold">LANGKAH 3 · ONLINE</span>
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Pembeli B Checkout Online</h3>
+                            <p class="text-xs text-slate-700 dark:text-slate-200 leading-relaxed">Di menit yang sama, Pembeli B di Web/Marketplace melihat stok = 1 lalu langsung bayar. <strong>Stok di <code class="font-mono">db_gudang</code> terpotong jadi 0!</strong></p>
                         </div>
 
-                        <div class="p-4 rounded-3xl bg-rose-50/80 dark:bg-rose-950/40 border-2 border-rose-500 space-y-2">
-                            <span class="px-2.5 py-0.5 rounded-lg bg-rose-600 text-white font-mono text-xs font-extrabold">LANGKAH 4 · RETRY</span>
+                        <div class="p-4 rounded-3xl bg-rose-50/80 dark:bg-rose-950/40 border-2 border-rose-500 space-y-1.5">
+                            <span class="px-2.5 py-0.5 rounded-lg bg-rose-600 text-white font-mono text-[11px] font-extrabold">LANGKAH 4 · RETRY</span>
                             <h3 class="text-sm font-extrabold text-rose-800 dark:text-rose-200">Ditolak <code class="font-mono">400 Stok Kurang</code>!</h3>
-                            <p class="text-xs text-rose-900 dark:text-rose-200 leading-relaxed">Saat internet Padang pulih &amp; klik Retry, Gudang menolak <strong>400 Stok Kurang (bukan 409!)</strong> karena struknya unik tetapi stok fisik sudah 0.</p>
+                            <p class="text-xs text-rose-900 dark:text-rose-200 leading-relaxed">Saat internet pulih &amp; kasir klik Retry, Gudang menolak <strong>400 Stok Kurang (bukan 409!)</strong>. Barang sudah dibawa Pembeli A, sementara Pembeli B sudah bayar!</p>
                         </div>
                     </div>
 
-                    <div class="p-4 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border-l-4 border-emerald-600 text-xs sm:text-sm text-slate-700 dark:text-slate-200">
-                        <strong>📋 SOP Pemulihan Manajer (Trade-Off Nyata):</strong> Tidak ada strategi tanpa risiko. Bila terjadi penolakan <code class="font-mono font-bold">400</code> saat Retry, staf wajib menjalankan SOP pemulihan: <strong>(1) tawarkan tukar model sejenis</strong>, <strong>(2) kirim dari stok cabang lain</strong>, atau <strong>(3) proses <em>refund</em> resmi</strong> + perbarui status nota agar audit tetap cocok!
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 text-xs leading-relaxed">
+                        <div class="lg:col-span-7 p-3.5 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border-l-4 border-emerald-600 text-slate-700 dark:text-slate-200">
+                            <strong>📋 SOP Pemulihan Omnichannel:</strong> Karena fisik sepatu sudah dibawa Pembeli A, staf wajib segera menghubungi <strong>Pembeli B (online)</strong> untuk: <strong>(1) tukar model sejenis</strong>, <strong>(2) kirim dari stok cabang lain</strong>, atau <strong>(3) proses <em>refund</em> resmi</strong> + perbarui catatan audit.
+                        </div>
+                        <div class="lg:col-span-5 p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border-l-4 border-indigo-600 text-slate-700 dark:text-slate-200">
+                            <strong>🏬 Catatan Skenario 2 (<em>Showroom / Ship-from-Warehouse</em>):</strong> Bentrokan serupa juga terjadi antar-cabang fisik jika cabang hanya memajang sampel &amp; pengiriman diambil dari <strong>Gudang Sentral</strong> (misal furnitur, elektronik, atau ukuran khusus).
+                        </div>
                     </div>
 
                     ${slideTransitionNote("Sekarang rasakan langsung integrasi POS & 2 Database secara live di Simulasi Dunia Nyata 2 pada Slide 9!")}
@@ -1259,7 +1264,7 @@
         function renderSlide10() {
             return `
                 <div class="slide-enter flex flex-col justify-between h-full gap-6">
-                    ${slideHeader("Babak 3 · Menutup Siklus 4 Pintu API", "Satu Tombol ${term('retur_nota', 'Retur / Pembatalan Nota')} di Layar Kasir", "Penjualan di dunia nyata tidak selalu mulus—pelanggan bisa membatalkan atau menukar barang. Satu tombol Retur langsung melengkapi seluruh siklus 4 pintu API (Minggu 4–7).")}
+                    ${slideHeader("Babak 3 · Menutup Siklus 4 Pintu API", `Satu Tombol ${term('retur_nota', 'Retur / Pembatalan Nota')} di Layar Kasir`, "Penjualan di dunia nyata tidak selalu mulus—pelanggan bisa membatalkan atau menukar barang. Satu tombol Retur langsung melengkapi seluruh siklus 4 pintu API (Minggu 4–7).")}
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-5 my-auto">
                         <div class="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2.5">
@@ -1296,7 +1301,7 @@
         function renderSlide11() {
             return `
                 <div class="slide-enter flex flex-col justify-between h-full gap-5">
-                    ${slideHeader("Babak 3 · Ritual Audit Harian", "${term('rekonsiliasi_tutup_toko', 'Rekonsiliasi Tutup Toko')} Lintas 2 Database", "Minggu 6 mengecek kecocokan internal Gudang; Minggu 7 mencocokkan pembukuan antara Kasir dan Gudang sebelum shift ditutup.")}
+                    ${slideHeader("Babak 3 · Ritual Audit Harian", `${term('rekonsiliasi_tutup_toko', 'Rekonsiliasi Tutup Toko')} Lintas 2 Database`, "Minggu 6 mengecek kecocokan internal Gudang; Minggu 7 mencocokkan pembukuan antara Kasir dan Gudang sebelum shift ditutup.")}
 
                     <div class="p-5 rounded-3xl bg-emerald-50/70 dark:bg-emerald-950/30 border-2 border-emerald-500 text-center space-y-2">
                         <div class="text-xs font-extrabold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">Rumus Wajib Tutup Shift (Target: Selisih = 0)</div>
@@ -1317,7 +1322,7 @@
 
                         <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-1.5">
                             <span class="text-xs font-extrabold text-amber-700 dark:text-amber-400">2. Retry Ditolak 400 (Stok Habis)</span>
-                            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">Terjadi bentrokan stok offline dengan cabang lain, sehingga nota tertahan dan belum di-refund resmi.</p>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">Terjadi bentrokan stok offline dengan pesanan online (omnichannel) atau gudang sentral, sehingga nota tertahan dan belum di-refund resmi.</p>
                             <div class="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 pt-1">→ Jalankan SOP tukar/refund &amp; ubah status nota.</div>
                         </div>
 
@@ -1337,7 +1342,7 @@
         function renderSlide12() {
             return `
                 <div class="slide-enter flex flex-col justify-between h-full gap-5">
-                    ${slideHeader("Babak 3 · Gerbang Kelayakan Rilis (Go-Live)", "${term('uat_go_nogo', 'User Acceptance Testing (UAT)')} &amp; Keputusan Manajer", "Di dunia kerja, lulusan Bisnis Digital berperan sebagai penguji bisnis yang memutuskan apakah sistem integrasi layak dipakai karyawan atau ditahan.")}
+                    ${slideHeader("Babak 3 · Gerbang Kelayakan Rilis (Go-Live)", `${term('uat_go_nogo', 'User Acceptance Testing (UAT)')} &amp; Keputusan Manajer`, "Di dunia kerja, lulusan Bisnis Digital berperan sebagai penguji bisnis yang memutuskan apakah sistem integrasi layak dipakai karyawan atau ditahan.")}
 
                     <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch my-auto">
                         <div class="lg:col-span-7 p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2.5">
@@ -1591,7 +1596,7 @@
                     <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-slate-700 dark:text-slate-200">
                         <div>
                             <strong class="text-emerald-700 dark:text-emerald-400 block mb-1">✅ Komponen Berkas PDF LKM 07:</strong>
-                            Form 1 (Identitas &amp; Kunci Paket NIM) &rarr; Form 2 (Laporan 6 Uji UAT, Bukti Screenshot, Rekonsiliasi &amp; Keputusan Go/No-Go) &rarr; Form 3 (4 Essay Studi Kasus M1–M7).
+                            Form 1 (Identitas &amp; Kunci Paket NIM) &rarr; Form 2 (Laporan 6 Uji UAT &amp; Bukti Screenshot) &rarr; Form 3 (Rekonsiliasi &amp; Keputusan Go/No-Go) &rarr; Form 4 (4 Essay Studi Kasus M1–M7 &amp; Pakta Integritas).
                         </div>
                         <div>
                             <strong class="text-rose-700 dark:text-rose-400 block mb-1">🛡️ Aturan Orisinalitas &amp; Anti-AI Mentah:</strong>
@@ -1951,22 +1956,7 @@
             const apiKey = posGetActiveKey();
             const cabangLbl = posGetCabangLabel();
 
-            // 1. Cek batas promo lokal / Gudang (maks 3 psg)
-            if (posSim.qty > 3) {
-                posSim.posBanner = {
-                    type: 'err',
-                    title: 'Pembelian Melebihi Batas Promo Toko',
-                    desc: 'Maksimal pembelian promo adalah 3 pasang per struk. Mohon informasikan kuota promo kepada pembeli dengan sopan.'
-                };
-                posSim.lastCourier = {
-                    method: 'POST', url: '/api/stok-keluar.php', apiKey: apiKey, sla: posSim.slaSec + ' dtk', httpCode: 400,
-                    json: JSON.stringify({ status: 'error', kode_http: 400, pesan: '400 Ditolak Kebijakan Promo: Maksimal pembelian 3 pasang per nota!', data: null }, null, 2)
-                };
-                renderCurrentSlide();
-                return;
-            }
-
-            // 2. Jika Jaringan Gudang PUTUS -> ikuti kebijakan Mode Darurat
+            // 1. Jika Jaringan Gudang PUTUS -> ikuti kebijakan Mode Darurat (cek lebih dulu karena validasi promo ada di server Gudang)
             if (!posSim.gudangOnline) {
                 if (posSim.darurat === 'strict') {
                     posSim.posBanner = {
@@ -1999,6 +1989,21 @@
                     renderCurrentSlide();
                     return;
                 }
+            }
+
+            // 2. Jika Jaringan Gudang ONLINE -> cek batas promo di Gudang (maks 3 psg)
+            if (posSim.qty > 3) {
+                posSim.posBanner = {
+                    type: 'err',
+                    title: 'Pembelian Melebihi Batas Promo Toko',
+                    desc: 'Maksimal pembelian promo adalah 3 pasang per struk. Mohon informasikan kuota promo kepada pembeli dengan sopan.'
+                };
+                posSim.lastCourier = {
+                    method: 'POST', url: '/api/stok-keluar.php', apiKey: apiKey, sla: posSim.slaSec + ' dtk', httpCode: 400,
+                    json: JSON.stringify({ status: 'error', kode_http: 400, pesan: '400 Ditolak Kebijakan Promo: Maksimal pembelian 3 pasang per nota!', data: null }, null, 2)
+                };
+                renderCurrentSlide();
+                return;
             }
 
             // 3. Jika Jaringan Gudang ONLINE -> cek stok di db_gudang
@@ -2058,11 +2063,24 @@
                 posSim.posBanner = {
                     type: 'err',
                     title: 'Retry Ditolak Gudang (400 Stok Kurang · Overselling Offline!)',
-                    desc: 'Stok ' + rec.kode + ' tinggal ' + (prod ? prod.stok : 0) + ' psg (tidak cukup untuk ' + rec.no_struk + '). Ini bukti nyata risiko Slide 8—wajib jalankan SOP tukar/refund!'
+                    desc: 'Stok ' + rec.kode + ' tinggal ' + (prod ? prod.stok : 0) + ' psg (tidak cukup untuk ' + rec.no_struk + '). Ini bukti nyata risiko Slide 8—wajib jalankan SOP penanganan pelanggan (tukar model/kirim cabang/refund)!'
                 };
                 posSim.lastCourier = {
                     method: 'POST', url: '/api/stok-keluar.php', apiKey: apiKey, sla: posSim.slaSec + ' dtk', httpCode: 400,
                     json: JSON.stringify({ status: 'error', kode_http: 400, pesan: '400 Stok Kurang saat Retry ' + rec.no_struk + ' (Overselling Offline)!', data: null }, null, 2)
+                };
+                renderCurrentSlide();
+                return;
+            }
+            if (rec.qty > 3) {
+                posSim.posBanner = {
+                    type: 'err',
+                    title: 'Retry Ditolak Gudang (400 Melebihi Batas Promo)',
+                    desc: 'Nota offline ' + rec.no_struk + ' berisi ' + rec.qty + ' psg (melebihi batas promo maks. 3 psg/nota). Wajib ditindaklanjuti sesuai SOP manajer.'
+                };
+                posSim.lastCourier = {
+                    method: 'POST', url: '/api/stok-keluar.php', apiKey: apiKey, sla: posSim.slaSec + ' dtk', httpCode: 400,
+                    json: JSON.stringify({ status: 'error', kode_http: 400, pesan: '400 Ditolak Kebijakan Promo saat Retry ' + rec.no_struk + ': Maksimal 3 pasang/nota!', data: null }, null, 2)
                 };
                 renderCurrentSlide();
                 return;
